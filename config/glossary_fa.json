@@ -1,0 +1,42 @@
+{
+  "competition": "Premier League",
+  "updated": "2026-11-13",
+  "teams": [
+    { "id": "ARS", "name_en": "Arsenal", "name_fa": "آرسنال", "aliases": ["ارسنال", "آرزنال", "توپچی‌ها"] },
+    { "id": "AVL", "name_en": "Aston Villa", "name_fa": "استون ویلا", "aliases": ["ویلا"] },
+    { "id": "BOU", "name_en": "Bournemouth", "name_fa": "بورنموث", "aliases": [] },
+    { "id": "BRE", "name_en": "Brentford", "name_fa": "برنتفورد", "aliases": [] },
+    { "id": "BHA", "name_en": "Brighton", "name_fa": "برایتون", "aliases": ["برتون"] },
+    { "id": "BUR", "name_en": "Burnley", "name_fa": "برنلی", "aliases": [] },
+    { "id": "CHE", "name_en": "Chelsea", "name_fa": "چلسی", "aliases": ["چلسیا"] },
+    { "id": "CRY", "name_en": "Crystal Palace", "name_fa": "کریستال پلاس", "aliases": ["پلاس"] },
+    { "id": "EVE", "name_en": "Everton", "name_fa": "اورتون", "aliases": [] },
+    { "id": "FUL", "name_en": "Fulham", "name_fa": "فولام", "aliases": [] },
+    { "id": "LEE", "name_en": "Leeds", "name_fa": "لیدز", "aliases": ["لیدز یونایتد"] },
+    { "id": "LIV", "name_en": "Liverpool", "name_fa": "لیورپول", "aliases": ["ردز"] },
+    { "id": "MCI", "name_en": "Manchester City", "name_fa": "منچسترسیتی", "aliases": ["سیتی", "من سیتی"] },
+    { "id": "MUN", "name_en": "Manchester United", "name_fa": "منچستریونایتد", "aliases": ["یونایتد", "من یونایتد"] },
+    { "id": "NEW", "name_en": "Newcastle", "name_fa": "نیوکاسل", "aliases": ["نیوکاسل یونایتد"] },
+    { "id": "NFO", "name_en": "Nottingham Forest", "name_fa": "ناتینگهام فارست", "aliases": ["فارست"] },
+    { "id": "SOU", "name_en": "Southampton", "name_fa": "ساوتهمپتون", "aliases": [] },
+    { "id": "TOT", "name_en": "Tottenham", "name_fa": "تاتنهام", "aliases": ["اسپرز", "تاتنهام هاتسپر"] },
+    { "id": "WHU", "name_en": "West Ham", "name_fa": "وستهم", "aliases": ["وست هم", "چکش‌ها"] },
+    { "id": "WOL", "name_en": "Wolverhampton", "name_fa": "ولورهمپتون", "aliases": ["ولوز"] }
+  ],
+  "players": [
+    { "id": "m-salah", "name_en": "Mohamed Salah", "name_fa": "محمد صلاح", "team": "LIV", "aliases": ["صلاح"] },
+    { "id": "e-haaland", "name_en": "Erling Haaland", "name_fa": "ارلینگ هالند", "team": "MCI", "aliases": ["هالند"] },
+    { "id": "b-saka", "name_en": "Bukayo Saka", "name_fa": "بوکایو ساکا", "team": "ARS", "aliases": ["ساکا"] },
+    { "id": "c-palmer", "name_en": "Cole Palmer", "name_fa": "کول پالمر", "team": "CHE", "aliases": ["پالمر"] }
+  ],
+  "note": "نمونهٔ شروع — در هفتهٔ ۰ به ۲۰ تیم کامل + ۱۵۰ بازیکن کلیدی گسترش یابد؛ برای هر مورد یک شکل فارسی، یک نام لاتین و aliasها. یک شکل فارسی برای هر تیم/بازیکن در همهٔ پلتفرم‌ها.",
+  "terms": {
+    "xG": "امید گل (Expected Goals) — مجموع احتمال گل شدن هر شوت بر اساس مدل",
+    "xA": "امید پاس گل (Expected Assists)",
+    "xGOT": "امید گل بر اساس شوت ثبت‌شده",
+    "npxG": "امید گل بدون پنالتی",
+    "xPTS": "امتیاز انتظاری",
+    "PPDA": "پاس‌های حریف در هر اقدام دفاعی — فشار دفاعی",
+    "per90": "نرخ به‌ازای هر ۹۰ دقیقه — فقط با دقایق معتبر"
+  }
+}

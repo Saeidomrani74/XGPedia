@@ -1,0 +1,25 @@
+name: xgpedia-jobs
+
+on:
+  schedule:
+    - cron: "30 5 * * *"   # daily_fixtures — ساعت ۰۹:۰۰ تهران (۰۵:۳۰ UTC)
+    - cron: "0 20 * * *"   # pre_match window — ۶ تا ۱۲ ساعت قبل از کیک‌آف‌های شبانه
+  workflow_dispatch: {}    # اجرای دستی از UI
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]" && python -m playwright install --with-deps chromium
+      - run: python run.py init
+      - run: python run.py fixtures --date $(date -u +%F)
+        env:
+          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+          DATABASE_PATH: data/dev.sqlite
+      # نکته: cron گیت‌هاب چند دقیقه تأخیر طبیعی دارد — برای لایو و ربات
+      # همیشه‌روشن مناسب نیست؛ VPS فقط پس از نیاز واقعی (دروازهٔ ۴)

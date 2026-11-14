@@ -1,0 +1,9 @@
+{
+  "min_sample_n": 5,
+  "xg_gap_abs": 1.0,
+  "shots_spike_ratio": 1.4,
+  "ppda_change_pct": 20,
+  "player_form_window": 3,
+  "player_min_minutes_default": 450,
+  "note": "مقادیر اولیه‌اند؛ با دادهٔ تاریخی کالیبره شوند، نه از روی یک نمونهٔ کوچک"
+}

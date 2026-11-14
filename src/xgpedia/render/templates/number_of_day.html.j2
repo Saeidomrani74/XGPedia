@@ -1,0 +1,52 @@
+{# قالب کارت «عدد روز» — 1080x1350 — فقط نمونهٔ شروع #}
+{# رنگ/فونت از brand.json تزریق می‌شود؛ عدد و متن از match.json #}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face { font-family: 'Vazirmatn'; src: url('../../brand/fonts/Vazirmatn-Regular.woff2') format('woff2'); font-weight: 400; }
+  @font-face { font-family: 'Vazirmatn'; src: url('../../brand/fonts/Vazirmatn-Black.woff2') format('woff2'); font-weight: 800; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1350px; }
+  body {
+    font-family: 'Vazirmatn', sans-serif;
+    background: {{ colors.ink }};            /* پس‌زمینه از کتابچهٔ ثابت */
+    color: {{ colors.fog }};
+    direction: rtl; unicode-bidi: plaintext;
+    font-variant-numeric: tabular-nums;
+  }
+  .card { width: 100%; height: 100%; padding: 72px; display: flex; flex-direction: column; justify-content: space-between; }
+  .header { display: flex; align-items: center; justify-content: space-between; }
+  .tag { color: {{ colors.steel_neutral }}; font-size: 26px; }
+  .big-number { font-size: 300px; font-weight: 800; color: {{ colors.signal_red }}; line-height: 1; text-align: center; }
+  .big-unit  { font-size: 64px; font-weight: 800; color: {{ colors.fog }}; text-align: center; margin-top: -20px; }
+  .headline  { font-size: 52px; font-weight: 800; text-align: center; }
+  .explain   { font-size: 40px; line-height: 1.7; text-align: center; max-width: 880px; margin: 0 auto; }
+  .footer { display: flex; justify-content: space-between; color: {{ colors.steel_neutral }}; font-size: 26px;
+            border-top: 1px solid #2A2A36; padding-top: 24px; }
+  .watermark { position: absolute; left: 48px; bottom: 40px; opacity: 0.4; font-weight: 800; font-size: 34px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <span class="tag">{{ competition_fa }} · عدد روز</span>
+      <span class="tag">{{ date_fa }}</span>
+    </div>
+
+    <div>
+      <div class="big-number">{{ value }}</div>
+      <div class="big-unit">{{ unit }}</div>
+      <div class="headline">{{ headline }}</div>
+      <p class="explain">{{ explanation }}</p>
+    </div>
+
+    <div class="footer">
+      <span>بازه: {{ window }} · n={{ n }} · منبع: {{ provider }}</span>
+      <span>به‌روزرسانی: {{ collected_at_tehran }} به وقت تهران</span>
+    </div>
+  </div>
+  <div class="watermark">XG</div>
+</body>
+</html>
