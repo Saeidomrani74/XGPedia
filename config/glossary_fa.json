@@ -1,35 +1,2220 @@
 {
   "competition": "Premier League",
-  "updated": "2026-11-13",
+  "season": "2026-27",
+  "updated": "2026-11-14",
   "teams": [
-    { "id": "ARS", "name_en": "Arsenal", "name_fa": "آرسنال", "aliases": ["ارسنال", "آرزنال", "توپچی‌ها"] },
-    { "id": "AVL", "name_en": "Aston Villa", "name_fa": "استون ویلا", "aliases": ["ویلا"] },
-    { "id": "BOU", "name_en": "Bournemouth", "name_fa": "بورنموث", "aliases": [] },
-    { "id": "BRE", "name_en": "Brentford", "name_fa": "برنتفورد", "aliases": [] },
-    { "id": "BHA", "name_en": "Brighton", "name_fa": "برایتون", "aliases": ["برتون"] },
-    { "id": "BUR", "name_en": "Burnley", "name_fa": "برنلی", "aliases": [] },
-    { "id": "CHE", "name_en": "Chelsea", "name_fa": "چلسی", "aliases": ["چلسیا"] },
-    { "id": "CRY", "name_en": "Crystal Palace", "name_fa": "کریستال پلاس", "aliases": ["پلاس"] },
-    { "id": "EVE", "name_en": "Everton", "name_fa": "اورتون", "aliases": [] },
-    { "id": "FUL", "name_en": "Fulham", "name_fa": "فولام", "aliases": [] },
-    { "id": "LEE", "name_en": "Leeds", "name_fa": "لیدز", "aliases": ["لیدز یونایتد"] },
-    { "id": "LIV", "name_en": "Liverpool", "name_fa": "لیورپول", "aliases": ["ردز"] },
-    { "id": "MCI", "name_en": "Manchester City", "name_fa": "منچسترسیتی", "aliases": ["سیتی", "من سیتی"] },
-    { "id": "MUN", "name_en": "Manchester United", "name_fa": "منچستریونایتد", "aliases": ["یونایتد", "من یونایتد"] },
-    { "id": "NEW", "name_en": "Newcastle", "name_fa": "نیوکاسل", "aliases": ["نیوکاسل یونایتد"] },
-    { "id": "NFO", "name_en": "Nottingham Forest", "name_fa": "ناتینگهام فارست", "aliases": ["فارست"] },
-    { "id": "SOU", "name_en": "Southampton", "name_fa": "ساوتهمپتون", "aliases": [] },
-    { "id": "TOT", "name_en": "Tottenham", "name_fa": "تاتنهام", "aliases": ["اسپرز", "تاتنهام هاتسپر"] },
-    { "id": "WHU", "name_en": "West Ham", "name_fa": "وستهم", "aliases": ["وست هم", "چکش‌ها"] },
-    { "id": "WOL", "name_en": "Wolverhampton", "name_fa": "ولورهمپتون", "aliases": ["ولوز"] }
+    {
+      "id": "ARS",
+      "name_en": "Arsenal",
+      "name_fa": "آرسنال",
+      "nickname_fa": "توپچی‌ها",
+      "aliases": [
+        "ارسنال",
+        "آرزنال",
+        "توپچی",
+        "گانرز"
+      ]
+    },
+    {
+      "id": "AVL",
+      "name_en": "Aston Villa",
+      "name_fa": "استون ویلا",
+      "nickname_fa": "شیرها",
+      "aliases": [
+        "ویلا",
+        "ویلایی‌ها",
+        "شیرهای بیرمنگام"
+      ]
+    },
+    {
+      "id": "BOU",
+      "name_en": "Bournemouth",
+      "name_fa": "بورنموث",
+      "nickname_fa": "گیلاس‌ها",
+      "aliases": [
+        "ای‌اف‌سی بورنموث"
+      ]
+    },
+    {
+      "id": "BRE",
+      "name_en": "Brentford",
+      "name_fa": "برنتفورد",
+      "nickname_fa": "زنبورها",
+      "aliases": []
+    },
+    {
+      "id": "BHA",
+      "name_en": "Brighton",
+      "name_fa": "برایتون",
+      "nickname_fa": "مرغ‌های دریایی",
+      "aliases": [
+        "برایتون اند هور آلبیون",
+        "برتون"
+      ]
+    },
+    {
+      "id": "CHE",
+      "name_en": "Chelsea",
+      "name_fa": "چلسی",
+      "nickname_fa": "شیرهای لندن",
+      "aliases": [
+        "بلوز",
+        "پنسیونرها",
+        "چلسیا"
+      ]
+    },
+    {
+      "id": "COV",
+      "name_en": "Coventry City",
+      "name_fa": "کاونتری سیتی",
+      "nickname_fa": "آبی‌های آسمانی",
+      "aliases": [
+        "کاونتری",
+        "آسمانی‌ها"
+      ]
+    },
+    {
+      "id": "CRY",
+      "name_en": "Crystal Palace",
+      "name_fa": "کریستال پالاس",
+      "nickname_fa": "عقاب‌ها",
+      "aliases": [
+        "پالاس",
+        "کریستال پلاس",
+        "پلاس"
+      ]
+    },
+    {
+      "id": "EVE",
+      "name_en": "Everton",
+      "name_fa": "اورتون",
+      "nickname_fa": "تافی‌ها",
+      "aliases": [
+        "تافی‌پزها"
+      ]
+    },
+    {
+      "id": "FUL",
+      "name_en": "Fulham",
+      "name_fa": "فولام",
+      "nickname_fa": "کلبه‌نشین‌ها",
+      "aliases": [
+        "کاتجی‌ها"
+      ]
+    },
+    {
+      "id": "HUL",
+      "name_en": "Hull City",
+      "name_fa": "هال سیتی",
+      "nickname_fa": "ببرها",
+      "aliases": [
+        "هال",
+        "ببرهای کهربایی"
+      ]
+    },
+    {
+      "id": "IPS",
+      "name_en": "Ipswich Town",
+      "name_fa": "ایپسویچ تاون",
+      "nickname_fa": "تراکتورسازان",
+      "aliases": [
+        "ایپسویچ",
+        "پسران تراکتور",
+        "تراکتوربوی‌ها"
+      ]
+    },
+    {
+      "id": "LEE",
+      "name_en": "Leeds United",
+      "name_fa": "لیدز یونایتد",
+      "nickname_fa": "طاووس‌ها",
+      "aliases": [
+        "لیدز",
+        "سفیدها",
+        "پیروها"
+      ]
+    },
+    {
+      "id": "LIV",
+      "name_en": "Liverpool",
+      "name_fa": "لیورپول",
+      "nickname_fa": "قرمزها",
+      "aliases": [
+        "سرخ‌پوشان",
+        "سرخها",
+        "ردز",
+        "لک‌لک‌ها"
+      ]
+    },
+    {
+      "id": "MCI",
+      "name_en": "Manchester City",
+      "name_fa": "منچسترسیتی",
+      "nickname_fa": "شهروندان",
+      "aliases": [
+        "سیتی",
+        "من سیتی",
+        "آبی‌های منچستر"
+      ]
+    },
+    {
+      "id": "MUN",
+      "name_en": "Manchester United",
+      "name_fa": "منچستریونایتد",
+      "nickname_fa": "شیاطین سرخ",
+      "aliases": [
+        "یونایتد",
+        "من یونایتد",
+        "سرخپوشان منچستر",
+        "رد دویلز"
+      ]
+    },
+    {
+      "id": "NEW",
+      "name_en": "Newcastle United",
+      "name_fa": "نیوکاسل",
+      "nickname_fa": "زاغی‌ها",
+      "aliases": [
+        "نیوکاسل یونایتد",
+        "کلاغ‌ها",
+        "زاغ‌ها"
+      ]
+    },
+    {
+      "id": "NFO",
+      "name_en": "Nottingham Forest",
+      "name_fa": "ناتینگهام فارست",
+      "nickname_fa": "درختان حیله‌گر",
+      "aliases": [
+        "فارست",
+        "جنگلی‌ها",
+        "قرمزها"
+      ]
+    },
+    {
+      "id": "TOT",
+      "name_en": "Tottenham",
+      "name_fa": "تاتنهام",
+      "nickname_fa": "خروس‌ها",
+      "aliases": [
+        "تاتنهام هاتسپر",
+        "اسپرز",
+        "سپرز",
+        "تاتز"
+      ]
+    },
+    {
+      "id": "SUN",
+      "name_en": "Sunderland",
+      "name_fa": "ساندرلند",
+      "nickname_fa": "گربه‌های سیاه",
+      "aliases": [
+        "سیاه‌پوشان"
+      ]
+    }
   ],
   "players": [
-    { "id": "m-salah", "name_en": "Mohamed Salah", "name_fa": "محمد صلاح", "team": "LIV", "aliases": ["صلاح"] },
-    { "id": "e-haaland", "name_en": "Erling Haaland", "name_fa": "ارلینگ هالند", "team": "MCI", "aliases": ["هالند"] },
-    { "id": "b-saka", "name_en": "Bukayo Saka", "name_fa": "بوکایو ساکا", "team": "ARS", "aliases": ["ساکا"] },
-    { "id": "c-palmer", "name_en": "Cole Palmer", "name_fa": "کول پالمر", "team": "CHE", "aliases": ["پالمر"] }
+    {
+      "id": "raya-ars",
+      "name_en": "David Raya Martín",
+      "name_fa": "داوید رایا",
+      "team": "ARS",
+      "position": "GK",
+      "aliases": [
+        "رایا"
+      ]
+    },
+    {
+      "id": "gabriel-ars",
+      "name_en": "Gabriel Magalhães",
+      "name_fa": "گابریل ماگالائس",
+      "team": "ARS",
+      "position": "DEF",
+      "aliases": [
+        "ماگالائس"
+      ]
+    },
+    {
+      "id": "lindel-f-avl",
+      "name_en": "Victor Lindelöf",
+      "name_fa": "ویکتور لیندلوف",
+      "team": "AVL",
+      "position": "DEF",
+      "aliases": [
+        "لیندلوف"
+      ]
+    },
+    {
+      "id": "silva-bou",
+      "name_en": "António Silva",
+      "name_fa": "آنتونیو سیلوا",
+      "team": "BOU",
+      "position": "DEF",
+      "aliases": [
+        "سیلوا"
+      ]
+    },
+    {
+      "id": "hill-bou",
+      "name_en": "James Hill",
+      "name_fa": "جیمز هیل",
+      "team": "BOU",
+      "position": "DEF",
+      "aliases": [
+        "هیل"
+      ]
+    },
+    {
+      "id": "petrovi-bou",
+      "name_en": "Đorđe Petrović",
+      "name_fa": "جورجه پتروویچ",
+      "team": "BOU",
+      "position": "GK",
+      "aliases": [
+        "پتروویچ"
+      ]
+    },
+    {
+      "id": "kelleher-bre",
+      "name_en": "Caoimhín Kelleher",
+      "name_fa": "کیوین کلهر",
+      "team": "BRE",
+      "position": "GK",
+      "aliases": [
+        "کلهر"
+      ]
+    },
+    {
+      "id": "ajer-bre",
+      "name_en": "Kristoffer Ajer",
+      "name_fa": "کریستوفر آیر",
+      "team": "BRE",
+      "position": "DEF",
+      "aliases": [
+        "آیر"
+      ]
+    },
+    {
+      "id": "verbruggen-bha",
+      "name_en": "Bart Verbruggen",
+      "name_fa": "بارت فربروگن",
+      "team": "BHA",
+      "position": "GK",
+      "aliases": [
+        "فربروگن"
+      ]
+    },
+    {
+      "id": "rushworth-cov",
+      "name_en": "Carl Rushworth",
+      "name_fa": "کارل راشورث",
+      "team": "COV",
+      "position": "GK",
+      "aliases": [
+        "راشورث"
+      ]
+    },
+    {
+      "id": "richards-cry",
+      "name_en": "Chris Richards",
+      "name_fa": "کریس ریچاردز",
+      "team": "CRY",
+      "position": "DEF",
+      "aliases": [
+        "ریچاردز"
+      ]
+    },
+    {
+      "id": "tarkowski-eve",
+      "name_en": "James Tarkowski",
+      "name_fa": "جیمز تارکووسکی",
+      "team": "EVE",
+      "position": "DEF",
+      "aliases": [
+        "تارکووسکی"
+      ]
+    },
+    {
+      "id": "pickford-eve",
+      "name_en": "Jordan Pickford",
+      "name_fa": "جردن پیکفورد",
+      "team": "EVE",
+      "position": "GK",
+      "aliases": [
+        "پیکفورد"
+      ]
+    },
+    {
+      "id": "leno-ful",
+      "name_en": "Bernd Leno",
+      "name_fa": "برنت لنو",
+      "team": "FUL",
+      "position": "GK",
+      "aliases": [
+        "لنو"
+      ]
+    },
+    {
+      "id": "bassey-ful",
+      "name_en": "Calvin Bassey",
+      "name_fa": "کالوین باسی",
+      "team": "FUL",
+      "position": "DEF",
+      "aliases": [
+        "باسی"
+      ]
+    },
+    {
+      "id": "tzolakis-hul",
+      "name_en": "Konstantinos Tzolakis",
+      "name_fa": "کونستانتینوس تسولاکیس",
+      "team": "HUL",
+      "position": "GK",
+      "aliases": [
+        "تسولاکیس"
+      ]
+    },
+    {
+      "id": "o-shea-ips",
+      "name_en": "Dara O'Shea",
+      "name_fa": "دارا اوشی",
+      "team": "IPS",
+      "position": "DEF",
+      "aliases": [
+        "اوشی"
+      ]
+    },
+    {
+      "id": "diop-ips",
+      "name_en": "Issa Diop",
+      "name_fa": "عیسی دیوپ",
+      "team": "IPS",
+      "position": "DEF",
+      "aliases": [
+        "دیوپ"
+      ]
+    },
+    {
+      "id": "davis-ips",
+      "name_en": "Leif Davis",
+      "name_fa": "لیف دیویس",
+      "team": "IPS",
+      "position": "DEF",
+      "aliases": [
+        "دیویس"
+      ]
+    },
+    {
+      "id": "ampadu-lee",
+      "name_en": "Ethan Ampadu",
+      "name_fa": "ایتن امپادو",
+      "team": "LEE",
+      "position": "MID",
+      "aliases": [
+        "امپادو"
+      ]
+    },
+    {
+      "id": "trafford-lee",
+      "name_en": "James Trafford",
+      "name_fa": "جیمز ترافورد",
+      "team": "LEE",
+      "position": "GK",
+      "aliases": [
+        "ترافورد"
+      ]
+    },
+    {
+      "id": "muharemovi-lee",
+      "name_en": "Tarik Muharemović",
+      "name_fa": "طارق محرموویچ",
+      "team": "LEE",
+      "position": "DEF",
+      "aliases": [
+        "محرموویچ"
+      ]
+    },
+    {
+      "id": "a-becker-liv",
+      "name_en": "Alisson Becker",
+      "name_fa": "آلیسون بکر",
+      "team": "LIV",
+      "position": "GK",
+      "aliases": [
+        "بکر"
+      ]
+    },
+    {
+      "id": "virgil-liv",
+      "name_en": "Virgil van Dijk",
+      "name_fa": "ویرجیل فن دایک",
+      "team": "LIV",
+      "position": "DEF",
+      "aliases": [
+        "دایک"
+      ],
+      "nickname_fa": "ژنرال دفاعی"
+    },
+    {
+      "id": "donnarumma-mci",
+      "name_en": "Gianluigi Donnarumma",
+      "name_fa": "جانلوئیجی دوناروما",
+      "team": "MCI",
+      "position": "GK",
+      "aliases": [
+        "دوناروما"
+      ]
+    },
+    {
+      "id": "r-ben-mci",
+      "name_en": "Rúben Dias",
+      "name_fa": "روبن دیاس",
+      "team": "MCI",
+      "position": "DEF",
+      "aliases": [
+        "دیاس"
+      ]
+    },
+    {
+      "id": "lammens-mun",
+      "name_en": "Senne Lammens",
+      "name_fa": "سنه لمنس",
+      "team": "MUN",
+      "position": "GK",
+      "aliases": [
+        "لمنس"
+      ]
+    },
+    {
+      "id": "horn-ek-new",
+      "name_en": "Lukás Hornícek",
+      "name_fa": "لوکاش هورنیچک",
+      "team": "NEW",
+      "position": "GK",
+      "aliases": [
+        "هورنیچک"
+      ]
+    },
+    {
+      "id": "sels-nfo",
+      "name_en": "Matz Sels",
+      "name_fa": "متز سلز",
+      "team": "NFO",
+      "position": "GK",
+      "aliases": [
+        "سلز"
+      ]
+    },
+    {
+      "id": "kinsky-tot",
+      "name_en": "Antonín Kinský",
+      "name_fa": "آنتونین کینسکی",
+      "team": "TOT",
+      "position": "GK",
+      "aliases": [
+        "کینسکی"
+      ]
+    },
+    {
+      "id": "van-hecke-tot",
+      "name_en": "Jan Paul van Hecke",
+      "name_fa": "یان پل فن هکه",
+      "team": "TOT",
+      "position": "DEF",
+      "aliases": [
+        "هکه"
+      ]
+    },
+    {
+      "id": "roefs-sun",
+      "name_en": "Robin Roefs",
+      "name_fa": "رابین روئفس",
+      "team": "SUN",
+      "position": "GK",
+      "aliases": [
+        "روئفس"
+      ]
+    },
+    {
+      "id": "hall-new",
+      "name_en": "Lewis Hall",
+      "name_fa": "لوئیس هال",
+      "team": "NEW",
+      "position": "DEF",
+      "aliases": [
+        "هال"
+      ]
+    },
+    {
+      "id": "murillo-nfo",
+      "name_en": "Murillo",
+      "name_fa": "موریلو",
+      "team": "NFO",
+      "position": "DEF",
+      "aliases": []
+    },
+    {
+      "id": "dewsbury-hall-eve",
+      "name_en": "Kiernan Dewsbury-Hall",
+      "name_fa": "کیرنان دوسبری-هال",
+      "team": "EVE",
+      "position": "MID",
+      "aliases": [
+        "دوسبری-هال"
+      ]
+    },
+    {
+      "id": "dasilva-cov",
+      "name_en": "Jay Dasilva",
+      "name_fa": "جی داسیلوا",
+      "team": "COV",
+      "position": "DEF",
+      "aliases": [
+        "داسیلوا"
+      ]
+    },
+    {
+      "id": "truffert-bou",
+      "name_en": "Adrien Truffert",
+      "name_fa": "آدریان تروفر",
+      "team": "BOU",
+      "position": "DEF",
+      "aliases": [
+        "تروفر"
+      ]
+    },
+    {
+      "id": "n-williams-nfo",
+      "name_en": "Neco Williams",
+      "name_fa": "نکو ویلیامز",
+      "team": "NFO",
+      "position": "DEF",
+      "aliases": [
+        "ویلیامز"
+      ]
+    },
+    {
+      "id": "mbeumo-mun",
+      "name_en": "Bryan Mbeumo",
+      "name_fa": "برایان امبومو",
+      "team": "MUN",
+      "position": "MID",
+      "aliases": [
+        "امبومو"
+      ]
+    },
+    {
+      "id": "haaland-mci",
+      "name_en": "Erling Haaland",
+      "name_fa": "ارلینگ هالند",
+      "team": "MCI",
+      "position": "FWD",
+      "aliases": [
+        "هالند"
+      ],
+      "nickname_fa": "هیولای نروژی"
+    },
+    {
+      "id": "vuskovic-bha",
+      "name_en": "Luka Vušković",
+      "name_fa": "لوکا ووشکوویچ",
+      "team": "BHA",
+      "position": "DEF",
+      "aliases": [
+        "ووشکوویچ"
+      ]
+    },
+    {
+      "id": "mcburnie-hul",
+      "name_en": "Oli McBurnie",
+      "name_fa": "اولی مک‌برنی",
+      "team": "HUL",
+      "position": "FWD",
+      "aliases": [
+        "مک‌برنی"
+      ]
+    },
+    {
+      "id": "barnes-new",
+      "name_en": "Harvey Barnes",
+      "name_fa": "هاروی بارنز",
+      "team": "NEW",
+      "position": "MID",
+      "aliases": [
+        "بارنز"
+      ]
+    },
+    {
+      "id": "wharton-cry",
+      "name_en": "Adam Wharton",
+      "name_fa": "آدام وارتون",
+      "team": "CRY",
+      "position": "MID",
+      "aliases": [
+        "وارتون"
+      ]
+    },
+    {
+      "id": "kamara-avl",
+      "name_en": "Boubacar Kamara",
+      "name_fa": "بوباکار کامارا",
+      "team": "AVL",
+      "position": "MID",
+      "aliases": [
+        "کامارا"
+      ]
+    },
+    {
+      "id": "justin-lee",
+      "name_en": "James Justin",
+      "name_fa": "جیمز جاستین",
+      "team": "LEE",
+      "position": "DEF",
+      "aliases": [
+        "جاستین"
+      ]
+    },
+    {
+      "id": "gro-bha",
+      "name_en": "Pascal Groß",
+      "name_fa": "پاسکال گروس",
+      "team": "BHA",
+      "position": "MID",
+      "aliases": [
+        "گروس"
+      ]
+    },
+    {
+      "id": "rogers-che",
+      "name_en": "Morgan Rogers",
+      "name_fa": "مورگان راجرز",
+      "team": "CHE",
+      "position": "MID",
+      "aliases": [
+        "راجرز"
+      ]
+    },
+    {
+      "id": "palmer-che",
+      "name_en": "Cole Palmer",
+      "name_fa": "کول پالمر",
+      "team": "CHE",
+      "position": "MID",
+      "aliases": [
+        "پالمر"
+      ],
+      "nickname_fa": "سرد (Cold)"
+    },
+    {
+      "id": "kamada-cry",
+      "name_en": "Daichi Kamada",
+      "name_fa": "دایچی کامادا",
+      "team": "CRY",
+      "position": "MID",
+      "aliases": [
+        "کامادا"
+      ]
+    },
+    {
+      "id": "tonali-tot",
+      "name_en": "Sandro Tonali",
+      "name_fa": "ساندرو تونالی",
+      "team": "TOT",
+      "position": "MID",
+      "aliases": [
+        "تونالی"
+      ]
+    },
+    {
+      "id": "rayan-bou",
+      "name_en": "Rayan",
+      "name_fa": "رایان",
+      "team": "BOU",
+      "position": "MID",
+      "aliases": []
+    },
+    {
+      "id": "gomez-bha",
+      "name_en": "Diego Gómez",
+      "name_fa": "دیگو گومز",
+      "team": "BHA",
+      "position": "MID",
+      "aliases": [
+        "گومز"
+      ]
+    },
+    {
+      "id": "mitchell-cry",
+      "name_en": "Tyrick Mitchell",
+      "name_fa": "تایریک میچل",
+      "team": "CRY",
+      "position": "DEF",
+      "aliases": [
+        "میچل"
+      ]
+    },
+    {
+      "id": "calvert-lewin-lee",
+      "name_en": "Dominic Calvert-Lewin",
+      "name_fa": "دامینیک کالورت-لوین",
+      "team": "LEE",
+      "position": "FWD",
+      "aliases": [
+        "کالورت-لوین"
+      ]
+    },
+    {
+      "id": "e-le-f-e-sun",
+      "name_en": "Enzo Le Fée",
+      "name_fa": "انزو لی فی",
+      "team": "SUN",
+      "position": "MID",
+      "aliases": [
+        "فی"
+      ]
+    },
+    {
+      "id": "jacquet-liv",
+      "name_en": "Jeremy Jacquet",
+      "name_fa": "ژرمی ژاکه",
+      "team": "LIV",
+      "position": "DEF",
+      "aliases": [
+        "ژاکه"
+      ]
+    },
+    {
+      "id": "armstrong-eve",
+      "name_en": "Harrison Armstrong",
+      "name_fa": "هریسون آرمسترانگ",
+      "team": "EVE",
+      "position": "MID",
+      "aliases": [
+        "آرمسترانگ"
+      ]
+    },
+    {
+      "id": "maguire-mun",
+      "name_en": "Harry Maguire",
+      "name_fa": "هری مگوایر",
+      "team": "MUN",
+      "position": "DEF",
+      "aliases": [
+        "مگوایر"
+      ]
+    },
+    {
+      "id": "slater-hul",
+      "name_en": "Regan Slater",
+      "name_fa": "ریگان اسلیتر",
+      "team": "HUL",
+      "position": "MID",
+      "aliases": [
+        "اسلیتر"
+      ]
+    },
+    {
+      "id": "barry-eve",
+      "name_en": "Thierno Barry",
+      "name_fa": "تیرنو باری",
+      "team": "EVE",
+      "position": "FWD",
+      "aliases": [
+        "باری"
+      ]
+    },
+    {
+      "id": "ajayi-hul",
+      "name_en": "Semi Ajayi",
+      "name_fa": "سمی اجایی",
+      "team": "HUL",
+      "position": "DEF",
+      "aliases": [
+        "اجایی"
+      ]
+    },
+    {
+      "id": "smith-bou",
+      "name_en": "Adam Smith",
+      "name_fa": "آدام اسمیت",
+      "team": "BOU",
+      "position": "DEF",
+      "aliases": [
+        "اسمیت"
+      ]
+    },
+    {
+      "id": "sadiki-sun",
+      "name_en": "Noah Sadiki",
+      "name_fa": "نواه سادیکی",
+      "team": "SUN",
+      "position": "MID",
+      "aliases": [
+        "سادیکی"
+      ]
+    },
+    {
+      "id": "egan-hul",
+      "name_en": "John Egan",
+      "name_fa": "جان ایگان",
+      "team": "HUL",
+      "position": "DEF",
+      "aliases": [
+        "ایگان"
+      ]
+    },
+    {
+      "id": "tavernier-bou",
+      "name_en": "Marcus Tavernier",
+      "name_fa": "مارکوس تاورنیه",
+      "team": "BOU",
+      "position": "MID",
+      "aliases": [
+        "تاورنیه"
+      ]
+    },
+    {
+      "id": "evanilson-bou",
+      "name_en": "Evanilson",
+      "name_fa": "اوانیلسون",
+      "team": "BOU",
+      "position": "FWD",
+      "aliases": []
+    },
+    {
+      "id": "mcatee-nfo",
+      "name_en": "James McAtee",
+      "name_fa": "جیمز مک‌آتی",
+      "team": "NFO",
+      "position": "MID",
+      "aliases": [
+        "مک‌آتی"
+      ]
+    },
+    {
+      "id": "enciso-ips",
+      "name_en": "Julio Enciso",
+      "name_fa": "خولیو انسیسو",
+      "team": "IPS",
+      "position": "MID",
+      "aliases": [
+        "انسیسو"
+      ]
+    },
+    {
+      "id": "thiago-bre",
+      "name_en": "Igor Thiago",
+      "name_fa": "ایگور تیاگو",
+      "team": "BRE",
+      "position": "FWD",
+      "aliases": [
+        "تیاگو"
+      ]
+    },
+    {
+      "id": "degaard-ars",
+      "name_en": "Martin Ødegaard",
+      "name_fa": "مارتین اودگارد",
+      "team": "ARS",
+      "position": "MID",
+      "aliases": [
+        "اودگارد"
+      ],
+      "nickname_fa": "کاپیتان نروژی"
+    },
+    {
+      "id": "rice-ars",
+      "name_en": "Declan Rice",
+      "name_fa": "دکلان رایس",
+      "team": "ARS",
+      "position": "MID",
+      "aliases": [
+        "رایس"
+      ]
+    },
+    {
+      "id": "de-cuyper-bha",
+      "name_en": "Maxim De Cuyper",
+      "name_fa": "ماکسیم دی کویپر",
+      "team": "BHA",
+      "position": "DEF",
+      "aliases": [
+        "کویپر"
+      ]
+    },
+    {
+      "id": "kerkez-liv",
+      "name_en": "Milos Kerkez",
+      "name_fa": "میلوش کرکز",
+      "team": "LIV",
+      "position": "DEF",
+      "aliases": [
+        "کرکز"
+      ]
+    },
+    {
+      "id": "iwobi-ful",
+      "name_en": "Alex Iwobi",
+      "name_fa": "الکس ایووبی",
+      "team": "FUL",
+      "position": "MID",
+      "aliases": [
+        "ایووبی"
+      ]
+    },
+    {
+      "id": "gonzalo-ful",
+      "name_en": "Gonzalo García",
+      "name_fa": "گونزالو گارسیا",
+      "team": "FUL",
+      "position": "FWD",
+      "aliases": [
+        "گارسیا"
+      ]
+    },
+    {
+      "id": "xhaka-sun",
+      "name_en": "Granit Xhaka",
+      "name_fa": "گرانیت ژاکا",
+      "team": "SUN",
+      "position": "MID",
+      "aliases": [
+        "ژاکا"
+      ]
+    },
+    {
+      "id": "suzuki-avl",
+      "name_en": "Zion Suzuki",
+      "name_fa": "زیون سوزوکی",
+      "team": "AVL",
+      "position": "GK",
+      "aliases": [
+        "سوزوکی"
+      ]
+    },
+    {
+      "id": "janelt-bre",
+      "name_en": "Vitaly Janelt",
+      "name_fa": "ویتالی جانلت",
+      "team": "BRE",
+      "position": "MID",
+      "aliases": [
+        "جانلت"
+      ]
+    },
+    {
+      "id": "van-ewijk-cov",
+      "name_en": "Milan van Ewijk",
+      "name_fa": "میلان فن اویک",
+      "team": "COV",
+      "position": "DEF",
+      "aliases": [
+        "اویک"
+      ]
+    },
+    {
+      "id": "bogle-lee",
+      "name_en": "Jayden Bogle",
+      "name_fa": "جیدن بوگل",
+      "team": "LEE",
+      "position": "DEF",
+      "aliases": [
+        "بوگل"
+      ]
+    },
+    {
+      "id": "b-fernandes-mun",
+      "name_en": "Bruno Fernandes",
+      "name_fa": "برونو فرناندز",
+      "team": "MUN",
+      "position": "MID",
+      "aliases": [
+        "فرناندز"
+      ],
+      "nickname_fa": "برونوی زخمی"
+    },
+    {
+      "id": "gibbs-white-nfo",
+      "name_en": "Morgan Gibbs-White",
+      "name_fa": "مورگان گیبز وایت",
+      "team": "NFO",
+      "position": "MID",
+      "aliases": [
+        "وایت"
+      ]
+    },
+    {
+      "id": "king-ful",
+      "name_en": "Josh King",
+      "name_fa": "جاش کینگ",
+      "team": "FUL",
+      "position": "MID",
+      "aliases": [
+        "کینگ"
+      ]
+    },
+    {
+      "id": "branthwaite-eve",
+      "name_en": "Jarrad Branthwaite",
+      "name_fa": "جارد برنثویت",
+      "team": "EVE",
+      "position": "DEF",
+      "aliases": [
+        "برنثویت"
+      ]
+    },
+    {
+      "id": "mykolenko-eve",
+      "name_en": "Vitalii Mykolenko",
+      "name_fa": "ویتالی میکولنکو",
+      "team": "EVE",
+      "position": "DEF",
+      "aliases": [
+        "میکولنکو"
+      ]
+    },
+    {
+      "id": "reinildo-sun",
+      "name_en": "Reinildo Mandava",
+      "name_fa": "رینیلدو مانداوا",
+      "team": "SUN",
+      "position": "DEF",
+      "aliases": [
+        "مانداوا"
+      ]
+    },
+    {
+      "id": "wirtz-liv",
+      "name_en": "Florian Wirtz",
+      "name_fa": "فلوریان ویرتز",
+      "team": "LIV",
+      "position": "MID",
+      "aliases": [
+        "ویرتز"
+      ],
+      "nickname_fa": "جادوگر آلمانی"
+    },
+    {
+      "id": "mcginn-avl",
+      "name_en": "John McGinn",
+      "name_fa": "جان مک‌گین",
+      "team": "AVL",
+      "position": "MID",
+      "aliases": [
+        "مک‌گین"
+      ]
+    },
+    {
+      "id": "robinson-ful",
+      "name_en": "Antonee Robinson",
+      "name_fa": "آنتونی رابینسون",
+      "team": "FUL",
+      "position": "DEF",
+      "aliases": [
+        "رابینسون"
+      ]
+    },
+    {
+      "id": "anderson-mci",
+      "name_en": "Elliot Anderson",
+      "name_fa": "الیوت اندرسون",
+      "team": "MCI",
+      "position": "MID",
+      "aliases": [
+        "اندرسون"
+      ]
+    },
+    {
+      "id": "boscagli-bha",
+      "name_en": "Olivier Boscagli",
+      "name_fa": "اولیویه بوسکالی",
+      "team": "BHA",
+      "position": "DEF",
+      "aliases": [
+        "بوسکالی"
+      ]
+    },
+    {
+      "id": "garner-eve",
+      "name_en": "James Garner",
+      "name_fa": "جیمز گارنر",
+      "team": "EVE",
+      "position": "MID",
+      "aliases": [
+        "گارنر"
+      ]
+    },
+    {
+      "id": "schade-bre",
+      "name_en": "Kevin Schade",
+      "name_fa": "کوین شاده",
+      "team": "BRE",
+      "position": "MID",
+      "aliases": [
+        "شاده"
+      ]
+    },
+    {
+      "id": "lewis-potter-bre",
+      "name_en": "Keane Lewis-Potter",
+      "name_fa": "کین لویس-پاتر",
+      "team": "BRE",
+      "position": "MID",
+      "aliases": [
+        "لویس-پاتر"
+      ]
+    },
+    {
+      "id": "calafiori-ars",
+      "name_en": "Riccardo Calafiori",
+      "name_fa": "ریکاردو کالافیوری",
+      "team": "ARS",
+      "position": "DEF",
+      "aliases": [
+        "کالافیوری"
+      ]
+    },
+    {
+      "id": "ndiaye-mci",
+      "name_en": "Iliman Ndiaye",
+      "name_fa": "ایلیمان ندای",
+      "team": "MCI",
+      "position": "MID",
+      "aliases": [
+        "ندای"
+      ]
+    },
+    {
+      "id": "mac-allister-liv",
+      "name_en": "Alexis Mac Allister",
+      "name_fa": "الکسیس مک آلیستر",
+      "team": "LIV",
+      "position": "MID",
+      "aliases": [
+        "آلیستر"
+      ]
+    },
+    {
+      "id": "schlager-nfo",
+      "name_en": "Xaver Schlager",
+      "name_fa": "خاور اشلاگر",
+      "team": "NFO",
+      "position": "MID",
+      "aliases": [
+        "اشلاگر"
+      ]
+    },
+    {
+      "id": "castagne-ful",
+      "name_en": "Timothy Castagne",
+      "name_fa": "تیموتی کاستانیه",
+      "team": "FUL",
+      "position": "DEF",
+      "aliases": [
+        "کاستانیه"
+      ]
+    },
+    {
+      "id": "dunk-bha",
+      "name_en": "Lewis Dunk",
+      "name_fa": "لوئیس دانک",
+      "team": "BHA",
+      "position": "DEF",
+      "aliases": [
+        "دانک"
+      ]
+    },
+    {
+      "id": "isak-liv",
+      "name_en": "Alexander Isak",
+      "name_fa": "الکساندر ایساک",
+      "team": "LIV",
+      "position": "FWD",
+      "aliases": [
+        "ایساک"
+      ],
+      "nickname_fa": "مهاجم رویایی"
+    },
+    {
+      "id": "colwill-che",
+      "name_en": "Levi Samuels Colwill",
+      "name_fa": "لوی کولویل",
+      "team": "CHE",
+      "position": "DEF",
+      "aliases": [
+        "کولویل"
+      ]
+    },
+    {
+      "id": "kayode-bre",
+      "name_en": "Michael Kayode",
+      "name_fa": "مایکل کایوده",
+      "team": "BRE",
+      "position": "DEF",
+      "aliases": [
+        "کایوده"
+      ]
+    },
+    {
+      "id": "ayari-bha",
+      "name_en": "Yasin Ayari",
+      "name_fa": "یاسین عیاری",
+      "team": "BHA",
+      "position": "MID",
+      "aliases": [
+        "عیاری"
+      ]
+    },
+    {
+      "id": "neto-che",
+      "name_en": "Pedro Neto",
+      "name_fa": "پدرو نتو",
+      "team": "CHE",
+      "position": "MID",
+      "aliases": [
+        "نتو"
+      ]
+    },
+    {
+      "id": "berge-ful",
+      "name_en": "Sander Berge",
+      "name_fa": "ساندر برگ",
+      "team": "FUL",
+      "position": "MID",
+      "aliases": [
+        "برگ"
+      ]
+    },
+    {
+      "id": "van-de-ven-tot",
+      "name_en": "Micky van de Ven",
+      "name_fa": "میکی فن ده فن",
+      "team": "TOT",
+      "position": "DEF",
+      "aliases": [
+        "فن"
+      ]
+    },
+    {
+      "id": "charles-ful",
+      "name_en": "Shea Charles",
+      "name_fa": "شی چارلز",
+      "team": "FUL",
+      "position": "MID",
+      "aliases": [
+        "چارلز"
+      ]
+    },
+    {
+      "id": "pinnock-cov",
+      "name_en": "Ethan Pinnock",
+      "name_fa": "ایتن پیناک",
+      "team": "COV",
+      "position": "DEF",
+      "aliases": [
+        "پیناک"
+      ]
+    },
+    {
+      "id": "konsa-ars",
+      "name_en": "Ezri Konsa Ngoyo",
+      "name_fa": "ازری کنسا",
+      "team": "ARS",
+      "position": "DEF",
+      "aliases": [
+        "کنسا"
+      ]
+    },
+    {
+      "id": "havertz-ars",
+      "name_en": "Kai Havertz",
+      "name_fa": "کای هاورتز",
+      "team": "ARS",
+      "position": "FWD",
+      "aliases": [
+        "هاورتز"
+      ]
+    },
+    {
+      "id": "rudoni-cov",
+      "name_en": "Jack Rudoni",
+      "name_fa": "جک رودونی",
+      "team": "COV",
+      "position": "MID",
+      "aliases": [
+        "رودونی"
+      ]
+    },
+    {
+      "id": "bobb-ful",
+      "name_en": "Oscar Bobb",
+      "name_fa": "اسکار باب",
+      "team": "FUL",
+      "position": "MID",
+      "aliases": [
+        "باب"
+      ]
+    },
+    {
+      "id": "coyle-hul",
+      "name_en": "Lewie Coyle",
+      "name_fa": "لوی کویل",
+      "team": "HUL",
+      "position": "DEF",
+      "aliases": [
+        "کویل"
+      ]
+    },
+    {
+      "id": "adams-bou",
+      "name_en": "Tyler Adams",
+      "name_fa": "تایلر آدامز",
+      "team": "BOU",
+      "position": "MID",
+      "aliases": [
+        "آدامز"
+      ]
+    },
+    {
+      "id": "kostoulas-bha",
+      "name_en": "Charalampos Kostoulas",
+      "name_fa": "چارالامپوس کوستولاس",
+      "team": "BHA",
+      "position": "FWD",
+      "aliases": [
+        "کوستولاس"
+      ]
+    },
+    {
+      "id": "n-jackson-avl",
+      "name_en": "Nicolas Jackson",
+      "name_fa": "نیکلاس جکسون",
+      "team": "AVL",
+      "position": "FWD",
+      "aliases": [
+        "جکسون"
+      ]
+    },
+    {
+      "id": "canvot-cry",
+      "name_en": "Jaydee Canvot",
+      "name_fa": "جیدی کانوو",
+      "team": "CRY",
+      "position": "DEF",
+      "aliases": [
+        "کانوو"
+      ]
+    },
+    {
+      "id": "gu-hi-mci",
+      "name_en": "Marc Guéhi",
+      "name_fa": "مارک گی‌هی",
+      "team": "MCI",
+      "position": "DEF",
+      "aliases": [
+        "گی‌هی"
+      ]
+    },
+    {
+      "id": "grimes-cov",
+      "name_en": "Matt Grimes",
+      "name_fa": "مت گریمز",
+      "team": "COV",
+      "position": "MID",
+      "aliases": [
+        "گریمز"
+      ]
+    },
+    {
+      "id": "thiaw-new",
+      "name_en": "Malick Thiaw",
+      "name_fa": "مالیک تیاو",
+      "team": "NEW",
+      "position": "DEF",
+      "aliases": [
+        "تیاو"
+      ]
+    },
+    {
+      "id": "jair-cunha-nfo",
+      "name_en": "Jair Cunha",
+      "name_fa": "ژایر کونیا",
+      "team": "NFO",
+      "position": "DEF",
+      "aliases": [
+        "کونیا"
+      ]
+    },
+    {
+      "id": "dalot-mun",
+      "name_en": "Diogo Dalot",
+      "name_fa": "دیوگو دالو",
+      "team": "MUN",
+      "position": "DEF",
+      "aliases": [
+        "دالو"
+      ]
+    },
+    {
+      "id": "gray-tot",
+      "name_en": "Archie Gray",
+      "name_fa": "آرچی گری",
+      "team": "TOT",
+      "position": "MID",
+      "aliases": [
+        "گری"
+      ]
+    },
+    {
+      "id": "wissa-new",
+      "name_en": "Yoane Wissa",
+      "name_fa": "یوآن ویسا",
+      "team": "NEW",
+      "position": "FWD",
+      "aliases": [
+        "ویسا"
+      ]
+    },
+    {
+      "id": "cunha-mun",
+      "name_en": "Matheus Cunha",
+      "name_fa": "متئوس کونیا",
+      "team": "MUN",
+      "position": "MID",
+      "aliases": [
+        "کونیا"
+      ]
+    },
+    {
+      "id": "gvardiol-mci",
+      "name_en": "Joško Gvardiol",
+      "name_fa": "یوشکو گواردیول",
+      "team": "MCI",
+      "position": "DEF",
+      "aliases": [
+        "گواردیول"
+      ]
+    },
+    {
+      "id": "giles-hul",
+      "name_en": "Ryan Giles",
+      "name_fa": "رایان گیلز",
+      "team": "HUL",
+      "position": "DEF",
+      "aliases": [
+        "گیلز"
+      ]
+    },
+    {
+      "id": "belloumi-hul",
+      "name_en": "Mohamed Belloumi",
+      "name_fa": "محمد بلومی",
+      "team": "HUL",
+      "position": "MID",
+      "aliases": [
+        "بلومی"
+      ]
+    },
+    {
+      "id": "yeremy-cry",
+      "name_en": "Yéremy Pino Santos",
+      "name_fa": "یرمی پینو",
+      "team": "CRY",
+      "position": "MID",
+      "aliases": [
+        "پینو"
+      ]
+    },
+    {
+      "id": "khalaili-cry",
+      "name_en": "Anan Khalaili",
+      "name_fa": "عنان خلایلی",
+      "team": "CRY",
+      "position": "DEF",
+      "aliases": [
+        "خلایلی"
+      ]
+    },
+    {
+      "id": "elvedi-lee",
+      "name_en": "Nico Elvedi",
+      "name_fa": "نیکو الودی",
+      "team": "LEE",
+      "position": "DEF",
+      "aliases": [
+        "الودی"
+      ]
+    },
+    {
+      "id": "mukiele-sun",
+      "name_en": "Nordi Mukiele",
+      "name_fa": "نوردی موکیله",
+      "team": "SUN",
+      "position": "DEF",
+      "aliases": [
+        "موکیله"
+      ]
+    },
+    {
+      "id": "delap-nfo",
+      "name_en": "Liam Delap",
+      "name_fa": "لیام دلپ",
+      "team": "NFO",
+      "position": "FWD",
+      "aliases": [
+        "دلپ"
+      ]
+    },
+    {
+      "id": "thomas-cov",
+      "name_en": "Bobby Thomas",
+      "name_fa": "بابی توماس",
+      "team": "COV",
+      "position": "DEF",
+      "aliases": [
+        "توماس"
+      ]
+    },
+    {
+      "id": "stach-lee",
+      "name_en": "Anton Stach",
+      "name_fa": "آنتون استش",
+      "team": "LEE",
+      "position": "MID",
+      "aliases": [
+        "استش"
+      ]
+    },
+    {
+      "id": "robertson-tot",
+      "name_en": "Andrew Robertson",
+      "name_fa": "اندرو رابرتسون",
+      "team": "TOT",
+      "position": "DEF",
+      "aliases": [
+        "رابرتسون"
+      ]
+    },
+    {
+      "id": "araujo-liv",
+      "name_en": "Ronald Araujo",
+      "name_fa": "رونالد آرائوخو",
+      "team": "LIV",
+      "position": "DEF",
+      "aliases": [
+        "آرائوخو"
+      ]
+    },
+    {
+      "id": "palacios-ips",
+      "name_en": "Exequiel Palacios",
+      "name_fa": "اکسکیل پالاسیوس",
+      "team": "IPS",
+      "position": "MID",
+      "aliases": [
+        "پالاسیوس"
+      ]
+    },
+    {
+      "id": "cash-avl",
+      "name_en": "Matty Cash",
+      "name_fa": "متی کش",
+      "team": "AVL",
+      "position": "DEF",
+      "aliases": [
+        "کش"
+      ]
+    },
+    {
+      "id": "tielemans-mun",
+      "name_en": "Youri Tielemans",
+      "name_fa": "یوری تیلمانس",
+      "team": "MUN",
+      "position": "MID",
+      "aliases": [
+        "تیلمانس"
+      ]
+    },
+    {
+      "id": "marmoush-tot",
+      "name_en": "Omar Marmoush",
+      "name_fa": "عمر مرموش",
+      "team": "TOT",
+      "position": "FWD",
+      "aliases": [
+        "مرموش"
+      ]
+    },
+    {
+      "id": "emersonn-ips",
+      "name_en": "Emersonn",
+      "name_fa": "امرسون",
+      "team": "IPS",
+      "position": "FWD",
+      "aliases": []
+    },
+    {
+      "id": "yirenkyi-cov",
+      "name_en": "Caleb Yirenkyi",
+      "name_fa": "کالب ییرنکی",
+      "team": "COV",
+      "position": "MID",
+      "aliases": [
+        "ییرنکی"
+      ]
+    },
+    {
+      "id": "hume-sun",
+      "name_en": "Trai Hume",
+      "name_fa": "ترای هیوم",
+      "team": "SUN",
+      "position": "DEF",
+      "aliases": [
+        "هیوم"
+      ]
+    },
+    {
+      "id": "george-eve",
+      "name_en": "Tyrique George",
+      "name_fa": "تایریک جورج",
+      "team": "EVE",
+      "position": "MID",
+      "aliases": [
+        "جورج"
+      ]
+    },
+    {
+      "id": "mu-oz-nfo",
+      "name_en": "Daniel Muñoz Mejía",
+      "name_fa": "دنیل مونیوز",
+      "team": "NFO",
+      "position": "DEF",
+      "aliases": [
+        "مونیوز"
+      ]
+    },
+    {
+      "id": "lacroix-che",
+      "name_en": "Maxence Lacroix",
+      "name_fa": "مکسانس لکروا",
+      "team": "CHE",
+      "position": "DEF",
+      "aliases": [
+        "لکروا"
+      ]
+    },
+    {
+      "id": "tanaka-lee",
+      "name_en": "Tanaka Ao",
+      "name_fa": "آئو تاناکا",
+      "team": "LEE",
+      "position": "MID",
+      "aliases": [
+        "تاناکا"
+      ]
+    },
+    {
+      "id": "gudmundsson-lee",
+      "name_en": "Gabriel Gudmundsson",
+      "name_fa": "گابریل گودموندسون",
+      "team": "LEE",
+      "position": "DEF",
+      "aliases": [
+        "گودموندسون"
+      ]
+    },
+    {
+      "id": "affengruber-ful",
+      "name_en": "David Affengruber",
+      "name_fa": "دیوید افنگروبر",
+      "team": "FUL",
+      "position": "DEF",
+      "aliases": [
+        "افنگروبر"
+      ]
+    },
+    {
+      "id": "botman-new",
+      "name_en": "Sven Botman",
+      "name_fa": "سون بوتمن",
+      "team": "NEW",
+      "position": "DEF",
+      "aliases": [
+        "بوتمن"
+      ]
+    },
+    {
+      "id": "dedi-new",
+      "name_en": "Amar Dedic",
+      "name_fa": "عمار ددیچ",
+      "team": "NEW",
+      "position": "DEF",
+      "aliases": [
+        "ددیچ"
+      ]
+    },
+    {
+      "id": "enzo-mci",
+      "name_en": "Enzo Fernández",
+      "name_fa": "انزو فرناندز",
+      "team": "MCI",
+      "position": "MID",
+      "aliases": [
+        "فرناندز"
+      ]
+    },
+    {
+      "id": "brobbey-sun",
+      "name_en": "Brian Brobbey",
+      "name_fa": "برایان بروبی",
+      "team": "SUN",
+      "position": "FWD",
+      "aliases": [
+        "بروبی"
+      ]
+    },
+    {
+      "id": "ndoye-nfo",
+      "name_en": "Dan Ndoye",
+      "name_fa": "دن ندویه",
+      "team": "NFO",
+      "position": "MID",
+      "aliases": [
+        "ندویه"
+      ]
+    },
+    {
+      "id": "m-sangar-bre",
+      "name_en": "Mamadou Sangaré",
+      "name_fa": "مامادو سانگاره",
+      "team": "BRE",
+      "position": "MID",
+      "aliases": [
+        "سانگاره"
+      ]
+    },
+    {
+      "id": "maatsen-avl",
+      "name_en": "Ian Maatsen",
+      "name_fa": "ایان ماتسن",
+      "team": "AVL",
+      "position": "DEF",
+      "aliases": [
+        "ماتسن"
+      ]
+    },
+    {
+      "id": "gakpo-liv",
+      "name_en": "Cody Gakpo",
+      "name_fa": "کودی گاکپو",
+      "team": "LIV",
+      "position": "MID",
+      "aliases": [
+        "گاکپو"
+      ]
+    },
+    {
+      "id": "saka-ars",
+      "name_en": "Bukayo Saka",
+      "name_fa": "بوکایو ساکا",
+      "team": "ARS",
+      "position": "MID",
+      "aliases": [
+        "ساکا"
+      ]
+    },
+    {
+      "id": "r-hl-eve",
+      "name_en": "Merlin Röhl",
+      "name_fa": "مرلین روهل",
+      "team": "EVE",
+      "position": "MID",
+      "aliases": [
+        "روهل"
+      ]
+    },
+    {
+      "id": "buend-a-avl",
+      "name_en": "Emiliano Buendía Stati",
+      "name_fa": "امی بوئندیا",
+      "team": "AVL",
+      "position": "MID",
+      "aliases": [
+        "بوئندیا"
+      ]
+    },
+    {
+      "id": "martinez-mun",
+      "name_en": "Lisandro Martínez",
+      "name_fa": "لیساندرو مارتینز",
+      "team": "MUN",
+      "position": "DEF",
+      "aliases": [
+        "مارتینز"
+      ]
+    },
+    {
+      "id": "acheampong-che",
+      "name_en": "Josh Acheampong",
+      "name_fa": "جاش آچیمپونگ",
+      "team": "CHE",
+      "position": "DEF",
+      "aliases": [
+        "آچیمپونگ"
+      ]
+    },
+    {
+      "id": "ouattara-ips",
+      "name_en": "Abdoul Ouattara",
+      "name_fa": "عبدول واتارا",
+      "team": "IPS",
+      "position": "DEF",
+      "aliases": [
+        "واتارا"
+      ]
+    },
+    {
+      "id": "barcola-liv",
+      "name_en": "Bradley Barcola",
+      "name_fa": "بردلی بارکولا",
+      "team": "LIV",
+      "position": "MID",
+      "aliases": [
+        "بارکولا"
+      ]
+    },
+    {
+      "id": "l-miley-new",
+      "name_en": "Lewis Miley",
+      "name_fa": "لوئیس مایلی",
+      "team": "NEW",
+      "position": "MID",
+      "aliases": [
+        "مایلی"
+      ]
+    },
+    {
+      "id": "szoboszlai-liv",
+      "name_en": "Dominik Szoboszlai",
+      "name_fa": "دومینیک سوبوسلای",
+      "team": "LIV",
+      "position": "MID",
+      "aliases": [
+        "سوبوسلای"
+      ]
+    },
+    {
+      "id": "mainoo-mun",
+      "name_en": "Kobbie Mainoo",
+      "name_fa": "کوبی مینو",
+      "team": "MUN",
+      "position": "MID",
+      "aliases": [
+        "مینو"
+      ]
+    },
+    {
+      "id": "willock-new",
+      "name_en": "Joe Willock",
+      "name_fa": "جو ویلک",
+      "team": "NEW",
+      "position": "MID",
+      "aliases": [
+        "ویلک"
+      ]
+    },
+    {
+      "id": "cherki-mci",
+      "name_en": "Rayan Cherki",
+      "name_fa": "رایان شرکی",
+      "team": "MCI",
+      "position": "MID",
+      "aliases": [
+        "شرکی"
+      ]
+    },
+    {
+      "id": "n-gonzalez-new",
+      "name_en": "Nico González Iglesias",
+      "name_fa": "نیکو گونزالس",
+      "team": "NEW",
+      "position": "MID",
+      "aliases": [
+        "گونزالس"
+      ]
+    },
+    {
+      "id": "semenyo-mci",
+      "name_en": "Antoine Semenyo",
+      "name_fa": "آنتوان سمنیو",
+      "team": "MCI",
+      "position": "MID",
+      "aliases": [
+        "سمنیو"
+      ]
+    },
+    {
+      "id": "khusanov-mci",
+      "name_en": "Abdukodir Khusanov",
+      "name_fa": "عبدالقادر خوسانوف",
+      "team": "MCI",
+      "position": "DEF",
+      "aliases": [
+        "خوسانوف"
+      ]
+    },
+    {
+      "id": "walton-ips",
+      "name_en": "Christian Walton",
+      "name_fa": "کریستین والتون",
+      "team": "IPS",
+      "position": "GK",
+      "aliases": [
+        "والتون"
+      ]
+    },
+    {
+      "id": "milenkovi-nfo",
+      "name_en": "Nikola Milenković",
+      "name_fa": "نیکولا میلنکوویچ",
+      "team": "NFO",
+      "position": "DEF",
+      "aliases": [
+        "میلنکوویچ"
+      ]
+    },
+    {
+      "id": "fatawu-ips",
+      "name_en": "Abdul Fatawu",
+      "name_fa": "عبدول فاتاوو",
+      "team": "IPS",
+      "position": "MID",
+      "aliases": [
+        "فاتاوو"
+      ]
+    },
+    {
+      "id": "kudus-tot",
+      "name_en": "Mohammed Kudus",
+      "name_fa": "محمد قدوس",
+      "team": "TOT",
+      "position": "MID",
+      "aliases": [
+        "قدوس"
+      ]
+    },
+    {
+      "id": "meunier-sun",
+      "name_en": "Thomas Meunier",
+      "name_fa": "توماس مونیه",
+      "team": "SUN",
+      "position": "DEF",
+      "aliases": [
+        "مونیه"
+      ]
+    },
+    {
+      "id": "white-ars",
+      "name_en": "Benjamin White",
+      "name_fa": "بنجامین وایت",
+      "team": "ARS",
+      "position": "DEF",
+      "aliases": [
+        "وایت"
+      ]
+    },
+    {
+      "id": "martinez-che",
+      "name_en": "Emiliano Martínez",
+      "name_fa": "امیلیانو مارتینز",
+      "team": "CHE",
+      "position": "GK",
+      "aliases": [
+        "مارتینز"
+      ]
+    },
+    {
+      "id": "jo-o-pedro-che",
+      "name_en": "João Pedro",
+      "name_fa": "ژائو پدرو",
+      "team": "CHE",
+      "position": "FWD",
+      "aliases": [
+        "پدرو"
+      ]
+    },
+    {
+      "id": "n-angulo-sun",
+      "name_en": "Nilson Angulo",
+      "name_fa": "نیلسون آنگولو",
+      "team": "SUN",
+      "position": "MID",
+      "aliases": [
+        "آنگولو"
+      ]
+    },
+    {
+      "id": "mendy-hul",
+      "name_en": "Nobel Mendy",
+      "name_fa": "نوبل مندی",
+      "team": "HUL",
+      "position": "DEF",
+      "aliases": [
+        "مندی"
+      ]
+    },
+    {
+      "id": "kluivert-bou",
+      "name_en": "Justin Kluivert",
+      "name_fa": "جاستین کلایورت",
+      "team": "BOU",
+      "position": "MID",
+      "aliases": [
+        "کلایورت"
+      ]
+    },
+    {
+      "id": "caicedo-che",
+      "name_en": "Moisés Caicedo",
+      "name_fa": "مویسس کایسدو",
+      "team": "CHE",
+      "position": "MID",
+      "aliases": [
+        "کایسدو"
+      ]
+    },
+    {
+      "id": "shaw-mun",
+      "name_en": "Luke Shaw",
+      "name_fa": "لوک شاو",
+      "team": "MUN",
+      "position": "DEF",
+      "aliases": [
+        "شاو"
+      ]
+    },
+    {
+      "id": "johnson-eve",
+      "name_en": "Brennan Johnson",
+      "name_fa": "برنان جانسون",
+      "team": "EVE",
+      "position": "MID",
+      "aliases": [
+        "جانسون"
+      ]
+    },
+    {
+      "id": "bentancur-tot",
+      "name_en": "Rodrigo Bentancur",
+      "name_fa": "رودریگو بنتانکور",
+      "team": "TOT",
+      "position": "MID",
+      "aliases": [
+        "بنتانکور"
+      ]
+    },
+    {
+      "id": "doku-mci",
+      "name_en": "Jérémy Doku",
+      "name_fa": "جرمی دوکو",
+      "team": "MCI",
+      "position": "MID",
+      "aliases": [
+        "دوکو"
+      ]
+    },
+    {
+      "id": "bruno-g-ars",
+      "name_en": "Bruno Guimarães",
+      "name_fa": "برونو گیمارائش",
+      "team": "ARS",
+      "position": "MID",
+      "aliases": [
+        "گیمارائش"
+      ]
+    },
+    {
+      "id": "foden-mci",
+      "name_en": "Phil Foden",
+      "name_fa": "فیل فودن",
+      "team": "MCI",
+      "position": "MID",
+      "aliases": [
+        "فودن"
+      ]
+    },
+    {
+      "id": "rashford-mun",
+      "name_en": "Marcus Rashford",
+      "name_fa": "مارکوس رشفورد",
+      "team": "MUN",
+      "position": "MID",
+      "aliases": [
+        "رشفورد"
+      ]
+    },
+    {
+      "id": "j-timber-ars",
+      "name_en": "Jurriën Timber",
+      "name_fa": "یورین تیمبر",
+      "team": "ARS",
+      "position": "DEF",
+      "aliases": [
+        "تیمبر"
+      ]
+    },
+    {
+      "id": "elanga-new",
+      "name_en": "Anthony Elanga",
+      "name_fa": "آنتونی الانگا",
+      "team": "NEW",
+      "position": "MID",
+      "aliases": [
+        "الانگا"
+      ]
+    },
+    {
+      "id": "james-che",
+      "name_en": "Reece James",
+      "name_fa": "ریس جیمز",
+      "team": "CHE",
+      "position": "DEF",
+      "aliases": [
+        "جیمز"
+      ]
+    },
+    {
+      "id": "eze-ars",
+      "name_en": "Eberechi Eze",
+      "name_fa": "ابره‌چی ازه",
+      "team": "ARS",
+      "position": "MID",
+      "aliases": [
+        "ازه"
+      ]
+    },
+    {
+      "id": "gy-keres-ars",
+      "name_en": "Viktor Gyökeres",
+      "name_fa": "ویکتور گیوکرس",
+      "team": "ARS",
+      "position": "FWD",
+      "aliases": [
+        "گیوکرس"
+      ],
+      "nickname_fa": "ماشین گلزنی سوئدی"
+    },
+    {
+      "id": "fofana-sun",
+      "name_en": "Malick Fofana",
+      "name_fa": "ملیک فوفانا",
+      "team": "SUN",
+      "position": "MID",
+      "aliases": [
+        "فوفانا"
+      ]
+    }
   ],
-  "note": "نمونهٔ شروع — در هفتهٔ ۰ به ۲۰ تیم کامل + ۱۵۰ بازیکن کلیدی گسترش یابد؛ برای هر مورد یک شکل فارسی، یک نام لاتین و aliasها. یک شکل فارسی برای هر تیم/بازیکن در همهٔ پلتفرم‌ها.",
   "terms": {
     "xG": "امید گل (Expected Goals) — مجموع احتمال گل شدن هر شوت بر اساس مدل",
     "xA": "امید پاس گل (Expected Assists)",
@@ -38,5 +2223,6 @@
     "xPTS": "امتیاز انتظاری",
     "PPDA": "پاس‌های حریف در هر اقدام دفاعی — فشار دفاعی",
     "per90": "نرخ به‌ازای هر ۹۰ دقیقه — فقط با دقایق معتبر"
-  }
+  },
+  "note": "گلاسه‌ری فارسی لیگ برتر انگلیس فصل ۲۰۲۶–۲۷؛ ۲۰ تیم و ۲۰۰ بازیکن برتر (بر پایهٔ دقیقهٔ بازی تا هفتهٔ ۱۰ + ستارگان مصدوم/شناخته‌شده). نام‌های فارسی بر اساس مقاله‌های ویکی‌پدیا فارسی و استفادهٔ رایج در رسانه‌های فارسی (فوتبالی، ورزش‌سه، تک‌اسپرت، ایسنا) انتخاب شده‌اند. برای هر مورد یک شکل فارسی واحد، نام لاتین، لقب و aliasها آمده است."
 }

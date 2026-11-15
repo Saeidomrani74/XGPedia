@@ -82,20 +82,74 @@
     "numerals_policy": "ارقام آماری همیشه لاتین با فونت tabular؛ تاریخ در متن فارسی با ارقام فارسی؛ یک عددگذاری در هر کارت — قاطی نکن"
   },
   "logo": {
-    "original": "brand/logo/xgpedia_logo_original.png (2576x1438، اثر واقعی حدود 1745x361)",
+    "structure": {
+      "root": "brand/logo/",
+      "png_dir": "brand/logo/png/",
+      "svg_dir": "brand/logo/svg/",
+      "naming_pattern": "logo*.png / logo*.svg (بدون پیشوند xgpedia-)"
+    },
+    "original": "brand/logo/png/logo.png (4000x825 PNG شفاف؛ اثر واقعی 1743x360 — viewBox اس‌وی‌جی: 1743.25x359.50)",
     "variants": {
-      "logo_light": "اصلی روی سفید",
-      "logo_dark": "XG سفید + PEDIA قرمز روی Ink",
-      "logo_mono_white": "تک‌رنگ سفید برای زمینهٔ قرمز/عکس",
-      "icon": "فقط XG با کرونومتر، مربع — تست در 110x110"
+      "color_horizontal": {
+        "file": "logo.png / logo.svg",
+        "use": "اصلی روی Paper (سفید)؛ XG سرمه‌ای + PEDIA قرمز",
+        "size": "4000x825"
+      },
+      "white_full": {
+        "file": "logo-white.png / logo-white.svg",
+        "use": "روی Ink یا عکس؛ تمام‌سفید تک‌رنگ",
+        "size": "4000x825"
+      },
+      "watermark_color": {
+        "file": "logo-watermark.png / logo-watermark.svg",
+        "use": "واترمارک رنگی ۴۰٪ شفافیت (آلفای ۱۰۲ از ۲۵۵)",
+        "size": "4000x825"
+      },
+      "watermark_white": {
+        "file": "logo-watermark-white.png / logo-watermark-white.svg",
+        "use": "واترمارک سفید ۴۰٪ شفافیت برای زمینهٔ تیره",
+        "size": "4000x825"
+      },
+      "xg_icon_square_110": {
+        "file": "logo-xg-{red,navy,white}.png/svg + logo-xg-watermark-white",
+        "use": "فقط XG با کرونومتر، مربع — تست در 110x110 (آواتار/فاویکن)",
+        "size": "110x110"
+      },
+      "xg_white_full": {
+        "file": "logo-xg-white-full.png / svg",
+        "use": "نشان کامل سفید — رزرو آینده؛ کشیدگی 2000x1074 (بلوک XG بزرگ + PEDIA)",
+        "size": "2000x1074"
+      }
+    },
+    "file_map_from_old_nesting": {
+      "_note": "همان فایل‌های xgpedia-logo-files قبلی با نام کوتاه جدید؛ محتوا بایت‌به‌بایت یکسان",
+      "logo.png": "قبلاً xgpedia-logo-color.png",
+      "logo-white.png": "قبلاً xgpedia-logo-white.png",
+      "logo-watermark.png": "قبلاً xgpedia-logo-watermark-color-40.png",
+      "logo-watermark-white.png": "قبلاً xgpedia-logo-watermark-white-40.png",
+      "logo-xg-red.png": "قبلاً xgpedia-xg-110-red.png",
+      "logo-xg-navy.png": "قبلاً xgpedia-xg-110-navy.png",
+      "logo-xg-white.png": "قبلاً xgpedia-xg-110-white.png",
+      "logo-xg-watermark-white.png": "قبلاً xgpedia-xg-110-watermark-white-40.png",
+      "logo-xg-white-full.png": "قبلاً xgpedia-xg-white.png",
+      "logo.svg": "قبلاً xgpedia-logo-color.svg",
+      "logo-white.svg": "قبلاً xgpedia-logo-white.svg",
+      "logo-watermark.svg": "قبلاً xgpedia-logo-watermark-color-40.svg",
+      "logo-watermark-white.svg": "قبلاً xgpedia-logo-watermark-white-40.svg",
+      "logo-xg-red.svg": "قبلاً xgpedia-xg-110-red.svg",
+      "logo-xg-navy.svg": "قبلاً xgpedia-xg-110-navy.svg",
+      "logo-xg-white.svg": "قبلاً xgpedia-xg-110-white.svg",
+      "logo-xg-watermark-white.svg": "قبلاً xgpedia-xg-110-watermark-white-40.svg",
+      "logo-xg-white-full.svg": "قبلاً xgpedia-xg-white.svg"
     },
     "rules": [
       "فضای خالی دور لوگو = ارتفاع حرف E",
       "حداقل عرض 96px؛ زیر آن جزئیات ناخوانا می‌شود",
       "کشیدن، چرخاندن یا تغییر رنگ ممنوع",
-      "لوگوی افقی کامل را در آواتار مربعی نچران",
-      "واترمارک: فقط XG کوچک با 40٪ شفافیت در گوشهٔ پایین-راست (نسخهٔ ۲) یا بالا-چپ (نسخهٔ ۳)",
-      "نسخهٔ TikTok بدون هیچ لوگو و واترمارک"
+      "لوگوی افقی کامل را در آواتار مربعی نچران — آیکون مربع ۱۱۰ (logo-xg-*) مخصوص آواتار/فاویکن است",
+      "واترمارک: فقط XG کوچک (logo-xg-watermark-white) یا نشان کامل ۴۰٪ (logo-watermark-*) در گوشهٔ پایین-راست یا بالا-چپ",
+      "نسخهٔ TikTok بدون هیچ لوگو و واترمارک",
+      "روی زمینهٔ قرمز فقط نسخهٔ سفید (logo-white) — هرگز رنگی"
     ]
   },
   "templates": {
@@ -156,5 +210,13 @@
     "#خبر_تحلیلی",
     "#جمع_بندی_هفتگی"
   ],
-  "forbidden_words_note": "قواعد پایهٔ اعتبار تحریریه؛ سیاست‌های موضوعی خود را به این فهرست اضافه کنید"
+  "forbidden_words_note": "قواعد پایهٔ اعتبار تحریریه؛ سیاست‌های موضوعی خود را به این فهرست اضافه کنید",
+  "glossary_ref": {
+    "file": "config/glossary_fa.json",
+    "season": "2026-27",
+    "updated": "2026-11-14",
+    "teams": 20,
+    "players": 200,
+    "changes_note": "تیم‌های اضافه‌شده نسبت به نسخهٔ قبلی: COV (کاونتری سیتی)، HUL (هال سیتی)، IPS (ایپسویچ)، SUN (ساندرلند)؛ حذف‌شده: BUR، SOU، WHU، WOL. فیلد nickname_fa برای همهٔ تیم‌ها اضافه شد."
+  }
 }

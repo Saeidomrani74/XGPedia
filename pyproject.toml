@@ -17,7 +17,6 @@ dependencies = [
 dev = [
     "pytest>=8.0",
     "ruff>=0.6",
-    "gitleaks>=8.18",        # اسکن secret در pre-commit (پیشنهاد نسخهٔ ۲)
 ]
 
 [tool.ruff]
