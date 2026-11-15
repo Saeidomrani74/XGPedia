@@ -1,0 +1,29 @@
+=== XGPedia daily sync - Sun 11/15/2026 13:20:34.07 === 
+Database status:
+  last_finished_match: 2026-11-08
+  total_finished: 480
+  total_stat_rows: 6920
+  total_xg_rows: 200
+  data age: 7 days - [WARN] data is stale (> 4 days)
+Season 2026-27: 100 finished matches
+  xG available for 100/100 matches
+  fixtures: 0 new, 100 updated
+  stat rows: 0
+  raw file: E0_2627_d598a5f681e1.csv - sha256 prefix: d598a5f681e1
+  2026-11-21 12:30 UTC - Manchester City FC vs Fulham FC
+  2026-11-21 15:00 UTC - Chelsea FC vs Leeds United FC
+  2026-11-21 15:00 UTC - Aston Villa FC vs Sunderland AFC
+  2026-11-21 15:00 UTC - AFC Bournemouth vs Nottingham Forest FC
+  2026-11-21 15:00 UTC - Tottenham Hotspur FC vs Ipswich Town FC
+  2026-11-21 15:00 UTC - Coventry City FC vs Crystal Palace FC
+  2026-11-21 17:30 UTC - Newcastle United FC vs Arsenal FC
+  2026-11-22 14:00 UTC - Hull City AFC vs Brighton & Hove Albion FC
+  2026-11-22 16:30 UTC - Liverpool FC vs Manchester United FC
+- 9 upcoming matches, new: 0
+Database status:
+  last_finished_match: 2026-11-08
+  total_finished: 480
+  total_stat_rows: 6920
+  total_xg_rows: 200
+  data age: 7 days - [WARN] data is stale (> 4 days)
+=== done === 

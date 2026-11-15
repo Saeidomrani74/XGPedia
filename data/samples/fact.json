@@ -1,0 +1,59 @@
+{
+  "fixture_id": "fdcouk:2026-11-08:Manchester United:Aston Villa",
+  "competition": {
+    "name": "Premier League",
+    "season": "2026-27"
+  },
+  "kickoff_utc": "2026-11-08T00:00:00",
+  "source": {
+    "provider": "football-data-co-uk",
+    "collected_at": "2026-11-15T08:22:46Z",
+    "payload_hash": "d598a5f681e1a9a4acf9dad9fb203b68da6f67e2d195678dbe99e95fbba14593"
+  },
+  "home": {
+    "name_fa": "منچستریونایتد",
+    "name_en": "Manchester United",
+    "last5": {
+      "n": 5,
+      "points": 3,
+      "goals_for": 3,
+      "goals_against": 8
+    },
+    "xg_for_avg": {
+      "value": 1.53,
+      "n": 9,
+      "provider": "football-data-co-uk"
+    },
+    "corners_avg": {
+      "value": 5.8,
+      "n": 10,
+      "provider": "football-data-co-uk"
+    }
+  },
+  "away": {
+    "name_fa": "استون ویلا",
+    "name_en": "Aston Villa",
+    "last5": {
+      "n": 5,
+      "points": 11,
+      "goals_for": 9,
+      "goals_against": 6
+    },
+    "xg_for_avg": {
+      "value": 1.2,
+      "n": 9,
+      "provider": "football-data-co-uk"
+    },
+    "corners_avg": {
+      "value": 3.7,
+      "n": 10,
+      "provider": "football-data-co-uk"
+    }
+  },
+  "availability": [],
+  "triggers": [],
+  "data_quality": {
+    "missing_fields": [],
+    "live_latency_seconds": null
+  }
+}

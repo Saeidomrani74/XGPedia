@@ -62,6 +62,7 @@ CREATE TABLE IF NOT EXISTS posts (
   content_version INTEGER NOT NULL DEFAULT 1,
   status TEXT NOT NULL DEFAULT 'draft',  -- draft|validated|awaiting_approval|approved|scheduled|published|failed|corrected
   title TEXT, caption TEXT,
+  draft_json TEXT,                       -- خروجی کامل مدل (bullets/source_note/uncertainties)
   fact_json TEXT,                        -- JSON واقعیت‌ها — منبع único تک‌نسخه
   created_at TEXT NOT NULL,
   UNIQUE (fixture_id, post_type, target_platform, content_version)  -- idempotency key
@@ -104,8 +105,20 @@ def init_db() -> None:
     DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
     with db() as conn:
         conn.executescript(SCHEMA)
+        _migrate(conn)
+
+
+def _migrate(conn: sqlite3.Connection) -> None:
+    """مهاجرت سبک برای DBهای نسخه‌های قبل — v0.8.5: ستون draft_json به posts.
+
+    CREATE TABLE IF NOT EXISTS ستون جدید به جدول موجود اضافه نمی‌کند؛
+    اینجا با PRAGMA table_info بررسی و ALTER TABLE انجام می‌شود (idempotent).
+    """
+    cols = {r["name"] for r in conn.execute("PRAGMA table_info(posts)")}
+    if "draft_json" not in cols:
+        conn.execute("ALTER TABLE posts ADD COLUMN draft_json TEXT")
 
 
 if __name__ == "__main__":
     init_db()
-    print(f"OK — database initialized at {DATABASE_PATH}")
+    print(f"OK - database initialized at {DATABASE_PATH}")

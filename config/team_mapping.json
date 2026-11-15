@@ -1,0 +1,132 @@
+{
+  "updated": "2026-11-15",
+  "note": "نگاشت نام تیم بین سه منبع + واژه‌نامهٔ فارسی. کلید هر ردیف canonical (نام کامل استاندارد) است. فصل ۲۰۲۷–۲۰۲۶: Coventry، Hull، Ipswich و Sunderland جای Burnley، Southampton، West Ham و Wolves را گرفته‌اند.",
+  "teams": {
+    "Arsenal": {
+      "csv_short": "Arsenal",
+      "fdo_id": 57,
+      "name_fa": "آرسنال",
+      "aliases": ["ارسنال", "آرزنال", "توپچی‌ها"]
+    },
+    "Aston Villa": {
+      "csv_short": "Aston Villa",
+      "fdo_id": 58,
+      "name_fa": "استون ویلا",
+      "aliases": ["ویلا"]
+    },
+    "Bournemouth": {
+      "csv_short": "Bournemouth",
+      "fdo_id": 354,
+      "name_fa": "بورنموث",
+      "aliases": []
+    },
+    "Brentford": {
+      "csv_short": "Brentford",
+      "fdo_id": 402,
+      "name_fa": "برنتفورد",
+      "aliases": []
+    },
+    "Brighton": {
+      "csv_short": "Brighton",
+      "fdo_id": 397,
+      "name_fa": "برایتون",
+      "aliases": ["برتون"]
+    },
+    "Chelsea": {
+      "csv_short": "Chelsea",
+      "fdo_id": 49,
+      "name_fa": "چلسی",
+      "aliases": ["چلسیا"]
+    },
+    "Coventry": {
+      "csv_short": "Coventry",
+      "fdo_id": 351,
+      "name_fa": "کاونتری",
+      "aliases": ["کاونتری سیتی"]
+    },
+    "Crystal Palace": {
+      "csv_short": "Crystal Palace",
+      "fdo_id": 356,
+      "name_fa": "کریستال پلاس",
+      "aliases": ["پلاس"]
+    },
+    "Everton": {
+      "csv_short": "Everton",
+      "fdo_id": 45,
+      "name_fa": "اورتون",
+      "aliases": []
+    },
+    "Fulham": {
+      "csv_short": "Fulham",
+      "fdo_id": 36,
+      "name_fa": "فولام",
+      "aliases": []
+    },
+    "Hull": {
+      "csv_short": "Hull",
+      "fdo_id": 395,
+      "name_fa": "هال سیتی",
+      "aliases": ["هال"]
+    },
+    "Ipswich": {
+      "csv_short": "Ipswich",
+      "fdo_id": 349,
+      "name_fa": "ایپسویچ",
+      "aliases": []
+    },
+    "Leeds": {
+      "csv_short": "Leeds",
+      "fdo_id": 63,
+      "name_fa": "لیدز",
+      "aliases": ["لیدز یونایتد"]
+    },
+    "Liverpool": {
+      "csv_short": "Liverpool",
+      "fdo_id": 64,
+      "name_fa": "لیورپول",
+      "aliases": ["ردز"]
+    },
+    "Manchester City": {
+      "csv_short": "Man City",
+      "fdo_id": 65,
+      "name_fa": "منچسترسیتی",
+      "aliases": ["سیتی", "من سیتی"]
+    },
+    "Manchester United": {
+      "csv_short": "Man United",
+      "fdo_id": 66,
+      "name_fa": "منچستریونایتد",
+      "aliases": ["یونایتد", "من یونایتد"]
+    },
+    "Newcastle": {
+      "csv_short": "Newcastle",
+      "fdo_id": 67,
+      "name_fa": "نیوکاسل",
+      "aliases": ["نیوکاسل یونایتد"]
+    },
+    "Nottingham Forest": {
+      "csv_short": "Nott'm Forest",
+      "fdo_id": 351,
+      "name_fa": "ناتینگهام فارست",
+      "aliases": ["فارست"]
+    },
+    "Sunderland": {
+      "csv_short": "Sunderland",
+      "fdo_id": 71,
+      "name_fa": "ساندرلند",
+      "aliases": []
+    },
+    "Tottenham": {
+      "csv_short": "Tottenham",
+      "fdo_id": 73,
+      "name_fa": "تاتنهام",
+      "aliases": ["اسپرز", "تاتنهام هاتسپر"]
+    }
+  },
+  "relegated_2025_26": {
+    "Burnley": { "csv_short": "Burnley", "name_fa": "برنلی" },
+    "Southampton": { "csv_short": "Southampton", "name_fa": "ساوتهمپتون" },
+    "West Ham": { "csv_short": "West Ham", "name_fa": "وستهم" },
+    "Wolverhampton": { "csv_short": "Wolves", "name_fa": "ولورهمپتون" }
+  }
+}
