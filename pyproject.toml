@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "xgpedia"
-version = "0.8.2"
+version = "0.9.0"
 description = "XGPedia — خط تولید محتوای تحلیلی فوتبال داده‌محور (عدد را API می‌دهد، متن را مدل می‌نویسد، تصویر را قالب HTML می‌سازد)"
 requires-python = ">=3.12"
 dependencies = [
@@ -14,10 +14,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# مرحلهٔ رندر (هفتهٔ ۵+): jinja2 + playwright
+# مرحلهٔ رندر (هفتهٔ ۵): jinja2 + playwright + jdatetime — نصب: pip install -e ".[render]"
 render = [
-    "jinja2>=3.1",           # پرکردن قالب‌های کارت از match.json
+    "jinja2>=3.1",           # پرکردن قالب‌های کارت از draft/fact JSON
     "playwright>=1.47",      # رندر HTML به PNG/JPEG و ضبط فریم ویدیو
+    "jdatetime>=5.0",        # تاریخ جلالی در کارت (نمایش فارسی، ذخیره همیشه UTC)
 ]
 # مرحلهٔ انتشار (هفتهٔ ۹+): تلگرام و RSS
 publish = [

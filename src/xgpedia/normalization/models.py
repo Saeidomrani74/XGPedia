@@ -27,12 +27,24 @@ class Last5(BaseModel):
     goals_against: int | None = None
 
 
+class RecentForm(BaseModel):
+    """ترتیب نتایج بازی‌های اخیر — برای دایره‌های فرم کارت استودیو (ب/م/ش)."""
+
+    sequence: str  # قدیمی‌ترین به جدیدترین؛ فقط حروف W/D/L
+    n: int
+
+
 class TeamSide(BaseModel):
     name_fa: str
     name_en: str
     last5: Last5 | None = None
     xg_for_avg: StatValue | None = None   # اگر provider نداد → None بماند
     corners_avg: StatValue | None = None
+    # ── فیلدهای اختیاری کارت استودیو (v10) — پست‌های آرشیوشدهٔ قدیمی بدون این‌ها هم parse می‌شوند ──
+    xg_against_avg: StatValue | None = None  # میانگین xG حریفان در بازی‌های تیم (xGA)
+    sot_avg: StatValue | None = None         # میانگین شوت در چارچوب
+    xg_series: list[float] | None = None     # xG بازی‌به‌بازی، قدیمی‌ترین → جدیدترین (حداکثر ۱۰) — برای روند ۱۰ بازی
+    recent_form: RecentForm | None = None    # توالی ب/م/ش — برای دایره‌های فرم
 
 
 class AvailabilityItem(BaseModel):

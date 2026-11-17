@@ -66,8 +66,32 @@ def test_stats_parsed(parsed):
 
 
 def test_season_label():
-    assert season_label(2027) == "2026-27"
-    assert season_label(2026) == "2025-26"
+    assert season_label(2026) == "2026-27"
+    assert season_label(2025) == "2025-26"
+
+
+def test_season_csv_mapping_is_start_year():
+    """قرارداد فصل: کلید SEASON_CSV «سال شروع» است — 2026 → پوشهٔ 2627 (فصل ۲۰۲۶–۲۰۲۷).
+
+    این آزمون برای باگ 404 نوشته شد: کیت قبلاً 2027 می‌فرستاد (سال پایان) و
+    API football-data.org برای فصل هنوز-موجود-نشده 404 می‌داد.
+    """
+    from src.xgpedia.providers.football_data_couk import SEASON_CSV
+
+    assert SEASON_CSV[2026] == "2627"
+    assert SEASON_CSV[2025] == "2526"
+
+
+def test_current_season_auto_computed():
+    """CURRENT_SEASON_START باید «سال شروع» فصل جاری باشد (قبل از اوت = فصل قبل)."""
+    from datetime import date
+
+    from src.xgpedia.config import CURRENT_SEASON_START
+
+    today = date.today()
+    expected = today.year if today.month >= 8 else today.year - 1
+    assert CURRENT_SEASON_START == expected
+    assert season_label(CURRENT_SEASON_START) == f"{expected}-{str(expected + 1)[2:]}"
 
 
 def test_fixture_id_stable():
@@ -84,8 +108,8 @@ def test_sync_idempotent(tmp_path, monkeypatch, parsed):
     from src.xgpedia import sync as sync_mod
 
     monkeypatch.setattr(sync_mod, "db", _tmp_db_factory(tmp_path))
-    s1 = sync_mod.sync_csv_results(parsed, "hash1", season_start=2027)
-    s2 = sync_mod.sync_csv_results(parsed, "hash1", season_start=2027)
+    s1 = sync_mod.sync_csv_results(parsed, "hash1", season_start=2026)
+    s2 = sync_mod.sync_csv_results(parsed, "hash1", season_start=2026)
     assert s1["fixtures_new"] == 2
     assert s2["fixtures_new"] == 0  # دوباره → جدید نیست
     assert s2["fixtures_updated"] == 2  # به‌روزرسانی همان‌ها

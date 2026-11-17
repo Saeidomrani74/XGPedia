@@ -217,6 +217,98 @@ def _team_corners_avg(conn: sqlite3.Connection, team: str, before_date: str) -> 
     return {"n": len(rows), "avg": sum(r["value"] for r in rows) / len(rows)}
 
 
+def _team_xga_avg(conn: sqlite3.Connection, team: str, before_date: str) -> dict | None:
+    """میانگین xG حریفان در بازی‌های تیم (xGA) — از ردیف xG حریف در همان بازی، همان provider."""
+    rows = conn.execute(
+        """
+        SELECT s.value
+        FROM fixture_statistics s
+        JOIN fixtures f ON f.fixture_id = s.fixture_id
+        WHERE s.metric = 'expected_goals' AND s.provider = ?
+          AND f.status = 'finished' AND f.kickoff_utc < ?
+          AND s.team = CASE WHEN f.home_team = ? THEN f.away_team ELSE f.home_team END
+          AND (f.home_team = ? OR f.away_team = ?)
+        ORDER BY f.kickoff_utc DESC
+        LIMIT 10
+        """,
+        (PRIMARY_STATS_PROVIDER, before_date, team, team, team),
+    ).fetchall()
+    if not rows:
+        return None
+    return {"n": len(rows), "avg": sum(r["value"] for r in rows) / len(rows)}
+
+
+def _team_sot_avg(conn: sqlite3.Connection, team: str, before_date: str) -> dict | None:
+    """میانگین شوت در چارچوب — CSV football-data.co.uk ستون HST/AST."""
+    rows = conn.execute(
+        """
+        SELECT s.value
+        FROM fixture_statistics s
+        JOIN fixtures f ON f.fixture_id = s.fixture_id
+        WHERE s.metric = 'shots_on_target' AND s.provider = ? AND s.team = ?
+          AND f.status = 'finished' AND f.kickoff_utc < ?
+        ORDER BY f.kickoff_utc DESC
+        LIMIT 10
+        """,
+        (PRIMARY_STATS_PROVIDER, team, before_date),
+    ).fetchall()
+    if not rows:
+        return None
+    return {"n": len(rows), "avg": sum(r["value"] for r in rows) / len(rows)}
+
+
+def _team_xg_series(conn: sqlite3.Connection, team: str, before_date: str, limit: int = 10) -> list[float] | None:
+    """xG بازی‌به‌بازی تیم، قدیمی‌ترین → جدیدترین — دادهٔ ماژول «روند ۱۰ بازی اخیر»."""
+    rows = conn.execute(
+        """
+        SELECT s.value
+        FROM fixture_statistics s
+        JOIN fixtures f ON f.fixture_id = s.fixture_id
+        WHERE s.metric = 'expected_goals' AND s.provider = ? AND s.team = ?
+          AND f.status = 'finished' AND f.kickoff_utc < ?
+        ORDER BY f.kickoff_utc DESC
+        LIMIT ?
+        """,
+        (PRIMARY_STATS_PROVIDER, team, before_date, limit),
+    ).fetchall()
+    if not rows:
+        return None
+    return [round(r["value"], 2) for r in reversed(rows)]
+
+
+def _team_form_sequence(conn: sqlite3.Connection, team: str, before_date: str, limit: int = 5) -> dict | None:
+    """توالی ب/م/ش آخرین بازی‌ها (W/D/L؛ قدیمی‌ترین → جدیدترین) — دایره‌های فرم کارت."""
+    rows = conn.execute(
+        """
+        SELECT kickoff_utc, home_team, away_team,
+               MAX(CASE WHEN team=home_team THEN value END) AS hg,
+               MAX(CASE WHEN team=away_team THEN value END) AS ag
+        FROM fixtures f
+        JOIN fixture_statistics s
+          ON s.fixture_id = f.fixture_id AND s.metric = 'goals' AND s.provider = ?
+        WHERE f.status = 'finished' AND f.kickoff_utc < ?
+          AND (f.home_team = ? OR f.away_team = ?)
+        GROUP BY f.fixture_id
+        ORDER BY f.kickoff_utc DESC
+        LIMIT ?
+        """,
+        (PRIMARY_STATS_PROVIDER, before_date, team, team, limit),
+    ).fetchall()
+    if not rows:
+        return None
+    letters = []
+    for row in reversed(rows):
+        hg, ag = row["hg"], row["ag"]
+        if hg is None or ag is None:
+            continue
+        is_home = row["home_team"] == team
+        my, opp = (hg, ag) if is_home else (ag, hg)
+        letters.append("W" if my > opp else ("D" if my == opp else "L"))
+    if not letters:
+        return None
+    return {"sequence": "".join(letters), "n": len(letters)}
+
+
 def build_match_facts(fixture_id: str) -> dict:
     """ساخت «JSON واقعیت‌ها» برای یک بازی — تنها ورودی مجاز LLM و رندرر.
 
@@ -227,6 +319,7 @@ def build_match_facts(fixture_id: str) -> dict:
         DataQuality,
         Last5,
         MatchFacts,
+        RecentForm,
         SourceInfo,
         StatValue,
         TeamSide,
@@ -247,6 +340,10 @@ def build_match_facts(fixture_id: str) -> dict:
             l5 = last5_from_db(conn, team, kickoff[:10])
             xg = _team_xg_avg(conn, team, kickoff[:10])
             corners = _team_corners_avg(conn, team, kickoff[:10])
+            xga = _team_xga_avg(conn, team, kickoff[:10])
+            sot = _team_sot_avg(conn, team, kickoff[:10])
+            series = _team_xg_series(conn, team, kickoff[:10])
+            form_seq = _team_form_sequence(conn, team, kickoff[:10])
             return TeamSide(
                 name_fa=team_name_fa(team),
                 name_en=team,
@@ -257,6 +354,14 @@ def build_match_facts(fixture_id: str) -> dict:
                 corners_avg=StatValue(
                     value=round(corners["avg"], 1), n=corners["n"], provider=PRIMARY_STATS_PROVIDER
                 ) if corners else None,
+                xg_against_avg=StatValue(
+                    value=round(xga["avg"], 2), n=xga["n"], provider=PRIMARY_STATS_PROVIDER
+                ) if xga else None,
+                sot_avg=StatValue(
+                    value=round(sot["avg"], 1), n=sot["n"], provider=PRIMARY_STATS_PROVIDER
+                ) if sot else None,
+                xg_series=series,
+                recent_form=RecentForm(**form_seq) if form_seq else None,
             )
 
         home = side(fx["home_team"])

@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: xgpedia
-Version: 0.8.2
+Version: 0.9.0
 Summary: XGPedia — خط تولید محتوای تحلیلی فوتبال داده‌محور (عدد را API می‌دهد، متن را مدل می‌نویسد، تصویر را قالب HTML می‌سازد)
 Requires-Python: >=3.12
 Requires-Dist: httpx>=0.27
@@ -9,6 +9,7 @@ Requires-Dist: python-dotenv>=1.0
 Provides-Extra: render
 Requires-Dist: jinja2>=3.1; extra == "render"
 Requires-Dist: playwright>=1.47; extra == "render"
+Requires-Dist: jdatetime>=5.0; extra == "render"
 Provides-Extra: publish
 Requires-Dist: aiogram>=3.13; extra == "publish"
 Requires-Dist: feedparser>=6.0; extra == "publish"

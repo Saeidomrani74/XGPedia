@@ -64,3 +64,70 @@ def stat_or_none(v: StatValue | None, min_n: int = 5) -> float | None:
     if v.n is not None and v.n < min_n:
         return None
     return v.value
+
+
+# ─── مدل Dixon-Coles (پواسون تعدیل‌شده) — ورودی فقط xG میانگین از fact_json ───
+
+DC_RHO = -0.07  # ضریب تعدیل نتیجه‌های کم‌گل؛ مقدار مرجع مقالهٔ Dixon-Coles 1997
+DC_MAX_GOALS = 6  # ماتریس تا ۶ گل هر طرف محاسبه می‌شود؛ دنبالهٔ بالا ناچیز است
+
+
+def _poisson_pmf(k: int, lam: float) -> float:
+    import math
+
+    fact = math.factorial(k)
+    return math.pow(lam, k) * math.exp(-lam) / fact
+
+
+def dixon_coles_matrix(lh: float, la: float, rho: float = DC_RHO) -> dict:
+    """ماتریس احتمال دقیق نتیجه از دو عدد xG — تعدیل Dixon-Coles روی نتیجه‌های کم‌گل.
+
+    ورودی صرفاً میانگین xG هر طرف از fact_json است؛ این تابع هیچ دادهٔ خارجی
+    نمی‌گیرد و deterministic است. خروجی: ماتریس ۰..۶ + احتمال‌های ۱X۲/بالای ۲.۵/هر دو گل.
+    """
+    lh = max(0.05, float(lh))
+    la = max(0.05, float(la))
+
+    def tau(h: int, a: int) -> float:
+        """تعدیل Dixon-Coles برای نتیجه‌های ۰-۰/۱-۰/۰-۱/۱-۱."""
+        if h == 0 and a == 0:
+            return 1 - lh * la * rho
+        if h == 0 and a == 1:
+            return 1 + lh * rho
+        if h == 1 and a == 0:
+            return 1 + la * rho
+        if h == 1 and a == 1:
+            return 1 - rho
+        return 1.0
+
+    matrix: list[list[float]] = []
+    p_h = p_d = p_a = p_o25 = p_btts = 0.0
+    for h in range(DC_MAX_GOALS + 1):
+        matrix.append([])
+        for a in range(DC_MAX_GOALS + 1):
+            p = max(0.0, _poisson_pmf(h, lh) * _poisson_pmf(a, la) * tau(h, a))
+            matrix[h].append(p)
+            if h > a:
+                p_h += p
+            elif h == a:
+                p_d += p
+            else:
+                p_a += p
+            if h + a >= 3:
+                p_o25 += p
+            if h >= 1 and a >= 1:
+                p_btts += p
+    total = p_h + p_d + p_a or 1.0
+    return {
+        "matrix": matrix,
+        "pH": p_h / total,
+        "pD": p_d / total,
+        "pA": p_a / total,
+        "pO25": p_o25 / total,
+        "pBTTS": p_btts / total,
+    }
+
+
+def expected_points(p_h: float, p_d: float, p_a: float) -> tuple[float, float]:
+    """امتیاز انتظاری هر طرف از احتمال‌های ۱X۲ — برد ۳، مساوی ۱."""
+    return round(p_h * 3 + p_d, 2), round(p_a * 3 + p_d, 2)

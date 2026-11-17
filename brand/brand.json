@@ -14,6 +14,40 @@
     "بی‌اغراق"
   ],
   "slogan_tone": "کمتر حرف، بیشتر عدد، با منبع.",
+  "matchday_palette": {
+    "note": "پالت استودیو کارت پیش‌بازی (ابزار طراحی tools/matchday_studio.html) — تمام رنگ‌های قالب match_preview.html.j2 از همین بخش تزریق می‌شود تا هیچ هگز در قالب هاردکد نباشد.",
+    "bg_studio": "#030711",
+    "bg_card": "#0D1730",
+    "bg_panel": "#091124",
+    "bg_deep": "#091226",
+    "bg_row": "#040814",
+    "card_grad_from": "#101A30",
+    "card_grad_to": "#091020",
+    "glass_grad_from": "rgba(16, 28, 58, 0.78)",
+    "glass_grad_to": "rgba(8, 14, 32, 0.90)",
+    "accent_red": "#E62E45",
+    "emerald": "#10B981",
+    "emerald_bright": "#34D399",
+    "amber": "#F59E0B",
+    "amber_bright": "#FBBF24",
+    "sky_bright": "#38BDF8",
+    "sky_bright_light": "#7DD3FC",
+    "draw_grey": "#475569",
+    "text_bright": "#F8FAFC",
+    "text_body": "#F1F5F9",
+    "text_soft": "#E2E8F0",
+    "text_line": "#CBD5E1",
+    "text_slate": "#94A3B8",
+    "text_muted": "#64748B",
+    "text_dim": "#F8FAFC",
+    "amber_soft": "#FCD34D",
+    "bg_deep_90": "rgba(9, 18, 38, 0.9)",
+    "navy_shield": "#152347",
+    "focus_amber": "#F59E0B",
+    "watch_bg": "rgba(15, 23, 42, 0.9)",
+    "ink_deep": "#070D1D",
+    "duel_vs_red": "#FF4D60"
+  },
   "colors": {
     "signal_red": "#FC0C26",
     "deep_navy": "#223D67",
@@ -66,6 +100,17 @@
       "Bold 700",
       "Black 800"
     ],
+    "font_files": {
+      "note": "نسخهٔ ttf برای نصب/طراحی؛ نسخهٔ woff2 برای لایهٔ رندر — cards.py این چهار فایل را به‌صورت data URI داخل HTML جاسازی می‌کند",
+      "ttf_dir": "brand/fonts/",
+      "woff2_dir": "brand/fonts/",
+      "woff2_files": [
+        "Vazirmatn-Regular.woff2",
+        "Vazirmatn-Medium.woff2",
+        "Vazirmatn-Bold.woff2",
+        "Vazirmatn-Black.woff2"
+      ]
+    },
     "card_sizes_1080x1350": {
       "main_number": "220-280px (Black 800) — تا 320px برای عدد روز",
       "title": "64px (Bold 700)",

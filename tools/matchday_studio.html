@@ -1,0 +1,2347 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>XGPedia Matchday Studio | استودیو طراحی کارت پیش‌بازی</title>
+
+  <!-- Google Fonts: Vazirmatn + Space Grotesk + JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Space+Grotesk:wght@600;700;800&family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- html2canvas for 2x High-Res Broadcast Export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <style>
+    :root {
+      --bg-studio: #030711;
+      --bg-panel: #091124;
+      --bg-card: #0D1730;
+      --accent-red: #E62E45;
+      --accent-emerald: #10B981;
+      --accent-amber: #F59E0B;
+      --home-color: #EF0107;
+      --away-color: #38BDF8;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Vazirmatn', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-studio);
+      color: #F8FAFC;
+      overflow-x: hidden;
+      font-feature-settings: "tnum" 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .font-mono-en {
+      font-family: 'JetBrains Mono', 'Space Grotesk', monospace;
+      font-feature-settings: "tnum" 1;
+    }
+
+    .font-display-en {
+      font-family: 'Space Grotesk', sans-serif;
+      font-feature-settings: "tnum" 1;
+    }
+
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(5, 9, 20, 0.7);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.25);
+      border-radius: 999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(230, 46, 69, 0.75);
+    }
+
+    /* Studio Stage Ambient Grid */
+    .studio-viewport-bg {
+      background-color: #02050D;
+      background-image:
+        radial-gradient(circle at 50% 35%, rgba(230, 46, 69, 0.08) 0%, transparent 55%),
+        radial-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+      background-size: 100% 100%, 24px 24px;
+    }
+
+    /* Locked Artboard Container */
+    #artboard-scale-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 32px 90px -12px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.1);
+      border-radius: 18px;
+      overflow: hidden;
+    }
+
+    #export-artboard {
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform-origin: top left;
+      background-color: #0D1730;
+      color: #F8FAFC;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      user-select: none;
+    }
+
+    /* Subtle Broadcast Scanline Overlay */
+    .broadcast-scanlines {
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.015) 0px,
+        rgba(255, 255, 255, 0.015) 1px,
+        transparent 1px,
+        transparent 4px
+      );
+    }
+
+    /* Glass Broadcast Card Architecture */
+    .xg-glass-card {
+      position: relative;
+      background: linear-gradient(165deg, rgba(16, 28, 58, 0.78) 0%, rgba(8, 14, 32, 0.90) 100%);
+      border: 1px solid rgba(248, 250, 252, 0.12);
+      border-radius: 20px;
+      padding: 14px 18px;
+      box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    /* Editorial Dark Tactical Card */
+    .xg-tactical-editorial {
+      position: relative;
+      background: linear-gradient(150deg, #101A30 0%, #091020 100%);
+      border: 1px solid rgba(127, 166, 232, 0.22);
+      border-radius: 20px;
+      padding: 14px 18px;
+      box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .xg-tactical-editorial::before {
+      content: '';
+      position: absolute;
+      left: -18%;
+      bottom: -55%;
+      width: 85%;
+      height: 130%;
+      border: 1px solid rgba(127, 166, 232, 0.14);
+      border-radius: 50%;
+      transform: rotate(-22deg);
+      pointer-events: none;
+    }
+
+    /* Unified 1X2 Probability Capsule */
+    .prob-capsule {
+      width: 100%;
+      height: 36px;
+      border-radius: 999px;
+      overflow: hidden;
+      display: flex;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+    }
+
+    .prob-seg {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 16px;
+      transition: width 0.25s ease;
+      border-radius: 0 !important;
+    }
+
+    /* Flat-Inner Proportional Comparison Bars */
+    .comp-bar-track {
+      height: 11px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+    }
+
+    .comp-bar-track.home-side {
+      border-radius: 0 999px 999px 0;
+      justify-content: flex-end;
+    }
+
+    .comp-bar-track.away-side {
+      border-radius: 999px 0 0 999px;
+      justify-content: flex-start;
+    }
+
+    .comp-bar-fill-home {
+      height: 100%;
+      border-radius: 0 999px 999px 0;
+      transition: width 0.25s ease;
+    }
+
+    .comp-bar-fill-away {
+      height: 100%;
+      border-radius: 999px 0 0 999px;
+      transition: width 0.25s ease;
+    }
+
+    /* Form Circles */
+    .form-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Vazirmatn', sans-serif;
+      font-size: 13px;
+      font-weight: 900;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+    }
+    .form-W { background: #10B981; color: #070D1D; }
+    .form-D { background: #F59E0B; color: #070D1D; }
+    .form-L { background: #E62E45; color: #FFFFFF; }
+
+    /* Range Slider Styling */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 999px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #E62E45;
+      border: 2px solid #FFFFFF;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- TOP STUDIO BAR -->
+  <header class="h-14 bg-[#070D1D] border-b border-white/10 px-4 flex items-center justify-between gap-3 shrink-0 z-30">
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-lg bg-[#E62E45] flex items-center justify-center shadow-lg shadow-[#E62E45]/30">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M4 4L20 20M20 4L4 20" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"/>
+            <circle cx="12" cy="12" r="3" fill="#070D1D"/>
+          </svg>
+        </div>
+        <div>
+          <span class="font-black text-base tracking-tight text-white">XGPedia</span>
+          <span class="text-[11px] text-slate-400 font-medium mr-1.5 hidden sm:inline">استودیو کارت پیش‌بازی</span>
+        </div>
+      </div>
+
+      <!-- Format Switcher -->
+      <div class="hidden md:flex items-center bg-[#030711] p-1 rounded-xl border border-white/10 gap-1 mr-4">
+        <button data-format="4:5" class="fmt-btn px-3 py-1 rounded-lg text-xs font-bold bg-[#E62E45] text-white transition">پست 4:5 (1080×1350)</button>
+        <button data-format="9:16" class="fmt-btn px-3 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition">استوری 9:16 (1080×1920)</button>
+        <button data-format="16:9" class="fmt-btn px-3 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition">بنر 16:9 (1920×1080)</button>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <!-- Monochrome Brand Watermark Toggle -->
+      <button id="toggle-mono-brand" type="button" class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-slate-300 transition flex items-center gap-1.5">
+        <span id="mono-dot" class="w-2 h-2 rounded-full bg-[#E62E45]"></span>
+        <span>لوگو: دو رنگ</span>
+      </button>
+
+      <!-- Export PNG 2x -->
+      <button id="btn-export-png" type="button" class="px-4 py-1.5 rounded-xl bg-[#E62E45] hover:bg-[#d12238] text-white text-xs font-extrabold shadow-lg shadow-[#E62E45]/25 transition flex items-center gap-1.5">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        <span>دانلود PNG (2x)</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Format Bar -->
+  <div class="flex md:hidden items-center justify-center bg-[#070D1D] border-b border-white/10 p-2 gap-1.5">
+    <button data-format="4:5" class="fmt-btn flex-1 py-1.5 rounded-lg text-xs font-bold bg-[#E62E45] text-white">پست 4:5</button>
+    <button data-format="9:16" class="fmt-btn flex-1 py-1.5 rounded-lg text-xs font-semibold text-slate-400 bg-white/5">استوری 9:16</button>
+    <button data-format="16:9" class="fmt-btn flex-1 py-1.5 rounded-lg text-xs font-semibold text-slate-400 bg-white/5">بنر 16:9</button>
+  </div>
+
+  <!-- MAIN WORKSPACE -->
+  <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
+
+    <!-- SIDEBAR CONTROLS -->
+    <aside class="w-full lg:w-[410px] bg-[#070D1D] border-b lg:border-b-0 lg:border-l border-white/10 flex flex-col shrink-0 max-h-[48vh] lg:max-h-[calc(100vh-3.5rem)]">
+      <!-- Sidebar Tabs -->
+      <div class="grid grid-cols-4 bg-[#040814] border-b border-white/10 p-1.5 gap-1 shrink-0">
+        <button data-tab="versions" class="tab-btn py-2 rounded-lg text-xs font-bold bg-white/10 text-white">ورژن و ماژول</button>
+        <button data-tab="match" class="tab-btn py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-white">مسابقه و پخش</button>
+        <button data-tab="teams" class="tab-btn py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-white">تیم‌ها و مهره</button>
+        <button data-tab="analytics" class="tab-btn py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-white">آمار و تحلیل</button>
+      </div>
+
+      <!-- Tab Panels Container -->
+      <div class="flex-1 overflow-y-auto p-4 space-y-5">
+
+        <!-- TAB 1: VERSIONS & MODULES -->
+        <div id="tab-versions" class="tab-panel space-y-5">
+          <div>
+            <label class="block text-xs font-extrabold text-slate-300 mb-2">انتخاب ورژن قالب (۵ نسخه آماده)</label>
+            <div class="space-y-1.5" id="version-buttons">
+              <button data-version="smart" class="ver-btn w-full text-right px-3.5 py-2.5 rounded-xl border border-[#E62E45] bg-[#E62E45]/15 text-white text-xs font-bold flex items-center justify-between">
+                <span>✨ هوشمند (بر اساس دیتای موجود)</span>
+                <span class="text-[10px] font-mono-en px-2 py-0.5 rounded bg-[#E62E45] text-white">AUTO</span>
+              </button>
+              <button data-version="v1" class="ver-btn w-full text-right px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-200 text-xs font-bold flex items-center justify-between">
+                <span>نسخه ۱: تحلیلی جامع (رادار + نکته تماشا + مهره‌ها)</span>
+                <span class="text-[10px] font-mono-en text-slate-400">V1</span>
+              </button>
+              <button data-version="v2" class="ver-btn w-full text-right px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-200 text-xs font-bold flex items-center justify-between">
+                <span>نسخه ۲: مدل پواسون و موج زمانی + سیگنال (+EV)</span>
+                <span class="text-[10px] font-mono-en text-slate-400">V2</span>
+              </button>
+              <button data-version="v3" class="ver-btn w-full text-right px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-200 text-xs font-bold flex items-center justify-between">
+                <span>نسخه ۳: فرم ۱۰ بازی اخیر + هشدارهای تاکتیکی</span>
+                <span class="text-[10px] font-mono-en text-slate-400">V3</span>
+              </button>
+              <button data-version="custom" class="ver-btn w-full text-right px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-200 text-xs font-bold flex items-center justify-between">
+                <span>نسخه کاستوم (کم و زیاد کردن + نیم‌عرض / تمام‌عرض)</span>
+                <span class="text-[10px] font-mono-en text-amber-400">CUSTOM</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Module List with Half-Width (½) vs Full-Width (1) Toggle -->
+          <div class="bg-[#040814] border border-white/10 rounded-2xl p-3.5 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-extrabold text-white">چیدمان و عرض ماژول‌ها</span>
+              <span class="text-[11px] text-slate-400">دو ماژول ½ کنار هم قرار می‌گیرند</span>
+            </div>
+            <div id="module-controls-list" class="space-y-2"></div>
+          </div>
+
+          <!-- Quick Match Presets -->
+          <div>
+            <label class="block text-xs font-extrabold text-slate-300 mb-2">پریست‌های آماده مسابقات</label>
+            <div class="grid grid-cols-2 gap-2">
+              <button data-preset="ars_liv" class="preset-btn p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-right text-xs font-bold">
+                آرسنال × لیورپول
+                <span class="block text-[10px] text-slate-400 font-normal mt-0.5">لیگ برتر انگلیس • W9</span>
+              </button>
+              <button data-preset="ars_bay" class="preset-btn p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-right text-xs font-bold">
+                آرسنال × بایرن مونیخ
+                <span class="block text-[10px] text-slate-400 font-normal mt-0.5">لیگ قهرمانان اروپا • QF1</span>
+              </button>
+              <button data-preset="prs_est" class="preset-btn p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-right text-xs font-bold">
+                پرسپولیس × استقلال
+                <span class="block text-[10px] text-slate-400 font-normal mt-0.5">لیگ برتر خلیج فارس • W11</span>
+              </button>
+              <button data-preset="rma_bar" class="preset-btn p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-right text-xs font-bold">
+                رئال مادرید × بارسلونا
+                <span class="block text-[10px] text-slate-400 font-normal mt-0.5">لالیگا اسپانیا • W32</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: MATCH, STADIUM, BROADCAST & PROBABILITIES -->
+        <div id="tab-match" class="tab-panel hidden space-y-4">
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-400 mb-1">نام رقابت / لیگ</label>
+              <input id="inp-competition" type="text" class="w-full px-3 py-2 rounded-xl bg-[#040814] border border-white/10 text-xs text-white" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-400 mb-1">هفته / مرحله</label>
+              <input id="inp-round" type="text" class="w-full px-3 py-2 rounded-xl bg-[#040814] border border-white/10 text-xs text-white" />
+            </div>
+          </div>
+
+          <!-- Dynamic Footer Telemetry Inputs (League EN, Season, Week Code) -->
+          <div class="bg-[#040814] border border-white/10 rounded-2xl p-3 space-y-2">
+            <span class="text-[11px] font-extrabold text-slate-300 block">متادیتای داینامیک فوتر (لیگ، فصل و هفته)</span>
+            <div class="grid grid-cols-12 gap-2">
+              <div class="col-span-6">
+                <label class="block text-[10px] text-slate-400 mb-1">لیگ (انگلیسی)</label>
+                <input id="inp-league-en" type="text" dir="ltr" placeholder="PREMIER LEAGUE" class="w-full px-2.5 py-1.5 rounded-lg bg-[#091124] border border-white/10 text-xs font-mono-en uppercase text-white" />
+              </div>
+              <div class="col-span-3">
+                <label class="block text-[10px] text-slate-400 mb-1">فصل</label>
+                <input id="inp-season" type="text" dir="ltr" placeholder="26/27" class="w-full px-2 py-1.5 rounded-lg bg-[#091124] border border-white/10 text-xs font-mono-en text-center text-white" />
+              </div>
+              <div class="col-span-3">
+                <label class="block text-[10px] text-slate-400 mb-1">هفته</label>
+                <input id="inp-week-code" type="text" dir="ltr" placeholder="W9" class="w-full px-2 py-1.5 rounded-lg bg-[#091124] border border-white/10 text-xs font-mono-en uppercase text-center text-white" />
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-400 mb-1">تاریخ / روز برگزاری</label>
+              <input id="inp-day" type="text" class="w-full px-3 py-2 rounded-xl bg-[#040814] border border-white/10 text-xs text-white" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-400 mb-1">ساعت بازی</label>
+              <input id="inp-time" type="text" class="w-full px-3 py-2 rounded-xl bg-[#040814] border border-white/10 text-xs text-white text-center font-mono-en" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-400 mb-1">نام ورزشگاه</label>
+              <input id="inp-stadium" type="text" class="w-full px-3 py-2 rounded-xl bg-[#040814] border border-white/10 text-xs text-white" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-400 mb-1">پخش زنده (شبکه تلویزیونی)</label>
+              <input id="inp-broadcast" type="text" class="w-full px-3 py-2 rounded-xl bg-[#040814] border border-white/10 text-xs text-white" />
+            </div>
+          </div>
+
+          <!-- 1X2 Probability Sliders -->
+          <div class="bg-[#040814] border border-white/10 rounded-2xl p-3.5 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-extrabold text-white">احتمالات نتیجه (۱X۲) و ضرایب منصفانه</span>
+              <button id="btn-calc-poisson" type="button" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[11px] font-bold hover:bg-emerald-500/25">
+                محاسبه از xG
+              </button>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span>برد میزبان</span>
+                <span id="lbl-prob-home" class="font-bold text-white">۴۲٪</span>
+              </div>
+              <input id="rng-prob-home" type="range" min="5" max="88" class="w-full" />
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span>مساوی</span>
+                <span id="lbl-prob-draw" class="font-bold text-slate-300">۲۷٪</span>
+              </div>
+              <input id="rng-prob-draw" type="range" min="5" max="70" class="w-full" />
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span>برد میهمان</span>
+                <span id="lbl-prob-away" class="font-bold text-white">۳۱٪</span>
+              </div>
+              <input id="rng-prob-away" type="range" min="5" max="88" class="w-full" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-slate-400 mb-1">منبع آمار فوتر</label>
+            <input id="inp-source" type="text" class="w-full px-3 py-2 rounded-xl bg-[#040814] border border-white/10 text-xs text-white" />
+          </div>
+        </div>
+
+        <!-- TAB 3: TEAMS, CRESTS, FORM & KEY PLAYERS -->
+        <div id="tab-teams" class="tab-panel hidden space-y-4">
+          <!-- Home Team -->
+          <div class="bg-[#040814] border border-white/10 rounded-2xl p-3.5 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-extrabold text-white">تیم میزبان (سمت راست)</span>
+              <input id="inp-home-color" type="color" class="w-7 h-7 rounded cursor-pointer bg-transparent border-0" />
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <input id="inp-home-name" type="text" placeholder="نام فارسی" class="col-span-2 px-3 py-2 rounded-xl bg-[#091124] border border-white/10 text-xs text-white" />
+              <input id="inp-home-code" type="text" maxlength="3" placeholder="ARS" dir="ltr" class="px-2 py-2 rounded-xl bg-[#091124] border border-white/10 text-xs text-center text-white font-mono-en uppercase" />
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">خط زیر لوگو (مربی و جمله توضیحی تیم)</label>
+              <input id="inp-home-sub" type="text" placeholder="میکل آرتتا • مستحکم‌ترین خط دفاع" class="w-full px-3 py-2 rounded-xl bg-[#091124] border border-white/10 text-xs text-white" />
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[11px] text-slate-400">فرم ۵ بازی (ب/م/ش):</span>
+              <div id="home-form-toggles" class="flex gap-1.5"></div>
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="flex-1 py-1.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] text-center font-bold cursor-pointer">
+                آپلود لوگوی PNG میزبان
+                <input id="file-home-logo" type="file" accept="image/*" class="hidden" />
+              </label>
+              <button id="clear-home-logo" type="button" class="px-2.5 py-1.5 rounded-xl bg-red-500/15 text-red-400 text-[11px] font-bold">حذف</button>
+            </div>
+            <div class="pt-2 border-t border-white/10 space-y-2">
+              <span class="text-[11px] font-bold text-slate-300 block">مهره کلیدی میزبان</span>
+              <div class="grid grid-cols-2 gap-2">
+                <input id="inp-kp-home-name" type="text" placeholder="نام بازیکن" class="px-2.5 py-1.5 rounded-lg bg-[#091124] border border-white/10 text-xs text-white" />
+                <input id="inp-kp-home-pos" type="text" placeholder="پست" class="px-2.5 py-1.5 rounded-lg bg-[#091124] border border-white/10 text-xs text-white" />
+                <input id="inp-kp-home-s1" type="text" placeholder="آمار ۱ (مثلا 0.89 xG+xA)" class="px-2.5 py-1.5 rounded-lg bg-[#091124] border border-white/10 text-xs text-white" />
+                <input id="inp-kp-home-s2" type="text" placeholder="آمار ۲ (مثلا 3.4 پاس کلیدی)" class="px-2.5 py-1.5 rounded-lg bg-[#091124] border border-white/10 text-xs text-white" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Away Team -->
+          <div class="bg-[#040814] border border-white/10 rounded-2xl p-3.5 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-extrabold text-white">تیم میهمان (سمت چپ)</span>
+              <input id="inp-away-color" type="color" class="w-7 h-7 rounded cursor-pointer bg-transparent border-0" />
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <input id="inp-away-name" type="text" placeholder="نام فارسی" class="col-span-2 px-3 py-2 rounded-xl bg-[#091124] border border-white/10 text-xs text-white" />
+              <input id="inp-away-code" type="text" maxlength="3" placeholder="LIV" dir="ltr" class="px-2 py-2 rounded-xl bg-[#091124] border border-white/10 text-xs text-center text-white font-mono-en uppercase" />
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">خط زیر لوگو (مربی و جمله توضیحی تیم)</label>
+              <input id="inp-away-sub" type="text" placeholder="آرنه اسلوت • بهترین خط حمله خارج خانه" class="w-full px-3 py-2 rounded-xl bg-[#091124] border border-white/10 text-xs text-white" />
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[11px] text-slate-400">فرم ۵ بازی (ب/م/ش):</span>
+              <div id="away-form-toggles" class="flex gap-1.5"></div>
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="flex-1 py-1.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] text-center font-bold cursor-pointer">
+                آپلود لوگوی PNG میهمان
+                <input id="file-away-logo" type="file" accept="image/*" class="hidden" />
+              </label>
+              <button id="clear-away-logo" type="button" class="px-2.5 py-1.5 rounded-xl bg-red-500/15 text-red-400 text-[11px] font-bold">حذف</button>
+            </div>
+            <div class="pt-2 border-t border-white/10 space-y-2">
+              <span class="text-[11px] font-bold text-slate-300 block">مهره کلیدی میهمان</span>
+              <div class="grid grid-cols-2 gap-2">
+                <input id="inp-kp-away-name" type="text" placeholder="نام بازیکن" class="px-2.5 py-1.5 rounded-lg bg-[#091124] border border-white/10 text-xs text-white" />
+                <input id="inp-kp-away-pos" type="text" placeholder="پست" class="px-2.5 py-1.5 rounded-lg bg-[#091124] border border-white/10 text-xs text-white" />
+                <input id="inp-kp-away-s1" type="text" placeholder="آمار ۱" class="px-2.5 py-1.5 rounded-lg bg-[#091124] border border-white/10 text-xs text-white" />
+                <input id="inp-kp-away-s2" type="text" placeholder="آمار ۲" class="px-2.5 py-1.5 rounded-lg bg-[#091124] border border-white/10 text-xs text-white" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: ANALYTICS DATA -->
+        <div id="tab-analytics" class="tab-panel hidden space-y-4">
+          <div class="bg-[#040814] border border-white/10 rounded-2xl p-3.5 space-y-3">
+            <span class="text-xs font-extrabold text-white block">شاخص‌های مقایسه‌ای (میزبان / میهمان)</span>
+            <div class="grid grid-cols-3 gap-2 items-center text-xs">
+              <span class="text-slate-400">امید گل (xG)</span>
+              <input id="inp-xg-home" type="number" step="0.01" class="px-2.5 py-1.5 rounded-lg bg-[#091124] border border-white/10 text-center font-mono-en" />
+              <input id="inp-xg-away" type="number" step="0.01" class="px-2.5 py-1.5 rounded-lg bg-[#091124] border border-white/10 text-center font-mono-en" />
+            </div>
+            <div class="grid grid-cols-3 gap-2 items-center text-xs">
+              <span class="text-slate-400">امید گل خورده (xGA)</span>
+              <input id="inp-xga-home" type="number" step="0.01" class="px-2.5 py-1.5 rounded-lg bg-[#091124] border border-white/10 text-center font-mono-en" />
+              <input id="inp-xga-away" type="number" step="0.01" class="px-2.5 py-1.5 rounded-lg bg-[#091124] border border-white/10 text-center font-mono-en" />
+            </div>
+            <div class="grid grid-cols-3 gap-2 items-center text-xs">
+              <span class="text-slate-400">شوت در چارچوب</span>
+              <input id="inp-sot-home" type="number" step="0.1" class="px-2.5 py-1.5 rounded-lg bg-[#091124] border border-white/10 text-center font-mono-en" />
+              <input id="inp-sot-away" type="number" step="0.1" class="px-2.5 py-1.5 rounded-lg bg-[#091124] border border-white/10 text-center font-mono-en" />
+            </div>
+          </div>
+
+          <div class="bg-[#040814] border border-white/10 rounded-2xl p-3.5 space-y-2.5">
+            <span class="text-xs font-extrabold text-white block">نقطه تمرکز بازی و هشدارها</span>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">عنوان نکته تماشا</label>
+              <input id="inp-focus-title" type="text" class="w-full px-3 py-1.5 rounded-xl bg-[#091124] border border-white/10 text-xs text-white" />
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">تحلیل تاکتیکی</label>
+              <textarea id="inp-focus-body" rows="2" class="w-full px-3 py-1.5 rounded-xl bg-[#091124] border border-white/10 text-xs text-white"></textarea>
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">باید حواسشون بهش باشه (میزبان)</label>
+              <input id="inp-watch-home" type="text" class="w-full px-3 py-1.5 rounded-xl bg-[#091124] border border-white/10 text-xs text-white" />
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">باید حواسشون بهش باشه (میهمان)</label>
+              <input id="inp-watch-away" type="text" class="w-full px-3 py-1.5 rounded-xl bg-[#091124] border border-white/10 text-xs text-white" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Copy JSON Action -->
+      <div class="p-3 bg-[#040814] border-t border-white/10 flex items-center justify-between gap-2 shrink-0">
+        <button id="btn-copy-json" type="button" class="flex-1 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-slate-300">
+          کپی دیتای JSON
+        </button>
+        <span id="artboard-dim-badge" class="px-3 py-2 rounded-xl bg-black/50 border border-white/10 text-[11px] font-mono-en text-slate-400">
+          1080×1350
+        </span>
+      </div>
+    </aside>
+
+    <!-- CENTER STAGE: EXACT ASPECT-LOCKED LIVE PREVIEW -->
+    <main id="stage-container" class="flex-1 studio-viewport-bg flex items-center justify-center p-4 sm:p-8 overflow-hidden relative">
+      <div id="artboard-scale-wrapper">
+        <!-- ================================================================
+             EXPORT ARTBOARD (EXACT 1080x1350 / 1080x1920 / 1920x1080)
+             ================================================================ -->
+        <div id="export-artboard" dir="rtl">
+
+          <!-- LAYER 1: Ambient Dual-Team Radial Lighting -->
+          <div id="card-ambient-glow" class="absolute inset-0 pointer-events-none z-0"></div>
+
+          <!-- LAYER 2: Architectural Tactical Pitch Markings & Outer Perimeter Frame -->
+          <svg
+            id="card-pitch-svg"
+            class="absolute inset-0 w-full h-full pointer-events-none z-0"
+            viewBox="0 0 1080 1350"
+            preserveAspectRatio="xMidYMid slice"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <defs>
+              <pattern id="techGridPattern" width="54" height="54" patternUnits="userSpaceOnUse">
+                <path d="M 54 0 L 0 0 0 54" fill="none" stroke="#F8FAFC" stroke-opacity="0.055" stroke-width="1" />
+              </pattern>
+              <radialGradient id="radarFadeGrad" cx="50%" cy="30%" r="44%">
+                <stop offset="0%" stop-color="#E62E45" stop-opacity="0.22" />
+                <stop offset="55%" stop-color="#E62E45" stop-opacity="0.06" />
+                <stop offset="100%" stop-color="#E62E45" stop-opacity="0" />
+              </radialGradient>
+            </defs>
+
+            <!-- 1px Coordinate Grid -->
+            <rect width="100%" height="100%" fill="url(#techGridPattern)" />
+
+            <!-- Outer Tactical Pitch Perimeter Frame (12px margin) -->
+            <rect id="outer-perimeter-rect" x="12" y="12" width="1056" height="1326" rx="18" stroke="#F8FAFC" stroke-opacity="0.11" stroke-width="1.5" />
+
+            <!-- Subtle Vertical Halfway Pitch Line & Penalty Arcs -->
+            <line id="pitch-halfway-line" x1="540" y1="12" x2="540" y2="1338" stroke="#F8FAFC" stroke-opacity="0.09" stroke-width="1.5" stroke-dasharray="8 8" />
+            <circle cx="540" cy="315" r="145" stroke="#F8FAFC" stroke-opacity="0.09" stroke-width="1.5" />
+
+            <!-- Left & Right Penalty Box Silhouettes -->
+            <rect x="12" y="145" width="135" height="360" stroke="#F8FAFC" stroke-opacity="0.07" stroke-width="1.5" />
+            <path d="M147 245 A 95 95 0 0 1 147 405" stroke="#F8FAFC" stroke-opacity="0.07" stroke-width="1.5" />
+            <rect id="pitch-right-box" x="933" y="145" width="135" height="360" stroke="#F8FAFC" stroke-opacity="0.07" stroke-width="1.5" />
+            <path id="pitch-right-arc" d="M933 245 A 95 95 0 0 0 933 405" stroke="#F8FAFC" stroke-opacity="0.07" stroke-width="1.5" />
+
+            <!-- Concentric xG Radar Rings Centered on VS Axis -->
+            <circle cx="540" cy="315" r="245" fill="url(#radarFadeGrad)" />
+            <circle cx="540" cy="315" r="215" stroke="#E62E45" stroke-opacity="0.18" stroke-width="1.2" stroke-dasharray="4 6" />
+            <circle cx="540" cy="315" r="295" stroke="#F8FAFC" stroke-opacity="0.07" stroke-width="1" />
+            <circle cx="540" cy="315" r="375" stroke="#F8FAFC" stroke-opacity="0.045" stroke-width="1" />
+
+            <!-- Corner Calibration Crosshairs -->
+            <path id="corner-crosshairs-path" d="M24 44V24H44M1056 44V24H1036M24 1306V1326H44M1056 1306V1326H1036" stroke="#E62E45" stroke-opacity="0.55" stroke-width="2" />
+          </svg>
+
+          <!-- LAYER 3: Subtle Broadcast Scanlines -->
+          <div class="absolute inset-0 broadcast-scanlines pointer-events-none z-0"></div>
+
+          <!-- 1. TOP HEADER BAR -->
+          <header id="card-masthead" class="relative z-10 px-9 pt-7 pb-3 flex items-center justify-between gap-4 shrink-0">
+            <!-- Right (Start in RTL): Competition + Matchweek Pills & Date/Time + Stadium(Icon) + Live Broadcast -->
+            <div class="flex flex-col items-start gap-2">
+              <!-- Row 1: Competition Pill + Matchweek Pill -->
+              <div class="flex items-center gap-2.5">
+                <div
+                  class="px-4 py-1.5 rounded-full text-[18px] font-black flex items-center gap-2 border text-[#F8FAFC]"
+                  style="background-color: rgba(21, 35, 71, 0.85); border-color: rgba(255, 255, 255, 0.13);"
+                >
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#E62E45" stroke-width="2.3">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 21h8m-4-4v4m-5-17h10v5a5 5 0 01-10 0V4zM5 6H3v2a3 3 0 003 3h1m12-5h2v2a3 3 0 01-3 3h-1" />
+                  </svg>
+                  <span id="card-competition">لیگ برتر انگلیس</span>
+                </div>
+                <span
+                  id="card-round"
+                  class="px-4 py-1.5 rounded-full text-[17px] font-bold tracking-tight border"
+                  style="background-color: rgba(230, 46, 69, 0.14); border-color: rgba(230, 46, 69, 0.42); color: #E62E45;"
+                >
+                  هفته نهم • نبرد صدرنشینان
+                </span>
+              </div>
+
+              <!-- Row 2: Date/Time + Stadium (with Stadium SVG Icon) + Live Broadcast -->
+              <div class="flex items-center gap-2.5 text-[13.5px] font-bold text-slate-200">
+                <span id="card-header-datetime" class="text-slate-300">یکشنبه ۶ آبان ۱۴۰۵ • ۲۰:۰۰</span>
+                <span class="text-slate-600">|</span>
+                <span class="inline-flex items-center gap-1.5 text-white">
+                  <!-- Stadium Icon before Stadium Name -->
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#E62E45" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <ellipse cx="12" cy="8" rx="9" ry="3.5" />
+                    <path d="M3 8v6c0 1.93 4.03 3.5 9 3.5s9-1.57 9-3.5V8" />
+                    <path d="M7 11.2v5.8M12 11.5v6M17 11.2v5.8" />
+                    <path d="M6 4.8V3M18 4.8V3" />
+                  </svg>
+                  <span id="card-stadium">ورزشگاه امارات</span>
+                </span>
+                <span class="text-slate-600">|</span>
+                <span id="card-broadcast" class="px-2.5 py-0.5 rounded-full bg-[#10B981]/15 border border-[#10B981]/35 text-[#34D399] text-[12.5px] font-extrabold">
+                  پخش زنده: شبکه سه
+                </span>
+              </div>
+            </div>
+
+            <!-- Left (End in RTL): XGPedia Shield Logo Lockup -->
+            <div id="card-brand-logo" class="flex items-center gap-3.5 shrink-0"></div>
+          </header>
+
+          <!-- 2. MAIN CARD BODY -->
+          <div id="card-main-body" class="relative z-10 flex-1 px-9 py-2 flex flex-col justify-between gap-3 overflow-hidden">
+
+            <!-- HERO MATCHUP + VS + PROJECTED XG HUB + PROBABILITY CAPSULE -->
+            <section id="card-hero-section" class="flex flex-col justify-between shrink-0">
+              <!-- 3-Column Matchup Row -->
+              <div class="grid grid-cols-11 items-center gap-2">
+
+                <!-- HOME TEAM (Right 4 Cols — Larger Floating Logo without Background Box or HOME Pill) -->
+                <div class="col-span-4 flex flex-col items-center text-center">
+                  <div class="relative w-[184px] h-[184px] flex items-center justify-center mb-1.5">
+                    <div id="home-crest-slot" class="relative z-10 flex items-center justify-center"></div>
+                  </div>
+
+                  <h1 id="card-home-name" class="text-[40px] font-black text-white leading-[1.1] tracking-tight">آرسنال</h1>
+                  <p id="card-home-sub" class="text-[16px] font-bold text-slate-200/85 mt-1.5 line-clamp-1 max-w-[310px]">
+                    میکل آرتتا • مستحکم‌ترین خط دفاع
+                  </p>
+                  <div id="card-home-form" class="flex items-center gap-1.5 mt-2.5"></div>
+                </div>
+
+                <!-- CENTER HUB: VS Diamond + Projected xG Box -->
+                <div class="col-span-3 flex flex-col items-center justify-center text-center px-1">
+                  <!-- Top Crimson Laser Rule -->
+                  <div class="w-[2px] h-[36px]" style="background: linear-gradient(to bottom, transparent, #E62E45);"></div>
+
+                  <!-- Rotated Crimson Square VS Emblem -->
+                  <div class="relative my-2 flex items-center justify-center">
+                    <div class="w-[84px] h-[84px] rounded-[22px] rotate-45 bg-[#E62E45] shadow-[0_0_40px_rgba(230,46,69,0.55)] border-2 border-white/30"></div>
+                    <span class="absolute font-display-en font-bold text-[35px] text-white tracking-tighter">VS</span>
+                  </div>
+
+                  <!-- Bottom Laser Rule -->
+                  <div class="w-[2px] h-[24px] my-1.5" style="background: linear-gradient(to top, transparent, #E62E45);"></div>
+
+                  <!-- Projected xG & xPts Box -->
+                  <div class="w-full py-2.5 px-2.5 rounded-2xl bg-[#091226]/90 border border-white/14 shadow-xl">
+                    <div class="flex items-center justify-center gap-2.5">
+                      <span id="hero-xg-home" class="text-[32px] font-black leading-none" style="color: var(--home-color);">۲.۱۲</span>
+                      <span class="text-sm font-black text-slate-400 font-mono-en">xG</span>
+                      <span id="hero-xg-away" class="text-[32px] font-black leading-none" style="color: var(--away-color);">۲.۲۴</span>
+                    </div>
+                    <div class="mt-2 pt-1.5 border-t border-white/10 flex items-center justify-around text-[11px]">
+                      <div>
+                        <span class="text-slate-400 block text-[9.5px]">امتیاز انتظاری</span>
+                        <strong id="hero-xpts-home" class="font-extrabold text-white">۱.۵۳ xPts</strong>
+                      </div>
+                      <div class="h-4 w-[1px] bg-white/10"></div>
+                      <div>
+                        <span class="text-slate-400 block text-[9.5px]">مجموع xG بازی</span>
+                        <strong id="hero-xg-total" class="font-extrabold text-emerald-400">۴.۳۶</strong>
+                      </div>
+                      <div class="h-4 w-[1px] bg-white/10"></div>
+                      <div>
+                        <span class="text-slate-400 block text-[9.5px]">امتیاز انتظاری</span>
+                        <strong id="hero-xpts-away" class="font-extrabold text-white">۱.۲۰ xPts</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- AWAY TEAM (Left 4 Cols — Larger Floating Logo without Background Box or AWAY Pill) -->
+                <div class="col-span-4 flex flex-col items-center text-center">
+                  <div class="relative w-[184px] h-[184px] flex items-center justify-center mb-1.5">
+                    <div id="away-crest-slot" class="relative z-10 flex items-center justify-center"></div>
+                  </div>
+
+                  <h2 id="card-away-name" class="text-[40px] font-black text-white leading-[1.1] tracking-tight">لیورپول</h2>
+                  <p id="card-away-sub" class="text-[16px] font-bold text-slate-200/85 mt-1.5 line-clamp-1 max-w-[310px]">
+                    آرنه اسلوت • بهترین خط حمله خارج خانه
+                  </p>
+                  <div id="card-away-form" class="flex items-center gap-1.5 mt-2.5"></div>
+                </div>
+              </div>
+
+              <!-- Unified 1X2 Probability Capsule + Fair Odds Row (Increased Top Spacing mt-8) -->
+              <div class="mt-8 space-y-2">
+                <div class="prob-capsule">
+                  <div id="cap-home" class="prob-seg" style="width: 42%; background: var(--home-color); color: #FFFFFF;">۴۲٪</div>
+                  <div id="cap-draw" class="prob-seg" style="width: 27%; background: #475569; color: #F8FAFC;">۲۷٪</div>
+                  <div id="cap-away" class="prob-seg" style="width: 31%; background: var(--away-color); color: #FFFFFF;">۳۱٪</div>
+                </div>
+
+                <!-- Fair Odds Row: Draw Fair Odds aligned directly beneath Draw % inside capsule -->
+                <div class="relative w-full h-7 flex items-center justify-between px-1 text-xs font-extrabold">
+                  <div class="flex items-center gap-1.5 z-10">
+                    <span class="text-slate-400">ضریب منصفانه میزبان:</span>
+                    <span id="odds-home" class="text-sm font-black px-2 py-0.5 rounded-md bg-white/[0.06]" style="color: var(--home-color);">۲.۳۸</span>
+                  </div>
+
+                  <div
+                    id="odds-draw-anchor"
+                    class="absolute top-1/2 -translate-y-1/2 flex items-center gap-1.5 whitespace-nowrap z-10 transition-all duration-200"
+                    style="right: 55.5%; transform: translate(50%, -50%);"
+                  >
+                    <span class="text-slate-400">ضریب مساوی:</span>
+                    <span id="odds-draw" class="text-sm font-black px-2 py-0.5 rounded-md bg-white/[0.06] text-slate-200">۳.۷۰</span>
+                  </div>
+
+                  <div class="flex items-center gap-1.5 z-10">
+                    <span class="text-slate-400">ضریب منصفانه میهمان:</span>
+                    <span id="odds-away" class="text-sm font-black px-2 py-0.5 rounded-md bg-white/[0.06]" style="color: var(--away-color);">۳.۲۳</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- DYNAMIC 2-COLUMN MODULAR GRID -->
+            <section id="modules-grid" class="flex-1 grid grid-cols-2 gap-3.5 content-stretch min-h-0"></section>
+
+          </div>
+
+          <!-- 3. BROADCAST FOOTER WITH DYNAMIC LEAGUE, SEASON & WEEK TELEMETRY -->
+          <footer class="relative z-10 px-9 py-3.5 border-t border-white/12 bg-black/25 flex items-center justify-between text-xs text-slate-400 shrink-0">
+            <!-- Right: Dynamic League + Season + Week // PRE - MATCH with Red Dot -->
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-[#E62E45]"></span>
+              <span id="card-micro-tag" dir="ltr" class="font-mono-en text-[13px] font-bold tracking-[0.18em] uppercase text-slate-200/90">
+                PREMIER LEAGUE 26/27 W9 // PRE - MATCH
+              </span>
+            </div>
+
+            <!-- Left: Source & Social Handles -->
+            <div class="flex items-center gap-3 font-mono-en font-bold text-slate-300" dir="ltr">
+              <span>@XGPedia</span>
+              <span class="text-slate-600">•</span>
+              <span>XGPedia.ir</span>
+              <span class="text-slate-600">|</span>
+              <span id="card-source" class="text-slate-400 font-medium text-[11px]">Opta / Dixon-Coles 10K</span>
+            </div>
+          </footer>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast Message -->
+  <div id="toast" class="fixed bottom-5 left-5 z-50 px-4 py-2.5 rounded-xl bg-[#0F172A] border border-[#E62E45]/50 text-white text-xs font-bold shadow-2xl opacity-0 pointer-events-none transition-opacity duration-200"></div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // 1. LOCKED DIMENSIONS
+      const FORMATS = {
+        '4:5': { w: 1080, h: 1350 },
+        '9:16': { w: 1080, h: 1920 },
+        '16:9': { w: 1920, h: 1080 }
+      };
+
+      // 2. MODULE REGISTRY
+      const MODULE_DEFS = [
+        { id: 'stats', title: 'مقایسه شاخص‌های فنی', canHalf: false, defaultSpan: 'full' },
+        { id: 'radar', title: 'رادار ۶ محوره تاکتیکی', canHalf: true, defaultSpan: 'half' },
+        { id: 'focus', title: 'نقطه تمرکز بازی', canHalf: true, defaultSpan: 'half' },
+        { id: 'watchout', title: 'باید حواسشون بهش باشه', canHalf: true, defaultSpan: 'half' },
+        { id: 'keyduel', title: 'تقابل مهره‌های کلیدی', canHalf: true, defaultSpan: 'half' },
+        { id: 'poisson', title: 'ماتریس احتمال دقیق نتیجه (۵×۵)', canHalf: true, defaultSpan: 'half' },
+        { id: 'wave', title: 'موج زمانی امید گل (۱۵ دقیقه‌ای)', canHalf: true, defaultSpan: 'half' },
+        { id: 'trend10', title: 'روند امید گل در ۱۰ بازی اخیر', canHalf: true, defaultSpan: 'half' },
+        { id: 'signals', title: 'سیگنال‌های آماری و ارزش بازار (+EV)', canHalf: false, defaultSpan: 'full' }
+      ];
+
+      // 3. PRESETS (With Dynamic League EN, Season & Week Code)
+      const PRESETS = {
+        ars_liv: {
+          competition: 'لیگ برتر انگلیس',
+          round: 'هفته نهم • نبرد صدرنشینان',
+          leagueEn: 'PREMIER LEAGUE',
+          season: '26/27',
+          weekCode: 'W9',
+          day: 'یکشنبه ۶ آبان ۱۴۰۵',
+          time: '۲۰:۰۰',
+          stadium: 'ورزشگاه امارات',
+          broadcast: 'پخش زنده: شبکه سه',
+          source: 'Opta / Dixon-Coles 10K',
+          probHome: 42,
+          probDraw: 27,
+          probAway: 31,
+          home: {
+            name: 'آرسنال',
+            sub: 'میکل آرتتا • مستحکم‌ترین خط دفاع',
+            code: 'ARS',
+            color: '#EF0107',
+            secondary: '#FFFFFF',
+            logoUrl: null,
+            form: ['W', 'W', 'D', 'W', 'W'],
+            xg: 2.12,
+            xga: 0.71,
+            sot: 6.4,
+            radar: [94, 92, 96, 98, 91, 93],
+            last10: [1.85, 2.20, 1.70, 2.30, 1.95, 2.15, 1.90, 2.25, 1.80, 2.12],
+            wave: [0.25, 0.36, 0.40, 0.29, 0.44, 0.38],
+            kp: { name: 'بوکایو ساکا', pos: 'وینگر راست', s1: '۰.۸۹ xG+xA', s2: '۳.۵ پاس کلیدی' },
+            watchout: 'انتقال‌های سریع محمد صلاح در فضای پشت مدافع چپ و ضربات ایستگاهی'
+          },
+          away: {
+            name: 'لیورپول',
+            sub: 'آرنه اسلوت • بهترین خط حمله خارج خانه',
+            code: 'LIV',
+            color: '#38BDF8',
+            secondary: '#F6EB61',
+            logoUrl: null,
+            form: ['W', 'W', 'W', 'W', 'D'],
+            xg: 2.24,
+            xga: 0.82,
+            sot: 6.8,
+            radar: [96, 94, 84, 90, 92, 95],
+            last10: [2.10, 1.95, 2.40, 2.05, 2.35, 1.90, 2.45, 2.15, 2.20, 2.24],
+            wave: [0.30, 0.38, 0.34, 0.42, 0.41, 0.39],
+            kp: { name: 'محمد صلاح', pos: 'وینگر راست', s1: '۱.۰۸ xG+xA', s2: '۳.۲ پاس کلیدی' },
+            watchout: 'کرنرهای کات‌دار آرسنال و برتری هوایی گابریل در محوطه ۶ قدم'
+          },
+          focus: {
+            title: 'دوئل مالکیت صبورانه با ضدحملات برق‌آسا',
+            body: 'کنترل ریتم در یک‌سوم میانی توسط آرسنال در برابر پاس‌های عمقی ترنت و سرعت وینگرهای لیورپول در فضاهای باز.',
+            tag: 'خط پرس ۴۲.۴ متری • نبرد مستقیم صدر جدول'
+          }
+        },
+        ars_bay: {
+          competition: 'لیگ قهرمانان اروپا',
+          round: 'دور رفت یک‌چهارم نهایی',
+          leagueEn: 'CHAMPIONS LEAGUE',
+          season: '26/27',
+          weekCode: 'QF1',
+          day: 'امشب',
+          time: '۲۳:۳۰',
+          stadium: 'ورزشگاه امارات',
+          broadcast: 'پخش زنده: شبکه سه',
+          source: 'Opta / Dixon-Coles 10K',
+          probHome: 49,
+          probDraw: 24,
+          probAway: 27,
+          home: {
+            name: 'آرسنال',
+            sub: 'میکل آرتتا • میانگین امتیاز ۲.۴',
+            code: 'ARS',
+            color: '#EF0107',
+            secondary: '#FFFFFF',
+            logoUrl: null,
+            form: ['W', 'W', 'D', 'W', 'W'],
+            xg: 1.94,
+            xga: 0.71,
+            sot: 6.3,
+            radar: [94, 92, 96, 95, 91, 93],
+            last10: [1.80, 2.15, 1.65, 2.25, 1.90, 2.05, 1.85, 2.10, 1.75, 1.94],
+            wave: [0.22, 0.34, 0.38, 0.27, 0.42, 0.31],
+            kp: { name: 'بوکایو ساکا', pos: 'وینگر راست', s1: '۰.۸۴ xG+xA', s2: '۳.۴ پاس کلیدی' },
+            watchout: 'فرارهای هری کین در نیم‌فضاها و ضربات ایستگاهی کات‌دار کیمیش'
+          },
+          away: {
+            name: 'بایرن مونیخ',
+            sub: 'ونسان کمپانی • مالکیت ۶۱.۲٪',
+            code: 'BAY',
+            color: '#38BDF8',
+            secondary: '#DC2626',
+            logoUrl: null,
+            form: ['W', 'L', 'W', 'W', 'D'],
+            xg: 1.38,
+            xga: 1.08,
+            sot: 5.5,
+            radar: [90, 86, 75, 79, 89, 92],
+            last10: [1.60, 1.15, 1.45, 1.35, 1.70, 1.20, 1.50, 1.18, 1.32, 1.38],
+            wave: [0.18, 0.24, 0.21, 0.29, 0.22, 0.24],
+            kp: { name: 'جمال موسیالا', pos: 'هافبک تهاجمی', s1: '۰.۷۹ xG+xA', s2: '۴.۲ دریبل موفق' },
+            watchout: 'کرنرهای کات‌دار آرسنال و برتری هوایی گابریل در محوطه ۶ قدم'
+          },
+          focus: {
+            title: 'فشار روی خروج توپ از عقب',
+            body: 'توجه ویژه به فاصلهٔ هافبک‌های بایرن با خط دفاع و فضاهای نیم‌فضای راست که ساکا و اودگارد روی آن متمرکزند.',
+            tag: 'خط پرس ۴۲.۸ متری • ۶۲٪ مالکیت در یک‌سوم هجومی'
+          }
+        },
+        prs_est: {
+          competition: 'لیگ برتر خلیج فارس',
+          round: 'هفته یازدهم • شهرآورد پایتخت',
+          leagueEn: 'PERSIAN GULF PRO LEAGUE',
+          season: '26/27',
+          weekCode: 'W11',
+          day: 'فردا شب',
+          time: '۱۹:۳۰',
+          stadium: 'ورزشگاه آزادی',
+          broadcast: 'پخش زنده: شبکه سه',
+          source: 'Metrica / XGPedia',
+          probHome: 46,
+          probDraw: 31,
+          probAway: 23,
+          home: {
+            name: 'پرسپولیس',
+            sub: 'کارلوس گاریدو • میانگین امتیاز ۲.۳',
+            code: 'PRS',
+            color: '#E62E45',
+            secondary: '#FFFFFF',
+            logoUrl: null,
+            form: ['W', 'W', 'D', 'W', 'W'],
+            xg: 1.68,
+            xga: 0.74,
+            sot: 5.4,
+            radar: [89, 92, 85, 95, 93, 88],
+            last10: [1.45, 1.85, 1.30, 2.05, 1.70, 1.55, 2.10, 1.65, 1.60, 1.68],
+            wave: [0.20, 0.28, 0.34, 0.25, 0.36, 0.25],
+            kp: { name: 'اوستون اورونوف', pos: 'وینگر چپ', s1: '۰.۶۸ xG+xA', s2: '۶.۲ لمس در محوطه' },
+            watchout: 'پاس‌های عمقی ماشاریپوف و ضدحملات سریع استقلال از جناحین'
+          },
+          away: {
+            name: 'استقلال',
+            sub: 'پیتسو موسیمانه • میانگین امتیاز ۱.۹',
+            code: 'EST',
+            color: '#3B82F6',
+            secondary: '#F8FAFC',
+            logoUrl: null,
+            form: ['W', 'D', 'W', 'L', 'W'],
+            xg: 1.24,
+            xga: 0.96,
+            sot: 4.1,
+            radar: [82, 84, 90, 87, 81, 83],
+            last10: [1.20, 1.05, 1.45, 0.90, 1.40, 1.25, 1.55, 1.15, 1.30, 1.24],
+            wave: [0.16, 0.20, 0.22, 0.25, 0.20, 0.21],
+            kp: { name: 'جلال‌الدین ماشاریپوف', pos: 'بازی‌ساز', s1: '۰.۶۱ xG+xA', s2: '۲.۹ پاس کلیدی' },
+            watchout: 'نفوذهای ترکیبی از کانال چپ و توپ‌های دوم پشت محوطه جریمه'
+          },
+          focus: {
+            title: 'مالکیت صبورانه در برابر بلاک فشرده',
+            body: 'کنترل ریتم بازی توسط هافبک‌های پرسپولیس در برابر انتقال‌های سریع استقلال پس از بازپس‌گیری توپ.',
+            tag: 'اهمیت حیاتی گل اول در تعیین استراتژی نیمه دوم'
+          }
+        },
+        rma_bar: {
+          competition: 'لالیگا اسپانیا',
+          round: 'هفته ۳۲ • ال‌کلاسیکو',
+          leagueEn: 'LALIGA',
+          season: '26/27',
+          weekCode: 'W32',
+          day: 'امشب',
+          time: '۲۲:۳۰',
+          stadium: 'سانتیاگو برنابئو',
+          broadcast: 'پخش زنده: شبکه ورزش',
+          source: 'Opta / LaLiga',
+          probHome: 44,
+          probDraw: 23,
+          probAway: 33,
+          home: {
+            name: 'رئال مادرید',
+            sub: 'کارلو آنچلوتی • قهرمان اروپا',
+            code: 'RMA',
+            color: '#F59E0B',
+            secondary: '#FFFFFF',
+            logoUrl: null,
+            form: ['W', 'W', 'W', 'D', 'W'],
+            xg: 2.18,
+            xga: 0.92,
+            sot: 6.9,
+            radar: [95, 85, 88, 90, 91, 94],
+            last10: [2.10, 1.85, 2.45, 2.30, 1.90, 2.60, 2.05, 1.75, 2.35, 2.18],
+            wave: [0.28, 0.35, 0.40, 0.32, 0.42, 0.41],
+            kp: { name: 'کیلیان امباپه', pos: 'مهاجم نوک', s1: '۱.۰۲ xG+xA', s2: '۴.۸ شوت در بازی' },
+            watchout: 'تله آفساید خط دفاعی بالای بارسلونا و خلاقیت لامین یامال'
+          },
+          away: {
+            name: 'بارسلونا',
+            sub: 'هانسی فلیک • صدرنشین لالیگا',
+            code: 'BAR',
+            color: '#E62E45',
+            secondary: '#004D98',
+            logoUrl: null,
+            form: ['W', 'L', 'W', 'W', 'W'],
+            xg: 1.96,
+            xga: 1.05,
+            sot: 6.4,
+            radar: [97, 96, 84, 83, 95, 96],
+            last10: [2.20, 1.60, 2.45, 2.00, 2.30, 1.95, 2.50, 1.85, 2.15, 1.96],
+            wave: [0.30, 0.36, 0.34, 0.38, 0.31, 0.27],
+            kp: { name: 'لامین یامال', pos: 'وینگر راست', s1: '۰.۹۵ xG+xA', s2: '۰.۴۱ تهدید پاس (xT)' },
+            watchout: 'فرارهای عمقی وینیسیوس و امباپه در فضای پشت مدافعان کناری'
+          },
+          focus: {
+            title: 'دوئل خط دفاعی بالا با پاس‌های عمقی',
+            body: 'خط دفاعی بسیار بالای بارسلونا در برابر پاس‌های مستقیم بلینگام برای زوج سرعتی خط حمله رئال.',
+            tag: 'میانگین ۴.۵ آفساید حریف به ازای هر ۹۰ دقیقه'
+          }
+        }
+      };
+
+      // 4. STATE
+      const state = {
+        format: '4:5',
+        version: 'smart',
+        monoBrand: false,
+        modules: [
+          { id: 'stats', enabled: true, span: 'full' },
+          { id: 'radar', enabled: true, span: 'half' },
+          { id: 'focus', enabled: true, span: 'half' },
+          { id: 'watchout', enabled: false, span: 'half' },
+          { id: 'keyduel', enabled: false, span: 'half' },
+          { id: 'poisson', enabled: false, span: 'half' },
+          { id: 'wave', enabled: false, span: 'half' },
+          { id: 'trend10', enabled: false, span: 'half' },
+          { id: 'signals', enabled: true, span: 'full' }
+        ],
+        match: JSON.parse(JSON.stringify(PRESETS.ars_liv))
+      };
+
+      // 5. UTILITIES
+      function toFa(val) {
+        return String(val).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[Number(d)]);
+      }
+
+      function hexToRgb(hex) {
+        const clean = (hex || '#E62E45').replace('#', '');
+        const full = clean.length === 3 ? clean.split('').map(c => c + c).join('') : clean;
+        const num = parseInt(full, 16) || 0;
+        return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+      }
+
+      function getLuminance(hex) {
+        const { r, g, b } = hexToRgb(hex);
+        const a = [r, g, b].map(v => {
+          v /= 255;
+          return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        });
+        return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
+      }
+
+      function getContrastText(hex) {
+        return getLuminance(hex) > 0.55 ? '#070D1D' : '#F8FAFC';
+      }
+
+      function showToast(msg) {
+        const el = document.getElementById('toast');
+        el.textContent = msg;
+        el.classList.remove('opacity-0');
+        el.classList.add('opacity-100');
+        clearTimeout(el._t);
+        el._t = setTimeout(() => {
+          el.classList.remove('opacity-100');
+          el.classList.add('opacity-0');
+        }, 2300);
+      }
+
+      // Smart Auto-Sync for League EN & Week Code when Persian competition/round is edited
+      const LEAGUE_FA_TO_EN = {
+        'لیگ برتر انگلیس': 'PREMIER LEAGUE',
+        'لیگ قهرمانان اروپا': 'CHAMPIONS LEAGUE',
+        'لالیگا': 'LALIGA',
+        'سری آ': 'SERIE A',
+        'بوندسلیگا': 'BUNDESLIGA',
+        'لیگ یک فرانسه': 'LIGUE 1',
+        'لیگ برتر خلیج فارس': 'PERSIAN GULF PRO LEAGUE',
+        'جام حذفی': 'DOMESTIC CUP',
+        'لیگ اروپا': 'EUROPA LEAGUE'
+      };
+
+      const PERSIAN_ORDINALS = {
+        'اول': 1, 'یکم': 1, 'دوم': 2, 'سوم': 3, 'چهارم': 4, 'پنجم': 5,
+        'ششم': 6, 'هفتم': 7, 'هشتم': 8, 'نهم': 9, 'دهم': 10,
+        'یازدهم': 11, 'دوازدهم': 12, 'سیزدهم': 13, 'چهاردهم': 14, 'پانزدهم': 15,
+        'شانزدهم': 16, 'هفدهم': 17, 'هجدهم': 18, 'نوزدهم': 19, 'بیستم': 20,
+        'بیست و یکم': 21, 'بیست و دوم': 22, 'بیست و سوم': 23, 'بیست و چهارم': 24,
+        'بیست و پنجم': 25, 'بیست و ششم': 26, 'بیست و هفتم': 27, 'بیست و هشتم': 28,
+        'بیست و نهم': 29, 'سی‌ام': 30, 'سی ام': 30
+      };
+
+      function inferWeekCodeFromPersian(roundStr) {
+        if (!roundStr) return null;
+        const normalized = roundStr.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+        const numMatch = normalized.match(/هفته\s*[^\d]*(\d+)/);
+        if (numMatch) return `W${numMatch[1]}`;
+        for (const [word, num] of Object.entries(PERSIAN_ORDINALS)) {
+          if (roundStr.includes(`هفته ${word}`) || roundStr.includes(`هفتهٔ ${word}`)) {
+            return `W${num}`;
+          }
+        }
+        if (roundStr.includes('فینال') && !roundStr.includes('نیمه') && !roundStr.includes('یک')) return 'FINAL';
+        if (roundStr.includes('نیمه‌نهایی') || roundStr.includes('نیمه نهایی')) return 'SF';
+        if (roundStr.includes('یک‌چهارم') || roundStr.includes('یک چهارم')) return 'QF';
+        if (roundStr.includes('یک‌هشتم') || roundStr.includes('یک هشتم')) return 'R16';
+        return null;
+      }
+
+      // Smooth Cubic Bezier Spline Path
+      function buildSmoothSpline(points, tension = 0.25) {
+        if (!points.length) return '';
+        if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+        let d = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+        for (let i = 0; i < points.length - 1; i++) {
+          const p0 = points[i === 0 ? 0 : i - 1];
+          const p1 = points[i];
+          const p2 = points[i + 1];
+          const p3 = points[i + 2 < points.length ? i + 2 : i + 1];
+          const cp1x = p1.x + (p2.x - p0.x) * tension;
+          const cp1y = p1.y + (p2.y - p0.y) * tension;
+          const cp2x = p2.x - (p3.x - p1.x) * tension;
+          const cp2y = p2.y - (p3.y - p1.y) * tension;
+          d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+        }
+        return d;
+      }
+
+      // Dixon-Coles Poisson Matrix
+      function calcPoisson(lh, la) {
+        const fact = n => (n <= 1 ? 1 : n * fact(n - 1));
+        const pmf = (k, l) => (Math.pow(l, k) * Math.exp(-l)) / fact(k);
+        const tau = (h, a, rho = -0.07) => {
+          if (h === 0 && a === 0) return 1 - lh * la * rho;
+          if (h === 0 && a === 1) return 1 + lh * rho;
+          if (h === 1 && a === 0) return 1 + la * rho;
+          if (h === 1 && a === 1) return 1 - rho;
+          return 1;
+        };
+        const matrix = [];
+        let pH = 0, pD = 0, pA = 0, pO25 = 0, pBTTS = 0;
+        for (let h = 0; h <= 6; h++) {
+          matrix[h] = [];
+          for (let a = 0; a <= 6; a++) {
+            const p = Math.max(0, pmf(h, lh) * pmf(a, la) * tau(h, a));
+            matrix[h][a] = p;
+            if (h > a) pH += p;
+            else if (h === a) pD += p;
+            else pA += p;
+            if (h + a >= 3) pO25 += p;
+            if (h >= 1 && a >= 1) pBTTS += p;
+          }
+        }
+        const tot = pH + pD + pA || 1;
+        return { matrix, pH: pH / tot, pD: pD / tot, pA: pA / tot, pO25: pO25 / tot, pBTTS: pBTTS / tot };
+      }
+
+      // 6. BRAND LOGO SVG
+      function buildBrandLogoSVG(monoWhite) {
+        const pediaFill = monoWhite ? '#FFFFFF' : '#F8FAFC';
+        const xgFill = monoWhite ? '#FFFFFF' : '#E62E45';
+        const shieldFill = monoWhite ? 'rgba(255,255,255,0.12)' : '#152347';
+        const shieldStroke = monoWhite ? '#FFFFFF' : '#E62E45';
+        const ringStroke = monoWhite ? 'rgba(255,255,255,0.4)' : 'rgba(248,250,252,0.28)';
+        const subTextFill = monoWhite ? 'rgba(255,255,255,0.75)' : '#94A3B8';
+
+        return `
+          <div class="flex items-center gap-3.5" dir="ltr">
+            <svg width="54" height="54" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M24 2.5L42 10.2V23.4C42 34.6 34.3 43 24 45.6C13.7 43 6 34.6 6 23.4V10.2L24 2.5Z" fill="${shieldFill}" stroke="${shieldStroke}" stroke-width="2.6"/>
+              <circle cx="24" cy="24" r="9.5" stroke="${ringStroke}" stroke-width="1.5"/>
+              <line x1="24" y1="9" x2="24" y2="39" stroke="${ringStroke}" stroke-width="1.2" stroke-dasharray="2.5 2.5"/>
+              <path d="M16.5 16.5L31.5 31.5M31.5 16.5L16.5 31.5" stroke="${xgFill}" stroke-width="3.2" stroke-linecap="round"/>
+              <circle cx="24" cy="24" r="3" fill="${pediaFill}"/>
+            </svg>
+            <div class="flex flex-col leading-none">
+              <div class="font-display-en font-bold text-[34px] tracking-tight">
+                <span style="color: ${xgFill};">XG</span><span style="color: ${pediaFill};">Pedia</span>
+              </div>
+              <span class="font-mono-en text-[11px] tracking-[0.26em] uppercase mt-1" style="color: ${subTextFill};">
+                FOOTBALL ANALYTICS
+              </span>
+            </div>
+          </div>
+        `;
+      }
+
+      // 7. ENLARGED FLOATING TEAM CREST SVG GENERATOR (NO SQUARE BACKGROUND BOX)
+      function renderTeamCrest(team, side) {
+        if (team.logoUrl) {
+          return `<img src="${team.logoUrl}" alt="${team.name}" class="w-[178px] h-[178px] object-contain" style="filter: drop-shadow(0 16px 26px rgba(0,0,0,0.6));" />`;
+        }
+        const p = team.color || '#EF0107';
+        const s = team.secondary || '#FFFFFF';
+        const code = (team.code || 'FC').slice(0, 3).toUpperCase();
+        const inkColor = getContrastText(p);
+        const badgePillBg = getLuminance(p) > 0.65 ? '#0D1730' : 'rgba(7, 13, 29, 0.55)';
+
+        return `
+          <svg width="178" height="178" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 16px 26px rgba(0,0,0,0.6));">
+            <defs>
+              <linearGradient id="crestRim_${side}" x1="20" y1="15" x2="160" y2="165" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="${s}" stop-opacity="0.95"/>
+                <stop offset="50%" stop-color="${p}" stop-opacity="0.9"/>
+                <stop offset="100%" stop-color="${s}" stop-opacity="0.7"/>
+              </linearGradient>
+              <clipPath id="shieldClip_${side}">
+                <path d="M90 16L150 40V88C150 128 124.5 156.5 90 166C55.5 156.5 30 128 30 88V40L90 16Z"/>
+              </clipPath>
+            </defs>
+
+            <path d="M90 12L154 38V88C154 130.5 127 160.5 90 170.5C53 160.5 26 130.5 26 88V38L90 12Z" fill="${p}" fill-opacity="0.22"/>
+
+            <g clip-path="url(#shieldClip_${side})">
+              <rect x="25" y="12" width="130" height="158" fill="${p}"/>
+              <path d="M25 112L155 56V84L25 140V112Z" fill="${s}" fill-opacity="0.28"/>
+              <path d="M90 16L150 40V58L90 34L30 58V40L90 16Z" fill="${s}" fill-opacity="0.9"/>
+              <ellipse cx="90" cy="30" rx="65" ry="28" fill="#FFFFFF" fill-opacity="0.14"/>
+            </g>
+
+            <path d="M90 16L150 40V88C150 128 124.5 156.5 90 166C55.5 156.5 30 128 30 88V40L90 16Z" stroke="url(#crestRim_${side})" stroke-width="4.5"/>
+            <path d="M90 23L143 44.5V87.5C143 123 120.5 148.5 90 157C59.5 148.5 37 123 37 87.5V44.5L90 23Z" stroke="${inkColor}" stroke-opacity="0.22" stroke-width="1.2"/>
+
+            <rect x="46" y="70" width="88" height="44" rx="12" fill="${badgePillBg}" stroke="${s}" stroke-opacity="0.45" stroke-width="1.5"/>
+            <text
+              x="90"
+              y="100"
+              text-anchor="middle"
+              fill="#F8FAFC"
+              font-family="Space Grotesk, JetBrains Mono, sans-serif"
+              font-weight="700"
+              font-size="28"
+              letter-spacing="2"
+            >${code}</text>
+
+            <circle cx="90" cy="134" r="4.5" fill="${inkColor}" fill-opacity="0.85"/>
+          </svg>
+        `;
+      }
+
+      // 8. APPLY TEMPLATE VERSION PRESET
+      function applyVersion(ver) {
+        state.version = ver;
+        const setLayout = (list) => {
+          state.modules.forEach(m => {
+            const found = list.find(x => x.id === m.id);
+            m.enabled = Boolean(found);
+            if (found) m.span = found.span;
+          });
+        };
+
+        if (ver === 'smart') {
+          const m = state.match;
+          const auto = [{ id: 'stats', span: 'full' }];
+          if (m.home.radar && m.home.radar.length === 6) auto.push({ id: 'radar', span: 'half' });
+          if (m.focus && m.focus.body) auto.push({ id: 'focus', span: 'half' });
+          if (m.home.kp && m.home.kp.name) auto.push({ id: 'keyduel', span: 'half' });
+          if (m.home.watchout) auto.push({ id: 'watchout', span: 'half' });
+          auto.push({ id: 'signals', span: 'full' });
+          setLayout(auto);
+        } else if (ver === 'v1') {
+          setLayout([
+            { id: 'stats', span: 'full' },
+            { id: 'radar', span: 'half' },
+            { id: 'focus', span: 'half' },
+            { id: 'keyduel', span: 'full' }
+          ]);
+        } else if (ver === 'v2') {
+          setLayout([
+            { id: 'stats', span: 'full' },
+            { id: 'poisson', span: 'half' },
+            { id: 'wave', span: 'half' },
+            { id: 'signals', span: 'full' }
+          ]);
+        } else if (ver === 'v3') {
+          setLayout([
+            { id: 'stats', span: 'full' },
+            { id: 'trend10', span: 'half' },
+            { id: 'watchout', span: 'half' },
+            { id: 'keyduel', span: 'full' }
+          ]);
+        }
+        renderModuleControls();
+        renderArtboard();
+      }
+
+      // 9. RENDER MODULE HTML
+      function renderModuleHTML(mod) {
+        const m = state.match;
+        const hc = m.home.color;
+        const ac = m.away.color;
+        const isHalf = mod.span === 'half';
+        const spanClass = isHalf ? 'col-span-1' : 'col-span-2';
+
+        // A. PROPORTIONAL FLAT-INNER COMPARISON BARS
+        if (mod.id === 'stats') {
+          const rows = [
+            { label: 'امید گل تولیدی (xG / 90)', h: Number(m.home.xg), a: Number(m.away.xg), dec: 2 },
+            { label: 'امید گل دریافتی (xGA / 90)', h: Number(m.home.xga), a: Number(m.away.xga), dec: 2 },
+            { label: 'شوت در چارچوب (SOT / 90)', h: Number(m.home.sot), a: Number(m.away.sot), dec: 1 }
+          ];
+          const barsHTML = rows.map(r => {
+            const maxVal = Math.max(r.h, r.a, 0.01);
+            const hPct = ((r.h / maxVal) * 100).toFixed(1);
+            const aPct = ((r.a / maxVal) * 100).toFixed(1);
+            return `
+              <div class="space-y-1">
+                <div class="grid grid-cols-3 items-center">
+                  <span class="text-right text-[21px] font-black leading-none" style="color: ${hc};">${toFa(r.h.toFixed(r.dec))}</span>
+                  <span class="text-center text-sm font-bold text-slate-200">${r.label}</span>
+                  <span class="text-left text-[21px] font-black leading-none" style="color: ${ac};">${toFa(r.a.toFixed(r.dec))}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-1">
+                  <div class="comp-bar-track home-side">
+                    <div class="comp-bar-fill-home" style="width: ${hPct}%; background: ${hc};"></div>
+                  </div>
+                  <div class="comp-bar-track away-side">
+                    <div class="comp-bar-fill-away" style="width: ${aPct}%; background: ${ac};"></div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('');
+
+          return `
+            <div class="xg-glass-card ${spanClass}">
+              <div class="flex items-center justify-between pb-1.5 mb-1.5 border-b border-white/10">
+                <div class="flex items-center gap-2">
+                  <span class="w-1.5 h-5 rounded-full bg-[#E62E45]"></span>
+                  <h3 class="text-[17px] font-black text-white">مقایسه شاخص‌های کلیدی (به ازای ۹۰ دقیقه)</h3>
+                </div>
+              </div>
+              <div class="flex-1 flex flex-col justify-center gap-2">
+                ${barsHTML}
+              </div>
+            </div>
+          `;
+        }
+
+        // B. 6-AXIS HEXAGONAL RADAR (TIGHT & CLOSE OUTSIDE HEXAGON)
+        if (mod.id === 'radar') {
+          const labels = ['خلق موقعیت', 'شدت پرس', 'ایستگاهی', 'صلابت دفاعی', 'مالکیت مؤثر', 'تهدید پاس'];
+          const hVals = m.home.radar || [90, 88, 92, 91, 89, 90];
+          const aVals = m.away.radar || [85, 84, 78, 80, 87, 89];
+          const vbW = 450, vbH = 276;
+          const cx = 225, cy = 138, R = 84;
+
+          const getCoords = vals => vals.map((v, i) => {
+            const ang = (-90 + i * 60) * (Math.PI / 180);
+            const r = (Math.max(15, Math.min(100, v)) / 100) * R;
+            return { x: cx + r * Math.cos(ang), y: cy + r * Math.sin(ang) };
+          });
+
+          const hCoords = getCoords(hVals);
+          const aCoords = getCoords(aVals);
+          const toPolyStr = arr => arr.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+
+          const getRing = scale => Array.from({ length: 6 }, (_, i) => {
+            const ang = (-90 + i * 60) * (Math.PI / 180);
+            return `${(cx + R * scale * Math.cos(ang)).toFixed(1)},${(cy + R * scale * Math.sin(ang)).toFixed(1)}`;
+          }).join(' ');
+
+          const labelSpecs = [
+            { x: cx, y: 20, anchor: 'middle' },
+            { x: cx + R * 0.866 + 14, y: cy - R * 0.5 - 4, anchor: 'start' },
+            { x: cx + R * 0.866 + 14, y: cy + R * 0.5 - 2, anchor: 'start' },
+            { x: cx, y: cy + R + 21, anchor: 'middle' },
+            { x: cx - R * 0.866 - 14, y: cy + R * 0.5 - 2, anchor: 'end' },
+            { x: cx - R * 0.866 - 14, y: cy - R * 0.5 - 4, anchor: 'end' }
+          ];
+
+          const labelsSVG = labels.map((lbl, i) => {
+            const pos = labelSpecs[i];
+            return `
+              <g>
+                <text x="${pos.x.toFixed(1)}" y="${pos.y.toFixed(1)}" text-anchor="${pos.anchor}" fill="#F1F5F9" font-family="Vazirmatn" font-weight="800" font-size="13.5">${lbl}</text>
+                <text x="${pos.x.toFixed(1)}" y="${(pos.y + 17).toFixed(1)}" text-anchor="${pos.anchor}" font-family="Vazirmatn" font-weight="900" font-size="13">
+                  <tspan fill="${hc}">${toFa(hVals[i])}</tspan>
+                  <tspan fill="#64748B"> / </tspan>
+                  <tspan fill="${ac}">${toFa(aVals[i])}</tspan>
+                </text>
+              </g>
+            `;
+          }).join('');
+
+          const vertexDotsSVG = hCoords.map(p => `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.4" fill="#FFFFFF" />`).join('');
+
+          return `
+            <div class="xg-glass-card ${spanClass}">
+              <div class="flex items-center justify-between pb-1.5 mb-1 border-b border-white/10">
+                <div class="flex items-center gap-2">
+                  <span class="w-1.5 h-5 rounded-full bg-[#E62E45]"></span>
+                  <h3 class="text-[17px] font-black text-white">رادار ۶ محوره تاکتیکی</h3>
+                </div>
+                <span class="text-[11px] font-mono-en text-slate-400">PERCENTILE</span>
+              </div>
+              <div class="flex-1 flex items-center justify-center" dir="ltr">
+                <svg width="100%" height="224" viewBox="0 0 ${vbW} ${vbH}" fill="none">
+                  <g stroke="rgba(255,255,255,0.14)" stroke-width="1.2">
+                    <polygon points="${getRing(1)}" />
+                    <polygon points="${getRing(0.75)}" />
+                    <polygon points="${getRing(0.5)}" />
+                    <polygon points="${getRing(0.25)}" />
+                    <line x1="${cx}" y1="${cy - R}" x2="${cx}" y2="${cy + R}" />
+                    <line x1="${cx + R * 0.866}" y1="${cy - R * 0.5}" x2="${cx - R * 0.866}" y2="${cy + R * 0.5}" />
+                    <line x1="${cx + R * 0.866}" y1="${cy + R * 0.5}" x2="${cx - R * 0.866}" y2="${cy - R * 0.5}" />
+                  </g>
+                  <polygon points="${toPolyStr(aCoords)}" fill="${ac}" fill-opacity="0.24" stroke="${ac}" stroke-width="2.5" />
+                  <polygon points="${toPolyStr(hCoords)}" fill="${hc}" fill-opacity="0.30" stroke="${hc}" stroke-width="2.8" />
+                  ${vertexDotsSVG}
+                  ${labelsSVG}
+                </svg>
+              </div>
+            </div>
+          `;
+        }
+
+        // C. TACTICAL FOCUS ("نقطه تمرکز بازی")
+        if (mod.id === 'focus') {
+          return `
+            <div class="xg-tactical-editorial ${spanClass}">
+              <svg class="absolute left-3 bottom-3 w-32 h-auto opacity-[0.13] pointer-events-none" viewBox="0 0 240 160" fill="none" stroke="#DCE6F8" stroke-width="2.5">
+                <rect x="2" y="2" width="236" height="156" rx="6" />
+                <line x1="120" y1="2" x2="120" y2="158" />
+                <circle cx="120" cy="80" r="32" />
+                <rect x="2" y="42" width="36" height="76" />
+                <rect x="202" y="42" width="36" height="76" />
+              </svg>
+              <div class="relative z-10">
+                <div class="flex items-center justify-between pb-1.5 mb-2 border-b border-white/10">
+                  <div class="flex items-center gap-2">
+                    <span class="w-1.5 h-5 rounded-full bg-[#E62E45]"></span>
+                    <h3 class="text-[17px] font-black text-white">نقطه تمرکز بازی</h3>
+                  </div>
+                  <span class="text-[11px] font-mono-en text-slate-400">TACTICAL LENS</span>
+                </div>
+                <h4 class="text-base font-black text-amber-300 mb-1.5">${m.focus.title}</h4>
+                <p class="text-[14.5px] leading-relaxed text-slate-200 font-medium">${m.focus.body}</p>
+              </div>
+              <div class="relative z-10 mt-2 pt-2 border-t border-white/10 flex items-center gap-2 text-xs font-bold text-slate-300">
+                <span class="w-2 h-2 rounded-full bg-[#E62E45]"></span>
+                <span>${m.focus.tag}</span>
+              </div>
+            </div>
+          `;
+        }
+
+        // D. WATCH OUT ("باید حواسشون بهش باشه" — Right Colored Border Design)
+        if (mod.id === 'watchout') {
+          return `
+            <div class="xg-tactical-editorial ${spanClass}">
+              <svg class="absolute left-3 bottom-3 w-28 h-auto opacity-[0.12] pointer-events-none" viewBox="0 0 140 140" fill="none" stroke="#F59E0B" stroke-width="2.2">
+                <circle cx="70" cy="70" r="60" />
+                <circle cx="70" cy="70" r="38" stroke-dasharray="6 5" />
+                <line x1="70" y1="6" x2="70" y2="134" />
+                <line x1="6" y1="70" x2="134" y2="70" />
+              </svg>
+              <div class="relative z-10">
+                <div class="flex items-center justify-between pb-1.5 mb-2 border-b border-white/10">
+                  <div class="flex items-center gap-2">
+                    <span class="w-1.5 h-5 rounded-full bg-[#F59E0B]"></span>
+                    <h3 class="text-[17px] font-black text-white">باید حواسشون بهش باشه</h3>
+                  </div>
+                  <span class="text-[11px] font-mono-en text-amber-400/90">WATCHLIST</span>
+                </div>
+                <div class="space-y-2">
+                  <div class="p-2.5 rounded-xl bg-white/[0.05] border border-white/10" style="border-right: 4px solid ${hc};">
+                    <div class="text-xs font-extrabold mb-0.5" style="color: ${hc};">هشدار برای ${m.home.name}:</div>
+                    <p class="text-[13.5px] text-slate-200 leading-snug font-medium">${m.home.watchout}</p>
+                  </div>
+                  <div class="p-2.5 rounded-xl bg-white/[0.05] border border-white/10" style="border-right: 4px solid ${ac};">
+                    <div class="text-xs font-extrabold mb-0.5" style="color: ${ac};">هشدار برای ${m.away.name}:</div>
+                    <p class="text-[13.5px] text-slate-200 leading-snug font-medium">${m.away.watchout}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        // E. KEY PLAYERS DUEL ("تقابل مهره‌های کلیدی" — Right Colored Border Design)
+        if (mod.id === 'keyduel') {
+          const hk = m.home.kp, ak = m.away.kp;
+          return `
+            <div class="xg-glass-card ${spanClass}">
+              <div class="flex items-center justify-between pb-1.5 mb-2 border-b border-white/10">
+                <div class="flex items-center gap-2">
+                  <span class="w-1.5 h-5 rounded-full bg-[#E62E45]"></span>
+                  <h3 class="text-[17px] font-black text-white">تقابل مهره‌های کلیدی</h3>
+                </div>
+                <span class="text-[11px] font-mono-en text-slate-400">KEY PLAYER DUEL</span>
+              </div>
+              <div class="grid grid-cols-11 items-center gap-2 my-auto">
+                <div class="col-span-5 p-3 rounded-2xl bg-white/[0.04] border border-white/10 flex flex-col gap-1.5" style="border-right: 4px solid ${hc};">
+                  <div class="flex items-center justify-between gap-1">
+                    <span class="text-base font-black text-white truncate">${hk.name}</span>
+                    <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-white/10 text-slate-300 shrink-0">${hk.pos}</span>
+                  </div>
+                  <div class="flex flex-wrap items-center justify-between gap-1 text-xs pt-1.5 border-t border-white/10">
+                    <span class="font-extrabold" style="color: ${hc};">${hk.s1}</span>
+                    <span class="text-slate-300 font-bold">${hk.s2}</span>
+                  </div>
+                </div>
+
+                <div class="col-span-1 flex items-center justify-center">
+                  <span class="w-8 h-8 rounded-xl bg-[#E62E45]/20 border border-[#E62E45]/50 flex items-center justify-center font-mono-en text-[12px] font-extrabold text-[#FF4D60]">VS</span>
+                </div>
+
+                <div class="col-span-5 p-3 rounded-2xl bg-white/[0.04] border border-white/10 flex flex-col gap-1.5" style="border-right: 4px solid ${ac};">
+                  <div class="flex items-center justify-between gap-1">
+                    <span class="text-base font-black text-white truncate">${ak.name}</span>
+                    <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-white/10 text-slate-300 shrink-0">${ak.pos}</span>
+                  </div>
+                  <div class="flex flex-wrap items-center justify-between gap-1 text-xs pt-1.5 border-t border-white/10">
+                    <span class="font-extrabold" style="color: ${ac};">${ak.s1}</span>
+                    <span class="text-slate-300 font-bold">${ak.s2}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        // F. PERSIAN 5x5 POISSON MATRIX
+        if (mod.id === 'poisson') {
+          const res = calcPoisson(Number(m.home.xg), Number(m.away.xg));
+          let cells = `<div class="flex items-center justify-center text-[10px] font-bold text-slate-400">م\\م</div>`;
+          for (let a = 0; a <= 4; a++) {
+            cells += `<div class="flex items-center justify-center text-xs font-black" style="color: ${ac};">${toFa(a)}</div>`;
+          }
+          const topList = [];
+          for (let h = 0; h <= 4; h++) {
+            cells += `<div class="flex items-center justify-center text-xs font-black" style="color: ${hc};">${toFa(h)}</div>`;
+            for (let a = 0; a <= 4; a++) {
+              const pct = res.matrix[h][a] * 100;
+              const score = `${toFa(h)}-${toFa(a)}`;
+              topList.push({ score, pct });
+              const op = Math.min(0.75, 0.08 + (pct / 13) * 0.65).toFixed(2);
+              const bg = h > a ? `rgba(230,46,69,${op})` : h === a ? `rgba(100,116,139,${op})` : `rgba(56,189,248,${op})`;
+              cells += `
+                <div class="rounded-lg py-1 text-center border border-white/10" style="background: ${bg};">
+                  <div class="text-[10px] font-bold opacity-80 leading-none">${score}</div>
+                  <div class="text-xs font-black mt-0.5 leading-none">${toFa(pct.toFixed(1))}٪</div>
+                </div>
+              `;
+            }
+          }
+          topList.sort((x, y) => y.pct - x.pct);
+          const top3 = topList.slice(0, 3).map(x => `${x.score} (${toFa(x.pct.toFixed(1))}٪)`).join(' • ');
+
+          return `
+            <div class="xg-glass-card ${spanClass}">
+              <div class="flex items-center justify-between pb-1.5 mb-1.5 border-b border-white/10">
+                <div class="flex items-center gap-2">
+                  <span class="w-1.5 h-5 rounded-full bg-[#E62E45]"></span>
+                  <h3 class="text-[17px] font-black text-white">ماتریس احتمال دقیق نتیجه</h3>
+                </div>
+                <span class="text-[11px] font-bold text-slate-400">مدل پواسون ۵×۵</span>
+              </div>
+              <div class="grid grid-cols-6 gap-1">${cells}</div>
+              <div class="mt-2 pt-1.5 border-t border-white/10 flex items-center justify-between text-xs">
+                <span class="text-slate-400 font-bold">محتمل‌ترین نتایج:</span>
+                <strong class="text-emerald-400 font-extrabold">${top3}</strong>
+              </div>
+            </div>
+          `;
+        }
+
+        // G. SMOOTH 15-MIN xG TIMING WAVE
+        if (mod.id === 'wave') {
+          const wH = m.home.wave || [0.22, 0.34, 0.38, 0.27, 0.42, 0.31];
+          const wA = m.away.wave || [0.18, 0.24, 0.21, 0.29, 0.22, 0.24];
+          const mins = ["۱۵'", "۳۰'", "۴۵'", "۶۰'", "۷۵'", "۹۰'"];
+          const maxV = Math.max(...wH, ...wA, 0.48);
+          const W = isHalf ? 420 : 880, H = 135, padX = 26, padY = 14;
+          const pW = W - padX * 2, pH = H - padY * 2;
+          const toPts = arr => arr.map((v, i) => ({ x: padX + (i / 5) * pW, y: padY + pH - (v / maxV) * pH }));
+          const hPts = toPts(wH), aPts = toPts(wA);
+          const hCurve = buildSmoothSpline(hPts, 0.25);
+          const aCurve = buildSmoothSpline(aPts, 0.25);
+          const hArea = `${hCurve} L ${hPts[5].x} ${padY + pH} L ${hPts[0].x} ${padY + pH} Z`;
+
+          return `
+            <div class="xg-glass-card ${spanClass}">
+              <div class="flex items-center justify-between pb-1.5 mb-1 border-b border-white/10">
+                <div class="flex items-center gap-2">
+                  <span class="w-1.5 h-5 rounded-full bg-[#E62E45]"></span>
+                  <h3 class="text-[17px] font-black text-white">موج زمانی امید گل (xG)</h3>
+                </div>
+                <span class="text-[11px] font-bold text-slate-400">بازه‌های ۱۵ دقیقه‌ای</span>
+              </div>
+              <div class="flex-1 flex items-center" dir="ltr">
+                <svg width="100%" height="154" viewBox="0 0 ${W} ${H + 24}" fill="none">
+                  <defs>
+                    <linearGradient id="waveGrad_${mod.span}" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="${hc}" stop-opacity="0.38" />
+                      <stop offset="100%" stop-color="${hc}" stop-opacity="0.0" />
+                    </linearGradient>
+                  </defs>
+                  <g stroke="rgba(255,255,255,0.08)" stroke-width="1" stroke-dasharray="4 4">
+                    <line x1="${padX}" y1="${padY}" x2="${W - padX}" y2="${padY}" />
+                    <line x1="${padX}" y1="${padY + pH / 2}" x2="${W - padX}" y2="${padY + pH / 2}" />
+                    <line x1="${padX}" y1="${padY + pH}" x2="${W - padX}" y2="${padY + pH}" />
+                  </g>
+                  <path d="${hArea}" fill="url(#waveGrad_${mod.span})" />
+                  <path d="${aCurve}" stroke="${ac}" stroke-width="2.8" fill="none" stroke-linecap="round" />
+                  <path d="${hCurve}" stroke="${hc}" stroke-width="3.2" fill="none" stroke-linecap="round" />
+                  ${hPts.map((p, i) => `
+                    <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4" fill="${hc}" stroke="#FFFFFF" stroke-width="1.5" />
+                    <text x="${p.x.toFixed(1)}" y="${H + 17}" text-anchor="middle" fill="#94A3B8" font-family="Vazirmatn" font-weight="800" font-size="13">${mins[i]}</text>
+                  `).join('')}
+                </svg>
+              </div>
+            </div>
+          `;
+        }
+
+        // H. SMOOTH LAST 10 MATCHES xG TREND
+        if (mod.id === 'trend10') {
+          const sH = m.home.last10 || [1.8, 2.1, 1.7, 2.2, 1.9, 2.0, 1.8, 2.1, 1.8, 1.9];
+          const sA = m.away.last10 || [1.6, 1.2, 1.5, 1.4, 1.7, 1.2, 1.5, 1.2, 1.3, 1.4];
+          const maxY = Math.max(...sH, ...sA, 2.6);
+          const W = isHalf ? 420 : 880, H = 135, padX = 22, padY = 14;
+          const pW = W - padX * 2, pH = H - padY * 2;
+          const toPts = arr => arr.map((v, i) => ({ x: padX + (i / (arr.length - 1)) * pW, y: padY + pH - (v / maxY) * pH }));
+          const hPts = toPts(sH), aPts = toPts(sA);
+          const hCurve = buildSmoothSpline(hPts, 0.22);
+          const aCurve = buildSmoothSpline(aPts, 0.22);
+          const hAvg = toFa((sH.reduce((a, b) => a + b, 0) / sH.length).toFixed(2));
+          const aAvg = toFa((sA.reduce((a, b) => a + b, 0) / sA.length).toFixed(2));
+
+          return `
+            <div class="xg-glass-card ${spanClass}">
+              <div class="flex items-center justify-between pb-1.5 mb-1 border-b border-white/10">
+                <div class="flex items-center gap-2">
+                  <span class="w-1.5 h-5 rounded-full bg-[#E62E45]"></span>
+                  <h3 class="text-[17px] font-black text-white">روند xG در ۱۰ بازی اخیر</h3>
+                </div>
+                <div class="text-xs font-extrabold">
+                  <span style="color: ${hc};">${hAvg}</span>
+                  <span class="text-slate-600 mx-1">/</span>
+                  <span style="color: ${ac};">${aAvg}</span>
+                </div>
+              </div>
+              <div class="flex-1 flex items-center" dir="ltr">
+                <svg width="100%" height="154" viewBox="0 0 ${W} ${H + 24}" fill="none">
+                  <g stroke="rgba(255,255,255,0.08)" stroke-width="1" stroke-dasharray="4 4">
+                    <line x1="${padX}" y1="${padY}" x2="${W - padX}" y2="${padY}" />
+                    <line x1="${padX}" y1="${padY + pH}" x2="${W - padX}" y2="${padY + pH}" />
+                  </g>
+                  <path d="${aCurve}" stroke="${ac}" stroke-width="2.8" fill="none" stroke-linecap="round" />
+                  <path d="${hCurve}" stroke="${hc}" stroke-width="3.2" fill="none" stroke-linecap="round" />
+                  ${hPts.map((p, i) => `
+                    <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.6" fill="${hc}" stroke="#FFFFFF" stroke-width="1.3" />
+                    <text x="${p.x.toFixed(1)}" y="${H + 17}" text-anchor="middle" fill="#94A3B8" font-family="Vazirmatn" font-weight="700" font-size="12">${toFa(i + 1)}</text>
+                  `).join('')}
+                </svg>
+              </div>
+            </div>
+          `;
+        }
+
+        // I. STATISTICAL SIGNALS & +EV VALUE EDGE (Right Colored Border Design)
+        if (mod.id === 'signals') {
+          const res = calcPoisson(Number(m.home.xg), Number(m.away.xg));
+          const o25 = toFa((res.pO25 * 100).toFixed(1));
+          const btts = toFa((res.pBTTS * 100).toFixed(1));
+          return `
+            <div class="xg-glass-card ${spanClass}">
+              <div class="flex items-center justify-between pb-1.5 mb-2 border-b border-white/10">
+                <div class="flex items-center gap-2">
+                  <span class="w-1.5 h-5 rounded-full bg-emerald-400"></span>
+                  <h3 class="text-[17px] font-black text-white">سیگنال‌های آماری و ارزش بازار (+EV)</h3>
+                </div>
+                <span class="text-[11px] font-mono-en text-emerald-400">VALUE EDGE</span>
+              </div>
+              <div class="grid grid-cols-3 gap-3">
+                <div class="rounded-2xl p-2.5 px-3 bg-gradient-to-l from-[#10B981]/15 to-white/[0.03] border border-[#10B981]/30 flex items-center justify-between gap-2" style="border-right: 4px solid #10B981;">
+                  <div>
+                    <span dir="ltr" class="inline-block font-mono-en text-[11px] font-extrabold px-2 py-0.5 rounded bg-[#10B981]/25 text-[#34D399] mb-1">+6.8% EV</span>
+                    <div class="text-sm font-black text-white">گل بالای ۲.۵</div>
+                    <div class="text-[11px] text-slate-300 mt-0.5">نرخ بالای خلق xG</div>
+                  </div>
+                  <div class="text-[22px] font-black text-[#34D399] leading-none">${o25}٪</div>
+                </div>
+
+                <div class="rounded-2xl p-2.5 px-3 bg-gradient-to-l from-[#38BDF8]/15 to-white/[0.03] border border-[#38BDF8]/30 flex items-center justify-between gap-2" style="border-right: 4px solid #38BDF8;">
+                  <div>
+                    <span dir="ltr" class="inline-block font-mono-en text-[11px] font-extrabold px-2 py-0.5 rounded bg-[#38BDF8]/25 text-[#7DD3FC] mb-1">+5.4% EV</span>
+                    <div class="text-sm font-black text-white">گلزنی هر دو تیم</div>
+                    <div class="text-[11px] text-slate-300 mt-0.5">تهدید هجومی دوطرفه</div>
+                  </div>
+                  <div class="text-[22px] font-black text-[#38BDF8] leading-none">${btts}٪</div>
+                </div>
+
+                <div class="rounded-2xl p-2.5 px-3 bg-gradient-to-l from-[#F59E0B]/15 to-white/[0.03] border border-[#F59E0B]/30 flex items-center justify-between gap-2" style="border-right: 4px solid #F59E0B;">
+                  <div>
+                    <span dir="ltr" class="inline-block font-mono-en text-[11px] font-extrabold px-2 py-0.5 rounded bg-[#F59E0B]/25 text-[#FBBF24] mb-1">+8.1% EV</span>
+                    <div class="text-sm font-black text-white">کرنر میزبان +۵.۵</div>
+                    <div class="text-[11px] text-slate-300 mt-0.5">فشار یک‌سوم دفاعی</div>
+                  </div>
+                  <div class="text-[22px] font-black text-[#FBBF24] leading-none">۷۱.۰٪</div>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        return '';
+      }
+
+      // 10. RENDER FULL ARTBOARD
+      function renderArtboard() {
+        const m = state.match;
+        const fmt = FORMATS[state.format];
+        const board = document.getElementById('export-artboard');
+        const pitchSvg = document.getElementById('card-pitch-svg');
+        const body = document.getElementById('card-main-body');
+        const hero = document.getElementById('card-hero-section');
+        const grid = document.getElementById('modules-grid');
+
+        board.style.width = `${fmt.w}px`;
+        board.style.height = `${fmt.h}px`;
+        pitchSvg.setAttribute('viewBox', `0 0 ${fmt.w} ${fmt.h}`);
+        document.getElementById('artboard-dim-badge').textContent = `${fmt.w}×${fmt.h}`;
+
+        // Update Outer Perimeter Frame & Crosshairs dynamically (12px inset)
+        const inset = 12;
+        const fw = fmt.w - inset * 2;
+        const fh = fmt.h - inset * 2;
+        const midX = fmt.w / 2;
+        const perimRect = document.getElementById('outer-perimeter-rect');
+        if (perimRect) {
+          perimRect.setAttribute('x', inset);
+          perimRect.setAttribute('y', inset);
+          perimRect.setAttribute('width', fw);
+          perimRect.setAttribute('height', fh);
+        }
+        const halfLine = document.getElementById('pitch-halfway-line');
+        if (halfLine) {
+          halfLine.setAttribute('x1', midX);
+          halfLine.setAttribute('x2', midX);
+          halfLine.setAttribute('y1', inset);
+          halfLine.setAttribute('y2', fmt.h - inset);
+        }
+        const rBox = document.getElementById('pitch-right-box');
+        if (rBox) rBox.setAttribute('x', fmt.w - inset - 135);
+        const rArc = document.getElementById('pitch-right-arc');
+        if (rArc) rArc.setAttribute('d', `M${fmt.w - inset - 135} 245 A 95 95 0 0 0 ${fmt.w - inset - 135} 405`);
+        const chPath = document.getElementById('corner-crosshairs-path');
+        if (chPath) {
+          const c1 = inset + 12, c2 = inset + 32;
+          const rx1 = fmt.w - c1, rx2 = fmt.w - c2;
+          const by1 = fmt.h - c1, by2 = fmt.h - c2;
+          chPath.setAttribute('d', `M${c1} ${c2}V${c1}H${c2}M${rx1} ${c2}V${c1}H${rx2}M${c1} ${by2}V${by1}H${c2}M${rx1} ${by2}V${by1}H${rx2}`);
+        }
+
+        // Adapt Layout to Format
+        if (state.format === '16:9') {
+          body.className = 'relative z-10 flex-1 px-9 py-2 grid grid-cols-12 gap-8 items-stretch overflow-hidden';
+          hero.className = 'col-span-5 flex flex-col justify-between border-l border-white/10 pl-7';
+          grid.className = 'col-span-7 grid grid-cols-2 gap-3.5 content-stretch min-h-0';
+        } else if (state.format === '9:16') {
+          body.className = 'relative z-10 flex-1 px-9 py-6 flex flex-col justify-between gap-6 overflow-hidden';
+          hero.className = 'flex flex-col justify-between shrink-0';
+          grid.className = 'flex-1 grid grid-cols-2 gap-4 content-stretch min-h-0';
+        } else {
+          body.className = 'relative z-10 flex-1 px-9 py-2 flex flex-col justify-between gap-3 overflow-hidden';
+          hero.className = 'flex flex-col justify-between shrink-0';
+          grid.className = 'flex-1 grid grid-cols-2 gap-3.5 content-stretch min-h-0';
+        }
+
+        // Team Colors & Ambient Radial Glows
+        document.documentElement.style.setProperty('--home-color', m.home.color);
+        document.documentElement.style.setProperty('--away-color', m.away.color);
+        document.getElementById('card-ambient-glow').style.background = `
+          radial-gradient(circle at 86% 32%, ${m.home.color}38 0%, transparent 48%),
+          radial-gradient(circle at 14% 32%, ${m.away.color}38 0%, transparent 48%),
+          radial-gradient(circle at 50% 36%, rgba(230, 46, 69, 0.14) 0%, transparent 52%)
+        `;
+
+        // Masthead & Dynamic Footer Telemetry (e.g., "PREMIER LEAGUE 26/27 W9 // PRE - MATCH")
+        document.getElementById('card-brand-logo').innerHTML = buildBrandLogoSVG(state.monoBrand);
+        document.getElementById('card-competition').textContent = m.competition;
+        document.getElementById('card-round').textContent = toFa(m.round);
+
+        const leaguePart = (m.leagueEn || 'PREMIER LEAGUE').trim().toUpperCase();
+        const seasonPart = (m.season || '26/27').trim().toUpperCase();
+        const weekPart = (m.weekCode || 'W9').trim().toUpperCase();
+        const dynamicFooterTag = [leaguePart, seasonPart, weekPart].filter(Boolean).join(' ') + ' // PRE - MATCH';
+        document.getElementById('card-micro-tag').textContent = dynamicFooterTag;
+
+        document.getElementById('card-header-datetime').textContent = `${toFa(m.day)} • ${toFa(m.time)}`;
+        document.getElementById('card-stadium').textContent = m.stadium;
+        document.getElementById('card-broadcast').textContent = m.broadcast;
+        document.getElementById('card-source').textContent = m.source;
+
+        // Enlarged Crests, Team Names, Coach/Tagline Subtitle & Form Circles
+        document.getElementById('home-crest-slot').innerHTML = renderTeamCrest(m.home, 'home');
+        document.getElementById('away-crest-slot').innerHTML = renderTeamCrest(m.away, 'away');
+        document.getElementById('card-home-name').textContent = m.home.name;
+        document.getElementById('card-home-sub').textContent = m.home.sub || '';
+        document.getElementById('card-away-name').textContent = m.away.name;
+        document.getElementById('card-away-sub').textContent = m.away.sub || '';
+
+        const formLabels = { W: 'ب', D: 'م', L: 'ش' };
+        document.getElementById('card-home-form').innerHTML = m.home.form
+          .map(f => `<span class="form-dot form-${f}">${formLabels[f] || 'م'}</span>`)
+          .join('');
+        document.getElementById('card-away-form').innerHTML = m.away.form
+          .map(f => `<span class="form-dot form-${f}">${formLabels[f] || 'م'}</span>`)
+          .join('');
+
+        // Center Projected xG Hub
+        const hXg = Number(m.home.xg) || 1.6;
+        const aXg = Number(m.away.xg) || 1.3;
+        document.getElementById('hero-xg-home').textContent = toFa(hXg.toFixed(2));
+        document.getElementById('hero-xg-away').textContent = toFa(aXg.toFixed(2));
+        document.getElementById('hero-xg-total').textContent = toFa((hXg + aXg).toFixed(2));
+
+        const xPtsH = (m.probHome / 100) * 3 + (m.probDraw / 100) * 1;
+        const xPtsA = (m.probAway / 100) * 3 + (m.probDraw / 100) * 1;
+        document.getElementById('hero-xpts-home').textContent = `${toFa(xPtsH.toFixed(2))} xPts`;
+        document.getElementById('hero-xpts-away').textContent = `${toFa(xPtsA.toFixed(2))} xPts`;
+
+        // Unified Probability Capsule & Fair Odds
+        const capH = document.getElementById('cap-home');
+        const capD = document.getElementById('cap-draw');
+        const capA = document.getElementById('cap-away');
+        capH.style.width = `${m.probHome}%`;
+        capH.style.color = getContrastText(m.home.color);
+        capH.textContent = m.probHome >= 11 ? `${toFa(m.probHome)}٪` : '';
+
+        capD.style.width = `${m.probDraw}%`;
+        capD.textContent = m.probDraw >= 11 ? `${toFa(m.probDraw)}٪` : '';
+
+        capA.style.width = `${m.probAway}%`;
+        capA.style.color = getContrastText(m.away.color);
+        capA.textContent = m.probAway >= 11 ? `${toFa(m.probAway)}٪` : '';
+
+        document.getElementById('odds-home').textContent = toFa((100 / Math.max(1, m.probHome)).toFixed(2));
+        document.getElementById('odds-draw').textContent = toFa((100 / Math.max(1, m.probDraw)).toFixed(2));
+        document.getElementById('odds-away').textContent = toFa((100 / Math.max(1, m.probAway)).toFixed(2));
+
+        // Align Draw Fair Odds directly beneath the center of the Draw segment in RTL
+        const drawCenterPct = Math.min(73, Math.max(27, m.probHome + m.probDraw / 2));
+        const drawAnchor = document.getElementById('odds-draw-anchor');
+        if (drawAnchor) {
+          drawAnchor.style.right = `${drawCenterPct.toFixed(1)}%`;
+        }
+
+        // Render Active Modules
+        const activeMods = state.modules.filter(x => x.enabled);
+        grid.innerHTML = activeMods.map(renderModuleHTML).join('');
+
+        fitStage();
+      }
+
+      // 11. EXACT PROPORTIONAL STAGE SCALER
+      function fitStage() {
+        const container = document.getElementById('stage-container');
+        const wrapper = document.getElementById('artboard-scale-wrapper');
+        const board = document.getElementById('export-artboard');
+        const fmt = FORMATS[state.format];
+        if (!container || !wrapper || !board) return;
+
+        const availW = Math.max(240, container.clientWidth - 36);
+        const availH = Math.max(240, container.clientHeight - 36);
+        const scale = Math.min(availW / fmt.w, availH / fmt.h, 1);
+
+        wrapper.style.width = `${Math.round(fmt.w * scale)}px`;
+        wrapper.style.height = `${Math.round(fmt.h * scale)}px`;
+        board.style.transform = `scale(${scale})`;
+      }
+
+      // 12. SIDEBAR CONTROLS RENDERING & SYNC
+      function renderModuleControls() {
+        const host = document.getElementById('module-controls-list');
+        host.innerHTML = state.modules.map(mod => {
+          const def = MODULE_DEFS.find(d => d.id === mod.id);
+          return `
+            <div class="flex items-center justify-between gap-2 p-2 rounded-xl bg-[#091124] border ${mod.enabled ? 'border-white/15' : 'border-white/5 opacity-60'}">
+              <label class="flex items-center gap-2 cursor-pointer flex-1 min-w-0">
+                <input type="checkbox" data-mod="${mod.id}" ${mod.enabled ? 'checked' : ''} class="mod-chk accent-[#E62E45] w-4 h-4 cursor-pointer" />
+                <span class="text-xs font-bold text-slate-200 truncate">${def.title}</span>
+              </label>
+              ${def.canHalf ? `
+                <div class="flex items-center bg-[#040814] rounded-lg p-0.5 border border-white/10 shrink-0">
+                  <button type="button" data-mod="${mod.id}" data-span="half" class="span-btn px-2 py-0.5 rounded text-[10px] font-bold ${mod.span === 'half' ? 'bg-[#E62E45] text-white' : 'text-slate-400'}">نیم‌عرض ½</button>
+                  <button type="button" data-mod="${mod.id}" data-span="full" class="span-btn px-2 py-0.5 rounded text-[10px] font-bold ${mod.span === 'full' ? 'bg-[#E62E45] text-white' : 'text-slate-400'}">تمام‌عرض ۱</button>
+                </div>
+              ` : `<span class="text-[10px] text-slate-500 px-2">تمام‌عرض</span>`}
+            </div>
+          `;
+        }).join('');
+
+        host.querySelectorAll('.mod-chk').forEach(chk => {
+          chk.addEventListener('change', () => {
+            const id = chk.getAttribute('data-mod');
+            const target = state.modules.find(x => x.id === id);
+            if (!chk.checked && state.modules.filter(x => x.enabled).length <= 1) {
+              chk.checked = true;
+              showToast('حداقل یک ماژول باید فعال بماند');
+              return;
+            }
+            target.enabled = chk.checked;
+            state.version = 'custom';
+            highlightVersionBtn('custom');
+            renderModuleControls();
+            renderArtboard();
+          });
+        });
+
+        host.querySelectorAll('.span-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-mod');
+            const sp = btn.getAttribute('data-span');
+            const target = state.modules.find(x => x.id === id);
+            target.span = sp;
+            target.enabled = true;
+            state.version = 'custom';
+            highlightVersionBtn('custom');
+            renderModuleControls();
+            renderArtboard();
+          });
+        });
+      }
+
+      function renderFormToggles(side) {
+        const host = document.getElementById(`${side}-form-toggles`);
+        const formLabels = { W: 'ب', D: 'م', L: 'ش' };
+        host.innerHTML = state.match[side].form.map((f, idx) => `
+          <button type="button" data-side="${side}" data-idx="${idx}" class="form-dot form-${f} cursor-pointer transition-transform active:scale-90">${formLabels[f] || 'م'}</button>
+        `).join('');
+        host.querySelectorAll('button').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const s = btn.getAttribute('data-side');
+            const i = Number(btn.getAttribute('data-idx'));
+            const seq = ['W', 'D', 'L'];
+            const cur = state.match[s].form[i];
+            state.match[s].form[i] = seq[(seq.indexOf(cur) + 1) % 3];
+            renderFormToggles(s);
+            renderArtboard();
+          });
+        });
+      }
+
+      function highlightVersionBtn(ver) {
+        document.querySelectorAll('.ver-btn').forEach(b => {
+          const active = b.getAttribute('data-version') === ver;
+          b.className = active
+            ? 'ver-btn w-full text-right px-3.5 py-2.5 rounded-xl border border-[#E62E45] bg-[#E62E45]/15 text-white text-xs font-bold flex items-center justify-between'
+            : 'ver-btn w-full text-right px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-200 text-xs font-bold flex items-center justify-between';
+        });
+      }
+
+      function syncInputsFromState() {
+        const m = state.match;
+        document.getElementById('inp-competition').value = m.competition;
+        document.getElementById('inp-round').value = m.round;
+        document.getElementById('inp-league-en').value = m.leagueEn || 'PREMIER LEAGUE';
+        document.getElementById('inp-season').value = m.season || '26/27';
+        document.getElementById('inp-week-code').value = m.weekCode || 'W9';
+        document.getElementById('inp-day').value = m.day;
+        document.getElementById('inp-time').value = m.time;
+        document.getElementById('inp-stadium').value = m.stadium;
+        document.getElementById('inp-broadcast').value = m.broadcast;
+        document.getElementById('inp-source').value = m.source;
+
+        document.getElementById('rng-prob-home').value = m.probHome;
+        document.getElementById('rng-prob-draw').value = m.probDraw;
+        document.getElementById('rng-prob-away').value = m.probAway;
+        document.getElementById('lbl-prob-home').textContent = `${toFa(m.probHome)}٪`;
+        document.getElementById('lbl-prob-draw').textContent = `${toFa(m.probDraw)}٪`;
+        document.getElementById('lbl-prob-away').textContent = `${toFa(m.probAway)}٪`;
+
+        document.getElementById('inp-home-name').value = m.home.name;
+        document.getElementById('inp-home-code').value = m.home.code;
+        document.getElementById('inp-home-sub').value = m.home.sub || '';
+        document.getElementById('inp-home-color').value = m.home.color;
+        document.getElementById('inp-kp-home-name').value = m.home.kp.name;
+        document.getElementById('inp-kp-home-pos').value = m.home.kp.pos;
+        document.getElementById('inp-kp-home-s1').value = m.home.kp.s1;
+        document.getElementById('inp-kp-home-s2').value = m.home.kp.s2;
+
+        document.getElementById('inp-away-name').value = m.away.name;
+        document.getElementById('inp-away-code').value = m.away.code;
+        document.getElementById('inp-away-sub').value = m.away.sub || '';
+        document.getElementById('inp-away-color').value = m.away.color;
+        document.getElementById('inp-kp-away-name').value = m.away.kp.name;
+        document.getElementById('inp-kp-away-pos').value = m.away.kp.pos;
+        document.getElementById('inp-kp-away-s1').value = m.away.kp.s1;
+        document.getElementById('inp-kp-away-s2').value = m.away.kp.s2;
+
+        document.getElementById('inp-xg-home').value = m.home.xg;
+        document.getElementById('inp-xg-away').value = m.away.xg;
+        document.getElementById('inp-xga-home').value = m.home.xga;
+        document.getElementById('inp-xga-away').value = m.away.xga;
+        document.getElementById('inp-sot-home').value = m.home.sot;
+        document.getElementById('inp-sot-away').value = m.away.sot;
+
+        document.getElementById('inp-focus-title').value = m.focus.title;
+        document.getElementById('inp-focus-body').value = m.focus.body;
+        document.getElementById('inp-watch-home').value = m.home.watchout;
+        document.getElementById('inp-watch-away').value = m.away.watchout;
+
+        renderFormToggles('home');
+        renderFormToggles('away');
+        renderModuleControls();
+      }
+
+      // 13. PROBABILITY BALANCER
+      function adjustProb(key, val) {
+        val = Math.max(5, Math.min(88, Math.round(Number(val))));
+        const m = state.match;
+        const keys = ['probHome', 'probDraw', 'probAway'];
+        const others = keys.filter(k => k !== key);
+        const rem = 100 - val;
+        const sumOthers = m[others[0]] + m[others[1]];
+        if (sumOthers <= 0) {
+          m[others[0]] = Math.floor(rem / 2);
+          m[others[1]] = rem - m[others[0]];
+        } else {
+          let first = Math.round((m[others[0]] / sumOthers) * rem);
+          first = Math.max(5, Math.min(rem - 5, first));
+          m[others[0]] = first;
+          m[others[1]] = rem - first;
+        }
+        m[key] = val;
+        syncInputsFromState();
+        renderArtboard();
+      }
+
+      // 14. HIGH-RES 2X PNG EXPORT
+      async function exportPNG() {
+        const board = document.getElementById('export-artboard');
+        const fmt = FORMATS[state.format];
+        const btn = document.getElementById('btn-export-png');
+        btn.disabled = true;
+        showToast('در حال تولید تصویر PNG با کیفیت 2x...');
+
+        let holder = null;
+        try {
+          await document.fonts.ready;
+          holder = document.createElement('div');
+          holder.style.cssText = `position:fixed;left:-99999px;top:0;width:${fmt.w}px;height:${fmt.h}px;`;
+          const clone = board.cloneNode(true);
+          clone.style.transform = 'none';
+          holder.appendChild(clone);
+          document.body.appendChild(holder);
+
+          const canvas = await html2canvas(clone, {
+            scale: 2,
+            useCORS: true,
+            width: fmt.w,
+            height: fmt.h,
+            backgroundColor: '#0D1730',
+            logging: false
+          });
+
+          const a = document.createElement('a');
+          a.download = `XGPedia-${state.match.home.code}-vs-${state.match.away.code}-${state.format.replace(':', 'x')}.png`;
+          a.href = canvas.toDataURL('image/png', 1.0);
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          showToast(`فایل PNG با ابعاد ${fmt.w * 2}×${fmt.h * 2} ذخیره شد`);
+        } catch (err) {
+          console.error(err);
+          showToast('خطا در تولید خروجی تصویر');
+        } finally {
+          if (holder && holder.parentNode) holder.parentNode.removeChild(holder);
+          btn.disabled = false;
+        }
+      }
+
+      // 15. EVENT LISTENERS
+      function bindEvents() {
+        // Format buttons
+        document.querySelectorAll('.fmt-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            state.format = btn.getAttribute('data-format');
+            document.querySelectorAll('.fmt-btn').forEach(b => {
+              const active = b.getAttribute('data-format') === state.format;
+              b.className = active
+                ? 'fmt-btn px-3 py-1 rounded-lg text-xs font-bold bg-[#E62E45] text-white transition'
+                : 'fmt-btn px-3 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition';
+            });
+            renderArtboard();
+          });
+        });
+
+        // Tabs
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const target = btn.getAttribute('data-tab');
+            document.querySelectorAll('.tab-btn').forEach(b => {
+              b.className = b === btn
+                ? 'tab-btn py-2 rounded-lg text-xs font-bold bg-white/10 text-white'
+                : 'tab-btn py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-white';
+            });
+            document.querySelectorAll('.tab-panel').forEach(p => {
+              p.classList.toggle('hidden', p.id !== `tab-${target}`);
+            });
+          });
+        });
+
+        // Version buttons
+        document.querySelectorAll('.ver-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const ver = btn.getAttribute('data-version');
+            highlightVersionBtn(ver);
+            applyVersion(ver);
+          });
+        });
+
+        // Presets
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const key = btn.getAttribute('data-preset');
+            state.match = JSON.parse(JSON.stringify(PRESETS[key]));
+            syncInputsFromState();
+            renderArtboard();
+            showToast(`مسابقه ${state.match.home.name} × ${state.match.away.name} بارگذاری شد`);
+          });
+        });
+
+        // Monochrome brand toggle
+        document.getElementById('toggle-mono-brand').addEventListener('click', () => {
+          state.monoBrand = !state.monoBrand;
+          document.getElementById('mono-dot').style.background = state.monoBrand ? '#FFFFFF' : '#E62E45';
+          document.querySelector('#toggle-mono-brand span:last-child').textContent = state.monoBrand ? 'لوگو: تک‌رنگ سفید' : 'لوگو: دو رنگ';
+          renderArtboard();
+        });
+
+        // Live Inputs
+        const bind = (id, fn) => {
+          const el = document.getElementById(id);
+          if (el) el.addEventListener('input', e => { fn(e.target.value); renderArtboard(); });
+        };
+
+        bind('inp-competition', v => {
+          state.match.competition = v;
+          const mappedEn = LEAGUE_FA_TO_EN[v.trim()];
+          if (mappedEn) {
+            state.match.leagueEn = mappedEn;
+            document.getElementById('inp-league-en').value = mappedEn;
+          }
+        });
+
+        bind('inp-round', v => {
+          state.match.round = v;
+          const inferredW = inferWeekCodeFromPersian(v);
+          if (inferredW) {
+            state.match.weekCode = inferredW;
+            document.getElementById('inp-week-code').value = inferredW;
+          }
+        });
+
+        bind('inp-league-en', v => state.match.leagueEn = v);
+        bind('inp-season', v => state.match.season = v);
+        bind('inp-week-code', v => state.match.weekCode = v);
+        bind('inp-day', v => state.match.day = v);
+        bind('inp-time', v => state.match.time = v);
+        bind('inp-stadium', v => state.match.stadium = v);
+        bind('inp-broadcast', v => state.match.broadcast = v);
+        bind('inp-source', v => state.match.source = v);
+
+        bind('inp-home-name', v => state.match.home.name = v);
+        bind('inp-home-code', v => state.match.home.code = v.toUpperCase());
+        bind('inp-home-sub', v => state.match.home.sub = v);
+        bind('inp-home-color', v => state.match.home.color = v);
+        bind('inp-kp-home-name', v => state.match.home.kp.name = v);
+        bind('inp-kp-home-pos', v => state.match.home.kp.pos = v);
+        bind('inp-kp-home-s1', v => state.match.home.kp.s1 = v);
+        bind('inp-kp-home-s2', v => state.match.home.kp.s2 = v);
+
+        bind('inp-away-name', v => state.match.away.name = v);
+        bind('inp-away-code', v => state.match.away.code = v.toUpperCase());
+        bind('inp-away-sub', v => state.match.away.sub = v);
+        bind('inp-away-color', v => state.match.away.color = v);
+        bind('inp-kp-away-name', v => state.match.away.kp.name = v);
+        bind('inp-kp-away-pos', v => state.match.away.kp.pos = v);
+        bind('inp-kp-away-s1', v => state.match.away.kp.s1 = v);
+        bind('inp-kp-away-s2', v => state.match.away.kp.s2 = v);
+
+        bind('inp-xg-home', v => state.match.home.xg = parseFloat(v) || 0);
+        bind('inp-xg-away', v => state.match.away.xg = parseFloat(v) || 0);
+        bind('inp-xga-home', v => state.match.home.xga = parseFloat(v) || 0);
+        bind('inp-xga-away', v => state.match.away.xga = parseFloat(v) || 0);
+        bind('inp-sot-home', v => state.match.home.sot = parseFloat(v) || 0);
+        bind('inp-sot-away', v => state.match.away.sot = parseFloat(v) || 0);
+
+        bind('inp-focus-title', v => state.match.focus.title = v);
+        bind('inp-focus-body', v => state.match.focus.body = v);
+        bind('inp-watch-home', v => state.match.home.watchout = v);
+        bind('inp-watch-away', v => state.match.away.watchout = v);
+
+        // Probabilities
+        document.getElementById('rng-prob-home').addEventListener('input', e => adjustProb('probHome', e.target.value));
+        document.getElementById('rng-prob-draw').addEventListener('input', e => adjustProb('probDraw', e.target.value));
+        document.getElementById('rng-prob-away').addEventListener('input', e => adjustProb('probAway', e.target.value));
+
+        document.getElementById('btn-calc-poisson').addEventListener('click', () => {
+          const res = calcPoisson(Number(state.match.home.xg), Number(state.match.away.xg));
+          let pH = Math.max(5, Math.round(res.pH * 100));
+          let pD = Math.max(5, Math.round(res.pD * 100));
+          let pA = Math.max(5, 100 - pH - pD);
+          if (pH + pD + pA !== 100) pH += 100 - (pH + pD + pA);
+          state.match.probHome = pH;
+          state.match.probDraw = pD;
+          state.match.probAway = pA;
+          syncInputsFromState();
+          renderArtboard();
+          showToast('احتمالات ۱X۲ و ضرایب منصفانه از xG به‌روز شدند');
+        });
+
+        // Logo Uploads
+        ['home', 'away'].forEach(side => {
+          document.getElementById(`file-${side}-logo`).addEventListener('change', e => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+              state.match[side].logoUrl = reader.result;
+              renderArtboard();
+              showToast('لوگو بارگذاری شد');
+            };
+            reader.readAsDataURL(file);
+          });
+          document.getElementById(`clear-${side}-logo`).addEventListener('click', () => {
+            state.match[side].logoUrl = null;
+            renderArtboard();
+          });
+        });
+
+        // Export & Copy JSON
+        document.getElementById('btn-export-png').addEventListener('click', exportPNG);
+        document.getElementById('btn-copy-json').addEventListener('click', () => {
+          const ta = document.createElement('textarea');
+          ta.value = JSON.stringify(state.match, null, 2);
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          showToast('دیتای JSON کپی شد');
+        });
+
+        // ResizeObserver for Locked Aspect Ratio Scaling
+        const stage = document.getElementById('stage-container');
+        if (typeof ResizeObserver !== 'undefined') {
+          new ResizeObserver(fitStage).observe(stage);
+        }
+        window.addEventListener('resize', fitStage);
+      }
+
+      // Initialize
+      window.addEventListener('DOMContentLoaded', () => {
+        bindEvents();
+        syncInputsFromState();
+        applyVersion('smart');
+      });
+    })();
+  </script>
+</body>
+</html>

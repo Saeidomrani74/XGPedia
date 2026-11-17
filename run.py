@@ -19,6 +19,8 @@
   python run.py draft --fixture ID [--platform telegram] [--post-type preview]
   python run.py list-posts                        # پیش‌نویس‌های ذخیره‌شده
   python run.py show-post --post-id 1             # نمایش کامل یک پست
+  python run.py export-post --post-id 1           # خروجی JSON مستقل (draft+fact)
+  python run.py render-post --post-id 1           # رندر تصویر از پست آرشیوشده
 """
 from __future__ import annotations
 
@@ -292,6 +294,75 @@ def cmd_show_post(args: argparse.Namespace) -> None:
     print((r["fact_json"] or "")[:600] + ("..." if r["fact_json"] and len(r["fact_json"]) > 600 else ""))
 
 
+def _load_post(post_id: int):
+    """خواندن یک پست از DB → (row, draft_dict, facts_dict)؛ خطای واضح اگر نبود."""
+    import json as _json
+
+    from src.xgpedia.db import db
+
+    with db() as conn:
+        r = conn.execute("SELECT * FROM posts WHERE post_id = ?", (post_id,)).fetchone()
+    if r is None:
+        raise SystemExit(f"No post with post_id {post_id} - run: python run.py list-posts")
+    if not r["draft_json"] or not r["fact_json"]:
+        raise SystemExit(f"post {post_id} has no draft_json/fact_json - render needs a validated draft")
+    return r, _json.loads(r["draft_json"]), _json.loads(r["fact_json"])
+
+
+def cmd_export_post(args: argparse.Namespace) -> None:
+    """خروجی JSON مستقل از یک پست — draft + fact + متادیتا در یک فایل for بردن/نگاه‌کردن."""
+    import json as _json
+
+    from src.xgpedia.config import ROOT
+
+    r, draft, facts = _load_post(args.post_id)
+    out = Path(args.out) if args.out else ROOT / "data" / "exports" / f"post_{args.post_id}_v{r['content_version']}.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "post_id": r["post_id"],
+        "fixture_id": r["fixture_id"],
+        "post_type": r["post_type"],
+        "target_platform": r["target_platform"],
+        "content_version": r["content_version"],
+        "status": r["status"],
+        "created_at": r["created_at"],
+        "draft": draft,
+        "facts": facts,
+    }
+    out.write_text(_json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"OK - exported to {out}")
+    print(f"  draft keys: {', '.join(draft.keys())}")
+    print(f"  facts fixture: {facts.get('fixture_id', '?')}")
+
+
+def cmd_render_post(args: argparse.Namespace) -> None:
+    """رندر کارت تصویری از یک پست ذخیره‌شده — ورودی همان draft_json + fact_json آرشیوشده."""
+    from src.xgpedia.config import ROOT
+    from src.xgpedia.render.cards import render_preview_card
+
+    r, draft, facts = _load_post(args.post_id)
+    out_dir = Path(args.out) if args.out else ROOT / "output"
+    try:
+        html_path, img_path, cap_path = render_preview_card(
+            draft,
+            facts,
+            out_dir=out_dir,
+            post_id=r["post_id"],
+            version=r["content_version"],
+            platform=r["target_platform"],
+            post_type=r["post_type"],
+            layout=args.layout,
+            fmt=args.format,
+        )
+    except FileNotFoundError as e:
+        print(f"[FAIL] {e}")
+        sys.exit(2)
+    print(f"OK - rendered post {r['post_id']} (v{r['content_version']} {r['post_type']}/{r['target_platform']})")
+    print(f"  image:    {img_path}")
+    print(f"  caption:  {cap_path}")
+    print(f"  html:     {html_path}  (intermediate - font embedded, opens standalone)")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="xgpedia",
@@ -330,6 +401,18 @@ def main(argv: list[str] | None = None) -> int:
     p_show = sub.add_parser("show-post", help="show one post in full")
     p_show.add_argument("--post-id", type=int, required=True)
 
+    p_export = sub.add_parser("export-post", help="export one post as a standalone JSON file")
+    p_export.add_argument("--post-id", type=int, required=True)
+    p_export.add_argument("--out", default=None, help="output path (default: data/exports/post_<id>_v<ver>.json)")
+
+    p_render = sub.add_parser("render-post", help="render a saved post to an image card (PNG/JPEG)")
+    p_render.add_argument("--post-id", type=int, required=True)
+    p_render.add_argument("--out", default=None, help="output directory (default: output/)")
+    p_render.add_argument("--format", default="4:5", choices=["4:5", "9:16", "16:9"],
+                          help="card format (default: 4:5 = 1080x1350; 9:16 = 1080x1920 story; 16:9 = 1920x1080 banner)")
+    p_render.add_argument("--layout", default="smart", choices=["smart", "v1", "v2", "v3"],
+                          help="module layout version (default: smart = data-driven selection)")
+
     args = parser.parse_args(argv)
     if args.cmd == "init":
         init_db()
@@ -352,6 +435,10 @@ def main(argv: list[str] | None = None) -> int:
         cmd_list_posts(args)
     elif args.cmd == "show-post":
         cmd_show_post(args)
+    elif args.cmd == "export-post":
+        cmd_export_post(args)
+    elif args.cmd == "render-post":
+        cmd_render_post(args)
     else:
         parser.error("unknown command")
     return 0

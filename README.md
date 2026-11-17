@@ -1,6 +1,6 @@
 # XGPedia v8 — کیت خط تولید با منابع دادهٔ جدید
 
-نسخهٔ ۸ کیت شروع، پس از قطع دسترسی پلن رایگان API-Football به فصل‌های جاری (پاییز ۲۰۲۶).
+نسخهٔ ۹ کیت شروع (v0.9.0)، پس از قطع دسترسی پلن رایگان API-Football به فصل‌های جاری (پاییز ۲۰۲۶).
 
 ## چه چیزی عوض شد؟
 
@@ -49,7 +49,7 @@ python check_env.py
 
 REM ۵) دریافت داده:
 python run.py sync-results                 REM نتایج + xG فصل جاری → DB
-python run.py sync-results --season 2026   REM فصل قبل (آمار بدون xG)
+python run.py sync-results --season 2025   REM فصل قبل (آمار بدون xG)
 python run.py fixtures --days 7            REM بازی‌های پیش‌رو
 python run.py status                       REM تازگی داده
 python run.py list-fixtures                REM فهرست fixture_idها برای facts
@@ -78,10 +78,15 @@ python run.py sync-results
 | دستور | کار | منبع |
 |---|---|---|
 | `init` | ساخت SQLite | — |
-| `sync-results [--season 2027\|2026]` | نتایج + xG + شوت/کرنر/کارت → DB | football-data.co.uk |
+| `sync-results [--season 2026\|2025]` | نتایج + xG + شوت/کرنر/کارت → DB | football-data.co.uk |
 | `fixtures --days 7` | بازی‌های پیش‌رو با کیک‌آف UTC → DB | football-data.org |
 | `list-fixtures [--limit 20]` | فهرست fixture_idهای DB — برای انتخاب آرگومان `facts` (بدون نیاز به sqlite3 CLI) | DB |
 | `facts --fixture ID [--out f.json]` | «JSON واقعیت‌ها»: فرم ۵ بازی، میانگین xG، کرنر، تریگرها | DB |
+| `draft --fixture ID [--platform telegram] [--post-type preview]` | تولید پیش‌نویس با LLM + عبور از ۷ دروازهٔ validator → ثبت در posts | LLM + DB |
+| `list-posts` | فهرست پست‌های ذخیره‌شده | DB |
+| `show-post --post-id N` | نمایش کامل draft_json + fact_json یک پست | DB |
+| `export-post --post-id N [--out f.json]` | خروجی JSON مستقل یک پست (متادیتا + draft + fact) در `data/exports/` | DB |
+| `render-post --post-id N [--out dir]` | رندر کارت تصویری ۱۰۸۰×۱۳۵۰ از پست آرشیوشده + فایل کپشن | DB + قالب HTML |
 | `status` | تازگی داده + آمار DB + هشدار کهنگی | DB |
 | `test-provider --matches 5` | آزمون پوشش فیلدها → `docs/provider-test.md` | football-data.co.uk |
 
@@ -97,7 +102,10 @@ src/xgpedia/
   normalization/ Pydantic schema؛ null≠0 (بدون تغییر)
   analytics/     محاسبهٔ قطعی (بدون تغییر)
   sync.py        (جدید) CSV/API → DB + ساخت MatchFacts + پایش تازگی
-tests/           ۳۶ تست: قواعد حیاتی + نگاشت نام + idempotency + null≠0
+  editorial/     prompt.py + draft.py (جدید) + llm_provider + validate — تولید و اعتبارسنجی متن
+  render/        (جدید v0.9) cards.py + templates/ — کارت از draft_json+fact_json+brand با Playwright
+tests/           ۶۵ تست: قواعد حیاتی + نگاشت نام + idempotency + null≠0 + تحریریه + رندر
+brand/fonts/     (جدید) Vazirmatn woff2 — فونت به‌صورت data URI داخل HTML جاسازی می‌شود
 setup.bat        راه‌اندازی ویندوز در یک کلیک
 daily-sync.bat   همگام‌سازی روزانه (برای Task Scheduler)
 check_env.py     بررسی محیط و توکن و دسترسی منابع
@@ -113,8 +121,62 @@ python run.py status          ← اگر عمر داده > ۴ روز: هشدار
    ↓
 python run.py facts --fixture <بازی امروزی> --out data/samples/fact.json
    ↓
-(هفته‌های بعد) لایهٔ تحریریه و رندر روی fact.json کار می‌کنند — بدون تغییر در schema
+python run.py draft --fixture <بازی امروزی>       ← تولید متن با LLM + ۷ دروازه
+   ↓
+python run.py list-posts / show-post              ← بازبینی پیش‌نویس
+   ↓
+python run.py export-post --post-id N             ← JSON مستقل برای آرشیو/برداشتن
+   ↓
+python run.py render-post --post-id N             ← کارت ۱۰۸۰×۱۳۵۰ + کپشن در output/
 ```
+
+### لایهٔ تحریریه چطور کار می‌کند (جدید در v0.8.5)
+
+`python run.py draft --fixture <id>` این زنجیره را اجرا می‌کند:
+
+1. فکت‌ها از DB با همان `build_match_facts` ساخته می‌شوند (ورودیِ واحد).
+2. `SYSTEM_PROMPT` (در `editorial/prompt.py`) همراه JSON فکت‌ها به مدل می‌رود؛
+   تنها منبع مجاز مدل همین JSON است — نه حافظه‌اش.
+3. خروجی مدل با `DraftOutput.from_json` پارس می‌شود (کلیدهای غیرمجاز رد).
+4. **source_note هرگز از مدل نمی‌آید** — کد آن را با provider/زمان/hash می‌سازد.
+5. هفت دروازهٔ `validate.py`؛ رد شد → یک بار retry با عین خطاها به مدل؛
+   دوباره رد شد → `RejectedDraft` و بررسی انسانی (خط خروج `exit 1`).
+6. پست معتبر در جدول `posts` با `status='validated'` و `content_version` تازه
+   ذخیره می‌شود (draft_json + fact_json — هر دو آرشیو می‌شوند).
+
+کلید LLM در `.env`: `LLM_BASE_URL` / `LLM_API_KEY` / `LLM_MODEL` — هر سرویس
+سازگار با OpenAI Chat Completions (OpenAI، DeepSeek، OpenRouter، z-ai و ...)؛
+نمونه‌ها در `.env.example`.
+
+### لایهٔ رندر چطور کار می‌کند (v0.10 — طراحی استودیو)
+
+`python run.py render-post --post-id N [--format 4:5|9:16|16:9] [--layout smart|v1|v2|v3]` این زنجیره را اجرا می‌کند:
+
+1. ردیف پست از DB خوانده می‌شود — ورودی رندر **همان draft_json + fact_json آرشیوشده**
+   است؛ یعنی تصویر دقیقاً از همان داده‌هایی ساخته می‌شود که متن از آن‌ها نوشته شد.
+2. `render/cards.py` از این دو JSON + `brand/brand.json` (بخش matchday_palette) +
+   `config/team_identities.json` (کد و رنگ رسمی هر تیم) یک context می‌سازد:
+   تاریخ جلالی و ساعت تهران با ارقام فارسی؛ ارقام آماری لاتین tabular؛
+   احتمال‌های ۱X۲، ضرایب منصفانه و ماتریس پواسون به‌صورت قطعی از دو عدد xG با
+   مدل Dixon-Coles مشتق می‌شوند (`analytics/metrics.py`)؛ ماژولی که داده‌اش نیست
+   رندر نمی‌شود (null≠0).
+3. قالب `templates/match_preview.html.j2` — بازپیاده‌سازی عینی `tools/matchday_studio.html`
+   (استودیوی مرجع طراحی): ۹ ماژول (stats/radar/focus/watchout/keyduel/poisson/wave/trend10/signals)،
+   چیدمان smart (داده‌محور) یا v1/v2/v3، سه فرمت خروجی.
+   فونت‌ها (Vazirmatn + Space Grotesk + JetBrains Mono) data URI درون‌جاسازی می‌شوند.
+4. Playwright (Chromium) بعد از `document.fonts.ready` اسکرین‌شات می‌گیرد:
+   تلگرام/سایت → PNG؛ اینستاگرام → JPEG (الزام API).
+5. خروجی در **`output/`** (قابل تغییر با `--out`): تصویر `post_{id}_v{ver}_{type}_{W}x{H}.{png|jpeg}`
+   + فایل کپشن `.txt` (کپشن + هشتگ ثابت نوع پست) + HTML میانی (خودبسنده).
+
+دارایی‌های تیمی: `python tools/fetch_crests.py` لوگوی رسمی SVG تیم‌ها را در
+`brand/crests/{CODE}.svg` می‌گذارد (۲۰/۲۰ تیم لیگ برتر موجود است). تیمِ بدون فایل با
+نشان انتزاعی یک‌دستِ خود استودیو (رنگ + کد) رندر می‌شود.
+
+نقشهٔ دارایی‌ها و ماژول‌های منتظرِ داده (رادار صدک، مهرهٔ کلیدی، موج زمانی، +EV،
+کارت بازیکن، عکس بازیکن، …): **`docs/ROADMAP.md`**.
+
+پیش‌نیاز (یک بار): `pip install -e ".[render]"` سپس `playwright install chromium`.
 
 ## قواعد حیاتی که این نسخه رعایت می‌کند
 
@@ -133,6 +195,7 @@ python run.py facts --fixture <بازی امروزی> --out data/samples/fact.js
 | `ImportError: cannot import name ...` در تست‌ها | **فایل‌های به‌جامانده از نسخهٔ قبلی** — extract جدید روی پوشهٔ قدیمی انجام شده | پوشهٔ قدیمی را کامل حذف/تغییرنام دهید و zip را در پوشهٔ تازه باز کنید، بعد setup.bat |
 | فارسی برعکس/جدا در ترمینال | کنسول ویندوز متن RTL را درست رندر نمی‌کند | طبیعی است — خروجی‌های ترمینال این پکیج انگلیسی است؛ فارسی فقط در فایل‌ها و اسناد است |
 | `[FAIL] football-data.co.uk ... handshake timed out` | کندی/فیلترینگ شبکه به میزبان CSV | check_env سه بار تلاش می‌کند؛ اگر باز هم نشد VPN یا ساعت دیگری امتحان کنید |
+| `Error: FOOTBALL_DATA_ORG_TOKEN is not set` با وجود .env پرشده | در نسخه‌های قبل از 0.8.3 فایل .env load نمی‌شد؛ یا Notepad پسوند پنهان `.txt` اضافه کرده | به v8.3+ ارتقا دهید؛ در Explorer گزینهٔ File name extensions را روشن کنید — نام باید دقیقاً `.env` و در ریشهٔ پکیج باشد (فاصله بعد از `=` اشکالی ندارد) |
 | `pytest: No module named pytest` | نصب توسعه‌ای بدون dev | `pip install pytest` (در setup.bat خودکار است) |
 | خطای ۴۲۹ در fixtures | سقف ۱۰ درخواست/دقیقه football-data.org | چند ثانیه صبر؛ آداپتر خودش backoff می‌زند |
 | تازگی داده > ۴ روز در status | تعطیلی بین‌المللی یا تغییر ساختار CSV | فایل خام همان روز را در `data/raw/` ببینید |

@@ -28,6 +28,8 @@ BRAND_FILE = ROOT / "brand" / "brand.json"
 THRESHOLDS_FILE = CONFIG_DIR / "thresholds.json"
 GLOSSARY_FILE = CONFIG_DIR / "glossary_fa.json"
 TEAM_MAPPING_FILE = CONFIG_DIR / "team_mapping.json"
+TEAM_IDENTITIES_FILE = CONFIG_DIR / "team_identities.json"
+CRESTS_DIR = ROOT / "brand" / "crests"  # brand/crests/{CODE}.svg|png — لوگوی واقعی تیم‌ها (tools/fetch_crests.py)
 DATABASE_PATH = Path(os.environ.get("DATABASE_PATH", ROOT / "data" / "dev.sqlite"))
 RAW_PAYLOAD_DIR = Path(os.environ.get("RAW_PAYLOAD_DIR", ROOT / "data" / "raw"))
 
@@ -73,6 +75,34 @@ def load_team_mapping() -> dict:
     """نگاشت نام تیم‌ها بین سه منبع + فارسی — config/team_mapping.json."""
     with open(TEAM_MAPPING_FILE, encoding="utf-8") as f:
         return json.load(f)
+
+
+@lru_cache(maxsize=1)
+def load_team_identities() -> dict:
+    """هویت بصری تیم‌ها (کد + رنگ اصلی/ثانویه) — config/team_identities.json.
+
+    کلید همان canonical (نام کامل استاندارد) در team_mapping.json است؛ اگر تیمی
+    اینجا نبود، رندرر fallback بی‌طرف خودش را به‌کار می‌برد — هرگز exception نمی‌دهد.
+    """
+    with open(TEAM_IDENTITIES_FILE, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def team_identity(name_en: str) -> dict | None:
+    """هویت یک تیم ({code, colors, crest})؛ None = در فایل هویت‌ها ثبت نشده."""
+    return load_team_identities().get("teams", {}).get(name_en)
+
+
+def team_crest_path(name_en: str) -> Path | None:
+    """مسیر لوگوی واقعی تیم اگر دانلود شده باشد (svg اول، بعد png)؛ وگرنه None."""
+    ident = team_identity(name_en)
+    if ident is None:
+        return None
+    for ext in (".svg", ".png"):
+        p = CRESTS_DIR / f"{ident['code']}{ext}"
+        if p.exists():
+            return p
+    return None
 
 
 def canonical_from_csv(csv_name: str) -> str:
