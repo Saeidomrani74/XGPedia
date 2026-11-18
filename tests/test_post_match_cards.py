@@ -174,24 +174,34 @@ def test_post_match_context_score_probs_and_modules():
     # دلتای بهره‌وری گل: 1 - 2.38 = -1.38
     assert ctx["hero"]["delta_home"] == "-1.38"
     assert ctx["hero"]["delta_away"] == "-0.66"
-    # smart 4:5: stats + دو نیم‌عرض (story, trend10) + verdict
+    # smart 4:5 (D24): خوانایی بر تراکم — فقط stats + story جا دارد؛ verdict در ۹:۱۶ است
     ids = [m["id"] for m in ctx["modules"] if m["enabled"]]
-    assert ids == ["stats", "trend10", "story", "verdict"]
-    # همهٔ ۶ متریک مشترک → ۶ ردیف آمار
-    assert len(ctx["module_data"]["stats"]["rows"]) == 6
+    assert ids == ["stats", "story"]
+    # سقف ردیف آمار در ۴:۵ → ۴ ردیفِ پراولویت (نه هر ۶ متریک)
+    assert len(ctx["module_data"]["stats"]["rows"]) == 4
+    # سقف بولت‌های روایت → حداکثر ۲ خط روی کارت
+    draft3 = _draft()
+    draft3["bullets"] = draft3["bullets"] + ["بولت سوم آزمایشی"]
+    ctx3 = build_post_match_context(draft3, _facts())
+    assert len(ctx3["module_data"]["story"]["body_lines"]) == 2
+    # smart 9:16: ظرفیت عمودی بیشتر — story و trend10 نیم‌عرض کنار هم + verdict
+    ctx9 = build_post_match_context(_draft(), _facts(), fmt="9:16")
+    ids9 = [m["id"] for m in ctx9["modules"] if m["enabled"]]
+    assert ids9 == ["stats", "trend10", "story", "verdict"]
+    # نمودار روند پس‌از‌بازی بلندتر از پیش‌بازی است (D24 — خوانایی موبایل)
+    assert ctx9["module_data"]["trend10"]["h"] == 190
     # verdict: برتری کیفی ساندرلند (فاصلهٔ ۱.۷۲ xG)
     assert "ساندرلند" in ctx["module_data"]["verdict"]["fair_title"]
 
 
 def test_post_match_context_minimal_data_fills():
-    """کمترین داده: بدون سری و بدون بولت — story از کپشن، trend10 خاموش، یتیم تمام‌عرض."""
+    """کمترین داده: بدون سری و بدون بولت — story از کپشن پر می‌شود (D24: ۴:۵ فقط stats+story)."""
     facts = _facts()
     for side in ("home", "away"):
         facts[side]["xg_series"] = None
     ctx = build_post_match_context(_draft(bullets=[]), facts)
     ids = [m["id"] for m in ctx["modules"] if m["enabled"]]
-    # story (از کپشن) + shotquality جانشین trend10 می‌شوند؛ grid همچنان پر
-    assert ids == ["stats", "story", "shotquality", "verdict"]
+    assert ids == ["stats", "story"]
     assert ctx["module_data"]["story"]["body_lines"] == [_draft(bullets=[])["caption"]]
 
 
@@ -239,6 +249,21 @@ def test_post_match_latin_digits_for_stats():
     html = render_post_match_html(_draft(), _facts())
     assert ">2.38<" in html or "2.38" in html
     assert "۰-۰" not in html  # نتیجه با ارقام لاتین
+
+
+def test_post_match_mobile_font_floors():
+    """D24 — کف خوانایی موبایل: کارت روی گوشی (~۳۹۰px) با ضریب ~۰.۳۷ دیده می‌شود؛
+    روی بوم ۱۰۸۰px هیچ متن خواندنی زیر ۲۴px و هیچ برچسب تزئینی زیر ۲۰px نباید باشد."""
+    html = render_post_match_html(_draft(), _facts())
+    style = html.split("<style>")[1].split("</style>")[0]
+    root = style.split(":root")[1].split("}")[0]
+    sizes = dict(re.findall(r"(--fs-[a-z0-9]+):\s*(\d+)px", root))
+    assert sizes, "CSS font-scale variables not found in :root"
+    decorative = {"--fs-modtag", "--fs-vbadge"}  # برچسب لاتین تزئینی — نه متن خواندنی
+    for name, px in sizes.items():
+        assert int(px) >= 20, f"{name}={px}px is below the 20px absolute floor (D24)"
+        if name not in decorative:
+            assert int(px) >= 24, f"{name}={px}px is below the 24px reading floor (D24)"
 
 
 def test_render_post_match_real_png(tmp_path):

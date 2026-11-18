@@ -90,10 +90,14 @@ def test_display_colors_missing_identity_uses_fallback():
 
 def test_smart_selects_only_available_modules():
     has = {"stats": True, "focus": True, "signals": True, "radar": False, "poisson": False}
+    # 4:5 (D24): فقط stats + focus — سیگنال‌ها فقط در 9:16 جا می‌شوند
     mods = _select_modules("smart", has)
     ids = [m["id"] for m in mods]
-    assert ids == ["stats", "focus", "signals"]
+    assert ids == ["stats", "focus"]
     assert all(m["enabled"] for m in mods)
+    # 9:16: سیگنال‌ها هم می‌آیند
+    mods9 = _select_modules("smart", has, fmt="9:16")
+    assert [m["id"] for m in mods9] == ["stats", "focus", "signals"]
 
 
 def test_v2_includes_poisson_and_wave_only_with_data():

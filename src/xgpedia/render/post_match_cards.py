@@ -55,8 +55,14 @@ POST_MODULE_DEFS = [
 # بعد از آن نمودارهای داده‌محور به ترتیب «خفن‌بودن».
 POST_SMART_PRIORITY = ["story", "trend10", "shotquality"]
 
-# ظرفیت ماژول‌های نیم‌عرض در هر فرمت (تا grid بدون خانهٔ خالی/سرریز پر شود)
-POST_HALF_CAPACITY = {"4:5": 2, "9:16": 4, "16:9": 2}
+# D24 — ظرفیت موبایل: کارت روی گوشی (~۳۹۰px) دیده می‌شود؛ متن‌ها کف خوانایی ≥۲۴px
+# دارند، پس هر فرمت فقط چند ماژول جا می‌دهد. نیم‌عرض یتیم خودبه‌خود تمام‌عرض می‌شود.
+POST_HALF_CAPACITY = {"4:5": 1, "9:16": 2, "16:9": 1}
+# سقف ردیف‌های آمار در هر فرمت (اولویت با ترتیب _comp_rows: xG، شوت، کرنر، …)
+POST_STATS_ROW_CAP = {"4:5": 4, "9:16": 4, "16:9": 3}
+# نوار «عدالت آماری» فقط در ۹:۱۶ جا می‌شود (D24): در ۴:۵ و ۱۶:۹ با فونت خوانا
+# کنار stats+story جا نمی‌شود — خوانایی بر تراکم محتوا مقدم است.
+POST_VERDICT_FORMATS = {"9:16"}
 
 _POST_PALETTE_CACHE: dict | None = None
 
@@ -116,8 +122,9 @@ def _select_post_modules(version: str, has: dict[str, bool], fmt: str = "4:5") -
     """انتخاب ماژول‌ها — smart داده‌محور و فضاآگاه؛ v1/v2/v3 عین استودیو.
 
     smart: stats همیشه (اگر ردیف دارد)؛ نیم‌عرض‌های موجود به ترتیب جذابیت تا
-    ظرفیت فرمت (تا فضا پر شود ولی سرریز نکند)؛ verdict در انتها.
+    ظرفیت فرمت (تا فضا پر شود ولی سرریز نکند)؛ verdict فقط در فرمت‌های جادار (D24).
     """
+    allow_verdict = fmt in POST_VERDICT_FORMATS
     if version == "smart":
         preset: list[tuple[str, str]] = []
         if has.get("stats"):
@@ -125,7 +132,7 @@ def _select_post_modules(version: str, has: dict[str, bool], fmt: str = "4:5") -
         avail = [m for m in POST_SMART_PRIORITY if has.get(m)]
         cap = POST_HALF_CAPACITY.get(fmt, 2)
         preset += [(m, "half") for m in avail[:cap]]
-        if has.get("verdict"):
+        if has.get("verdict") and allow_verdict:
             preset.append(("verdict", "full"))
     else:
         presets = {
@@ -133,7 +140,7 @@ def _select_post_modules(version: str, has: dict[str, bool], fmt: str = "4:5") -
             "v2": [("stats", "full"), ("trend10", "half"), ("shotquality", "half"), ("verdict", "full")],
             "v3": [("stats", "full"), ("story", "half"), ("shotquality", "half"), ("verdict", "full")],
         }
-        preset = presets.get(version, presets["v1"])
+        preset = [p for p in presets.get(version, presets["v1"]) if p[0] != "verdict" or allow_verdict]
     selected = [
         {"id": mod_id, "enabled": has.get(mod_id, False), "span": span}
         for mod_id, _can_half, default_span in POST_MODULE_DEFS
@@ -157,8 +164,13 @@ def _side_stats(facts_side: dict) -> dict[str, float | None]:
     return out
 
 
-def _comp_rows(hs: dict, as_: dict, palette: dict, h_ink: str, a_ink: str) -> list[dict]:
-    """ردیف‌های ماژول آمار — فقط متریک‌هایی که هر دو طرف مقدار دارند (مقایسهٔ نیمه‌خالی گمراه‌کننده است)."""
+def _comp_rows(
+    hs: dict, as_: dict, palette: dict, h_ink: str, a_ink: str, max_rows: int | None = None
+) -> list[dict]:
+    """ردیف‌های ماژول آمار — فقط متریک‌هایی که هر دو طرف مقدار دارند (مقایسهٔ نیمه‌خالی گمراه‌کننده است).
+
+    max_rows: سقف D24 — روی موبایل فقط چند ردیف خوانا جا می‌شود؛ اولویت با ترتیب لیست.
+    """
     rows = []
     for label, metric, dec, suffix, sub_metric in (
         ("امید گل واقعی (xG)", "expected_goals", 2, "", None),
@@ -183,6 +195,8 @@ def _comp_rows(hs: dict, as_: dict, palette: dict, h_ink: str, a_ink: str) -> li
             "sub_h": sub_h, "sub_a": sub_a,
             "h_ink": h_ink, "a_ink": a_ink,
         })
+        if max_rows is not None and len(rows) >= max_rows:
+            break
     return rows
 
 
@@ -202,6 +216,13 @@ def build_post_match_context(
     from src.xgpedia.analytics.metrics import dixon_coles_matrix, expected_points
 
     b = brand or load_brand()
+    if "postmatch_palette" not in b:
+        raise RuntimeError(
+            "brand.json has no 'postmatch_palette' section - the patch was applied only "
+            "partially. Re-copy ALL files from XGPedia_Stage2_PostMatch_Patch.zip over "
+            "the project root and OVERWRITE the existing files (Windows Explorer must be "
+            "told 'Replace', not 'Skip'; or use robocopy - see README_STAGE2_PATCH.md)."
+        )
     t = dict(b["postmatch_palette"])
     home_f, away_f = facts.get("home", {}), facts.get("away", {})
 
@@ -289,23 +310,25 @@ def build_post_match_context(
             f"radial-gradient(circle at 14% 28%, {glow_a}{ambient_alpha} 0%, transparent 52%)"
         ),
     }
-    score_size = {"4:5": 128, "9:16": 138, "16:9": 106}.get(fmt, 128)
+    score_size = {"4:5": 148, "9:16": 158, "16:9": 150}.get(fmt, 148)
 
     # ── ماژول‌ها ──
-    stats_rows = _comp_rows(hs, as_, t, home["ink"], away["ink"])
+    stats_rows = _comp_rows(hs, as_, t, home["ink"], away["ink"],
+                            max_rows=POST_STATS_ROW_CAP.get(fmt))
 
     bullets = [x for x in draft.get("bullets", []) if x]
     story = None
     if draft.get("title"):
-        story = {"title": draft["title"], "body_lines": bullets[:3], "tag": None}
+        story = {"title": draft["title"], "body_lines": bullets[:2], "tag": None}
         if not bullets and draft.get("caption"):
             story["body_lines"] = [draft["caption"]]
 
     trend_ctx = None
     h_series, a_series = home_f.get("xg_series"), away_f.get("xg_series")
     if h_series and a_series and len(h_series) >= 2 and len(a_series) >= 2:
+        # نمودار بلندتر از پیش‌بازی (D24): در نیم‌عرض، نمودار کوتاه روی گوشی ناخواناست
         trend_ctx = _trend_context([float(x) for x in h_series], [float(x) for x in a_series],
-                                   True, hc, ac)
+                                   True, hc, ac, vh=190)
 
     shot_rows = []
     if hs.get("total_shots") is not None and as_.get("total_shots") is not None:
@@ -367,10 +390,12 @@ def build_post_match_context(
     comp_fa = {"Premier League": "لیگ برتر انگلیس"}.get(comp_en, comp_en)
     kickoff = facts.get("kickoff_utc", "")
     prov = facts.get("source", {}).get("provider", "")
+    # برچسب پانویس کوتاه (D24): پسوند POST-MATCH حذف شد — قرص «پایان بازی» همان را
+    # می‌گوید و پانویس تک‌خطی با فونت خوانا جا می‌شود.
     micro_tag = " ".join(x for x in (
         (comp_en or "FOOTBALL").upper(),
         season_short(season) if season else "",
-    ) if x) + " // POST - MATCH"
+    ) if x)
 
     logo_uri = _brand_logo_uri_light(brand_mono)
     brand_lockup_html = (

@@ -244,33 +244,40 @@ def test_context_signals_from_poisson_and_corners():
 # ─── ماژول‌ها: smart فقط با داده ───
 
 def test_smart_modules_enabled_set():
-    """smart فضاآگاه: با دادهٔ کامل، نمودارهای داده‌محور (poisson/trend10) هم انتخاب می‌شوند."""
+    """smart فضاآگاه (D24): 4:5 = stats + focus (خوانایی بر تراکم)؛
+    9:16 = ماتریس پواسون + روند نیم‌عرض کنار هم + سیگنال‌ها."""
     ctx = build_preview_context(_draft(), _facts())
     ids = [m["id"] for m in ctx["modules"] if m["enabled"]]
-    # ترتیب رجیستری MODULE_DEFS: stats, focus, poisson, trend10, signals (سمت چپ news)
-    assert ids == ["stats", "focus", "poisson", "trend10", "signals"]
+    # ترتیب رجیستری MODULE_DEFS: stats, focus, poisson, trend10, signals
+    assert ids == ["stats", "focus"]
+    ctx9 = build_preview_context(_draft(), _facts(), fmt="9:16")
+    ids9 = [m["id"] for m in ctx9["modules"] if m["enabled"]]
+    assert ids9 == ["stats", "poisson", "trend10", "signals"]
 
 
-def test_smart_fills_space_and_respects_capacity():
-    """ظرفیت فرمت: 16:9 دو نیم‌عرض می‌گیرد؛ 9:16 تا شش — پرکردن فضا بدون سرریز."""
+def test_smart_layout_per_format():
+    """چیدمان per فرمت (D24): 16:9 روندِ تمام‌عرض می‌گیرد (نمودار پهن)؛
+    پواسون و سیگنال‌ها فقط در 9:16 جا می‌شوند."""
     ctx_wide = build_preview_context(_draft(), _facts(), fmt="16:9")
-    halves_wide = [m for m in ctx_wide["modules"] if m["enabled"] and m["span"] == "half"]
-    assert len(halves_wide) == 2  # poisson + trend10 (خفن‌ترین‌ها اول)
-    ids_wide = [m["id"] for m in ctx_wide["modules"] if m["enabled"]]
-    assert "poisson" in ids_wide and "trend10" in ids_wide
+    ids_wide = {m["id"]: m for m in ctx_wide["modules"] if m["enabled"]}
+    assert set(ids_wide) == {"stats", "trend10"}
+    assert ids_wide["trend10"]["span"] == "full"
+    halves9 = [m for m in build_preview_context(_draft(), _facts(), fmt="9:16")["modules"]
+               if m["enabled"] and m["span"] == "half"]
+    assert {m["id"] for m in halves9} == {"poisson", "trend10"}
 
 
 def test_smart_with_minimal_data_still_fills():
-    """کمترین داده: بدون سری و بدون xG — stats + focus + signals حاضرند و یتیم تمام‌عرض می‌شود."""
+    """کمترین داده: بدون سری و بدون xG — 4:5 = stats + focus و focus تمام‌عرض می‌شود."""
     facts = _facts()
     for side in ("home", "away"):
         facts[side]["xg_series"] = None
         facts[side]["xg_for_avg"] = None
     ctx = build_preview_context(_draft(), facts)
     ids = [m["id"] for m in ctx["modules"] if m["enabled"]]
-    assert ids == ["stats", "focus", "signals"]
+    assert ids == ["stats", "focus"]
     focus = next(m for m in ctx["modules"] if m["id"] == "focus")
-    assert focus["span"] == "full"  # نیم‌عرض یتیم → تمام‌عرض تا خانهٔ خالی نماند
+    assert focus["span"] == "full"  # روایت ۴:۵ از ابتدا تمام‌عرض است (D24)
 
 
 def test_modules_without_data_absent_from_html():
@@ -284,10 +291,25 @@ def test_modules_without_data_absent_from_html():
 
 def test_layout_v2_adds_poisson_when_xg_available():
     html = render_preview_html(_draft(), _facts(), layout="v2")
-    assert "ماتریس احتمال دقیق نتیجه" in html
+    assert "ماتریس نتیجه" in html
     assert "مدل پواسون ۵×۵" in html
     # ردیف‌های ماتریس: ارقام لاتین «0-0»
     assert ">0-0<" in html
+
+
+def test_preview_mobile_font_floors():
+    """D24 — کف خوانایی موبایل کارت پیش‌بازی: روی بوم ۱۰۸۰px هیچ متن خواندنی
+    زیر ۲۴px و هیچ برچسب تزئینی زیر ۲۰px نباشد (همان قاعدهٔ کارت پس‌از‌بازی)."""
+    html = render_preview_html(_draft(), _facts())
+    style = html.split("<style>")[1].split("</style>")[0]
+    root = style.split(":root")[1].split("}")[0]
+    sizes = dict(re.findall(r"(--fs-[a-z0-9]+):\s*(\d+)px", root))
+    assert sizes, "CSS font-scale variables not found in :root"
+    decorative = {"--fs-modtag", "--fs-sigbadge", "--fs-pmsc", "--fs-duelpos"}  # لاتین تزئینی
+    for name, px in sizes.items():
+        assert int(px) >= 20, f"{name}={px}px is below the 20px absolute floor (D24)"
+        if name not in decorative:
+            assert int(px) >= 24, f"{name}={px}px is below the 24px reading floor (D24)"
 
 
 # ─── برند: رنگ/فونت فقط از brand.json و identities ───

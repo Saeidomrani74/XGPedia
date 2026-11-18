@@ -368,6 +368,28 @@ def cmd_render_post(args: argparse.Namespace) -> None:
     print(f"  html:     {html_path}  (intermediate - font embedded, opens standalone)")
 
 
+def cmd_publish(args: argparse.Namespace) -> None:
+    """ارسال پست برای بازبینی/انتشار تلگرام (NEXT_STEPS مرحلهٔ ۲).
+
+    --dry-run: کارت + کپشن فقط برای اولین ادمین می‌رود — چیزی منتشر نمی‌شود.
+    بدون فلگ: پیام بازبینی با دکمهٔ تأیید/رد برای همهٔ ادمین‌ها؛ انتشار واقعی
+    بعد از تأیید ادمین در ربات (python -m src.xgpedia.publishers.telegram_bot).
+    """
+    import asyncio
+
+    from src.xgpedia.publishers.telegram_publish import publish_cli
+
+    try:
+        sys.exit(asyncio.run(publish_cli(args.post_id, dry_run=args.dry_run)))
+    except SystemExit as e:  # پیام validate_env خودش [FAIL] دارد
+        if str(e):
+            print(str(e))
+        sys.exit(2)
+    except (ValueError, LookupError, FileNotFoundError) as e:
+        print(f"[FAIL] {e}")
+        sys.exit(2)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="xgpedia",
@@ -422,6 +444,11 @@ def main(argv: list[str] | None = None) -> int:
     p_render.add_argument("--mono", action="store_true",
                           help="monochrome white brand logo in the masthead (default: official duotone)")
 
+    p_pub = sub.add_parser("publish", help="send a post to Telegram review/publish flow (aiogram)")
+    p_pub.add_argument("--post-id", type=int, required=True)
+    p_pub.add_argument("--dry-run", action="store_true",
+                       help="send card + caption to the first admin only - nothing is published")
+
     args = parser.parse_args(argv)
     if args.cmd == "init":
         init_db()
@@ -448,6 +475,8 @@ def main(argv: list[str] | None = None) -> int:
         cmd_export_post(args)
     elif args.cmd == "render-post":
         cmd_render_post(args)
+    elif args.cmd == "publish":
+        cmd_publish(args)
     else:
         parser.error("unknown command")
     return 0

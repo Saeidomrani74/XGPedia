@@ -424,10 +424,16 @@ def _sin(a: float) -> float:
     return math.sin(a)
 
 
-def _trend_context(h_series: list[float], a_series: list[float], is_half: bool, hc: str, ac: str) -> dict:
-    """روند xG بازی‌به‌بازی — عین ماژول trend10 استودیو با طول سری‌های دلخواه."""
+def _trend_context(
+    h_series: list[float], a_series: list[float], is_half: bool, hc: str, ac: str, vh: int = 135
+) -> dict:
+    """روند xG بازی‌به‌بازی — عین ماژول trend10 استودیو با طول سری‌های دلخواه.
+
+    vh: ارتفاع viewBox — پیش‌فرض استودیو (۱۳۵)؛ کارت پس‌از‌بازی برای خوانایی موبایل
+    بلندترش می‌کند (D24) بدون دست‌زدن به هندسهٔ پیش‌بازی.
+    """
     w = 420 if is_half else 880
-    h_, pad_x, pad_y = 135, 22, 14
+    h_, pad_x, pad_y = vh, 22, 14
     p_w, p_h = w - pad_x * 2, h_ - pad_y * 2
     max_y = max(*h_series, *a_series, 2.6)
 
@@ -596,26 +602,42 @@ def _select_modules(version: str, has: dict[str, bool], fmt: str = "4:5") -> lis
     قالب محفوظ است تا وقتی داده‌اش خریداری/تولید شد فقط داده اضافه شود).
     smart: stats همیشه؛ نیم‌عرض‌های موجود به ترتیب جذابیت (poisson/trend10
     خفن‌ترند) تا ظرفیت فرمت — تا فضا پر شود ولی سرریز نکند؛ signals در انتها.
+
+    D24 — ظرفیت موبایل: با کف خوانایی (متن ≥۲۴px روی بوم ۱۰۸۰) هر فرمت فقط
+    چند ماژول جا می‌دهد؛ سیگنال‌ها مثل verdictِ پس‌از‌بازی فقط در ۹:۱۶ می‌گنجند.
     """
     presets = {
         "v1": [("stats", "full"), ("radar", "half"), ("focus", "half"), ("keyduel", "full")],
         "v2": [("stats", "full"), ("poisson", "half"), ("wave", "half"), ("signals", "full")],
         "v3": [("stats", "full"), ("trend10", "half"), ("watchout", "half"), ("keyduel", "full")],
     }
-    # ظرفیت ماژول‌های نیم‌عرض هر فرمت (جفت‌شدنی در grid دو ستونه)
-    half_capacity = {"4:5": 4, "9:16": 6, "16:9": 2}.get(fmt, 4)
+    # D24 — ظرفیت موبایل: با کف خوانایی (متن ≥۲۴px روی بوم ۱۰۸۰) هر فرمت فقط چند
+    # ماژول جا می‌دهد. سیگنال‌ها (تمام‌عرض) و ماتریس پواسون (۶ ردیف) فقط در ۹:۱۶
+    # می‌گنجند؛ ۴:۵ = دو ماژول تمام‌عرض؛ ۱۶:۹ = روندِ تمام‌عرض (نمودار پهن).
+    allow_signals = fmt == "9:16"
     if version == "smart":
         preset = []
         if has.get("stats"):
             preset.append(("stats", "full"))
-        # ترتیب جذابیت: نمودارهای داده‌محور خفن اول؛ focus (متن تحریریه) همیشه هستهٔ روایت
-        priority = ["poisson", "trend10", "focus", "radar", "keyduel", "watchout"]
-        avail = [m for m in priority if has.get(m)]
-        preset += [(m, "half") for m in avail[:half_capacity]]
-        if has.get("signals"):
-            preset.append(("signals", "full"))
+        if fmt == "9:16":
+            halves = [m for m in ("poisson", "trend10", "focus", "radar", "keyduel", "watchout")
+                      if has.get(m)]
+            preset += [(m, "half") for m in halves[:2]]
+            if has.get("signals"):
+                preset.append(("signals", "full"))
+        elif fmt == "16:9":
+            if has.get("trend10"):
+                preset.append(("trend10", "full"))
+            elif has.get("focus"):
+                preset.append(("focus", "full"))
+        else:  # 4:5 — خوانایی بر تراکم: آمار + روایت
+            if has.get("focus"):
+                preset.append(("focus", "full"))
+            elif has.get("trend10"):
+                preset.append(("trend10", "full"))
     else:
-        preset = presets.get(version, presets["v1"])
+        preset = [p for p in presets.get(version, presets["v1"])
+                  if p[0] != "signals" or allow_signals]
     selected = [
         {"id": mod_id, "enabled": has.get(mod_id, False), "span": span}
         for mod_id, _can_half, default_span in MODULE_DEFS
@@ -695,6 +717,8 @@ def build_preview_context(
     }
 
     # ── ردیف‌های ماژول مقایسه — فقط وقتی هر دو طرف مقدار دارند (مقایسهٔ نیمه‌خالی گمراه‌کننده است) ──
+    # سقف ردیف per فرمت (D24): در 16:9 با فونت خوانا فقط دو ردیف جا می‌شود
+    stat_row_cap = {"4:5": 3, "9:16": 3, "16:9": 2}.get(fmt, 3)
     stat_rows = []
     for label, hkey, akey, dec in (
         ("امید گل تولیدی (xG / 90)", "xg", "xg", 2),
@@ -710,15 +734,17 @@ def build_preview_context(
             "h": fmt_fixed(hv, dec), "a": fmt_fixed(av, dec),
             "h_pct": f"{hv / max_v * 100:.1f}", "a_pct": f"{av / max_v * 100:.1f}",
         })
+        if len(stat_rows) >= stat_row_cap:
+            break
 
-    # ── ماژول نقطهٔ تمرکز — از متن تحریریه (draft) ──
+    # ── ماژول نقطهٔ تمرکز — از متن تحریریه (draft)؛ حداکثر ۲ بولت روی کارت (D24) ──
     bullets = [x for x in draft.get("bullets", []) if x]
     prov = facts.get("source", {}).get("provider", "")
     focus = None
     if draft.get("title") and bullets:
         focus = {
             "title": draft["title"],
-            "body_lines": bullets[:3],
+            "body_lines": bullets[:2],
             "tag": f"داده: {prov}" if prov else "",
         }
 
@@ -728,7 +754,8 @@ def build_preview_context(
         radar_ctx = _radar_context(home["radar"], away["radar"], hc, ac)
     trend_ctx = None
     if home["xg_series"] and away["xg_series"]:
-        trend_ctx = _trend_context(home["xg_series"], away["xg_series"], True, hc, ac)
+        # نمودار بلندتر (D24): روند کوتاه روی گوشی ناخواناست — همان چیزی که کارت پس‌از‌بازی دارد
+        trend_ctx = _trend_context(home["xg_series"], away["xg_series"], True, hc, ac, vh=190)
     wave_ctx = None
     if home["wave"] and away["wave"]:
         wave_ctx = _wave_context(home["wave"], away["wave"], True, hc, ac)
@@ -783,13 +810,15 @@ def build_preview_context(
 
     week_code = facts.get("matchday")
     week_part = f"W{week_code}" if isinstance(week_code, int) else (week_code or "")
+    # پسوند PRE-MATCH حذف شد (D24) — قرص «پیش‌بازی» همان را می‌گوید و پانویس
+    # با فونت خوانا تک‌خطی جا می‌شود
     micro_tag = " ".join(
         x for x in (
             (comp_en or "FOOTBALL").upper(),
             season_short(season) if season else "",
             week_part,
         ) if x
-    ) + " // PRE - MATCH"
+    )
 
     n_xg = ((home_f.get("xg_for_avg") or {}).get("n"))
     stat_n = f"n={n_xg}" if n_xg is not None else None

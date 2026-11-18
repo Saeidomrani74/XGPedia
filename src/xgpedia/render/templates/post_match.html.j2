@@ -1,9 +1,12 @@
-{# قالب کارت پس‌از‌بازی — استودیوی post-match.html، تم «مجله تاکتیکی خاکی و برنز» (Warm Terracotta) عیناً #}
+{# قالب کارت پس‌از‌بازی — استودیوی post-match.html، تم «مجله تاکتیکی خاکی و برنز» (Warm Terracotta) #}
 {# منبع طراحی: فایل استودیو؛ همهٔ رنگ‌ها از brand.json (postmatch_palette) و رنگ تیم‌ها از
    config/team_identities.json تزریق می‌شود — هیچ هگز برندی در قالب هاردکد نیست.
    اعداد از fact_json (result/match_stats)؛ متن‌ها از draft_json؛ مشتق‌ها فقط Dixon-Coles.
    ماژول‌ها: stats/trend10/story/shotquality/verdict (+motm/momentum رزرو)؛
    ماژول یا ردیفی که داده‌اش نیست رندر نمی‌شود (null≠0). #}
+{# D24 — مقیاس تایپوگرافی موبایل: کارت روی گوشی (~۳۹۰px عرض) دیده می‌شود؛ یعنی هر متن
+   با ضریب ~۰.۳۷ نمایش داده می‌شود. کف خوانایی: متن خواندنی ≥۲۴px و برچسب تزئینی ≥۲۰px
+   روی بوم ۱۰۸۰px. همهٔ اندازه‌ها متغیر CSS هستند و در .fmt-916 / .fmt-169 بازتنظیم می‌شوند. #}
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -35,6 +38,65 @@
     --t-footer-bg: {{ t.footer_bg }};
     --home-color: {{ home.color }};
     --away-color: {{ away.color }};
+
+    /* ── D24: مقیاس تایپوگرافی موبایل — کف‌های خوانایی روی بوم ۱۰۸۰px ── */
+    --fs-pill: 28px;        /* قرص مسابقه */
+    --fs-pill2: 27px;       /* قرص راند */
+    --fs-meta: 26px;        /* تاریخ/ورزشگاه */
+    --fs-bc: 25px;          /* قرص «پایان بازی» */
+    --logo-h: 54px;
+    --crest: 185px;
+    --fs-team: 52px;        /* نام تیم */
+    --fs-teamsub: 27px;     /* نام انگلیسی/کد */
+    --fs-scorers: 24px;
+    --fs-xgval: 44px;       /* عدد xG هیرو */
+    --fs-xglbl: 29px;
+    --fs-xgsub: 27px;       /* ردیف xPts فشرده */
+    --fs-xgsublbl: 26px;
+    --capsule-h: 54px;
+    --fs-seg: 28px;         /* درصدهای کپسول */
+    --fs-modtitle: 30px;    /* عنوان ماژول */
+    --fs-modtag: 22px;      /* برچسب لاتین تزئینی */
+    --fs-statval: 40px;     /* عدد آمار */
+    --fs-statsub: 25px;     /* زیرعدد (در چارچوب) */
+    --fs-statlbl: 27px;     /* برچسب آمار */
+    --statbar-h: 12px;
+    --fs-storytitle: 36px;
+    --fs-story: 30px;       /* متن روایت */
+    --fs-trendfoot: 24px;
+    --fs-sqval: 36px;
+    --fs-sqlbl: 27px;
+    --fs-vbadge: 22px;
+    --fs-vtitle: 28px;
+    --fs-vdesc: 26px;
+    --fs-vval: 40px;
+    --fs-footer: 24px;
+    --fs-footersrc: 24px;
+    --pad-x: 44px;
+    --underbar-w: 104px;
+    --underbar-h: 16px;
+  }
+
+  /* ۹:۱۶ (استوری) — همان کف خوانایی، کادرها کمی بزرگ‌تر (فضای عمودی زیاد است) */
+  .fmt-916 {
+    --crest: 205px; --fs-team: 56px; --fs-xgval: 48px; --fs-statval: 42px;
+    --fs-story: 31px; --fs-seg: 30px; --capsule-h: 60px;
+  }
+
+  /* ۱۶:۹ (افقی ۱۹۲۰px) — روی گوشی با ضریب ~۰.۲۰ دیده می‌شود؛ همه‌چیز ~۱.۵ برابر بوم ۱۰۸۰ */
+  .fmt-169 {
+    --fs-pill: 44px; --fs-pill2: 42px; --fs-meta: 42px; --fs-bc: 38px; --logo-h: 80px;
+    --crest: 175px; --fs-team: 62px; --fs-teamsub: 36px; --fs-scorers: 32px;
+    --fs-xgval: 58px; --fs-xglbl: 38px; --fs-xgsub: 36px; --fs-xgsublbl: 34px;
+    --capsule-h: 80px; --fs-seg: 40px;
+    --fs-modtitle: 42px; --fs-modtag: 28px;
+    --fs-statval: 54px; --fs-statsub: 34px; --fs-statlbl: 38px; --statbar-h: 18px;
+    --fs-storytitle: 46px; --fs-story: 40px;
+    --fs-trendfoot: 32px;
+    --fs-sqval: 48px; --fs-sqlbl: 38px;
+    --fs-vbadge: 26px; --fs-vtitle: 38px; --fs-vdesc: 32px; --fs-vval: 52px;
+    --fs-footer: 38px; --fs-footersrc: 36px;
+    --pad-x: 60px; --underbar-w: 132px; --underbar-h: 20px;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -49,7 +111,7 @@
     display: flex; flex-direction: column; justify-content: space-between;
   }
 
-  /* لایهٔ ۱: نور محیطی رنگ تیم‌ها — قوی‌تر از استودیو (درخواست کاربر) */
+  /* لایهٔ ۱: نور محیطی رنگ تیم‌ها */
   #card-ambient-glow { position: absolute; inset: 0; pointer-events: none; z-index: 0; background: {{ pitch.ambient }}; }
 
   /* لایهٔ ۲: خطوط تاکتیکی زمین + قاب پیرامونی */
@@ -59,190 +121,184 @@
   .broadcast-scanlines {
     position: absolute; inset: 0; pointer-events: none; z-index: 0;
     background: repeating-linear-gradient(to bottom,
-      var(--t-scanline) 0px, var(--t-scanline) 1px, transparent 1px, transparent 4px);
+      var(--t-scanline) 0px, var(--t-scanline) 1px, transparent 1px, transparent 5px);
   }
 
   /* ── ۱. سرصفحه ── */
   #card-masthead {
-    position: relative; z-index: 10; padding: 26px 36px 8px;
+    position: relative; z-index: 10; padding: 24px var(--pad-x) 10px;
     display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-shrink: 0;
   }
-  .masthead-right { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
-  .masthead-pills { display: flex; align-items: center; gap: 10px; }
+  .masthead-right { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+  .masthead-pills { display: flex; align-items: center; gap: 12px; }
   .pill-competition {
-    padding: 6px 16px; border-radius: 999px; font-size: 18px; font-weight: 900;
-    display: flex; align-items: center; gap: 8px;
+    padding: 8px 20px; border-radius: 999px; font-size: var(--fs-pill); font-weight: 900;
+    display: flex; align-items: center; gap: 10px;
     background-color: {{ t.comp_pill_bg }}; color: {{ t.comp_pill_text }};
-    border: 1.5px solid var(--t-card-border);
+    border: 2px solid var(--t-card-border);
   }
   .pill-round {
-    padding: 6px 16px; border-radius: 999px; font-size: 17px; font-weight: 700; letter-spacing: -0.01em;
-    background-color: {{ t.accent }}20; border: 1px solid {{ t.accent }}66; color: var(--t-accent);
+    padding: 8px 20px; border-radius: 999px; font-size: var(--fs-pill2); font-weight: 700; letter-spacing: -0.01em;
+    background-color: {{ t.accent }}20; border: 2px solid {{ t.accent }}66; color: var(--t-accent);
   }
-  .masthead-meta { display: flex; align-items: center; gap: 10px; font-size: 15.5px; font-weight: 700; color: var(--t-text-sub); }
+  .masthead-meta { display: flex; align-items: center; gap: 12px; font-size: var(--fs-meta); font-weight: 700; color: var(--t-text-sub); }
   .masthead-meta .sep { color: var(--t-text-muted); opacity: 0.6; }
-  .meta-stadium { display: inline-flex; align-items: center; gap: 6px; color: var(--t-text-main); }
+  .meta-stadium { display: inline-flex; align-items: center; gap: 8px; color: var(--t-text-main); }
   .pill-broadcast {
-    padding: 2px 12px; border-radius: 999px; font-size: 14px; font-weight: 800;
+    padding: 3px 14px; border-radius: 999px; font-size: var(--fs-bc); font-weight: 800;
     background: var(--t-accent); border: 1px solid var(--t-accent); color: var(--t-accent-contrast);
   }
   #card-brand-logo { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
   .brand-logo-lockup { display: flex; align-items: center; }
-  .brand-logo-img { height: 42px; width: auto; display: block; }
+  .brand-logo-img { height: var(--logo-h); width: auto; display: block; }
 
   /* ── ۲. بدنه ── */
   #card-main-body {
-    position: relative; z-index: 10; flex: 1; padding: 8px 36px;
-    display: flex; flex-direction: column; justify-content: space-between; gap: 12px; overflow: hidden;
+    position: relative; z-index: 10; flex: 1; padding: 10px var(--pad-x);
+    display: flex; flex-direction: column; justify-content: space-between; gap: 14px; overflow: hidden;
   }
   #card-hero-section { display: flex; flex-direction: column; justify-content: space-between; flex-shrink: 0; }
-  .matchup-grid { display: grid; grid-template-columns: repeat(12, 1fr); align-items: center; gap: 8px; }
+  .matchup-grid { display: grid; grid-template-columns: repeat(12, 1fr); align-items: center; gap: 12px; }
   .team-col { grid-column: span 4; display: flex; flex-direction: column; align-items: center; text-align: center; }
-  .crest-wrap { position: relative; width: 166px; height: 166px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
+  .crest-wrap { position: relative; width: var(--crest); height: var(--crest); display: flex; align-items: center; justify-content: center; margin-bottom: 6px; }
   .crest-slot { position: relative; z-index: 10; display: flex; align-items: center; justify-content: center; }
-  .crest-slot img, .crest-slot svg { width: 164px; height: 164px; object-fit: contain; }
-  .team-name { font-size: 36px; font-weight: 900; line-height: 1.1; letter-spacing: -0.02em; color: var(--t-text-main); }
-  .team-sub { font-size: 15px; font-weight: 700; opacity: 0.8; margin-top: 4px; max-width: 290px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .crest-slot img, .crest-slot svg { width: calc(var(--crest) - 6px); height: calc(var(--crest) - 6px); object-fit: contain; }
+  .team-name { font-size: var(--fs-team); font-weight: 900; line-height: 1.12; letter-spacing: -0.02em; color: var(--t-text-main); }
+  .team-sub { font-size: var(--fs-teamsub); font-weight: 700; opacity: 0.8; margin-top: 6px; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .scorers-pill {
-    margin-top: 8px; padding: 4px 12px; border-radius: 12px; border: 1.5px solid var(--t-card-border);
-    font-size: 14px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;
-    max-width: 300px; background: var(--t-surface); color: var(--t-text-sub);
+    margin-top: 10px; padding: 5px 14px; border-radius: 14px; border: 2px solid var(--t-card-border);
+    font-size: var(--fs-scorers); font-weight: 800; display: inline-flex; align-items: center; gap: 8px;
+    max-width: 320px; background: var(--t-surface); color: var(--t-text-sub);
   }
   .scorers-pill span.txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-  .hub-col { grid-column: span 4; display: flex; flex-direction: column; align-items: center; justify-content: space-between; text-align: center; padding: 0 4px; gap: 12px; }
-  .giant-score-row { width: 100%; display: flex; align-items: center; justify-content: center; gap: 20px; padding-top: 4px; }
+  .hub-col { grid-column: span 4; display: flex; flex-direction: column; align-items: center; justify-content: space-between; text-align: center; padding: 0 4px; gap: 14px; }
+  .giant-score-row { width: 100%; display: flex; align-items: center; justify-content: center; gap: 22px; padding-top: 4px; }
   .score-num { font-size: {{ score_size }}px; font-weight: 900; line-height: 0.84; letter-spacing: -0.05em; color: var(--t-text-main); }
-  .score-underbar { width: 88px; height: 12px; border-radius: 999px; margin-top: 10px; }
-  .score-divider { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding-bottom: 12px; }
-  .score-divider .d1 { width: 14px; height: 14px; border-radius: 999px; background: var(--t-accent); }
-  .score-divider .d2 { width: 14px; height: 14px; border-radius: 999px; opacity: 0.45; background: var(--t-text-main); }
+  .score-underbar { width: var(--underbar-w); height: var(--underbar-h); border-radius: 999px; margin-top: 12px; }
+  .score-divider { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding-bottom: 12px; }
+  .score-divider .d1 { width: 16px; height: 16px; border-radius: 999px; background: var(--t-accent); }
+  .score-divider .d2 { width: 16px; height: 16px; border-radius: 999px; opacity: 0.45; background: var(--t-text-main); }
 
   .center-xg-box {
-    width: 100%; padding: 10px; border-radius: 16px; border: 1.5px solid var(--t-card-border);
+    width: 100%; padding: 12px; border-radius: 18px; border: 2px solid var(--t-card-border);
     background: var(--t-xgbox-bg); box-shadow: var(--t-card-shadow);
   }
-  .xg-main-row { display: flex; align-items: center; justify-content: center; gap: 10px; }
-  .xg-val { font-size: 31px; font-weight: 900; line-height: 1; }
-  .xg-label { font-size: 15px; font-weight: 900; color: var(--t-text-muted); }
+  .xg-main-row { display: flex; align-items: center; justify-content: center; gap: 14px; }
+  .xg-val { font-size: var(--fs-xgval); font-weight: 900; line-height: 1; }
+  .xg-label { font-size: var(--fs-xglbl); font-weight: 900; color: var(--t-text-muted); }
   .xg-sub-row {
-    margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--t-card-border);
-    display: flex; align-items: center; justify-content: space-around; font-size: 13px;
+    margin-top: 10px; padding-top: 10px; border-top: 1.5px solid var(--t-card-border);
+    display: flex; align-items: center; justify-content: space-around; gap: 8px;
   }
-  .xg-sub-row .cell-label { color: var(--t-text-muted); display: block; font-size: 12px; }
-  .xg-sub-row strong { font-weight: 800; color: var(--t-text-main); }
-  .xg-sub-row .vsep { height: 16px; width: 1px; background: var(--t-card-border); }
+  .xg-sub-row .cell { display: inline-flex; align-items: baseline; gap: 8px; white-space: nowrap; }
+  .xg-sub-row .cell-label { color: var(--t-text-muted); font-size: var(--fs-xgsublbl); font-weight: 700; }
+  .xg-sub-row strong { font-weight: 800; color: var(--t-text-main); font-size: var(--fs-xgsub); }
+  .xg-sub-row .vsep { height: 22px; width: 1.5px; background: var(--t-card-border); }
 
   .capsule-block { margin-top: 16px; }
   .prob-capsule {
-    width: 100%; height: 36px; border-radius: 999px; overflow: hidden; display: flex;
-    background: var(--t-capsule-bg); border: 1.5px solid var(--t-card-border);
-    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.14);
+    width: 100%; height: var(--capsule-h); border-radius: 999px; overflow: hidden; display: flex;
+    background: var(--t-capsule-bg); border: 2px solid var(--t-card-border);
+    box-shadow: inset 0 3px 7px rgba(0, 0, 0, 0.14);
   }
-  .prob-seg { height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 16px; border-radius: 0 !important; }
-  .telemetry-row {
-    position: relative; width: 100%; height: 28px; display: flex; align-items: center;
-    justify-content: space-between; padding: 0 4px; font-size: 13.5px; font-weight: 800; color: var(--t-text-sub);
-  }
-  .telemetry-row .chip { font-size: 13.5px; font-weight: 900; padding: 2px 8px; border-radius: 8px; background: var(--t-surface); }
+  .prob-seg { height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: var(--fs-seg); border-radius: 0 !important; }
 
   /* ── ۳. گرید ماژول‌ها ── */
-  #modules-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-content: stretch; min-height: 0; }
+  #modules-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-content: stretch; min-height: 0; }
   .xg-glass-card {
-    position: relative; background: var(--t-card-bg); border: 1.5px solid var(--t-card-border);
-    border-radius: 20px; padding: 13px 17px; box-shadow: var(--t-card-shadow);
+    position: relative; background: var(--t-card-bg); border: 2px solid var(--t-card-border);
+    border-radius: 22px; padding: 14px 20px; box-shadow: var(--t-card-shadow);
     display: flex; flex-direction: column; justify-content: space-between; overflow: hidden;
   }
   .xg-tactical-editorial {
-    position: relative; background: var(--t-editorial-bg); border: 1.5px solid var(--t-editorial-border);
-    border-radius: 20px; padding: 13px 17px; box-shadow: var(--t-card-shadow);
+    position: relative; background: var(--t-editorial-bg); border: 2px solid var(--t-editorial-border);
+    border-radius: 22px; padding: 14px 20px; box-shadow: var(--t-card-shadow);
     display: flex; flex-direction: column; justify-content: space-between; overflow: hidden;
   }
   .span-half { grid-column: span 1; }
   .span-full { grid-column: span 2; }
   .mod-head {
-    display: flex; align-items: center; justify-content: space-between; gap: 8px;
-    padding-bottom: 6px; margin-bottom: 6px; border-bottom: 1px solid {{ t.grid_stroke }}1A;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding-bottom: 8px; margin-bottom: 10px; border-bottom: 1.5px solid {{ t.grid_stroke }}1A;
   }
-  .mod-head-l { display: flex; align-items: center; gap: 8px; min-width: 0; }
-  .mod-chip { width: 6px; height: 20px; border-radius: 999px; background: var(--t-accent); flex-shrink: 0; }
-  .mod-title { font-size: 16px; font-weight: 900; color: var(--t-text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .mod-tag { font-size: 12.5px; font-family: 'JetBrains Mono', monospace; color: var(--t-text-muted); flex-shrink: 0; }
+  .mod-head-l { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .mod-chip { width: 7px; height: 30px; border-radius: 999px; background: var(--t-accent); flex-shrink: 0; }
+  .mod-title { font-size: var(--fs-modtitle); font-weight: 900; color: var(--t-text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mod-tag { font-size: var(--fs-modtag); font-family: 'JetBrains Mono', monospace; color: var(--t-text-muted); flex-shrink: 0; }
 
-  .comp-rows { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 9px; }
-  .comp-row .vals { display: grid; grid-template-columns: 1fr 1.2fr 1fr; align-items: center; margin-bottom: 4px; }
-  .comp-row .v-h { text-align: right; font-size: 19px; font-weight: 900; line-height: 1; }
-  .comp-row .v-a { text-align: left; font-size: 19px; font-weight: 900; line-height: 1; }
-  .comp-row .v-h small, .comp-row .v-a small { font-size: 13px; font-weight: 700; opacity: 0.8; }
-  .comp-row .lbl { text-align: center; font-size: 14px; font-weight: 700; color: var(--t-text-sub); }
-  .comp-row .bars { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
-  .comp-bar-track { height: 10px; background: var(--t-track-bg); overflow: hidden; display: flex; align-items: center; }
+  .comp-rows { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+  .comp-row .vals { display: grid; grid-template-columns: 1fr 1.2fr 1fr; align-items: center; margin-bottom: 6px; }
+  .comp-row .v-h { text-align: right; font-size: var(--fs-statval); font-weight: 900; line-height: 1; }
+  .comp-row .v-a { text-align: left; font-size: var(--fs-statval); font-weight: 900; line-height: 1; }
+  .comp-row .v-h small, .comp-row .v-a small { font-size: var(--fs-statsub); font-weight: 700; opacity: 0.8; }
+  .comp-row .lbl { text-align: center; font-size: var(--fs-statlbl); font-weight: 700; color: var(--t-text-sub); }
+  .comp-row .bars { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+  .comp-bar-track { height: var(--statbar-h); background: var(--t-track-bg); overflow: hidden; display: flex; align-items: center; }
   .comp-bar-track.home-side { border-radius: 0 999px 999px 0; justify-content: flex-end; }
   .comp-bar-track.away-side { border-radius: 999px 0 0 999px; justify-content: flex-start; }
   .comp-bar-fill-home { height: 100%; border-radius: 0 999px 999px 0; }
   .comp-bar-fill-away { height: 100%; border-radius: 999px 0 0 999px; }
 
   .story-body { position: relative; z-index: 10; }
-  .story-title { font-size: 17px; font-weight: 900; margin-bottom: 6px; color: var(--t-accent); }
-  .story-line { font-size: 14.5px; line-height: 1.65; font-weight: 500; color: var(--t-text-sub); }
+  .story-title { font-size: var(--fs-storytitle); font-weight: 900; margin-bottom: 8px; color: var(--t-accent); }
+  /* متن LLM می‌تواند بلند باشد — هر بولت حداکثر ۳ خط؛ بیشترش با overflow پنهان (D24) */
+  .story-line {
+    font-size: var(--fs-story); line-height: 1.55; font-weight: 500; color: var(--t-text-sub);
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
   .editorial-pitch {
-    position: absolute; left: 12px; bottom: 12px; width: 128px; height: auto; opacity: 0.12; pointer-events: none;
+    position: absolute; left: 14px; bottom: 14px; width: 148px; height: auto; opacity: 0.12; pointer-events: none;
   }
 
-  .trend-svg { width: 100%; height: 166px; display: block; }
-  .trend-foot { display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 700; color: var(--t-text-sub); padding-top: 4px; }
+  .trend-svg { width: 100%; height: auto; max-height: 300px; display: block; }
+  .trend-foot { display: flex; align-items: center; justify-content: space-between; font-size: var(--fs-trendfoot); font-weight: 700; color: var(--t-text-sub); padding-top: 8px; }
 
-  .sq-rows { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+  .sq-rows { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
   .sq-row {
-    display: flex; align-items: center; justify-content: space-between; padding: 8px 12px;
-    border-radius: 12px; border: 1px solid var(--t-card-border); background: var(--t-surface);
+    display: flex; align-items: center; justify-content: space-between; padding: 12px 16px;
+    border-radius: 14px; border: 1.5px solid var(--t-card-border); background: var(--t-surface);
   }
-  .sq-row .v-h, .sq-row .v-a { font-size: 17px; font-weight: 900; }
-  .sq-row .lbl { font-size: 13.5px; font-weight: 700; color: var(--t-text-sub); }
+  .sq-row .v-h, .sq-row .v-a { font-size: var(--fs-sqval); font-weight: 900; }
+  .sq-row .lbl { font-size: var(--fs-sqlbl); font-weight: 700; color: var(--t-text-sub); }
 
-  .verdict-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; flex: 1; align-items: stretch; }
+  .verdict-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; flex: 1; align-items: stretch; }
   .verdict-card {
-    border-radius: 16px; padding: 10px 12px; border: 1px solid; background: var(--t-surface);
-    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    border-radius: 18px; padding: 12px 16px; border: 1.5px solid; background: var(--t-surface);
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
   }
-  .verdict-card.vc-green { border-color: {{ t.verdict_green }}59; border-right: 4px solid {{ t.verdict_green }}; }
-  .verdict-card.vc-sky { border-color: {{ t.verdict_sky }}59; border-right: 4px solid {{ t.verdict_sky }}; }
-  .verdict-card.vc-amber { border-color: {{ t.verdict_amber }}59; border-right: 4px solid {{ t.verdict_amber }}; }
+  .verdict-card.vc-green { border-color: {{ t.verdict_green }}59; border-right: 5px solid {{ t.verdict_green }}; }
+  .verdict-card.vc-sky { border-color: {{ t.verdict_sky }}59; border-right: 5px solid {{ t.verdict_sky }}; }
+  .verdict-card.vc-amber { border-color: {{ t.verdict_amber }}59; border-right: 5px solid {{ t.verdict_amber }}; }
   .verdict-badge {
-    display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 800;
-    padding: 2px 8px; border-radius: 6px; margin-bottom: 4px;
+    display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-vbadge); font-weight: 800;
+    padding: 3px 10px; border-radius: 8px; margin-bottom: 6px;
   }
-  .verdict-title { font-size: 15px; font-weight: 900; color: var(--t-text-main); line-height: 1.3; }
-  .verdict-desc { font-size: 12.5px; margin-top: 2px; color: var(--t-text-sub); line-height: 1.45; }
-  .verdict-value { font-size: 21px; font-weight: 900; line-height: 1; }
+  .verdict-title { font-size: var(--fs-vtitle); font-weight: 900; color: var(--t-text-main); line-height: 1.3; }
+  .verdict-desc { font-size: var(--fs-vdesc); margin-top: 3px; color: var(--t-text-sub); line-height: 1.4; }
+  .verdict-value { font-size: var(--fs-vval); font-weight: 900; line-height: 1; }
 
   /* ── ۴. پانویس ── */
   #card-footer {
-    position: relative; z-index: 10; padding: 10px 36px; border-top: 1px solid var(--t-card-border);
+    position: relative; z-index: 10; padding: 12px var(--pad-x); border-top: 1.5px solid var(--t-card-border);
     background: var(--t-footer-bg); display: flex; align-items: center; justify-content: space-between;
-    font-size: 13px; flex-shrink: 0; color: var(--t-text-sub);
+    flex-wrap: wrap; row-gap: 6px; column-gap: 14px;
+    font-size: var(--fs-footer); flex-shrink: 0; color: var(--t-text-sub);
   }
-  .footer-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--t-accent); display: inline-block; margin-left: 8px; }
-  .footer-tag { font-family: 'JetBrains Mono', monospace; font-size: 13.5px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--t-text-main); }
-  .footer-left { display: flex; align-items: center; gap: 12px; font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+  .footer-dot { width: 10px; height: 10px; border-radius: 999px; background: var(--t-accent); display: inline-block; margin-left: 10px; }
+  .footer-tag { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-footer); font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--t-text-main); }
+  .footer-left { display: flex; align-items: center; gap: 14px; font-family: 'JetBrains Mono', monospace; font-weight: 700; }
   .footer-left .sep { opacity: 0.4; }
-  .footer-source { opacity: 0.8; font-weight: 500; font-size: 12.5px; }
+  .footer-source { opacity: 0.8; font-weight: 500; font-size: var(--fs-footersrc); }
 
   /* ── فرمت‌ها ── */
-  .fmt-169 #card-main-body { display: grid; grid-template-columns: repeat(12, 1fr); gap: 28px; align-items: stretch; padding: 8px 36px; }
-  .fmt-169 #card-hero-section { grid-column: span 5; border-left: 1px solid {{ t.grid_stroke }}26; padding-left: 28px; }
+  .fmt-169 #card-main-body { display: grid; grid-template-columns: repeat(12, 1fr); gap: 32px; align-items: stretch; padding: 10px var(--pad-x); }
+  .fmt-169 #card-hero-section { grid-column: span 5; border-left: 1.5px solid {{ t.grid_stroke }}26; padding-left: 32px; }
   .fmt-169 #modules-grid { grid-column: span 7; gap: 14px; }
-  .fmt-169 .comp-row .v-h, .fmt-169 .comp-row .v-a { font-size: 21px; }
-  .fmt-169 .comp-row .lbl { font-size: 15.5px; }
-  .fmt-169 .story-line { font-size: 16px; }
-  .fmt-169 .story-title { font-size: 18px; }
-  .fmt-169 .sq-row .lbl { font-size: 15px; }
-  .fmt-169 .sq-row .v-h, .fmt-169 .sq-row .v-a { font-size: 18px; }
-  .fmt-169 .verdict-title { font-size: 16px; }
-  .fmt-169 .verdict-desc { font-size: 13.5px; }
-  .fmt-169 .mod-title { font-size: 17px; }
-  .fmt-916 #card-main-body { padding: 20px 36px; gap: 20px; }
-  .fmt-916 #modules-grid { gap: 16px; }
+  /* ستون تیم در هیروی ۱۶:۹ باریک است (~۲۳۰px) — نام انگلیسی به دو خط می‌شکند نه ellipsis */
+  .fmt-169 .team-sub { white-space: normal; max-width: 100%; line-height: 1.3; }
+  .fmt-916 #card-main-body { padding: 20px var(--pad-x); gap: 20px; }
+  .fmt-916 #modules-grid { gap: 18px; }
 </style>
 </head>
 <body>
@@ -272,7 +328,7 @@
     <div class="masthead-right">
       <div class="masthead-pills">
         <div class="pill-competition">
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="{{ t.accent }}" stroke-width="2.4">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="{{ t.accent }}" stroke-width="2.4">
             <path stroke-linecap="round" stroke-linejoin="round" d="M8 21h8m-4-4v4m-5-17h10v5a5 5 0 01-10 0V4zM5 6H3v2a3 3 0 003 3h1m12-5h2v2a3 3 0 01-3 3h-1" />
           </svg>
           <span>{{ competition_fa }}</span>
@@ -284,7 +340,7 @@
         {% if stadium %}
         <span class="sep">|</span>
         <span class="meta-stadium">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="{{ t.accent }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{ t.accent }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <ellipse cx="12" cy="8" rx="9" ry="3.5" />
             <path d="M3 8v6c0 1.93 4.03 3.5 9 3.5s9-1.57 9-3.5V8" />
             <path d="M7 11.2v5.8M12 11.5v6M17 11.2v5.8" />
@@ -339,20 +395,9 @@
               <span class="xg-val num" style="color: {{ away.ink }};">{{ hero.xg_away }}</span>
             </div>
             <div class="xg-sub-row">
-              <div>
-                <span class="cell-label">امتیاز انتظاری</span>
-                <strong class="num">{{ hero.xpts_home or na_label }} <span class="font-mono-en" style="font-size:12px;">xPts</span></strong>
-              </div>
-              <div class="vsep"></div>
-              <div>
-                <span class="cell-label">مجموع xG بازی</span>
-                <strong class="num" style="color: var(--t-accent);">{{ hero.xg_total or na_label }}</strong>
-              </div>
-              <div class="vsep"></div>
-              <div>
-                <span class="cell-label">امتیاز انتظاری</span>
-                <strong class="num">{{ hero.xpts_away or na_label }} <span class="font-mono-en" style="font-size:12px;">xPts</span></strong>
-              </div>
+              <span class="cell"><bdi class="cell-label font-mono-en">xPts</bdi> <strong class="num" style="color: {{ home.ink }};">{{ hero.xpts_home or na_label }}</strong></span>
+              <span class="vsep"></span>
+              <span class="cell"><strong class="num" style="color: {{ away.ink }};">{{ hero.xpts_away or na_label }}</strong> <bdi class="cell-label font-mono-en">xPts</bdi></span>
             </div>
           </div>
           {% endif %}
@@ -376,19 +421,6 @@
           <div class="prob-seg num" style="width: {{ seg.pct }}%; background: {{ seg.bg }}; color: {{ seg.color }};">{% if seg.pct >= 11 %}{{ seg.pct }}٪{% endif %}</div>
           {% endfor %}
         </div>
-        <div class="telemetry-row">
-          <div style="display:flex; align-items:center; gap:6px; z-index:10;">
-            <span style="opacity:0.75;">بهره‌وری گل میزبان:</span>
-            {% if hero.delta_home %}<span dir="ltr" class="chip num" style="color: {{ home.ink }};">{{ hero.delta_home }}</span>{% endif %}
-          </div>
-          <div style="display:flex; align-items:center; gap:6px; z-index:10; opacity:0.85;">
-            <span>شبیه‌سازی عدالت نتیجه بر اساس xG</span>
-          </div>
-          <div style="display:flex; align-items:center; gap:6px; z-index:10;">
-            <span style="opacity:0.75;">بهره‌وری گل میهمان:</span>
-            {% if hero.delta_away %}<span dir="ltr" class="chip num" style="color: {{ away.ink }};">{{ hero.delta_away }}</span>{% endif %}
-          </div>
-        </div>
       </div>
       {% endif %}
     </section>
@@ -400,7 +432,7 @@
       {% if m.id == 'stats' and module_data.stats.rows %}
       <div class="xg-glass-card {{ 'span-half' if m.span == 'half' else 'span-full' }}">
         <div class="mod-head">
-          <div class="mod-head-l"><span class="mod-chip"></span><h3 class="mod-title">آمار کلیدی مسابقه (۹۰ دقیقه)</h3></div>
+          <div class="mod-head-l"><span class="mod-chip"></span><h3 class="mod-title">آمار کلیدی بازی</h3></div>
           <span class="mod-tag">MATCH TELEMETRY</span>
         </div>
         <div class="comp-rows">
@@ -432,7 +464,7 @@
         </svg>
         <div class="story-body">
           <div class="mod-head">
-            <div class="mod-head-l"><span class="mod-chip"></span><h3 class="mod-title">روایت آماری و گره بازی</h3></div>
+            <div class="mod-head-l"><span class="mod-chip"></span><h3 class="mod-title">روایت آماری بازی</h3></div>
             <span class="mod-tag">MATCH STORY</span>
           </div>
           <h4 class="story-title">{{ module_data.story.title }}</h4>
@@ -441,8 +473,8 @@
           {% endfor %}
         </div>
         {% if module_data.story.tag %}
-        <div class="trend-foot" style="margin-top:8px; padding-top:8px; border-top:1px solid {{ t.grid_stroke }}1A;">
-          <span style="width:8px; height:8px; border-radius:999px; background: var(--t-accent); display:inline-block;"></span>
+        <div class="trend-foot" style="margin-top:10px; padding-top:10px; border-top:1.5px solid {{ t.grid_stroke }}1A;">
+          <span style="width:10px; height:10px; border-radius:999px; background: var(--t-accent); display:inline-block;"></span>
           <span>{{ module_data.story.tag }}</span>
         </div>
         {% endif %}
@@ -453,7 +485,7 @@
       {% set tr = module_data.trend10 %}
       <div class="xg-glass-card {{ 'span-half' if m.span == 'half' else 'span-full' }}">
         <div class="mod-head">
-          <div class="mod-head-l"><span class="mod-chip"></span><h3 class="mod-title">روند xG ده بازی اخیر (شامل این بازی)</h3></div>
+          <div class="mod-head-l"><span class="mod-chip"></span><h3 class="mod-title">روند xG ده بازی اخیر</h3></div>
           <span class="mod-tag">XG TREND</span>
         </div>
         <div style="flex:1; display:flex; align-items:center;" dir="ltr">
@@ -472,8 +504,8 @@
           </svg>
         </div>
         <div class="trend-foot">
-          <span style="display:flex; align-items:center; gap:6px;"><span style="width:10px; height:4px; border-radius:2px; background: var(--home-color); display:inline-block;"></span>{{ home.name_fa }}: میانگین <span class="num">{{ tr.home_avg }}</span></span>
-          <span style="display:flex; align-items:center; gap:6px;"><span style="width:10px; height:4px; border-radius:2px; background: var(--away-color); display:inline-block;"></span>{{ away.name_fa }}: میانگین <span class="num">{{ tr.away_avg }}</span></span>
+          <span style="display:flex; align-items:center; gap:8px;"><span style="width:14px; height:5px; border-radius:3px; background: var(--home-color); display:inline-block;"></span>{{ home.name_fa }}: میانگین <span class="num">{{ tr.home_avg }}</span></span>
+          <span style="display:flex; align-items:center; gap:8px;"><span style="width:14px; height:5px; border-radius:3px; background: var(--away-color); display:inline-block;"></span>{{ away.name_fa }}: میانگین <span class="num">{{ tr.away_avg }}</span></span>
         </div>
       </div>
       {% endif %}
@@ -500,12 +532,12 @@
       {% set v = module_data.verdict %}
       <div class="xg-glass-card {{ 'span-half' if m.span == 'half' else 'span-full' }}">
         <div class="mod-head">
-          <div class="mod-head-l"><span class="mod-chip"></span><h3 class="mod-title">شاخص عدالت آماری و ارزیابی مدل</h3></div>
+          <div class="mod-head-l"><span class="mod-chip"></span><h3 class="mod-title">عدالت آماری نتیجه</h3></div>
           <span class="mod-tag" style="color: var(--t-accent);">POST-MATCH VERDICT</span>
         </div>
         <div class="verdict-grid">
           <div class="verdict-card vc-green">
-            <div>
+            <div class="vc-txt">
               <span dir="ltr" class="verdict-badge font-mono-en" style="background: {{ t.verdict_green }}33; color: {{ t.verdict_green }};">xG FAIRNESS</span>
               <div class="verdict-title">{{ v.fair_title }}</div>
               <div class="verdict-desc">{{ v.fair_desc }}</div>
@@ -513,7 +545,7 @@
             <div dir="ltr" class="verdict-value num" style="color: {{ t.verdict_green }};">{{ v.fair_value }}</div>
           </div>
           <div class="verdict-card vc-sky">
-            <div>
+            <div class="vc-txt">
               <span dir="ltr" class="verdict-badge font-mono-en" style="background: {{ t.verdict_sky }}33; color: {{ t.verdict_sky }};">FINISHING</span>
               <div class="verdict-title">دقت ضربه نهایی</div>
               <div class="verdict-desc">برتر: {{ v.fin_best }}</div>
@@ -521,12 +553,12 @@
             <div dir="ltr" class="verdict-value num" style="color: {{ t.verdict_sky }};">{{ v.fin_value }}</div>
           </div>
           <div class="verdict-card vc-amber">
-            <div>
+            <div class="vc-txt">
               <span dir="ltr" class="verdict-badge font-mono-en" style="background: {{ t.verdict_amber }}33; color: {{ t.verdict_amber }};">TEMPO &amp; RISK</span>
               <div class="verdict-title">{{ v.tempo }}</div>
               <div class="verdict-desc">{{ v.tempo_label }}</div>
             </div>
-            <div class="verdict-value num" style="color: {{ t.verdict_amber }}; font-size: 24px;">{{ v.tempo_value or na_label }}</div>
+            <div dir="ltr" class="verdict-value num" style="color: {{ t.verdict_amber }};">{{ v.tempo_value or na_label }}</div>
           </div>
         </div>
       </div>
@@ -538,7 +570,7 @@
 
   <!-- ۴. پانویس -->
   <footer id="card-footer">
-    <div style="display:flex; align-items:center; gap:8px;">
+    <div style="display:flex; align-items:center; gap:10px;">
       <span class="footer-dot"></span>
       <span dir="ltr" class="footer-tag font-mono-en">{{ micro_tag }}</span>
     </div>

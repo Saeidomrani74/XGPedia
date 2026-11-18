@@ -33,6 +33,14 @@ CRESTS_DIR = ROOT / "brand" / "crests"  # brand/crests/{CODE}.svg|png — لوگ
 DATABASE_PATH = Path(os.environ.get("DATABASE_PATH", ROOT / "data" / "dev.sqlite"))
 RAW_PAYLOAD_DIR = Path(os.environ.get("RAW_PAYLOAD_DIR", ROOT / "data" / "raw"))
 
+# لایهٔ انتشار تلگرام (مرحلهٔ ۲ NEXT_STEPS) — خالی = غیرفعال؛ پیام خطای واضح در run.py publish
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_CHANNEL_ID = os.environ.get("TELEGRAM_CHANNEL_ID", "")
+TELEGRAM_GROUP_ID = os.environ.get("TELEGRAM_GROUP_ID", "")
+ADMIN_TELEGRAM_IDS = frozenset(
+    int(x) for x in os.environ.get("ADMIN_TELEGRAM_IDS", "").split(",") if x.strip()
+)
+
 DISPLAY_TZ = "Asia/Tehran"  # ذخیره همیشه UTC؛ نمایش «به وقت تهران (UTC+3:30)»
 
 # فصل جاری — «سال شروع» فصل (قرارداد هر دو provider: CSV با mmz4281/<YY><YY+1>/
