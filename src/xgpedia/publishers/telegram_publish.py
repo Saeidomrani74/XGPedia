@@ -84,14 +84,70 @@ def build_caption(post: dict) -> str:
 
 
 def build_review_caption(post: dict) -> str:
-    """کپشن پیام بازبینی برای ادمین — همان کپشن انتشار + برچسب وضعیت و پست."""
-    base = build_caption(post)
+    """کپشن پیام بازبینی برای ادمین — همان کپشن انتشار + برچسب وضعیت و پست.
+
+    fit_caption تضمین می‌کند سر از سقف ۱۰۲۴ کپشن عکس تلگرام نزند
+    (`MEDIA_CAPTION_TOO_LONG` کل ارسال را می‌انداخت).
+    """
     head = (
         f"🟠 پیش‌نویس {POST_TYPE_FA.get(post['post_type'], post['post_type'])} — "
         f"post #{post['post_id']} · v{post['content_version']}\n"
         f"وضعیت: <i>نیازمند تأیید انسانی</i>"
     )
-    return f"{head}\n\n{base}"
+    return fit_caption(head, post)
+
+
+def build_dry_run_caption(post: dict) -> str:
+    """کپشن پیش‌نمایش dry-run — بدون دکمه است و راهنمای رسیدن به پیام بازبینی دارد.
+
+    (تجربهٔ واقعی: کاربر پیش‌نمایش بدون دکمه را می‌دید و دنبال دکمهٔ تأیید می‌گشت.)
+    """
+    head = (
+        "🧪 DRY-RUN (ارسال آزمایشی — چیزی در کانال منتشر نمی‌شود)\n"
+        "این پیش‌نمایش عمداً دکمه ندارد. برای پیام بازبینی با دکمهٔ تأیید:\n"
+        f"python run.py publish --post-id {post['post_id']}   (بدون --dry-run)"
+    )
+    return fit_caption(head, post)
+
+
+# سقف کپشن عکس در Bot API — بر حسب واحد UTF-16 (ایموجی ۲ واحد است)
+CAPTION_LIMIT = 1024
+
+
+def _utf16_len(s: str) -> int:
+    return len(s.encode("utf-16-le")) // 2
+
+
+def _plain_body(post: dict) -> str:
+    """متن خام کپشن بدون هیچ تگ HTML — فقط برای مسیر برش سرریز.
+
+    برش وسط HTML تگِ باز رها می‌کند و کل پارس کپشن خطا می‌دهد؛ متن escape شده
+    دیگر < > & ندارد، پس هر جای آن قابل برش است.
+    """
+    draft = json.loads(post["draft_json"] or "{}")
+    parts = [
+        (post["title"] or draft.get("title") or "").strip(),
+        (post["caption"] or draft.get("caption") or "").strip(),
+        (draft.get("source_note") or "").strip(),
+        HASHTAG_BY_TYPE.get(post["post_type"], ""),
+    ]
+    return "\n\n".join(p for p in parts if p)
+
+
+def fit_caption(head: str, post: dict, limit: int = CAPTION_LIMIT) -> str:
+    """head + کپشن پست، تضمین‌شده زیر سقف تلگرام.
+
+    جا شود → همان کپشن HTML کامل؛ سرریز کند → متن بدون تگ برش‌خورده با «…».
+    """
+    base = build_caption(post)
+    prefix = f"{head}\n\n" if head else ""
+    if _utf16_len(prefix) + _utf16_len(base) <= limit:
+        return prefix + base
+    body = html.escape(_plain_body(post))
+    budget = limit - _utf16_len(prefix) - 1  # ۱ برای «…»
+    if _utf16_len(body) > budget:
+        body = body[: max(budget - 2, 0)].rstrip() + "…"
+    return prefix + body
 
 
 def find_card_image(post_id: int, version: int, out_dir: Path | None = None) -> Path:
@@ -203,7 +259,8 @@ async def approve_and_publish(
         raise ValueError("TELEGRAM_CHANNEL_ID is empty - set it in .env")
 
     image = find_card_image(post_id, post["content_version"])
-    msg = await transport.send_photo(int(channel), str(image), build_caption(post))
+    # fit_caption با head خالی = همان build_caption، مگر آنکه از سقف رد شود
+    msg = await transport.send_photo(int(channel), str(image), fit_caption("", post))
     with db() as conn:
         conn.execute(
             "INSERT INTO publishing_logs (post_id, platform_message_id, permalink, published_at, result)"
@@ -253,7 +310,7 @@ async def publish_cli(post_id: int, dry_run: bool = False) -> int:
             if dry_run:
                 post = load_post(post_id)
                 image = find_card_image(post_id, post["content_version"])
-                caption = "🧪 DRY-RUN (ارسال آزمایشی — چیزی در کانال منتشر نمی‌شود)\n\n" + build_caption(post)
+                caption = build_dry_run_caption(post)
                 admin = min(ADMIN_TELEGRAM_IDS)
                 msg = await transport.send_photo(admin, str(image), caption)
                 with db() as conn:

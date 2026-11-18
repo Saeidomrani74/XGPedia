@@ -15,6 +15,7 @@ import logging
 
 from aiogram import Bot, Dispatcher, F, Router
 from aiogram.exceptions import TelegramBadRequest
+from aiogram.filters import Command
 from aiogram.types import (
     CallbackQuery,
     FSInputFile,
@@ -84,6 +85,33 @@ def make_transport(bot: Bot) -> AiogramTransport:
     return AiogramTransport(bot)
 
 
+@router.message(Command("start"))
+async def on_start(m: Message) -> None:
+    role = "ادمین" if tp.is_admin(m.from_user.id) else "کاربر"
+    await m.answer(
+        f"ربات انتشار XGPedia — {role}.\n"
+        "پیش‌نویس‌ها با run.py publish برای شما می‌آیند؛ تأیید یعنی انتشار در کانال."
+    )
+
+
+@router.message(F.text)  # بعد از /start ثبت می‌شود؛ هر متن دیگری را می‌گیرد
+async def on_any_text(m: Message) -> None:
+    """متن ساده («تایید» و مانند آن) → راهنما، نه سکوت.
+
+    تجربهٔ واقعی: کاربر متن تأیید می‌فرستاد و فقط «Update is not handled» در لاگ
+    می‌افتاد؛ تصمیم فقط از دکمه‌های زیر پیام بازبینی می‌آید — حالا همین را جواب می‌دهیم.
+    """
+    if tp.is_admin(m.from_user.id):
+        await m.answer(
+            "تأیید/رد فقط با دکمه‌های زیر پیام بازبینی انجام می‌شود، نه با متن.\n"
+            "برای فرستادن پیام بازبینی با دکمه‌ها:\n"
+            "python run.py publish --post-id <id>\n"
+            "(بدون --dry-run — پیش‌نمایش dry-run عمداً دکمه ندارد)"
+        )
+    else:
+        await m.answer("این ربات دستور متنی ندارد؛ دکمه‌های بازبینی زیر پیام پیش‌نویس می‌آیند.")
+
+
 @router.callback_query(F.data.startswith(("approve:", "reject:", "edit:")))
 async def on_decision(cb: CallbackQuery, bot: Bot) -> None:
     """دکمه‌های زیر پیام بازبینی — فقط ادمین؛ نتیجه در همان پیام ویرایش می‌شود."""
@@ -124,14 +152,6 @@ async def main() -> None:
     bot = Bot(TELEGRAM_BOT_TOKEN)
     dp = Dispatcher()
     dp.include_router(router)
-
-    @router.message(F.text == "/start")
-    async def _start(m: Message) -> None:
-        role = "ادمین" if tp.is_admin(m.from_user.id) else "کاربر"
-        await m.answer(
-            f"ربات انتشار XGPedia — {role}.\n"
-            "پیش‌نویس‌ها با run.py publish برای شما می‌آیند؛ تأیید یعنی انتشار در کانال."
-        )
 
     log.info("bot polling started - admins: %s", sorted(ADMIN_TELEGRAM_IDS))
     await dp.start_polling(bot)

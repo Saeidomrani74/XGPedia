@@ -101,6 +101,46 @@ def test_caption_escapes_llm_html(pub_db):
     assert "منبع:" in cap
 
 
+def test_review_caption_never_exceeds_telegram_limit(pub_db):
+    """سقف ۱۰۲۴ کپشن عکس تلگرام — سرریز → برش امن، بدون تگ نصف‌شده (خطای پارس)."""
+    pub_db.execute("UPDATE posts SET caption=? WHERE post_id=1", ("متن آزمایشی " * 300,))
+    cap = tp.build_review_caption(_post(pub_db))
+    assert tp._utf16_len(cap) <= tp.CAPTION_LIMIT
+    assert cap.startswith("🟠") and cap.endswith("…")
+    # برش فقط روی متن escape شده → همهٔ تگ‌ها کامل و از پیش تعریف‌شده‌اند
+    import re
+
+    assert set(re.findall(r"<[^>]+>", cap)) <= {"<i>", "</i>"}
+
+
+def test_dry_run_caption_tells_how_to_get_buttons(pub_db):
+    """پیش‌نمایش dry-run باید صریح بگوید دکمه ندارد و دستور ارسال بازبینی چیست."""
+    cap = tp.build_dry_run_caption(_post(pub_db))
+    assert "DRY-RUN" in cap and "دکمه ندارد" in cap
+    assert "python run.py publish --post-id 1" in cap and "بدون --dry-run" in cap
+    assert tp._utf16_len(cap) <= tp.CAPTION_LIMIT
+
+
+def test_bot_answers_plain_text_with_guidance(pub_db):
+    """متن ساده («تایید») دیگر سکوت نمی‌ماند — راهنمای دکمه‌ها برمی‌گردد."""
+    pytest.importorskip("aiogram", reason="publish extras not installed")
+    from src.xgpedia.publishers import telegram_bot as tb
+
+    replies = []
+
+    class _Msg:
+        text = "تایید"
+
+        class from_user:
+            id = ADMIN
+
+        async def answer(self, text, **kw):
+            replies.append(text)
+
+    asyncio.run(tb.on_any_text(_Msg()))
+    assert replies and "دکمه" in replies[0] and "publish --post-id" in replies[0]
+
+
 # ─── فلو تأیید ───
 
 def test_submit_sends_to_admins_with_buttons(pub_db):
