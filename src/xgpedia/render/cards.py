@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import base64
 import colorsys
+import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -30,6 +31,7 @@ from src.xgpedia.config import (
 
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 FONTS_DIR = ROOT / "brand" / "fonts"
+BRAND_LOGO_DIR = ROOT / "brand" / "logo" / "svg"
 FONT_FILES = (  # (نام فایل woff2، خانوادهٔ CSS، وزن یا بازهٔ وزن)
     ("Vazirmatn-Regular.woff2", "Vazirmatn", 400),
     ("Vazirmatn-Medium.woff2", "Vazirmatn", 500),
@@ -175,6 +177,22 @@ def _color_dist_hsl(a: str, b: str) -> float:
     return min(dh, 1 - dh) * 360  # بر حسب درجه
 
 
+def _glow_color(hex_color: str, min_lightness: float = 0.3) -> str:
+    """رنگ درخشش محیطی تیم روی زمینهٔ تیره — رنگ‌های خیلی تیره (سرمه‌ای/مشکی تیم‌ها)
+    روی کارت تیره محو می‌شوند؛ روشنایی به حداقل کشیده می‌شود، فام و اشباع عین تیم.
+
+    مشتق قطعی از خود رنگ تیم — هیچ رنگی هاردکد نیست (قاعدهٔ brand.json).
+    """
+    import colorsys
+
+    r, g, b = (int(hex_color[i:i + 2], 16) / 255 for i in (1, 3, 5))
+    h, l, s = colorsys.rgb_to_hls(r, g, b)
+    if l < min_lightness:
+        l = min_lightness
+    r2, g2, b2 = colorsys.hls_to_rgb(h, l, s)
+    return "#{:02X}{:02X}{:02X}".format(round(r2 * 255), round(g2 * 255), round(b2 * 255))
+
+
 def display_colors(
     home_ident: dict | None, away_ident: dict | None, fallback: str
 ) -> tuple[str, str]:
@@ -197,7 +215,53 @@ def display_colors(
 
 # ─── SVGهای استودیو (port از buildBrandLogoSVG/renderTeamCrest) ───
 
+def _brand_logo_data_uri(mono: bool = False) -> str | None:
+    """SVG رسمی برند به‌صورت data-URI — همان الگوی data-URI نشان تیم‌ها (_crest_html).
+
+    mono=True  → logo-white.svg عیناً (تک‌رنگ سفید — حالت مونو).
+    mono=False → نسخهٔ معکوس رسمی سند برند (فصل ۶): XG سفید + PEDIA قرمز روی Ink؛
+                 فقط fillِ نخستِ فایل رسمی (سرمه‌ای XG — کنتراست ≈۱٫۸:۱ روی Ink ممنوع)
+                 به سفید تبدیل می‌شود و قرمز رسمی خودِ فایل دست‌نخورده می‌ماند.
+    فایل غایب → None (فراخوان به نشان بازسازی استودیو برمی‌گردد).
+    """
+    src = BRAND_LOGO_DIR / ("logo-white.svg" if mono else "logo.svg")
+    if not src.exists():
+        return None
+    svg = src.read_text(encoding="utf-8")
+    if not mono:
+        first_fill = re.search(r'fill="#[0-9A-Fa-f]{6}"', svg)
+        if first_fill:
+            svg = svg.replace(first_fill.group(0), 'fill="#FFFFFF"', 1)
+    b64 = base64.b64encode(svg.encode("utf-8")).decode("ascii")
+    return f"data:image/svg+xml;base64,{b64}"
+
+
+def _brand_avatar_data_uri() -> str | None:
+    """آواتار مربعی رسمی (logo-xg-white.svg — ۱۱۰px) برای فاوآیکون/آواتار شبکه‌ها."""
+    src = BRAND_LOGO_DIR / "logo-xg-white.svg"
+    if not src.exists():
+        return None
+    b64 = base64.b64encode(src.read_bytes()).decode("ascii")
+    return f"data:image/svg+xml;base64,{b64}"
+
+
 def _brand_lockup_svg(mono: bool = False) -> str:
+    """سرصفحهٔ برند کارت: SVG رسمی برند جاسازی‌شده (data-URI — همان الگوی نشان تیم‌ها).
+
+    حالت دوبنگی = نسخهٔ معکوس رسمی (XG سفید + PEDIA قرمز) و mono = تک‌رنگ سفید؛
+    هر دو روی پس‌زمینهٔ Ink معتبرند. بدون فایل رسمی → نشان بازسازی استودیو.
+    """
+    uri = _brand_logo_data_uri(mono)
+    if uri is not None:
+        return (
+            '<div class="brand-logo-lockup" dir="ltr">'
+            f'<img src="{uri}" alt="XGPedia" class="brand-logo-img" />'
+            "</div>"
+        )
+    return _brand_lockup_studio_fallback(mono)
+
+
+def _brand_lockup_studio_fallback(mono: bool = False) -> str:
     """لوگوی متنی استودیو (سپر XG + XGPedia + FOOTBALL ANALYTICS) — svg درون‌خطی، عین استودیو."""
     p = _palette()
     pedia_fill = "#FFFFFF" if mono else p["text_bright"]
@@ -525,23 +589,31 @@ def _team_side_ctx(side: dict, ident: dict | None, display_color: str, side_key:
 
 # ─── ماژول‌ها: انتخاب نسخه (port از applyVersion استودیو) ───
 
-def _select_modules(version: str, has: dict[str, bool]) -> list[dict]:
-    """نسخهٔ چیدمان — smart داده‌محور است؛ بقیه نسخه‌های ثابت استودیو.
+def _select_modules(version: str, has: dict[str, bool], fmt: str = "4:5") -> list[dict]:
+    """نسخهٔ چیدمان — smart داده‌محور و فضاآگاه است؛ بقیه نسخه‌های ثابت استودیو.
 
     ماژولی که داده‌اش در fact_json نیست در هیچ نسخه‌ای روشن نمی‌شود (کدش در
     قالب محفوظ است تا وقتی داده‌اش خریداری/تولید شد فقط داده اضافه شود).
+    smart: stats همیشه؛ نیم‌عرض‌های موجود به ترتیب جذابیت (poisson/trend10
+    خفن‌ترند) تا ظرفیت فرمت — تا فضا پر شود ولی سرریز نکند؛ signals در انتها.
     """
     presets = {
         "v1": [("stats", "full"), ("radar", "half"), ("focus", "half"), ("keyduel", "full")],
         "v2": [("stats", "full"), ("poisson", "half"), ("wave", "half"), ("signals", "full")],
         "v3": [("stats", "full"), ("trend10", "half"), ("watchout", "half"), ("keyduel", "full")],
     }
+    # ظرفیت ماژول‌های نیم‌عرض هر فرمت (جفت‌شدنی در grid دو ستونه)
+    half_capacity = {"4:5": 4, "9:16": 6, "16:9": 2}.get(fmt, 4)
     if version == "smart":
-        preset = [("stats", "full")]
-        for mod in ("radar", "focus", "keyduel", "watchout"):
-            if has.get(mod):
-                preset.append((mod, "half"))
-        preset.append(("signals", "full"))
+        preset = []
+        if has.get("stats"):
+            preset.append(("stats", "full"))
+        # ترتیب جذابیت: نمودارهای داده‌محور خفن اول؛ focus (متن تحریریه) همیشه هستهٔ روایت
+        priority = ["poisson", "trend10", "focus", "radar", "keyduel", "watchout"]
+        avail = [m for m in priority if has.get(m)]
+        preset += [(m, "half") for m in avail[:half_capacity]]
+        if has.get("signals"):
+            preset.append(("signals", "full"))
     else:
         preset = presets.get(version, presets["v1"])
     selected = [
@@ -566,12 +638,14 @@ def build_preview_context(
     brand: dict | None = None,
     layout: str = "smart",
     fmt: str = "4:5",
+    brand_mono: bool = False,
 ) -> dict:
     """context کامل قالب استودیو از draft + fact + brand + team_identities.
 
     همهٔ اعداد از fact_json می‌آیند؛ متن‌ها از draft_json؛ رنگ برند از brand.json؛
     رنگ/کد تیم از team_identities.json. layout: smart | v1 | v2 | v3.
     fmt: 4:5 | 9:16 | 16:9 (ابعاد و هندسهٔ چیدمان).
+    brand_mono: لوگوی سرصفحه تک‌رنگ سفید (False = دوبنگی رسمی XG سفید + PEDIA قرمز).
     """
     from src.xgpedia.analytics.metrics import dixon_coles_matrix, expected_points
 
@@ -611,9 +685,11 @@ def build_preview_context(
         "right_box_x": w - inset - 135,
         "right_arc": f"M{w - inset - 135} 245 A 95 95 0 0 0 {w - inset - 135} 405",
         "crosshairs": _crosshairs(w, hgt, inset),
+        # نور محیطی رنگ دو تیم — تقویت‌شده (آلفای 55 و شعاع بازتر) تا هویت رنگی
+        # تیم‌ها در پس‌زمینهٔ کارت محسوس باشد؛ رنگ‌های تیره با _glow_color قابل‌دید می‌شوند
         "ambient": (
-            f"radial-gradient(circle at 86% 32%, {hc}38 0%, transparent 48%),"
-            f"radial-gradient(circle at 14% 32%, {ac}38 0%, transparent 48%),"
+            f"radial-gradient(circle at 86% 30%, {_glow_color(hc)}55 0%, transparent 56%),"
+            f"radial-gradient(circle at 14% 30%, {_glow_color(ac)}55 0%, transparent 56%),"
             f"radial-gradient(circle at 50% 36%, rgba(230, 46, 69, 0.14) 0%, transparent 52%)"
         ),
     }
@@ -696,7 +772,7 @@ def build_preview_context(
         "trend10": trend_ctx is not None,
         "signals": signals_ctx is not None,
     }
-    modules = _select_modules(layout, has)
+    modules = _select_modules(layout, has, fmt)
 
     # ── هدر و پانویس ──
     comp_en = facts.get("competition", {}).get("name", "")
@@ -749,7 +825,9 @@ def build_preview_context(
         "palette": p,
         "fonts": _font_faces(),
         "brand_name": b.get("brand", "XGPedia"),
-        "brand_lockup_html": _brand_lockup_svg(False),
+        "brand_lockup_html": _brand_lockup_svg(brand_mono),
+        "brand_mono": brand_mono,
+        "brand_favicon_uri": _brand_avatar_data_uri(),
         "handle": "@xgpedia",
         "domain": (b.get("handles", {}).get("domain") or ["xgpedia.com"])[0],
         "na_label": NO_DATA,
@@ -807,12 +885,13 @@ def render_preview_html(
     post_type: str = "preview",
     layout: str = "smart",
     fmt: str = "4:5",
+    brand_mono: bool = False,
 ) -> str:
     """پر کردن قالب استودیو و برگرداندن HTML کامل (خودبسنده — فونت جاسازی‌شده)."""
     from jinja2 import Environment, FileSystemLoader
 
     env = Environment(autoescape=True, loader=FileSystemLoader(str(TEMPLATES_DIR)))
-    ctx = build_preview_context(draft, facts, post_type=post_type, layout=layout, fmt=fmt)
+    ctx = build_preview_context(draft, facts, post_type=post_type, layout=layout, fmt=fmt, brand_mono=brand_mono)
     return env.get_template("match_preview.html.j2").render(**ctx)
 
 
@@ -826,14 +905,24 @@ def render_preview_card(
     post_type: str = "preview",
     layout: str = "smart",
     fmt: str = "4:5",
+    brand_mono: bool = False,
 ) -> tuple[Path, Path, Path]:
     """رندر کامل یک پست: HTML میانی + تصویر نهایی + فایل کپشن آمادهٔ انتشار.
 
     قالب‌های تصویر (همان سه دکمهٔ استودیو): 4:5 → 1080×1350 پیش‌فرض؛
     9:16 → 1080×1920 استوری؛ 16:9 → 1920×1080 بنر.
     تلگرام/سایت PNG؛ اینستاگرام JPEG (الزام API).
+    post_type=post_match → قالب پس‌از‌بازی (تم Warm Terracotta، رندرر جداگانه).
     """
     from src.xgpedia.render.render_png import render_sync
+
+    if post_type == "post_match":
+        from src.xgpedia.render.post_match_cards import render_post_match_card
+
+        return render_post_match_card(
+            draft, facts, out_dir, post_id, version,
+            platform=platform, layout=layout, fmt=fmt, brand_mono=brand_mono,
+        )
 
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
@@ -841,7 +930,7 @@ def render_preview_card(
     stem = f"post_{post_id}_v{version}_{post_type}"
     html_path = out / f"{stem}_{w}x{hgt}.html"
     html_path.write_text(
-        render_preview_html(draft, facts, post_type=post_type, layout=layout, fmt=fmt),
+        render_preview_html(draft, facts, post_type=post_type, layout=layout, fmt=fmt, brand_mono=brand_mono),
         encoding="utf-8",
     )
 

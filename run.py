@@ -96,7 +96,11 @@ def cmd_facts(args: argparse.Namespace) -> None:
     """ساخت JSON واقعیت‌ها برای یک fixture — ورودی لایهٔ تحریریه."""
     from src.xgpedia.sync import build_match_facts
 
-    facts = build_match_facts(args.fixture)
+    try:
+        facts = build_match_facts(args.fixture, post_match=args.post_match)
+    except ValueError as e:
+        print(f"[FAIL] {e}")
+        sys.exit(2)
     out = Path(args.out) if args.out else None
     text = json.dumps(facts, ensure_ascii=False, indent=2)
     if out:
@@ -220,7 +224,7 @@ def cmd_draft(args: argparse.Namespace) -> None:
         sys.exit(2)
 
     init_db()  # مهاجرت idempotent (ستون draft_json برای DBهای نسخهٔ قبل)
-    facts = build_match_facts(args.fixture)
+    facts = build_match_facts(args.fixture, post_match=(args.post_type == "post_match"))
     print(f"fixture: {facts['fixture_id']}")
     print(f"generating {args.post_type} for {args.platform} with {llm.model} ...")
     try:
@@ -353,6 +357,7 @@ def cmd_render_post(args: argparse.Namespace) -> None:
             post_type=r["post_type"],
             layout=args.layout,
             fmt=args.format,
+            brand_mono=args.mono,
         )
     except FileNotFoundError as e:
         print(f"[FAIL] {e}")
@@ -382,6 +387,8 @@ def main(argv: list[str] | None = None) -> int:
     p_facts = sub.add_parser("facts", help="build the facts JSON for one fixture")
     p_facts.add_argument("--fixture", required=True)
     p_facts.add_argument("--out", default=None, help="optional output path for the JSON file")
+    p_facts.add_argument("--post-match", action="store_true",
+                         help="post-match facts: final score + this match's stats (finished matches only)")
 
     sub.add_parser("status", help="data freshness + DB stats")
 
@@ -412,6 +419,8 @@ def main(argv: list[str] | None = None) -> int:
                           help="card format (default: 4:5 = 1080x1350; 9:16 = 1080x1920 story; 16:9 = 1920x1080 banner)")
     p_render.add_argument("--layout", default="smart", choices=["smart", "v1", "v2", "v3"],
                           help="module layout version (default: smart = data-driven selection)")
+    p_render.add_argument("--mono", action="store_true",
+                          help="monochrome white brand logo in the masthead (default: official duotone)")
 
     args = parser.parse_args(argv)
     if args.cmd == "init":

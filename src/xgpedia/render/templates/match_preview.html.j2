@@ -8,7 +8,8 @@
 <head>
 <meta charset="utf-8">
 <title>XGPedia | {{ home.name_fa }} × {{ away.name_fa }}</title>
-<style>
+{% if brand_favicon_uri %}<link rel="icon" type="image/svg+xml" href="{{ brand_favicon_uri }}">
+{% endif %}<style>
   {% for f in fonts %}
   @font-face { font-family: '{{ f.family }}'; src: url('{{ f.data }}') format('woff2'); font-weight: {{ f.weight }}; }
   {% endfor %}
@@ -161,7 +162,7 @@
     border: 1px solid rgba(230, 46, 69, 0.42);
     color: var(--accent-red);
   }
-  .masthead-meta { display: flex; align-items: center; gap: 10px; font-size: 13.5px; font-weight: 700; color: var(--text-soft); }
+  .masthead-meta { display: flex; align-items: center; gap: 10px; font-size: 15.5px; font-weight: 700; color: var(--text-soft); }
   .masthead-meta .sep { color: var(--draw-grey); }
   .meta-stadium { display: inline-flex; align-items: center; gap: 6px; color: #FFFFFF; }
   .pill-broadcast {
@@ -169,13 +170,15 @@
     background: rgba(16, 185, 129, 0.15);
     border: 1px solid rgba(16, 185, 129, 0.35);
     color: var(--emerald-bright);
-    font-size: 12.5px; font-weight: 800;
+    font-size: 14px; font-weight: 800;
   }
   #card-brand-logo { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+  .brand-logo-lockup { display: flex; align-items: center; }
+  .brand-logo-img { height: 42px; width: auto; display: block; }
   .masthead-lockup { display: flex; align-items: center; gap: 14px; }
   .lockup-text { display: flex; flex-direction: column; line-height: 1; }
   .lockup-brand { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 34px; letter-spacing: -0.02em; }
-  .lockup-sub { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.26em; text-transform: uppercase; margin-top: 4px; }
+  .lockup-sub { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.26em; text-transform: uppercase; margin-top: 4px; }
 
   /* ── بدنهٔ اصلی ── */
   #card-main-body {
@@ -209,14 +212,14 @@
   .xg-hub-row { display: flex; align-items: center; justify-content: center; gap: 10px; }
   .xg-hub-val { font-size: 32px; font-weight: 900; line-height: 1; }
   .xg-hub-label { font-size: 14px; font-weight: 900; color: var(--text-slate); font-family: 'JetBrains Mono', monospace; }
-  .xg-hub-sub { margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-around; font-size: 11px; }
-  .xg-hub-sub .cell-label { color: var(--text-slate); display: block; font-size: 9.5px; }
-  .xg-hub-sub strong { font-weight: 800; color: #FFFFFF; }
+  .xg-hub-sub { margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-around; font-size: 13px; }
+  .xg-hub-sub .cell-label { color: var(--text-slate); display: block; font-size: 12px; }
+  .xg-hub-sub strong { font-weight: 800; color: #FFFFFF; font-size: 14px; }
   .xg-hub-sub .vsep { height: 16px; width: 1px; background: rgba(255,255,255,0.1); }
   .xg-hub-sub .total { color: var(--emerald-bright); font-weight: 800; }
 
   .capsule-block { margin-top: 32px; }
-  .odds-row { position: relative; width: 100%; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 4px; font-size: 12px; font-weight: 800; }
+  .odds-row { position: relative; width: 100%; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 4px; font-size: 13.5px; font-weight: 800; }
   .odds-side { display: flex; align-items: center; gap: 6px; z-index: 10; }
   .odds-side .lbl { color: var(--text-slate); }
   .odds-chip { font-size: 14px; font-weight: 900; padding: 2px 8px; border-radius: 6px; background: rgba(255, 255, 255, 0.06); }
@@ -234,7 +237,7 @@
   .mod-chip.emerald { background: var(--emerald-bright); }
   .mod-chip.amber { background: var(--amber); }
   .mod-title { font-size: 17px; font-weight: 900; color: #FFFFFF; }
-  .mod-tag { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text-slate); }
+  .mod-tag { font-size: 12.5px; font-family: 'JetBrains Mono', monospace; color: var(--text-slate); }
   .mod-tag.emerald { color: var(--emerald-bright); }
   .mod-tag.amber { color: rgba(251, 191, 36, 0.9); font-family: 'Vazirmatn', sans-serif; }
 
@@ -256,13 +259,13 @@
   .editorial-inner { position: relative; z-index: 10; }
   .focus-title { font-size: 16px; font-weight: 900; color: var(--amber-soft); margin-bottom: 6px; }
   .focus-body { font-size: 14.5px; line-height: 1.625; color: var(--text-soft); font-weight: 500; }
-  .focus-foot { position: relative; z-index: 10; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--text-line); }
+  .focus-foot { position: relative; z-index: 10; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 700; color: var(--text-line); }
   .focus-foot .dot { width: 8px; height: 8px; border-radius: 999px; background: var(--accent-red); }
 
   /* watchout (editorial) */
   .watch-block { padding: 10px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); }
-  .watch-block .watch-team { font-size: 12px; font-weight: 800; margin-bottom: 2px; }
-  .watch-block p { font-size: 13.5px; color: var(--text-soft); line-height: 1.375; font-weight: 500; }
+  .watch-block .watch-team { font-size: 13.5px; font-weight: 800; margin-bottom: 2px; }
+  .watch-block p { font-size: 15px; color: var(--text-soft); line-height: 1.375; font-weight: 500; }
   .watch-list { display: flex; flex-direction: column; gap: 8px; }
 
   /* keyduel */
@@ -270,19 +273,19 @@
   .duel-card { grid-column: span 5; padding: 12px; border-radius: 16px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; gap: 6px; }
   .duel-row1 { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
   .duel-name { font-size: 16px; font-weight: 900; color: #FFFFFF; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .duel-pos { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; background: rgba(255,255,255,0.1); color: var(--text-line); flex-shrink: 0; }
-  .duel-row2 { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px; font-size: 12px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); }
+  .duel-pos { font-size: 12.5px; font-weight: 700; padding: 2px 8px; border-radius: 6px; background: rgba(255,255,255,0.1); color: var(--text-line); flex-shrink: 0; }
+  .duel-row2 { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px; font-size: 13.5px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); }
   .duel-vs { grid-column: span 1; display: flex; align-items: center; justify-content: center; }
-  .duel-vs span { width: 32px; height: 32px; border-radius: 12px; background: rgba(230,46,69,0.2); border: 1px solid rgba(230,46,69,0.5); display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 800; color: var(--duel-vs-red); }
+  .duel-vs span { width: 32px; height: 32px; border-radius: 12px; background: rgba(230,46,69,0.2); border: 1px solid rgba(230,46,69,0.5); display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 800; color: var(--duel-vs-red); }
 
   /* poisson */
   .poisson-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
-  .pm-axis { display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--text-slate); }
-  .pm-head { display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+  .pm-axis { display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--text-slate); }
+  .pm-head { display: flex; align-items: center; justify-content: center; font-size: 13.5px; font-weight: 900; }
   .pm-cell { border-radius: 8px; padding: 4px 0; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
-  .pm-cell .sc { font-size: 10px; font-weight: 700; opacity: 0.8; line-height: 1; }
-  .pm-cell .pc { font-size: 12px; font-weight: 900; margin-top: 2px; line-height: 1; }
-  .poisson-foot { margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between; font-size: 12px; }
+  .pm-cell .sc { font-size: 12px; font-weight: 700; opacity: 0.8; line-height: 1; }
+  .pm-cell .pc { font-size: 13.5px; font-weight: 900; margin-top: 2px; line-height: 1; }
+  .poisson-foot { margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between; font-size: 13.5px; }
   .poisson-foot .lbl { color: var(--text-slate); font-weight: 700; }
   .poisson-foot strong { color: var(--emerald-bright); font-weight: 800; }
 
@@ -294,12 +297,12 @@
   .signal-card.tone-emerald { background: linear-gradient(to left, rgba(16,185,129,0.15), rgba(255,255,255,0.03)); border-color: rgba(16,185,129,0.3); border-right: 4px solid var(--emerald); }
   .signal-card.tone-sky { background: linear-gradient(to left, rgba(56,189,248,0.15), rgba(255,255,255,0.03)); border-color: rgba(56,189,248,0.3); border-right: 4px solid var(--sky-bright); }
   .signal-card.tone-amber { background: linear-gradient(to left, rgba(245,158,11,0.15), rgba(255,255,255,0.03)); border-color: rgba(245,158,11,0.3); border-right: 4px solid var(--amber); }
-  .signal-badge { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 6px; margin-bottom: 4px; }
+  .signal-badge { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 800; padding: 2px 8px; border-radius: 6px; margin-bottom: 4px; }
   .signal-card.tone-emerald .signal-badge { background: rgba(16,185,129,0.25); color: var(--emerald-bright); }
   .signal-card.tone-sky .signal-badge { background: rgba(56,189,248,0.25); color: var(--sky-bright-light); }
   .signal-card.tone-amber .signal-badge { background: rgba(245,158,11,0.25); color: var(--amber-bright); }
   .signal-title { font-size: 14px; font-weight: 900; color: #FFFFFF; }
-  .signal-desc { font-size: 11px; color: var(--text-line); margin-top: 2px; }
+  .signal-desc { font-size: 12.5px; color: var(--text-line); margin-top: 2px; }
   .signal-value { font-size: 22px; font-weight: 900; line-height: 1; }
   .signal-card.tone-emerald .signal-value { color: var(--emerald-bright); }
   .signal-card.tone-sky .signal-value { color: var(--sky-bright-light); }
@@ -312,14 +315,14 @@
     border-top: 1px solid rgba(255,255,255,0.12);
     background: rgba(0, 0, 0, 0.25);
     display: flex; align-items: center; justify-content: space-between;
-    font-size: 12px; color: var(--text-slate);
+    font-size: 13px; color: var(--text-slate);
     flex-shrink: 0;
   }
   .footer-left { display: flex; align-items: center; gap: 8px; }
   .footer-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--accent-red); }
   .footer-tag { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(226, 232, 240, 0.9); }
   .footer-right { display: flex; align-items: center; gap: 12px; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--text-line); direction: ltr; }
-  .footer-source { color: var(--text-slate); font-weight: 500; font-size: 11px; }
+  .footer-source { color: var(--text-slate); font-weight: 500; font-size: 12.5px; }
   .footer-right .sep { color: var(--draw-grey); }
 
   /* ── چیدمان ۱۶:۹ — hero کنار و ماژول‌ها ستون دیگر (عین کلاس‌سوئیچ استودیو) ── */
@@ -695,7 +698,7 @@
       <div class="xg-glass-card {{ span_cls }}">
         <div class="mod-head">
           <div class="mod-head-l"><span class="mod-chip"></span><h3 class="mod-title">روند xG در بازی‌های اخیر</h3></div>
-          <div style="font-size: 12px; font-weight: 800;">
+          <div style="font-size: 13.5px; font-weight: 800;">
             <span style="color: {{ home.color }};">{{ data.home_avg }}</span>
             <span style="color: {{ palette.text_muted }}; margin: 0 4px;">/</span>
             <span style="color: {{ away.color }};">{{ data.away_avg }}</span>

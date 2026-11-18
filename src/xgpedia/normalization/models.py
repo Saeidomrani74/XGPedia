@@ -34,6 +34,29 @@ class RecentForm(BaseModel):
     n: int
 
 
+class MatchStats(BaseModel):
+    """آمار همان یک بازی (نه میانگین فصل) — فقط برای بازی‌های پایان‌یافته.
+
+    فیلدی که provider نداد None می‌ماند (null≠0)؛ رندرر ماژول/ردیفش را نمی‌سازد.
+    """
+
+    goals: StatValue | None = None
+    expected_goals: StatValue | None = None
+    total_shots: StatValue | None = None
+    shots_on_target: StatValue | None = None
+    corner_kicks: StatValue | None = None
+    fouls: StatValue | None = None
+    yellow_cards: StatValue | None = None
+    red_cards: StatValue | None = None
+
+
+class MatchResult(BaseModel):
+    """نتیجهٔ نهایی — از متریک goals همان بازی؛ غایب = بازی هنوز تمام نشده."""
+
+    home_goals: int | None = None
+    away_goals: int | None = None
+
+
 class TeamSide(BaseModel):
     name_fa: str
     name_en: str
@@ -45,6 +68,8 @@ class TeamSide(BaseModel):
     sot_avg: StatValue | None = None         # میانگین شوت در چارچوب
     xg_series: list[float] | None = None     # xG بازی‌به‌بازی، قدیمی‌ترین → جدیدترین (حداکثر ۱۰) — برای روند ۱۰ بازی
     recent_form: RecentForm | None = None    # توالی ب/م/ش — برای دایره‌های فرم
+    # ── کارت پس‌از‌بازی (post_match) — آمار خودِ بازی ──
+    match_stats: MatchStats | None = None
 
 
 class AvailabilityItem(BaseModel):
@@ -77,6 +102,7 @@ class MatchFacts(BaseModel):
     source: SourceInfo
     home: TeamSide
     away: TeamSide
+    result: MatchResult | None = None  # فقط post_match بازی‌های پایان‌یافته
     availability: list[AvailabilityItem] = Field(default_factory=list)
     triggers: list[str] = Field(default_factory=list)
     data_quality: DataQuality = Field(default_factory=DataQuality)

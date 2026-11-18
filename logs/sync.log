@@ -246,3 +246,192 @@ Database status:
   total_xg_rows: 200
   data age: 9 days - [WARN] data is stale (> 4 days)
 === done === 
+=== XGPedia daily sync - Wed 11/18/2026  7:30:03.65 === 
+Database status:
+  last_finished_match: 2026-11-08
+  total_finished: 480
+  total_stat_rows: 6920
+  total_xg_rows: 200
+  data age: 10 days - [WARN] data is stale (> 4 days)
+Traceback (most recent call last):
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpx\_transports\default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpx\_transports\default.py", line 250, in handle_request
+    resp = self._pool.handle_request(req)
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpcore\_sync\connection_pool.py", line 256, in handle_request
+    raise exc from None
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpcore\_sync\connection_pool.py", line 236, in handle_request
+    response = connection.handle_request(
+        pool_request.request
+    )
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpcore\_sync\connection.py", line 101, in handle_request
+    raise exc
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpcore\_sync\connection.py", line 78, in handle_request
+    stream = self._connect(request)
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpcore\_sync\connection.py", line 124, in _connect
+    stream = self._network_backend.connect_tcp(**kwargs)
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpcore\_backends\sync.py", line 207, in connect_tcp
+    with map_exceptions(exc_map):
+         ~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\saeid\AppData\Local\Programs\Python\Python314\Lib\contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpcore\_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ConnectError: [Errno 11001] getaddrinfo failed
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\saeid\StudioProjects\XGPedia\run.py", line 451, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "C:\Users\saeid\StudioProjects\XGPedia\run.py", line 424, in main
+    cmd_sync_results(args)
+    ~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\saeid\StudioProjects\XGPedia\run.py", line 57, in cmd_sync_results
+    rows, payload_hash, path = api.fetch_season_rows(args.season)
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\saeid\StudioProjects\XGPedia\src\xgpedia\providers\football_data_couk.py", line 209, in fetch_season_rows
+    text, path = self.download_season_csv(start_year)
+                 ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\saeid\StudioProjects\XGPedia\src\xgpedia\providers\football_data_couk.py", line 112, in download_season_csv
+    resp = self._client.get(url_path)
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpx\_client.py", line 1053, in get
+    return self.request(
+           ~~~~~~~~~~~~^
+        "GET",
+        ^^^^^^
+    ...<7 lines>...
+        extensions=extensions,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpx\_client.py", line 825, in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpx\_client.py", line 914, in send
+    response = self._send_handling_auth(
+        request,
+    ...<2 lines>...
+        history=[],
+    )
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpx\_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+        request,
+        follow_redirects=follow_redirects,
+        history=history,
+    )
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpx\_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpx\_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpx\_transports\default.py", line 249, in handle_request
+    with map_httpcore_exceptions():
+         ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\saeid\AppData\Local\Programs\Python\Python314\Lib\contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpx\_transports\default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ConnectError: [Errno 11001] getaddrinfo failed
+[ERROR] sync-results failed 
+Traceback (most recent call last):
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpx\_transports\default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpx\_transports\default.py", line 250, in handle_request
+    resp = self._pool.handle_request(req)
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpcore\_sync\connection_pool.py", line 256, in handle_request
+    raise exc from None
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpcore\_sync\connection_pool.py", line 236, in handle_request
+    response = connection.handle_request(
+        pool_request.request
+    )
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpcore\_sync\connection.py", line 101, in handle_request
+    raise exc
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpcore\_sync\connection.py", line 78, in handle_request
+    stream = self._connect(request)
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpcore\_sync\connection.py", line 124, in _connect
+    stream = self._network_backend.connect_tcp(**kwargs)
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpcore\_backends\sync.py", line 207, in connect_tcp
+    with map_exceptions(exc_map):
+         ~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\saeid\AppData\Local\Programs\Python\Python314\Lib\contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpcore\_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ConnectError: [Errno 11001] getaddrinfo failed
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\saeid\StudioProjects\XGPedia\run.py", line 451, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "C:\Users\saeid\StudioProjects\XGPedia\run.py", line 426, in main
+    cmd_fixtures(args)
+    ~~~~~~~~~~~~^^^^^^
+  File "C:\Users\saeid\StudioProjects\XGPedia\run.py", line 83, in cmd_fixtures
+    raw = api.upcoming_fixtures(days=args.days)
+  File "C:\Users\saeid\StudioProjects\XGPedia\src\xgpedia\providers\football_data_org.py", line 81, in upcoming_fixtures
+    return self._get(
+           ~~~~~~~~~^
+        f"/competitions/{PL_CODE}/matches",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+        },
+        ^^
+    )
+    ^
+  File "C:\Users\saeid\StudioProjects\XGPedia\src\xgpedia\providers\football_data_org.py", line 57, in _get
+    resp = with_backoff(call)
+  File "C:\Users\saeid\StudioProjects\XGPedia\src\xgpedia\providers\base.py", line 99, in with_backoff
+    return fn()
+  File "C:\Users\saeid\StudioProjects\XGPedia\src\xgpedia\providers\football_data_org.py", line 50, in call
+    r = self._client.get(endpoint, params=params)
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpx\_client.py", line 1053, in get
+    return self.request(
+           ~~~~~~~~~~~~^
+        "GET",
+        ^^^^^^
+    ...<7 lines>...
+        extensions=extensions,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpx\_client.py", line 825, in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpx\_client.py", line 914, in send
+    response = self._send_handling_auth(
+        request,
+    ...<2 lines>...
+        history=[],
+    )
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpx\_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+        request,
+        follow_redirects=follow_redirects,
+        history=history,
+    )
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpx\_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpx\_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpx\_transports\default.py", line 249, in handle_request
+    with map_httpcore_exceptions():
+         ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\saeid\AppData\Local\Programs\Python\Python314\Lib\contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\saeid\StudioProjects\XGPedia\.venv\Lib\site-packages\httpx\_transports\default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ConnectError: [Errno 11001] getaddrinfo failed
+Database status:
+  last_finished_match: 2026-11-08
+  total_finished: 480
+  total_stat_rows: 6920
+  total_xg_rows: 200
+  data age: 10 days - [WARN] data is stale (> 4 days)
+=== done === 

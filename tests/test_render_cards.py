@@ -9,10 +9,12 @@
   - رنگ فقط از brand.json (matchday_palette) + team_identities.json تزریق می‌شود
   - احتمال‌های ۱X۲ فقط از Dixon-Coles روی xG فکت‌ها مشتق می‌شوند
   - ماژول‌ها: smart فقط با داده روشن می‌شود؛ ماژول بی‌داده در HTML نیست
+  - لوگوی رسمی برند data-URI در سرصفحه: دوبنگی (XG سفید + PEDIA قرمز) و مونو سفید؛ فاوآیکون آواتار
   - رندر واقعی Playwright → PNG/JPEG سالم و غیرخالی در هر سه فرمت
 """
 from __future__ import annotations
 
+import base64
 import json
 import re
 
@@ -242,9 +244,33 @@ def test_context_signals_from_poisson_and_corners():
 # ─── ماژول‌ها: smart فقط با داده ───
 
 def test_smart_modules_enabled_set():
+    """smart فضاآگاه: با دادهٔ کامل، نمودارهای داده‌محور (poisson/trend10) هم انتخاب می‌شوند."""
     ctx = build_preview_context(_draft(), _facts())
     ids = [m["id"] for m in ctx["modules"] if m["enabled"]]
+    # ترتیب رجیستری MODULE_DEFS: stats, focus, poisson, trend10, signals (سمت چپ news)
+    assert ids == ["stats", "focus", "poisson", "trend10", "signals"]
+
+
+def test_smart_fills_space_and_respects_capacity():
+    """ظرفیت فرمت: 16:9 دو نیم‌عرض می‌گیرد؛ 9:16 تا شش — پرکردن فضا بدون سرریز."""
+    ctx_wide = build_preview_context(_draft(), _facts(), fmt="16:9")
+    halves_wide = [m for m in ctx_wide["modules"] if m["enabled"] and m["span"] == "half"]
+    assert len(halves_wide) == 2  # poisson + trend10 (خفن‌ترین‌ها اول)
+    ids_wide = [m["id"] for m in ctx_wide["modules"] if m["enabled"]]
+    assert "poisson" in ids_wide and "trend10" in ids_wide
+
+
+def test_smart_with_minimal_data_still_fills():
+    """کمترین داده: بدون سری و بدون xG — stats + focus + signals حاضرند و یتیم تمام‌عرض می‌شود."""
+    facts = _facts()
+    for side in ("home", "away"):
+        facts[side]["xg_series"] = None
+        facts[side]["xg_for_avg"] = None
+    ctx = build_preview_context(_draft(), facts)
+    ids = [m["id"] for m in ctx["modules"] if m["enabled"]]
     assert ids == ["stats", "focus", "signals"]
+    focus = next(m for m in ctx["modules"] if m["id"] == "focus")
+    assert focus["span"] == "full"  # نیم‌عرض یتیم → تمام‌عرض تا خانهٔ خالی نماند
 
 
 def test_modules_without_data_absent_from_html():
@@ -360,3 +386,60 @@ def test_render_real_story_format(tmp_path):
         return
     with Image.open(img_path) as im:
         assert im.size == (1080, 1920)
+
+
+# ─── مرحلهٔ ۱: لوگوی رسمی برند در سرصفحه (data-URI) + فاوآیکون آواتار ───
+
+
+def _decoded_brand_svg(lockup_html: str) -> str:
+    m = re.search(r'src="data:image/svg\+xml;base64,([A-Za-z0-9+/=]+)"', lockup_html)
+    assert m, "official brand logo must be embedded as a data-URI <img>"
+    return base64.b64decode(m.group(1)).decode("utf-8")
+
+
+def test_official_brand_logo_embedded_duotone():
+    """حالت پیش‌فرض: SVG رسمی برند به‌صورت data-URI — نسخهٔ معکوس رسمی (XG سفید + PEDIA قرمز)."""
+    from src.xgpedia.config import ROOT
+
+    ctx = build_preview_context(_draft(), _facts())
+    assert ctx["brand_mono"] is False
+    svg = _decoded_brand_svg(ctx["brand_lockup_html"])
+    src = (ROOT / "brand" / "logo" / "svg" / "logo.svg").read_text(encoding="utf-8")
+    first_fill = re.search(r'fill="#[0-9A-Fa-f]{6}"', src).group(0)
+    # فقط fillِ نخستِ فایل رسمی (سرمه‌ای XG) سفید شده؛ بقیهٔ فایل عین رسمی است
+    assert svg == src.replace(first_fill, 'fill="#FFFFFF"', 1)
+    assert 'class="brand-logo-img"' in ctx["brand_lockup_html"]
+    assert 'alt="XGPedia"' in ctx["brand_lockup_html"]
+
+
+def test_official_brand_logo_mono_variant():
+    """حالت مونو (brand_mono=True): فایل رسمی تک‌رنگ سفید عیناً و بدون هیچ بازرنگی."""
+    from src.xgpedia.config import ROOT
+
+    ctx = build_preview_context(_draft(), _facts(), brand_mono=True)
+    assert ctx["brand_mono"] is True
+    svg = _decoded_brand_svg(ctx["brand_lockup_html"])
+    src = (ROOT / "brand" / "logo" / "svg" / "logo-white.svg").read_text(encoding="utf-8")
+    assert svg == src
+
+
+def test_avatar_favicon_wired_into_head():
+    """آواتار مربعی رسمی (logo-xg-white.svg) به‌صورت فاوآیکون در head خروجی نهایی."""
+    from src.xgpedia.config import ROOT
+
+    ctx = build_preview_context(_draft(), _facts())
+    assert ctx["brand_favicon_uri"].startswith("data:image/svg+xml;base64,")
+    avatar_src = (ROOT / "brand" / "logo" / "svg" / "logo-xg-white.svg").read_bytes()
+    assert base64.b64encode(avatar_src).decode("ascii") in ctx["brand_favicon_uri"]
+
+    html = render_preview_html(_draft(), _facts())
+    assert 'rel="icon"' in html and 'type="image/svg+xml"' in html
+    assert "brand-logo-img" in html  # لوگوی رسمی در سرصفحهٔ خروجی نهایی
+
+
+def test_brand_lockup_falls_back_to_studio_without_files(tmp_path, monkeypatch):
+    """بدون فایل‌های رسمی برند → نشان بازسازی استودیو (رفتار قبلی حفظ می‌شود)."""
+    from src.xgpedia.render import cards as rc
+
+    monkeypatch.setattr(rc, "BRAND_LOGO_DIR", tmp_path)
+    assert rc._brand_lockup_svg().startswith('<div class="masthead-lockup"')

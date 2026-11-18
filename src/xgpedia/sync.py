@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from src.xgpedia.config import (
     CURRENT_SEASON_START,
@@ -309,16 +309,31 @@ def _team_form_sequence(conn: sqlite3.Connection, team: str, before_date: str, l
     return {"sequence": "".join(letters), "n": len(letters)}
 
 
-def build_match_facts(fixture_id: str) -> dict:
+def _match_metrics(conn: sqlite3.Connection, fixture_id: str, team: str) -> dict[str, float]:
+    """آمار خودِ یک بازی برای یک تیم — {metric: value}؛ ردیف NULL اصلاً برنمی‌گردد."""
+    rows = conn.execute(
+        """
+        SELECT metric, value FROM fixture_statistics
+        WHERE fixture_id = ? AND team = ? AND provider = ? AND value IS NOT NULL
+        """,
+        (fixture_id, team, PRIMARY_STATS_PROVIDER),
+    ).fetchall()
+    return {r["metric"]: float(r["value"]) for r in rows}
+
+
+def build_match_facts(fixture_id: str, post_match: bool = False) -> dict:
     """ساخت «JSON واقعیت‌ها» برای یک بازی — تنها ورودی مجاز LLM و رندرر.
 
-    خروجی dict مطابق schema MatchFacts (models.py)؛ آمادهٔ json.dumps با ensure_ascii=False.
+    post_match=True فقط برای بازی‌های پایان‌یافته: نتیجه + آمار خودِ بازی (match_stats)
+    و روند/form شامل همین بازی. خروجی dict مطابق schema MatchFacts (models.py).
     """
     from src.xgpedia.analytics.metrics import evaluate_triggers
     from src.xgpedia.normalization.models import (
         DataQuality,
         Last5,
         MatchFacts,
+        MatchResult,
+        MatchStats,
         RecentForm,
         SourceInfo,
         StatValue,
@@ -329,6 +344,10 @@ def build_match_facts(fixture_id: str) -> dict:
         fx = conn.execute("SELECT * FROM fixtures WHERE fixture_id = ?", (fixture_id,)).fetchone()
         if fx is None:
             raise KeyError(f"fixture {fixture_id} not found in DB - run sync-results first")
+        if post_match and fx["status"] != "finished":
+            raise ValueError(
+                f"fixture {fixture_id} is '{fx['status']}' - post_match facts need a finished match"
+            )
 
         kickoff = fx["kickoff_utc"]
         if kickoff.endswith("Z"):
@@ -336,14 +355,33 @@ def build_match_facts(fixture_id: str) -> dict:
         else:
             kickoff_dt = datetime.fromisoformat(kickoff)
 
+        # روند/فرم: پیش‌بازی تا قبل از بازی؛ پس‌از‌بازی شامل خودِ بازی (روز بعدِ کیک‌آف)
+        series_before = (
+            (kickoff_dt + timedelta(days=1)).date().isoformat() if post_match else kickoff[:10]
+        )
+
         def side(team: str) -> TeamSide:
             l5 = last5_from_db(conn, team, kickoff[:10])
             xg = _team_xg_avg(conn, team, kickoff[:10])
             corners = _team_corners_avg(conn, team, kickoff[:10])
             xga = _team_xga_avg(conn, team, kickoff[:10])
             sot = _team_sot_avg(conn, team, kickoff[:10])
-            series = _team_xg_series(conn, team, kickoff[:10])
-            form_seq = _team_form_sequence(conn, team, kickoff[:10])
+            series = _team_xg_series(conn, team, series_before)
+            form_seq = _team_form_sequence(conn, team, series_before)
+            match_stats = None
+            if post_match:
+                mm = _match_metrics(conn, fixture_id, team)
+                sv = lambda k: StatValue(value=mm[k], n=1, provider=PRIMARY_STATS_PROVIDER) if k in mm else None  # noqa: E731
+                match_stats = MatchStats(
+                    goals=sv("goals"),
+                    expected_goals=sv("expected_goals"),
+                    total_shots=sv("total_shots"),
+                    shots_on_target=sv("shots_on_target"),
+                    corner_kicks=sv("corner_kicks"),
+                    fouls=sv("fouls"),
+                    yellow_cards=sv("yellow_cards"),
+                    red_cards=sv("red_cards"),
+                )
             return TeamSide(
                 name_fa=team_name_fa(team),
                 name_en=team,
@@ -362,10 +400,18 @@ def build_match_facts(fixture_id: str) -> dict:
                 ) if sot else None,
                 xg_series=series,
                 recent_form=RecentForm(**form_seq) if form_seq else None,
+                match_stats=match_stats,
             )
 
         home = side(fx["home_team"])
         away = side(fx["away_team"])
+
+        result = None
+        if post_match:
+            hg = home.match_stats.goals.value if home.match_stats and home.match_stats.goals else None
+            ag = away.match_stats.goals.value if away.match_stats and away.match_stats.goals else None
+            result = MatchResult(home_goals=int(hg) if hg is not None else None,
+                                 away_goals=int(ag) if ag is not None else None)
 
         missing = []
         if home.xg_for_avg is None:
@@ -376,6 +422,11 @@ def build_match_facts(fixture_id: str) -> dict:
             missing.append("home.last5")
         if away.last5 is None or away.last5.n < 5:
             missing.append("away.last5")
+        if post_match:
+            if home.match_stats is None or home.match_stats.expected_goals is None:
+                missing.append("home.match_stats.expected_goals")
+            if away.match_stats is None or away.match_stats.expected_goals is None:
+                missing.append("away.match_stats.expected_goals")
 
         facts = MatchFacts(
             fixture_id=fixture_id,
@@ -388,6 +439,7 @@ def build_match_facts(fixture_id: str) -> dict:
             ),
             home=home,
             away=away,
+            result=result,
             data_quality=DataQuality(missing_fields=missing),
         )
         facts.triggers = evaluate_triggers(facts)
