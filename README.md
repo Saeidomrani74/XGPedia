@@ -1,6 +1,6 @@
-# XGPedia v8 — کیت خط تولید با منابع دادهٔ جدید
+# XGPedia v0.10 — کیت خط تولید محتوای داده‌محور فوتبال
 
-نسخهٔ ۹ کیت شروع (v0.9.0)، پس از قطع دسترسی پلن رایگان API-Football به فصل‌های جاری (پاییز ۲۰۲۶).
+نسخهٔ ۱۱ کیت شروع (v0.11.0): انتشار تلگرام + خط تولید روزانه + بهبودهای رندر + ابزارهای دروازهٔ ۳ (`check-telegram`، `weekly-report`، GATE3_RUNBOOK — D28).
 
 ## چه چیزی عوض شد؟
 
@@ -114,11 +114,25 @@ run.py           درگاه خط فرمان
 
 ## گردش کار روزانه (Workflow A در نسخهٔ جدید)
 
+از v0.10 کل زنجیره یک دستور است — `python run.py daily` (یا `daily-sync.bat`
+در Task Scheduler؛ زنجیرهٔ زیر را به‌ترتیب اجرا می‌کند):
+
 ```
-daily-sync.bat (یا اجرای دستی ۲ دستور sync)
+sync-results → fixtures --days 7        ← هر دو با تحمل خطا؛ DB قبلی می‌ماند
    ↓
-python run.py status          ← اگر عمر داده > ۴ روز: هشدار
+status                                   ← اگر عمر داده > ۴ روز: هشدار
    ↓
+برای هر بازیِ فردا که پست preview ندارد:
+   facts → draft (LLM + ۷ دروازه) → render-post → صف تأیید تلگرام
+```
+
+قواعد (D26): اجرای دوبارهٔ همان روز پست تکراری نمی‌سازد (بازیِ دارای پست
+رد می‌شود)؛ شکست یک بازی بقیه را نمی‌اندازد (exit code ۱ = اجرا ناقص)؛ بدون
+`TELEGRAM_BOT_TOKEN` فقط رندر می‌شود و دستور `publish --post-id` چاپ می‌شود.
+
+دستورهای تک‌قدمی همچنان برای بازبینی دستی کار می‌کنند:
+
+```
 python run.py facts --fixture <بازی امروزی> --out data/samples/fact.json
    ↓
 python run.py draft --fixture <بازی امروزی>       ← تولید متن با LLM + ۷ دروازه
@@ -128,6 +142,14 @@ python run.py list-posts / show-post              ← بازبینی پیش‌ن
 python run.py export-post --post-id N             ← JSON مستقل برای آرشیو/برداشتن
    ↓
 python run.py render-post --post-id N             ← کارت ۱۰۸۰×۱۳۵۰ + کپشن در output/
+```
+
+نمونهٔ اجرای daily با تاریخ و سقف دلخواه:
+
+```
+python run.py daily --date 2026-11-19 --limit 4 --format 4:5
+python run.py daily --no-submit     # فقط رندر؛ صف تأیید نه
+python run.py daily --no-sync       # بدون شبکه، از DB موجود
 ```
 
 ### لایهٔ تحریریه چطور کار می‌کند (جدید در v0.8.5)
@@ -175,6 +197,9 @@ python run.py render-post --post-id N             ← کارت ۱۰۸۰×۱۳۵�
 
 نقشهٔ دارایی‌ها و ماژول‌های منتظرِ داده (رادار صدک، مهرهٔ کلیدی، موج زمانی، +EV،
 کارت بازیکن، عکس بازیکن، …): **`docs/ROADMAP.md`**.
+
+**شروع در چت/محیط جدید؟** اول `docs/HANDOFF.md` (وضعیت کامل پروژه و قواعد حیاتی)
+سپس `docs/NEXT_STEPS.md` (برنامهٔ مرحله‌به‌مرحله) را بخوانید.
 
 پیش‌نیاز (یک بار): `pip install -e ".[render]"` سپس `playwright install chromium`.
 

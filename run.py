@@ -21,13 +21,17 @@
   python run.py show-post --post-id 1             # نمایش کامل یک پست
   python run.py export-post --post-id 1           # خروجی JSON مستقل (draft+fact)
   python run.py render-post --post-id 1           # رندر تصویر از پست آرشیوشده
+  python run.py daily                             # زنجیرهٔ کامل روزانه (مرحلهٔ ۳ NEXT_STEPS)
+  python run.py check-telegram                    # بررسی فقط-خواندنی توکن/کانال/ادمین (مرحلهٔ ۶)
+  python run.py weekly-report                     # گزارش هفتگی کوتاه در docs/weekly/ (دروازهٔ ۳)
+  python run.py daily --date 2026-11-19 --limit 4 # بازی‌های یک تاریخ مشخص، سقف پست
 """
 from __future__ import annotations
 
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # سازگاری ویندوز: اگر خروجی به فایل/لاگ می‌رود UTF-8 باشد؛ کنسول تعاملی خودش یونیکد است
@@ -45,6 +49,12 @@ from src.xgpedia.sync import data_freshness, season_label
 
 # anchor مسیر پروژه — دستورات همیشه از ریشهٔ پکیج کار می‌کنند، مستقل از cwd
 ROOT = Path(__file__).resolve().parent
+
+
+def _date_arg(s: str) -> str:
+    """اعتبارسنجی --date برای دستور daily — خطای واضح اگر قالب YYYY-MM-DD نباشد."""
+    datetime.strptime(s, "%Y-%m-%d")
+    return s
 
 
 def cmd_sync_results(args: argparse.Namespace) -> None:
@@ -76,7 +86,7 @@ def cmd_fixtures(args: argparse.Namespace) -> None:
 
     try:
         api = FootballDataOrg()
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 — توکن/شبکه؛ پیام واضح و خروج ۲
         print(f"Error: {e}")
         sys.exit(2)
     try:
@@ -122,7 +132,7 @@ def cmd_status(_: argparse.Namespace) -> None:
         print(f"  {k}: {v}")
     if info["last_finished_match"] != "-":
         last = info["last_finished_match"][:10]
-        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        today = datetime.now(UTC).strftime("%Y-%m-%d")
         age = (datetime.strptime(today, "%Y-%m-%d") - datetime.strptime(last, "%Y-%m-%d")).days
         flag = "[WARN] data is stale (> 4 days)" if age > 4 else "[OK] fresh"
         print(f"  data age: {age} days - {flag}")
@@ -228,11 +238,11 @@ def cmd_draft(args: argparse.Namespace) -> None:
     print(f"fixture: {facts['fixture_id']}")
     print(f"generating {args.post_type} for {args.platform} with {llm.model} ...")
     try:
-        draft, rep, n_attempts = generate_draft(
+        draft, _rep, n_attempts = generate_draft(
             llm, facts, post_type=args.post_type, target_platform=args.platform
         )
-    except Exception as e:
-        print(f"[REJECTED] draft did not pass the 7 gates after 2 attempts")
+    except Exception as e:  # noqa: BLE001 — هر شکست LLM/دروازه: پیام کامل و خروج ۱
+        print("[REJECTED] draft did not pass the 7 gates after 2 attempts")
         print(str(e)[:1500])
         sys.exit(1)
 
@@ -390,6 +400,75 @@ def cmd_publish(args: argparse.Namespace) -> None:
         sys.exit(2)
 
 
+def cmd_check_telegram(_: argparse.Namespace) -> None:
+    """دروازهٔ ۳ — بررسی فقط-خواندنی پیکربندی تلگرام (NEXT_STEPS مرحلهٔ ۶).
+
+    getMe/getChat/getChatMember — هیچ پیامی ارسال نمی‌شود؛ سه خطای رایج روز صفر
+    (توکن غلط، رباتِ غیرادمینِ کانال، ادمینِ بدون /start) قبل از dry-run پیدا می‌شوند.
+    """
+    import asyncio
+
+    from src.xgpedia import config
+    from src.xgpedia.publishers.telegram_check import check_telegram, make_http_fetch
+
+    async def _run() -> tuple[bool, list[str]]:
+        fetch = make_http_fetch(config.TELEGRAM_BOT_TOKEN) if config.TELEGRAM_BOT_TOKEN else None
+        return await check_telegram(
+            fetch,
+            token=config.TELEGRAM_BOT_TOKEN,
+            channel_id=config.TELEGRAM_CHANNEL_ID,
+            admin_ids=config.ADMIN_TELEGRAM_IDS,
+        )
+
+    ok, lines = asyncio.run(_run())
+    print("Telegram readiness check (read-only, nothing is sent):")
+    for line in lines:
+        print(f"  {line}")
+    if not ok:
+        sys.exit(1)
+
+
+def cmd_weekly_report(args: argparse.Namespace) -> None:
+    """گزارش هفتگی کوتاه — معیار پایان دروازهٔ ۳ («گزارش هفتگی در docs/»).
+
+    خلاصهٔ N روز آخر از DB: پست‌ها بر اساس وضعیت، انتشار ok/dry_run/خطا،
+    تصمیم‌های ادمین‌ها، تازگی داده + رأیِ قاعدهٔ توقف (≥۲ خطای مهم).
+    """
+    from src.xgpedia.config import ROOT
+    from src.xgpedia.reports import save_weekly_report
+
+    init_db()
+    path = save_weekly_report(ROOT, days=args.days)
+    print(f"weekly report saved: {path}")
+    print("open it in an editor (UTF-8) - Windows cmd cannot render Persian text")
+
+
+def cmd_daily(args: argparse.Namespace) -> None:
+    """زنجیرهٔ روزانهٔ سرتاسری (NEXT_STEPS مرحلهٔ ۳) — sync → status → پیش‌بازی فردا → صف تأیید.
+
+    پیش‌فرض: بازی‌های فردای UTC که پستِ preview/telegram ندارند → facts → draft →
+    render → صف تأیید تلگرام (اگر توکن هست). اجرای دوباره همان روز هیچ پست
+    تکراری نمی‌سازد (idempotency روزانه). exit code: ۰ = کامل، ۱ = شکست جزئی.
+    """
+    from src.xgpedia.daily import run_daily
+
+    init_db()  # مهاجرت idempotent — مثل cmd_draft
+    if args.date:
+        print(f"target date: {args.date}")
+    else:
+        print("target date: tomorrow (UTC)")
+    res = run_daily(
+        target_date=args.date,
+        limit=args.limit,
+        fmt=args.format,
+        submit=not args.no_submit,
+        sync=not args.no_sync,
+    )
+    if res.failed:
+        print(f"[DONE-WITH-ERRORS] {len(res.failed)} fixture(s) failed - see messages above")
+        sys.exit(res.exit_code)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="xgpedia",
@@ -449,6 +528,27 @@ def main(argv: list[str] | None = None) -> int:
     p_pub.add_argument("--dry-run", action="store_true",
                        help="send card + caption to the first admin only - nothing is published")
 
+    sub.add_parser("check-telegram",
+                   help="read-only Telegram config check (token/channel/admins - nothing is sent)")
+
+    p_week = sub.add_parser("weekly-report", help="short weekly report into docs/weekly/ (Gate 3)")
+    p_week.add_argument("--days", type=int, default=7,
+                        help="report window in days (default 7)")
+
+    p_daily = sub.add_parser(
+        "daily", help="full daily chain: sync -> previews for target date -> review queue"
+    )
+    p_daily.add_argument("--date", type=_date_arg, default=None,
+                         help="target date YYYY-MM-DD (default: tomorrow UTC)")
+    p_daily.add_argument("--limit", type=int, default=8,
+                         help="max posts per run - LLM cost cap (default 8)")
+    p_daily.add_argument("--format", default="4:5", choices=["4:5", "9:16", "16:9"],
+                         help="card format for renders (default 4:5 = telegram feed)")
+    p_daily.add_argument("--no-submit", action="store_true",
+                         help="render cards only - skip the Telegram review queue")
+    p_daily.add_argument("--no-sync", action="store_true",
+                         help="skip data sync and use DB as-is (testing / offline rerun)")
+
     args = parser.parse_args(argv)
     if args.cmd == "init":
         init_db()
@@ -477,6 +577,12 @@ def main(argv: list[str] | None = None) -> int:
         cmd_render_post(args)
     elif args.cmd == "publish":
         cmd_publish(args)
+    elif args.cmd == "check-telegram":
+        cmd_check_telegram(args)
+    elif args.cmd == "weekly-report":
+        cmd_weekly_report(args)
+    elif args.cmd == "daily":
+        cmd_daily(args)
     else:
         parser.error("unknown command")
     return 0

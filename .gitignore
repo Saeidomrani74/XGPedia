@@ -8,11 +8,20 @@ venv/
 .env
 *.key
 
-# Data
+# Data — ساخته‌شده با run.py، نه خروجی منبع
 data/*.sqlite
 data/raw/
 data/samples/*.json.gz
+data/exports/
 
-# OS / editor
-.DS_Store
-Thumbs.db
+# خروجی رندر و لاگ‌های daily-sync.bat — قابل بازتولید
+output/
+logs/
+
+# ابزارها
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+xgpedia.egg-info/
+.idea/
+.vscode/

@@ -232,6 +232,8 @@
     background-color: rgba(21, 35, 71, 0.85);
     border: 1px solid rgba(255, 255, 255, 0.13);
   }
+  /* D27 — آیکون جام با فونت قرص مقیاس می‌شود (در 16:9 با --fs-pill بزرگ ثابت ماند) */
+  .pill-competition svg { width: 0.9em; height: 0.9em; }
   .pill-round {
     padding: 8px 20px; border-radius: 999px;
     font-size: var(--fs-pill2); font-weight: 700; letter-spacing: -0.01em;
@@ -294,13 +296,14 @@
   .xg-hub-sub strong { font-weight: 800; color: #FFFFFF; font-size: var(--fs-xgsub); }
   .xg-hub-sub .vsep { height: 22px; width: 1px; background: rgba(255,255,255,0.1); }
 
-  .capsule-block { margin-top: 24px; }
-  .odds-row { position: relative; width: 100%; min-height: 36px; display: flex; align-items: center; justify-content: space-between; padding: 8px 4px 0; font-size: var(--fs-oddslbl); font-weight: 800; }
-  .odds-side { display: flex; align-items: center; gap: 8px; z-index: 10; }
+  .capsule-block { margin-top: 18px; }
+  /* D27 — مفهوم «ضرایب منصفانه» از برچسب میزبان به این کپشن منتقل شد تا ردیف
+     ضرایب با فونت‌های بزرگ 16:9 جا شود (قبلاً عدد مساوی روی برچسب می‌افتاد) */
+  .capsule-cap { font-size: var(--fs-focusfoot); font-weight: 700; color: var(--text-slate); margin-bottom: 6px; }
+  .odds-row { width: 100%; min-height: 36px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 4px 0; font-size: var(--fs-oddslbl); font-weight: 800; }
+  .odds-side { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
   .odds-side .lbl { color: var(--text-slate); }
   .odds-chip { font-size: var(--fs-oddschip); font-weight: 900; padding: 2px 10px; border-radius: 8px; background: rgba(255, 255, 255, 0.06); }
-  #odds-draw-anchor { position: absolute; top: 50%; transform: translate(50%, -50%); display: flex; align-items: center; gap: 8px; white-space: nowrap; z-index: 10; transition: all 0.2s; }
-  #odds-draw-anchor .lbl { color: var(--text-slate); }
 
   /* ── شبکهٔ ماژول‌ها ── */
   #modules-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-content: stretch; min-height: 0; }
@@ -332,7 +335,10 @@
   .trend-svg { width: 100%; height: auto; max-height: 300px; display: block; }
 
   /* focus (editorial) */
-  .editorial-bg-svg { position: absolute; left: 14px; bottom: 14px; width: 148px; opacity: 0.13; pointer-events: none; }
+  /* D27 — طرح زمین به‌جای یتیم‌ماندن در گوشه، بزرگ و وسطِ نیمهٔ چپ می‌نشیند تا
+     ماژول تک‌ستونه سمت‌چپ‌خالی نباشد؛ متن (z-index بالاتر) روی واترمارک می‌افتد */
+  .editorial-bg-svg { position: absolute; left: 24px; top: 50%; transform: translateY(-50%); width: min(44%, 330px); opacity: 0.17; pointer-events: none; }
+  .xg-tactical-editorial.span-half .editorial-bg-svg { left: 14px; top: auto; bottom: 14px; transform: none; width: 150px; }
   .editorial-inner { position: relative; z-index: 10; }
   .focus-title { font-size: var(--fs-focustitle); font-weight: 900; color: var(--amber-soft); margin-bottom: 6px; line-height: 1.3; }
   /* متن LLM می‌تواند بلند باشد — هر بولت حداکثر ۲ خط؛ بیشترش با overflow پنهان (D24) */
@@ -366,7 +372,7 @@
   .pm-cell { border-radius: 8px; padding: 2px 0; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
   .pm-cell .sc { font-size: var(--fs-pmsc); font-weight: 700; opacity: 0.8; line-height: 1; }
   .pm-cell .pc { font-size: var(--fs-pmpc); font-weight: 900; margin-top: 2px; line-height: 1; }
-  .poisson-foot { margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between; font-size: var(--fs-pmfoot); }
+  .poisson-foot { margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; flex-wrap: wrap; row-gap: 4px; align-items: center; justify-content: space-between; font-size: var(--fs-pmfoot); }
   .poisson-foot .lbl { color: var(--text-slate); font-weight: 700; }
   .poisson-foot strong { color: var(--emerald-bright); font-weight: 800; }
 
@@ -382,7 +388,7 @@
   .signal-card.tone-emerald .signal-badge { background: rgba(16,185,129,0.25); color: var(--emerald-bright); }
   .signal-card.tone-sky .signal-badge { background: rgba(56,189,248,0.25); color: var(--sky-bright-light); }
   .signal-card.tone-amber .signal-badge { background: rgba(245,158,11,0.25); color: var(--amber-bright); }
-  .signal-title { font-size: var(--fs-sigtitle); font-weight: 900; color: #FFFFFF; }
+  .signal-title { font-size: var(--fs-sigtitle); font-weight: 900; color: #FFFFFF; text-wrap: balance; }
   .signal-desc { font-size: var(--fs-sigdesc); color: var(--text-line); margin-top: 2px; }
   .signal-value { font-size: var(--fs-sigval); font-weight: 900; line-height: 1; }
   .signal-card.tone-emerald .signal-value { color: var(--emerald-bright); }
@@ -549,17 +555,20 @@
       <!-- کپسول احتمال + ضرایب منصفانه -->
       {% if hero.capsule %}
       <div class="capsule-block">
+        <div class="capsule-cap">احتمال ۱X۲ · ضرایب منصفانه — مدل Dixon-Coles</div>
         <div class="prob-capsule">
           {% for seg in hero.capsule %}
           <div class="prob-seg" style="width: {{ seg.pct }}%; background: {{ seg.bg }}; color: {{ seg.color }};">{% if seg.pct >= 11 %}{{ seg.pct }}٪{% endif %}</div>
           {% endfor %}
         </div>
+        <!-- D27 — سه گروه استاتیک با space-between؛ لنگرِ مطلقِ مساوی در 16:9
+             روی برچسب می‌افتاد (سه گروه ۸۹۰px در ردیف ۶۹۸px جا نمی‌شد) -->
         <div class="odds-row">
           <div class="odds-side">
-            <span class="lbl">ضرایب منصفانه — میزبان:</span>
+            <span class="lbl">میزبان:</span>
             <span class="odds-chip" style="color: var(--home-color);">{{ hero.odds.home }}</span>
           </div>
-          <div id="odds-draw-anchor" style="right: {{ hero.odds.draw_anchor_pct }}%; transform: translate(50%, -50%);">
+          <div class="odds-side odds-draw">
             <span class="lbl">مساوی:</span>
             <span class="odds-chip" style="color: var(--text-soft);">{{ hero.odds.draw }}</span>
           </div>
@@ -740,7 +749,7 @@
         </div>
         <div class="poisson-foot">
           <span class="lbl">محتمل‌ترین نتایج:</span>
-          <strong>{{ data.top3 }}</strong>
+          <strong>{{ data.top2 if mod.span == 'half' else data.top3 }}</strong>
         </div>
       </div>
       {% endif %}
@@ -779,7 +788,7 @@
       {% if mod.id == 'trend10' %}
       <div class="xg-glass-card {{ span_cls }}">
         <div class="mod-head">
-          <div class="mod-head-l"><span class="mod-chip"></span><h3 class="mod-title">روند xG در بازی‌های اخیر</h3></div>
+          <div class="mod-head-l"><span class="mod-chip"></span><h3 class="mod-title">{% if mod.span == 'half' %}روند xG{% else %}روند xG در بازی‌های اخیر{% endif %}</h3></div>
           <div style="font-size: var(--fs-pmfoot); font-weight: 800;">
             <span style="color: {{ home.color }};">{{ data.home_avg }}</span>
             <span style="color: {{ palette.text_muted }}; margin: 0 4px;">/</span>

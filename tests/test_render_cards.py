@@ -465,3 +465,81 @@ def test_brand_lockup_falls_back_to_studio_without_files(tmp_path, monkeypatch):
 
     monkeypatch.setattr(rc, "BRAND_LOGO_DIR", tmp_path)
     assert rc._brand_lockup_svg().startswith('<div class="masthead-lockup"')
+
+
+# ─── مرحلهٔ ۴ (NEXT_STEPS): ردیف ضرایب بدون تصادم + پیکسلی 9:16/16:9 + JPEG ───
+
+
+def _render_card_file(tmp_path, fmt, platform="telegram"):
+    from src.xgpedia.render.cards import render_preview_card
+
+    _, img, _ = render_preview_card(_draft(), _facts(), tmp_path, 9001, 1,
+                                    platform=platform, fmt=fmt)
+    return img
+
+
+def test_odds_row_no_collision_all_formats(tmp_path):
+    """مرحلهٔ ۴ بند ۳ — سه گروه ردیف ضرایب در هیچ فرمتی هم‌پوشانی ندارند.
+
+    رگرسیون برای 16:9: با فونت‌های بزرگ، سه گروه ۸۹۰px در ردیف ۶۹۸px جا نمی‌شد
+    و عدد ضریب مساوی روی برچسب می‌افتاد (D27: سه‌گروه استاتیک شد).
+    """
+    pytest.importorskip("playwright", reason="render extras not installed")
+    from playwright.sync_api import sync_playwright
+
+    from src.xgpedia.render.cards import FORMATS
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        try:
+            for fmt in ("4:5", "9:16", "16:9"):
+                html = tmp_path / f"odds_{fmt.replace(':', '_')}.html"
+                html.write_text(render_preview_html(_draft(), _facts(), fmt=fmt), encoding="utf-8")
+                w, h = FORMATS[fmt]
+                page = browser.new_page(viewport={"width": w, "height": h})
+                page.goto(html.resolve().as_uri())
+                page.evaluate("document.fonts.ready")
+                rects = page.evaluate(
+                    "() => { const row = document.querySelector('.odds-row').getBoundingClientRect();"
+                    " const sides = [...document.querySelectorAll('.odds-side')]"
+                    " .map(el => JSON.parse(JSON.stringify(el.getBoundingClientRect())));"
+                    " return {row: JSON.parse(JSON.stringify(row)), sides}; }"
+                )
+                page.close()
+                row, rects = rects["row"], rects["sides"]
+                assert len(rects) == 3, f"{fmt}: expected 3 odds groups, got {len(rects)}"
+                for a, b in ((rects[0], rects[1]), (rects[1], rects[2]), (rects[0], rects[2])):
+                    overlap = min(a["right"], b["right"]) - max(a["left"], b["left"])
+                    assert overlap <= 0.5, f"{fmt}: odds groups overlap by {overlap:.1f}px"
+                # هیچ گروهی از کادر خود ردیف بیرون نزند
+                for r in rects:
+                    assert r["left"] >= row["left"] - 0.5 and r["right"] <= row["right"] + 0.5, \
+                        f"{fmt}: odds group escapes its row ({r['left']:.0f}..{r['right']:.0f} vs row {row['left']:.0f}..{row['right']:.0f})"
+        finally:
+            browser.close()
+
+
+def test_render_pixels_916_and_169(tmp_path):
+    """مرحلهٔ ۴ بند ۲ — رندر واقعی 9:16 و 16:9: ابعاد دقیق بوم + غیرخالی."""
+    pytest.importorskip("playwright", reason="render extras not installed")
+    from PIL import Image
+
+    for fmt, (w, h) in (("9:16", (1080, 1920)), ("16:9", (1920, 1080))):
+        img = _render_card_file(tmp_path, fmt)
+        im = Image.open(img).convert("L")
+        assert im.size == (w, h), f"{fmt}: wrong canvas {im.size}"
+        hist = im.histogram()
+        assert 1 - hist[255] / sum(hist) > 0.9, f"{fmt}: card looks blank"
+
+
+def test_instagram_jpeg_smoke(tmp_path):
+    """مرحلهٔ ۴ بند ۲ — platform=instagram → خروجی JPEG (الزام API) سالم و غیرخالی."""
+    pytest.importorskip("playwright", reason="render extras not installed")
+    from PIL import Image
+
+    img = _render_card_file(tmp_path, "4:5", platform="instagram")
+    assert img.suffix == ".jpeg", f"expected .jpeg for instagram, got {img.name}"
+    im = Image.open(img)
+    assert im.format == "JPEG" and im.size == (1080, 1350)
+    hist = im.convert("L").histogram()
+    assert 1 - hist[255] / sum(hist) > 0.9, "instagram card looks blank"

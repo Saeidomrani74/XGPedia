@@ -525,9 +525,13 @@ def _poisson_context(matrix: list[list[float]]) -> dict:
             tops.append((f"{h}-{a}", pct))
     tops.sort(key=lambda x: -x[1])
     top3 = " • ".join(f"{score} ({fmt_stat(round(pct, 1), 1)}٪)" for score, pct in tops[:3])
+    # D27 — در کارت نیم‌عرض، سه نتیجه در یک خط جا نمی‌شود و wrap شده از پایین
+    # کارت بریده می‌شد؛ نسخهٔ دو نتیجه‌ای همان‌جا می‌ماند
+    top2 = " • ".join(f"{score} ({fmt_stat(round(pct, 1), 1)}٪)" for score, pct in tops[:2])
     return {
         "cells": cells,
         "top3": top3,
+        "top2": top2,
         "col_hc": p["accent_red"],
         "col_ac": p["sky_bright"],
     }
@@ -774,7 +778,7 @@ def build_preview_context(
         signal_cards.append({
             "tone": "sky",
             "badge": None,
-            "title": "گلزنی هر دو تیم",
+            "title": "گل هر دو تیم",  # D27 — نسخهٔ بلندتر در کارت سیگنال کلمهٔ یتیم می‌گذاشت
             "desc": "تهدید هجومی دوطرفه",
             "value": fmt_fixed(round(dc["pBTTS"] * 100, 1), 1),
         })
@@ -846,8 +850,8 @@ def build_preview_context(
             "home": fmt_fixed(round(100 / max(1, probs["home"]), 2), 2),
             "draw": fmt_fixed(round(100 / max(1, probs["draw"]), 2), 2),
             "away": fmt_fixed(round(100 / max(1, probs["away"]), 2), 2),
-            # لنگر ضریب مساوی زیر مرکز پارهٔ مساوی کپسول — عین استودیو
-            "draw_anchor_pct": f"{min(73, max(27, probs['home'] + probs['draw'] / 2)):.1f}",
+            # D27 — ردیف ضرایب سه‌گروهِ استاتیک شد؛ لنگرِ مطلقِ زیر پارهٔ مساوی
+            # در 16:9 روی برچسب می‌افتاد (فضا کم بود) و حذف شد
         }
 
     return {

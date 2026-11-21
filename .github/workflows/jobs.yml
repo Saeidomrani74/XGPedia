@@ -15,11 +15,29 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install -e ".[dev]" && python -m playwright install --with-deps chromium
+      - run: pip install -e ".[render,dev]" && python -m playwright install --with-deps chromium
       - run: python run.py init
-      - run: python run.py fixtures --date $(date -u +%F)
         env:
-          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+          DATABASE_PATH: data/dev.sqlite
+      # نتایج + xG — بدون کلید (football-data.co.uk)؛ همیشه اجرا می‌شود
+      - run: python run.py sync-results
+        env:
+          DATABASE_PATH: data/dev.sqlite
+      # بازی‌های پیش‌رو — فقط وقتی secret تنظیم شده باشد.
+      # تعمیر بدهی ۶/۴ HANDOFF: فلگ واقعی --days است (نه --date) و توکن سرویس
+      # football-data.org است (نه API_FOOTBALL_KEY که مربوط به provider حذف‌شده است).
+      - run: python run.py fixtures --days 7
+        if: ${{ secrets.FOOTBALL_DATA_ORG_TOKEN != '' }}
+        env:
+          FOOTBALL_DATA_ORG_TOKEN: ${{ secrets.FOOTBALL_DATA_ORG_TOKEN }}
+          DATABASE_PATH: data/dev.sqlite
+      # تازگی داده بعد از sync — با FAIL کار را می‌شکند اگر چیزی خراب باشد
+      - run: python run.py status
+        env:
+          DATABASE_PATH: data/dev.sqlite
+      # مجموعهٔ تست — بدون توکن/کلید (تست‌های publish با importorskip رد می‌شوند)
+      - run: python -m pytest tests/ -q
+        env:
           DATABASE_PATH: data/dev.sqlite
       # نکته: cron گیت‌هاب چند دقیقه تأخیر طبیعی دارد — برای لایو و ربات
       # همیشه‌روشن مناسب نیست؛ VPS فقط پس از نیاز واقعی (دروازهٔ ۴)

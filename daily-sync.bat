@@ -1,7 +1,17 @@
 @echo off
-REM XGPedia v8 - Daily data sync for Windows Task Scheduler
-REM Recommended: run daily (e.g. 09:00 Tehran / 06:00 UTC).
-REM The CSV updates weekly after match rounds; daily runs keep data fresh.
+REM XGPedia v10 - Daily production chain for Windows Task Scheduler
+REM Recommended: run daily (e.g. 09:00 Tehran / 05:30 UTC) - previews are made
+REM for TOMORROW's matches, so the review queue is ready during the day.
+REM
+REM One command does the whole chain (NEXT_STEPS stage 3):
+REM   sync-results -> fixtures --days 7 -> status (staleness warning) ->
+REM   for each tomorrow match without a post: facts -> draft -> render-post ->
+REM   Telegram review queue (needs TELEGRAM_BOT_TOKEN; otherwise WARN only).
+REM Re-running the same day creates no duplicate posts (daily is idempotent).
+REM
+REM Exit codes for Task Scheduler: 0 = all good, 1 = partial failures.
+REM Full log: logs\daily.log   (Telegram moderation bot must run separately:
+REM   python -m src.xgpedia.publishers.telegram_bot)
 REM NOTE: keep this file ASCII-only. cmd.exe mis-parses .bat files containing UTF-8 text.
 
 setlocal
@@ -20,20 +30,14 @@ call .venv\Scripts\activate.bat
 
 if not exist logs mkdir logs
 
-echo === XGPedia daily sync - %date% %time% === >> logs\sync.log
+echo === XGPedia daily chain - %date% %time% === >> logs\daily.log
 
-REM 1) snapshot before
-python run.py status >> logs\sync.log 2>&1
+python run.py daily >> logs\daily.log 2>&1
+if errorlevel 1 (
+    echo [WARN] daily chain finished with errors - see logs\daily.log >> logs\daily.log
+    echo === done with errors === >> logs\daily.log
+    exit /b 1
+)
 
-REM 2) download results + xG for current season
-python run.py sync-results >> logs\sync.log 2>&1
-if errorlevel 1 echo [ERROR] sync-results failed >> logs\sync.log
-
-REM 3) upcoming fixtures (needs FOOTBALL_DATA_ORG_TOKEN in .env)
-python run.py fixtures --days 7 >> logs\sync.log 2>&1
-if errorlevel 2 echo [WARN] fixtures failed (token missing or network) >> logs\sync.log
-
-REM 4) snapshot after + freshness warning
-python run.py status >> logs\sync.log 2>&1
-
-echo === done === >> logs\sync.log
+echo === done OK === >> logs\daily.log
+exit /b 0
