@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import json
 import os
+import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -63,6 +65,18 @@ def _strip_code_fence(raw: str) -> str:
     return t.strip()
 
 
+TRANSIENT_STATUS = frozenset({429, 500, 502, 503, 504})  # HTTPهایی که retryشان منطقی است
+
+
+def _env_number(name: str, default: float) -> float:
+    """عدد اختیاری از env — خالی/غیرعدد → پیش‌فرض (تنظیم retry بدون تغییر کد)."""
+    raw = (os.environ.get(name) or "").strip()
+    try:
+        return float(raw)
+    except ValueError:
+        return default
+
+
 class OpenAICompatibleLLM:
     """کلاینت عمومی سازگار با OpenAI — پشت همان interface؛ قابل تعویض با یک خط env.
 
@@ -74,7 +88,12 @@ class OpenAICompatibleLLM:
 
     name = "openai_compatible"
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        max_attempts: int | None = None,
+        backoff_seconds: float | None = None,
+        sleep: Callable[[float], None] | None = None,
+    ) -> None:
         missing = [k for k in ("LLM_BASE_URL", "LLM_API_KEY", "LLM_MODEL") if not os.environ.get(k)]
         if missing:
             raise RuntimeError(
@@ -84,13 +103,20 @@ class OpenAICompatibleLLM:
         self.base_url = os.environ["LLM_BASE_URL"].rstrip("/")
         self.api_key = os.environ["LLM_API_KEY"]
         self.model = os.environ["LLM_MODEL"]
+        # retry خطای گذرا (D30) — از env قابل تنظیم، در تست قابل تزریق
+        self.max_attempts = max(1, int(
+            max_attempts if max_attempts is not None else _env_number("LLM_MAX_ATTEMPTS", 3)
+        ))
+        self.backoff_seconds = max(0.0, float(
+            backoff_seconds if backoff_seconds is not None
+            else _env_number("LLM_BACKOFF_SECONDS", 5.0)
+        ))
+        self._sleep = sleep or time.sleep
 
     def generate(
         self, system_prompt: str, facts: MatchFacts, repair_feedback: str = "",
         previous_raw: str = "",
     ) -> DraftOutput:
-        import httpx
-
         # فقط فیلدهای مجاز به مدل می‌روند — payload خام هرگز ارسال نمی‌شود
         payload = facts.model_dump(mode="json")
         messages = [
@@ -101,18 +127,49 @@ class OpenAICompatibleLLM:
             # الگوی اصلاح: پیش‌نویس ردشده + خطاهای validator عیناً برمی‌گردند
             messages.append({"role": "assistant", "content": previous_raw or "{}"})
             messages.append({"role": "user", "content": REPAIR_PREFIX + repair_feedback})
-        resp = httpx.post(
-            f"{self.base_url}/chat/completions",
-            headers={"Authorization": f"Bearer {self.api_key}"},
-            json={
-                "model": self.model,
-                "response_format": {"type": "json_object"},
-                "messages": messages,
-            },
-            timeout=60.0,
-        )
-        resp.raise_for_status()
-        return DraftOutput.from_json(resp.json()["choices"][0]["message"]["content"])
+        return DraftOutput.from_json(self._chat(messages))
+
+    def _chat(self, messages: list[dict]) -> str:
+        """POST با retry خطای گذرا (D30) — timeout/قطع اتصال و 429/5xx.
+
+        ریشه: daily 2026-11-21 روی ویندوز کاربر — ۵۰۳ و ReadTimeout سرویس LLM
+        هر دو fixture آن روز را می‌انداخت؛ حالا تا max_attempts با backoff نمایی
+        تلاش می‌شود. خطای پایدار (۴xx و …) همان‌جا raise؛ آخرین تلاش هرچه شد
+        همان بالا می‌رود تا daily آن را ایزوله و با دستور بازیابی ثبت کند.
+        """
+        import httpx
+
+        for attempt in range(1, self.max_attempts + 1):
+            is_last = attempt == self.max_attempts
+            try:
+                resp = httpx.post(
+                    f"{self.base_url}/chat/completions",
+                    headers={"Authorization": f"Bearer {self.api_key}"},
+                    json={
+                        "model": self.model,
+                        "response_format": {"type": "json_object"},
+                        "messages": messages,
+                    },
+                    timeout=60.0,
+                )
+            except httpx.TransportError as e:  # ReadTimeout/ConnectTimeout/…
+                if is_last:
+                    raise
+                reason = type(e).__name__
+            else:
+                if resp.status_code not in TRANSIENT_STATUS:
+                    resp.raise_for_status()
+                    return resp.json()["choices"][0]["message"]["content"]
+                if is_last:
+                    resp.raise_for_status()  # گذرا ولی تلاشی نماند → همان خطای HTTP
+                reason = f"HTTP {resp.status_code}"
+            wait = self.backoff_seconds * (2 ** (attempt - 1))
+            print(
+                f"[llm] transient error ({reason})"
+                f" - retry {attempt + 1}/{self.max_attempts} in {wait:.0f}s"
+            )
+            self._sleep(wait)
+        raise AssertionError("unreachable - last attempt always returns or raises")
 
 
 REPAIR_PREFIX = (

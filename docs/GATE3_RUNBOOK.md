@@ -127,6 +127,8 @@ python run.py weekly-report
 | `post N already published (idempotency)` | این پست قبلاً منتشر شده — خطا نیست | پست بعدی را publish کنید |
 | `no rendered card for post N` | کارت هنوز رندر نشده | `python run.py render-post --post-id N` بعد دوباره publish |
 | `[WARN] Telegram not configured` (daily) | توکن/ادمین در `.env` نیست — کارت‌ها در `output/` مانده‌اند | `.env` را پر کنید؛ daily دوباره (idempotent است، پست تکراری نمی‌سازد) |
+| `[WARN] data is stale (13 days > 4)` | آخرین بازیِ انجام‌شدهٔ CSV قدیمی است — **در وقفهٔ ملی طبیعی است** (بازی‌ای انجام نشده) | کاری لازم نیست؛ بعد از اولین هفتهٔ بازی، CSV به‌روز و WARN خودش می‌رود |
+| `FAIL - fdo:…: ReadTimeout` یا `503 Service Unavailable` (از سرویس LLM) | خطای گذرای سرویس مدل زبانی — کد شما سالم است | از v0.11.2 خودکار تا ۳ بار با فاصلهٔ نمایی تلاش می‌شود (D30)؛ اگر باز هم FAIL شد: `python run.py daily` دوباره — idempotent است و فقط بازی‌های بدون پست را دوباره می‌سازد |
 
 ## پس از عبور از Gate 3
 
