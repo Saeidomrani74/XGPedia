@@ -4,18 +4,14 @@
   دادهٔ فوتبال: competitions, seasons, teams, players, fixtures, match_events,
     lineups, fixture_statistics, player_statistics, injuries, availability_reports
   ردیابی منبع: data_sources, ingestion_runs, raw_payloads
-  محتوا و انتشار: articles, posts, media_assets, publishing_logs
+  محتوا و انتشار: articles, posts, media_assets, publishing_logs, scheduled_publishes
   جامعه و ربات: bot_users, subscriptions, prediction_entries, leaderboards,
     moderation_logs, admin_actions
-
-فیلدهای مشترک حیاتی: provider_id, source_id, collected_at, event_time,
-updated_at, season_id, status, confidence, raw_payload_hash
 """
 from __future__ import annotations
 
 import sqlite3
 from contextlib import contextmanager
-from pathlib import Path
 
 from src.xgpedia.config import DATABASE_PATH
 
@@ -81,12 +77,50 @@ CREATE TABLE IF NOT EXISTS moderation_logs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   post_id INTEGER,
   admin_user_id INTEGER NOT NULL,
-  action TEXT NOT NULL,                  -- approve | reject | edit | rebuild | mute | ban
+  action TEXT NOT NULL,                  -- approve | reject | edit | rebuild | schedule | cancel_schedule
   created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS scheduled_publishes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  post_id INTEGER NOT NULL REFERENCES posts(post_id),
+  scheduled_at_utc TEXT NOT NULL,
+  scheduled_time_tehran TEXT NOT NULL,   -- فرمت ۲۴ ساعته تهران مثل "09:35"
+  scheduled_by_admin INTEGER NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending', -- pending | published | failed | cancelled
+  error_detail TEXT,
+  created_at TEXT NOT NULL,
+  executed_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS fixture_odds (
+  home_team TEXT NOT NULL,
+  away_team TEXT NOT NULL,
+  match_date TEXT NOT NULL,              -- YYYY-MM-DD
+  home_odds REAL,
+  draw_odds REAL,
+  away_odds REAL,
+  over25_odds REAL,
+  btts_odds REAL,
+  provider TEXT NOT NULL,
+  collected_at TEXT NOT NULL,
+  PRIMARY KEY (home_team, away_team, match_date, provider)
+);
+
+CREATE TABLE IF NOT EXISTS team_enrichments (
+  team TEXT NOT NULL,
+  season TEXT NOT NULL,
+  key_player_json TEXT,                  -- {"name", "pos", "s1", "s2"}
+  ppda REAL,
+  deep_passes REAL,
+  provider TEXT NOT NULL,
+  collected_at TEXT NOT NULL,
+  PRIMARY KEY (team, season, provider)
 );
 
 CREATE INDEX IF NOT EXISTS idx_posts_status ON posts(status);
 CREATE INDEX IF NOT EXISTS idx_fixtures_kickoff ON fixtures(kickoff_utc);
+CREATE INDEX IF NOT EXISTS idx_scheduled_status_time ON scheduled_publishes(status, scheduled_at_utc);
 """
 
 
@@ -109,14 +143,60 @@ def init_db() -> None:
 
 
 def _migrate(conn: sqlite3.Connection) -> None:
-    """مهاجرت سبک برای DBهای نسخه‌های قبل — v0.8.5: ستون draft_json به posts.
-
-    CREATE TABLE IF NOT EXISTS ستون جدید به جدول موجود اضافه نمی‌کند؛
-    اینجا با PRAGMA table_info بررسی و ALTER TABLE انجام می‌شود (idempotent).
-    """
+    """مهاجرت سبک و idempotent برای DBهای نسخه‌های قبل."""
     cols = {r["name"] for r in conn.execute("PRAGMA table_info(posts)")}
     if "draft_json" not in cols:
         conn.execute("ALTER TABLE posts ADD COLUMN draft_json TEXT")
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS scheduled_publishes (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          post_id INTEGER NOT NULL REFERENCES posts(post_id),
+          scheduled_at_utc TEXT NOT NULL,
+          scheduled_time_tehran TEXT NOT NULL,
+          scheduled_by_admin INTEGER NOT NULL,
+          status TEXT NOT NULL DEFAULT 'pending',
+          error_detail TEXT,
+          created_at TEXT NOT NULL,
+          executed_at TEXT
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS fixture_odds (
+          home_team TEXT NOT NULL,
+          away_team TEXT NOT NULL,
+          match_date TEXT NOT NULL,
+          home_odds REAL,
+          draw_odds REAL,
+          away_odds REAL,
+          over25_odds REAL,
+          btts_odds REAL,
+          provider TEXT NOT NULL,
+          collected_at TEXT NOT NULL,
+          PRIMARY KEY (home_team, away_team, match_date, provider)
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS team_enrichments (
+          team TEXT NOT NULL,
+          season TEXT NOT NULL,
+          key_player_json TEXT,
+          ppda REAL,
+          deep_passes REAL,
+          provider TEXT NOT NULL,
+          collected_at TEXT NOT NULL,
+          PRIMARY KEY (team, season, provider)
+        )
+        """
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_scheduled_status_time "
+        "ON scheduled_publishes(status, scheduled_at_utc)"
+    )
 
 
 if __name__ == "__main__":

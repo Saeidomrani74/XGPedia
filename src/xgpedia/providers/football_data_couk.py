@@ -211,6 +211,51 @@ class FootballDataCoUk:
         payload_hash = hashlib.sha256(text.encode("utf-8")).hexdigest()
         return rows, payload_hash, path
 
+
+
+    def parse_upcoming_odds(self, csv_text: str) -> list[dict[str, Any]]:
+        """پارس ضرایب واقعی بازی‌های پیش‌رو از fixtures.csv رایگان football-data.co.uk (فقط لیگ برتر E0)."""
+        from src.xgpedia.config import canonical_team_name
+
+        reader = csv.DictReader(io.StringIO(csv_text))
+        out: list[dict[str, Any]] = []
+        for r in reader:
+            if (r.get("Div") or "").strip() != LEAGUE_PL:
+                continue
+            d = (r.get("Date") or "").strip()
+            try:
+                match_date = datetime.strptime(d, "%d/%m/%Y").strftime("%Y-%m-%d")
+            except ValueError:
+                continue
+            home = canonical_team_name((r.get("HomeTeam") or "").strip())
+            away = canonical_team_name((r.get("AwayTeam") or "").strip())
+            if not home or not away:
+                continue
+            h_odd = _to_float(r.get("AvgH")) or _to_float(r.get("B365H"))
+            d_odd = _to_float(r.get("AvgD")) or _to_float(r.get("B365D"))
+            a_odd = _to_float(r.get("AvgA")) or _to_float(r.get("B365A"))
+            o25_odd = _to_float(r.get("Avg>2.5")) or _to_float(r.get("B365>2.5"))
+            if not (h_odd or d_odd or a_odd or o25_odd):
+                continue
+            out.append({
+                "home_team": home,
+                "away_team": away,
+                "match_date": match_date,
+                "home_odds": h_odd,
+                "draw_odds": d_odd,
+                "away_odds": a_odd,
+                "over25_odds": o25_odd,
+                "btts_odds": None,
+            })
+        return out
+
+    def fetch_upcoming_odds(self) -> list[dict[str, Any]]:
+        """دانلود fixtures.csv رایگان football-data.co.uk و استخراج ضرایب واقعی لیگ برتر."""
+        resp = self._client.get("/fixtures.csv")
+        if resp.status_code != 200:
+            raise RuntimeError(f"fixtures.csv download failed: HTTP {resp.status_code}")
+        return self.parse_upcoming_odds(resp.text)
+
     def close(self) -> None:
         self._client.close()
 

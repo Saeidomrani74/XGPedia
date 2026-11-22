@@ -70,6 +70,9 @@ class TeamSide(BaseModel):
     recent_form: RecentForm | None = None    # توالی ب/م/ش — برای دایره‌های فرم
     # ── کارت پس‌از‌بازی (post_match) — آمار خودِ بازی ──
     match_stats: MatchStats | None = None
+    # ── داده‌های تکمیلی رایگان (v0.14.0): رادار صدک لیگ + مهرهٔ کلیدی Understat ──
+    radar: list[int] | None = None
+    kp: dict[str, str] | None = None
 
 
 class AvailabilityItem(BaseModel):
@@ -106,6 +109,7 @@ class MatchFacts(BaseModel):
     availability: list[AvailabilityItem] = Field(default_factory=list)
     triggers: list[str] = Field(default_factory=list)
     data_quality: DataQuality = Field(default_factory=DataQuality)
+    market_odds: dict[str, float] | None = None  # ضرایب واقعی بازار از football-data.co.uk/fixtures.csv
 
     @property
     def kickoff_tehran(self) -> str:

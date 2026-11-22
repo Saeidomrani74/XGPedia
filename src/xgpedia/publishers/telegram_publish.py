@@ -76,6 +76,20 @@ def build_caption(post: dict) -> str:
     parts = [f"<b>{title}</b>"]
     if caption:
         parts.append(caption)
+    facts = json.loads(post.get("fact_json") or "{}") if isinstance(post, dict) else {}
+    if post["post_type"] in ("preview", "pre_match"):
+        w_lines = []
+        hf, af = facts.get("home") or {}, facts.get("away") or {}
+        if hf.get("watchout"):
+            w_lines.append(f"• {html.escape(str(hf.get('name_fa', 'میزبان')))}: {html.escape(str(hf['watchout']))}")
+        if af.get("watchout"):
+            w_lines.append(f"• {html.escape(str(af.get('name_fa', 'میهمان')))}: {html.escape(str(af['watchout']))}")
+        if w_lines:
+            parts.append("⚠️ <b>باید حواسشون بهش باشه:</b>\n" + "\n".join(w_lines))
+    elif post["post_type"] == "post_match":
+        bullets = [html.escape(str(b).strip()) for b in (draft.get("bullets") or []) if str(b).strip()]
+        if bullets:
+            parts.append("🎯 <b>روایت آماری و گره تاکتیکی بازی:</b>\n" + "\n".join(f"• {b}" for b in bullets))
     if source:
         parts.append(f"<i>منبع: {source}</i>")
     if tag:
@@ -252,15 +266,16 @@ async def approve_and_publish(
         raise ValueError(f"post {post_id} already published (idempotency)")
 
     post = load_post(post_id)
-    if post["status"] != "awaiting_approval":
+    if post["status"] not in {"awaiting_approval", "scheduled"}:
         raise ValueError(f"post {post_id} status '{post['status']}' - submit it first")
     channel = channel_id or TELEGRAM_CHANNEL_ID
     if not channel:
         raise ValueError("TELEGRAM_CHANNEL_ID is empty - set it in .env")
 
     image = find_card_image(post_id, post["content_version"])
+    chat_target = int(channel) if str(channel).lstrip("-").isdigit() else str(channel)
     # fit_caption با head خالی = همان build_caption، مگر آنکه از سقف رد شود
-    msg = await transport.send_photo(int(channel), str(image), fit_caption("", post))
+    msg = await transport.send_photo(chat_target, str(image), fit_caption("", post))
     with db() as conn:
         conn.execute(
             "INSERT INTO publishing_logs (post_id, platform_message_id, permalink, published_at, result)"

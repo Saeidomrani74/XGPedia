@@ -30,6 +30,7 @@ GLOSSARY_FILE = CONFIG_DIR / "glossary_fa.json"
 TEAM_MAPPING_FILE = CONFIG_DIR / "team_mapping.json"
 TEAM_IDENTITIES_FILE = CONFIG_DIR / "team_identities.json"
 CRESTS_DIR = ROOT / "brand" / "crests"  # brand/crests/{CODE}.svg|png — لوگوی واقعی تیم‌ها (tools/fetch_crests.py)
+STUDIO_TEMPLATES_DIR = Path(os.environ.get("XGPEDIA_STUDIO_TEMPLATES_DIR", ROOT / "studio_templates"))
 DATABASE_PATH = Path(os.environ.get("DATABASE_PATH", ROOT / "data" / "dev.sqlite"))
 RAW_PAYLOAD_DIR = Path(os.environ.get("RAW_PAYLOAD_DIR", ROOT / "data" / "raw"))
 
@@ -96,9 +97,61 @@ def load_team_identities() -> dict:
         return json.load(f)
 
 
+def canonical_team_name(raw_name: str, fdo_id: int | None = None) -> str:
+    """تبدیل نام خام هر provider (مثل 'Liverpool FC' یا 'Hull City AFC') به نام canonical در team_mapping.json."""
+    if not raw_name:
+        return raw_name
+    cleaned = raw_name.strip()
+    m = load_team_mapping()
+    all_teams = {}
+    all_teams.update(m.get("relegated_2025_26", {}))
+    all_teams.update(m.get("teams", {}))
+
+    low = cleaned.lower()
+    for canonical, info in all_teams.items():
+        if canonical.lower() == low or str(info.get("csv_short", "")).lower() == low:
+            return canonical
+
+    norm = low
+    for prefix in ("afc ", "fc "):
+        if norm.startswith(prefix):
+            norm = norm[len(prefix):].strip()
+    for suffix in (" & hove albion fc", " & hove albion", " hotspur fc", " hotspur", " afc", " fc"):
+        if norm.endswith(suffix):
+            norm = norm[:-len(suffix)].strip()
+
+    for canonical, info in all_teams.items():
+        if canonical.lower() == norm or str(info.get("csv_short", "")).lower() == norm:
+            return canonical
+
+    for suffix in (" united", " city", " town", " albion", " wanderers"):
+        if norm.endswith(suffix):
+            cand = norm[:-len(suffix)].strip()
+            for canonical in all_teams:
+                if canonical.lower() == cand:
+                    return canonical
+
+    if fdo_id is not None:
+        matches = [c for c, info in all_teams.items() if info.get("fdo_id") == fdo_id]
+        if len(matches) == 1:
+            return matches[0]
+
+    return cleaned
+
+
 def team_identity(name_en: str) -> dict | None:
-    """هویت یک تیم ({code, colors, crest})؛ None = در فایل هویت‌ها ثبت نشده."""
-    return load_team_identities().get("teams", {}).get(name_en)
+    """هویت یک تیم ({code, colors, crest})؛ با پشتیبانی از نام خام provider و معادل‌های Hull/Hull City."""
+    teams = load_team_identities().get("teams", {})
+    if name_en in teams:
+        return teams[name_en]
+    canon = canonical_team_name(name_en)
+    if canon in teams:
+        return teams[canon]
+    canon_low = canon.lower()
+    for k, v in teams.items():
+        if k.lower().startswith(canon_low + " ") or canon_low.startswith(k.lower() + " "):
+            return v
+    return None
 
 
 def team_crest_path(name_en: str) -> Path | None:
@@ -126,14 +179,16 @@ def canonical_from_csv(csv_name: str) -> str:
 
 
 def team_name_fa(name_en: str) -> str:
-    """نام فارسی یکدست تیم از نگاشت/واژه‌نامه؛ اگر نبود، همان ورودی برمی‌گردد.
+    """نام فارسی یکدست تیم از نگاشت/واژه‌نامه (حتی برای نام خام مثل Liverpool FC).
 
     قاعدهٔ تحریریه: نام تیم/بازیکن خارج از واژه‌نامه از سوی validator رد می‌شود.
     """
     m = load_team_mapping()
-    for canonical, t in m.get("teams", {}).items():
-        if name_en in (canonical, t.get("csv_short", ""), *t.get("aliases", [])):
-            return t["name_fa"]
+    canon = canonical_team_name(name_en)
+    for group in ("teams", "relegated_2025_26"):
+        for canonical, t in m.get(group, {}).items():
+            if canon == canonical or name_en in (canonical, t.get("csv_short", ""), *t.get("aliases", [])):
+                return t["name_fa"]
     g = load_glossary()
     for team in g.get("teams", []):
         if name_en in (team["name_en"], team["id"], *team.get("aliases", [])):

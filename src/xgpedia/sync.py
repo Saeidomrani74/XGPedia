@@ -20,6 +20,7 @@ from src.xgpedia.config import (
     CURRENT_SEASON_START,
     PRIMARY_FIXTURES_PROVIDER,
     PRIMARY_STATS_PROVIDER,
+    canonical_team_name,
     team_name_fa,
 )
 from src.xgpedia.db import db
@@ -121,8 +122,8 @@ def sync_upcoming_fixtures(raw, season_start: int = CURRENT_SEASON_START) -> dic
     with db() as conn:
         for m in raw.payload.get("matches", []):
             fid = f"fdo:{m['id']}"
-            home = m["homeTeam"]["name"]
-            away = m["awayTeam"]["name"]
+            home = canonical_team_name(m["homeTeam"]["name"], m["homeTeam"].get("id"))
+            away = canonical_team_name(m["awayTeam"]["name"], m["awayTeam"].get("id"))
             kickoff = m["utcDate"]  # ISO-8601 UTC
             existed = conn.execute(
                 "SELECT 1 FROM fixtures WHERE fixture_id = ?", (fid,)
@@ -133,6 +134,7 @@ def sync_upcoming_fixtures(raw, season_start: int = CURRENT_SEASON_START) -> dic
                                       home_team, away_team, status, raw_payload_hash, collected_at)
                 VALUES (?, ?, 'Premier League', ?, ?, ?, ?, 'scheduled', ?, ?)
                 ON CONFLICT(fixture_id) DO UPDATE SET
+                  home_team=excluded.home_team, away_team=excluded.away_team,
                   kickoff_utc=excluded.kickoff_utc, status='scheduled',
                   raw_payload_hash=excluded.raw_payload_hash, collected_at=excluded.collected_at
                 """,
@@ -143,6 +145,208 @@ def sync_upcoming_fixtures(raw, season_start: int = CURRENT_SEASON_START) -> dic
                 inserted += 1
     return {"upcoming_new": inserted, "total_in_payload": len(raw.payload.get("matches", []))}
 
+
+# ─── ۲ب) همگام‌سازی ضرایب رایگان بازار + داده‌های Understat (v0.14.0) ───
+
+def sync_upcoming_odds(odds_rows: list[dict], provider: str = PRIMARY_STATS_PROVIDER) -> dict:
+    """ذخیرهٔ ضرایب واقعی بازی‌های پیش‌رو در جدول fixture_odds (idempotent)."""
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    saved = 0
+    with db() as conn:
+        for r in odds_rows:
+            conn.execute(
+                """
+                INSERT INTO fixture_odds
+                  (home_team, away_team, match_date, home_odds, draw_odds, away_odds, over25_odds, btts_odds, provider, collected_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(home_team, away_team, match_date, provider) DO UPDATE SET
+                  home_odds=excluded.home_odds, draw_odds=excluded.draw_odds,
+                  away_odds=excluded.away_odds, over25_odds=excluded.over25_odds,
+                  btts_odds=excluded.btts_odds, collected_at=excluded.collected_at
+                """,
+                (
+                    r["home_team"], r["away_team"], r["match_date"],
+                    r.get("home_odds"), r.get("draw_odds"), r.get("away_odds"),
+                    r.get("over25_odds"), r.get("btts_odds"), provider, now,
+                ),
+            )
+            saved += 1
+    return {"odds_saved": saved}
+
+
+def sync_understat_league(league_data: dict, season_start: int = CURRENT_SEASON_START) -> dict:
+    """ذخیرهٔ مهره‌های کلیدی و PPDA/Deep تیم‌ها از Understat در team_enrichments (idempotent)."""
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    season = season_label(season_start)
+    key_players = league_data.get("key_players") or {}
+    team_metrics = league_data.get("team_metrics") or {}
+    teams = sorted(set(key_players) | set(team_metrics))
+    saved = 0
+    with db() as conn:
+        for team in teams:
+            kp = key_players.get(team)
+            tm = team_metrics.get(team) or {}
+            conn.execute(
+                """
+                INSERT INTO team_enrichments
+                  (team, season, key_player_json, ppda, deep_passes, provider, collected_at)
+                VALUES (?, ?, ?, ?, ?, 'understat', ?)
+                ON CONFLICT(team, season, provider) DO UPDATE SET
+                  key_player_json=COALESCE(excluded.key_player_json, team_enrichments.key_player_json),
+                  ppda=COALESCE(excluded.ppda, team_enrichments.ppda),
+                  deep_passes=COALESCE(excluded.deep_passes, team_enrichments.deep_passes),
+                  collected_at=excluded.collected_at
+                """,
+                (
+                    team, season,
+                    json.dumps(kp, ensure_ascii=False) if kp else None,
+                    tm.get("ppda"), tm.get("deep"), now,
+                ),
+            )
+            saved += 1
+    return {"teams_enriched": saved, "key_players": len(key_players)}
+
+
+def _team_enrichment_from_db(conn: sqlite3.Connection, team: str, season: str) -> dict:
+    """خواندن مهرهٔ کلیدی و PPDA/Deep ذخیره‌شده برای یک تیم (در صورت وجود جدول)."""
+    try:
+        row = conn.execute(
+            """
+            SELECT key_player_json, ppda, deep_passes
+            FROM team_enrichments
+            WHERE team = ? AND season = ?
+            ORDER BY collected_at DESC LIMIT 1
+            """,
+            (team, season),
+        ).fetchone()
+    except sqlite3.OperationalError:
+        return {}
+    if not row:
+        return {}
+    kp = json.loads(row["key_player_json"]) if row["key_player_json"] else None
+    return {"kp": kp, "ppda": row["ppda"], "deep": row["deep_passes"]}
+
+
+def _fixture_odds_from_db(conn: sqlite3.Connection, home: str, away: str, match_date: str) -> dict[str, float] | None:
+    """خواندن ضرایب واقعی بازار برای بازی از جدول fixture_odds (در صورت وجود)."""
+    try:
+        row = conn.execute(
+            """
+            SELECT home_odds, draw_odds, away_odds, over25_odds, btts_odds
+            FROM fixture_odds
+            WHERE home_team = ? AND away_team = ? AND ABS(julianday(match_date) - julianday(?)) <= 2
+            ORDER BY collected_at DESC LIMIT 1
+            """,
+            (home, away, match_date[:10]),
+        ).fetchone()
+    except sqlite3.OperationalError:
+        return None
+    if not row:
+        return None
+    out: dict[str, float] = {}
+    for col, key in (
+        ("home_odds", "home"), ("draw_odds", "draw"), ("away_odds", "away"),
+        ("over25_odds", "over25"), ("btts_odds", "btts"),
+    ):
+        if row[col] is not None and float(row[col]) > 1.0:
+            out[key] = float(row[col])
+    return out or None
+
+
+def _compute_league_radar_percentiles(
+    conn: sqlite3.Connection, before_date: str, season: str
+) -> dict[str, list[int]]:
+    """محاسبهٔ رادار ۶ محوره تاکتیکی بر اساس صدک واقعی بین تیم‌های لیگ در DB.
+
+    ۶ محور مطابق استودیو:
+      0: خلق موقعیت (xG تولیدی در هر بازی)
+      1: شدت پرس (معکوس PPDA از Understat؛ یا معکوس شوت دریافتی از DB)
+      2: ایستگاهی (کرنر در هر بازی)
+      3: صلابت دفاعی (معکوس xGA دریافتی در هر بازی)
+      4: مالکیت مؤثر (سهم شوت یا پاس عمقی Understat)
+      5: تهدید پاس / ضربه (شوت در چارچوب در هر بازی)
+    برای اعتبار آماری حداقل ۶ تیم با بازی تمام‌شده در DB لازم است؛ وگرنه {} برمی‌گردد.
+    """
+    rows = conn.execute(
+        """
+        SELECT s.team, s.metric, AVG(s.value) AS avg_val
+        FROM fixture_statistics s
+        JOIN fixtures f ON f.fixture_id = s.fixture_id
+        WHERE f.status = 'finished' AND f.kickoff_utc < ? AND s.provider = ?
+          AND s.metric IN ('expected_goals', 'total_shots', 'shots_on_target', 'corner_kicks')
+        GROUP BY s.team, s.metric
+        """,
+        (before_date, PRIMARY_STATS_PROVIDER),
+    ).fetchall()
+    team_for: dict[str, dict[str, float]] = {}
+    for r in rows:
+        team_for.setdefault(r["team"], {})[r["metric"]] = float(r["avg_val"])
+
+    # آمار حریفان (xGA و شوت دریافتی)
+    against_rows = conn.execute(
+        """
+        SELECT
+          CASE WHEN f.home_team = s.team THEN f.away_team ELSE f.home_team END AS defending_team,
+          s.metric,
+          AVG(s.value) AS avg_val
+        FROM fixture_statistics s
+        JOIN fixtures f ON f.fixture_id = s.fixture_id
+        WHERE f.status = 'finished' AND f.kickoff_utc < ? AND s.provider = ?
+          AND s.metric IN ('expected_goals', 'total_shots')
+        GROUP BY defending_team, s.metric
+        """,
+        (before_date, PRIMARY_STATS_PROVIDER),
+    ).fetchall()
+    team_against: dict[str, dict[str, float]] = {}
+    for r in against_rows:
+        team_against.setdefault(r["defending_team"], {})[r["metric"]] = float(r["avg_val"])
+
+    # داده‌های اختیاری Understat (PPDA و deep)
+    enrich_map: dict[str, dict[str, float]] = {}
+    try:
+        for r in conn.execute(
+            "SELECT team, ppda, deep_passes FROM team_enrichments WHERE season = ?", (season,)
+        ).fetchall():
+            enrich_map[r["team"]] = {"ppda": r["ppda"], "deep": r["deep_passes"]}
+    except sqlite3.OperationalError:
+        pass
+
+    valid_teams = [
+        t for t, d in team_for.items()
+        if all(k in d for k in ("expected_goals", "total_shots", "shots_on_target", "corner_kicks"))
+        and "expected_goals" in team_against.get(t, {})
+        and "total_shots" in team_against.get(t, {})
+    ]
+    if len(valid_teams) < 6:
+        return {}
+
+    use_ppda = all(enrich_map.get(t, {}).get("ppda") for t in valid_teams)
+    use_deep = all(enrich_map.get(t, {}).get("deep") is not None for t in valid_teams)
+
+    raw_axes: dict[str, list[float]] = {}
+    for t in valid_teams:
+        tf = team_for[t]
+        ta = team_against[t]
+        ax0 = tf["expected_goals"]
+        ax1 = -float(enrich_map[t]["ppda"]) if use_ppda else -ta["total_shots"]
+        ax2 = tf["corner_kicks"]
+        ax3 = -ta["expected_goals"]
+        ax4 = (
+            float(enrich_map[t]["deep"])
+            if use_deep
+            else tf["total_shots"] / max(tf["total_shots"] + ta["total_shots"], 0.1)
+        )
+        ax5 = tf["shots_on_target"]
+        raw_axes[t] = [ax0, ax1, ax2, ax3, ax4, ax5]
+
+    n = len(valid_teams)
+    radar_by_team: dict[str, list[int]] = {t: [0] * 6 for t in valid_teams}
+    for axis in range(6):
+        ordered = sorted(valid_teams, key=lambda t: raw_axes[t][axis])
+        for rank, t in enumerate(ordered):
+            pct = round(25 + (rank / max(n - 1, 1)) * 74)  # بازهٔ خوانا و واقعی ۲۵ تا ۹۹
+            radar_by_team[t][axis] = int(pct)
+    return radar_by_team
 
 # ─── ۳) ساخت MatchFacts از DB ───
 
@@ -403,8 +607,22 @@ def build_match_facts(fixture_id: str, post_match: bool = False) -> dict:
                 match_stats=match_stats,
             )
 
-        home = side(fx["home_team"])
-        away = side(fx["away_team"])
+        radar_map = _compute_league_radar_percentiles(conn, kickoff[:10], fx["season"]) if not post_match else {}
+        home_canon = canonical_team_name(fx["home_team"])
+        away_canon = canonical_team_name(fx["away_team"])
+        home = side(home_canon)
+        away = side(away_canon)
+        if not post_match:
+            if home_canon in radar_map and away_canon in radar_map:
+                home.radar = radar_map[home_canon]
+                away.radar = radar_map[away_canon]
+            h_enr = _team_enrichment_from_db(conn, home_canon, fx["season"])
+            a_enr = _team_enrichment_from_db(conn, away_canon, fx["season"])
+            if h_enr.get("kp"):
+                home.kp = h_enr["kp"]
+            if a_enr.get("kp"):
+                away.kp = a_enr["kp"]
+        market_odds = _fixture_odds_from_db(conn, home_canon, away_canon, kickoff[:10]) if not post_match else None
 
         result = None
         if post_match:
@@ -441,6 +659,7 @@ def build_match_facts(fixture_id: str, post_match: bool = False) -> dict:
             away=away,
             result=result,
             data_quality=DataQuality(missing_fields=missing),
+            market_odds=market_odds,
         )
         facts.triggers = evaluate_triggers(facts)
         return json.loads(facts.model_dump_json())

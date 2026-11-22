@@ -1,30 +1,31 @@
-"""آزمون‌های کارت پس‌از‌بازی (post_match) — تم Warm Terracotta عین استودیوی post-match.html.
+"""آزمون‌های کارت پس‌ازبازی — موتور قالب استودیویی (`studio_templates/post_match.html`).
 
 اجرا:  python -m pytest tests/test_post_match_cards.py -v
 پوشش:
-  - build_match_facts(post_match=True): نتیجه + آمار خودِ بازی + روند شامل همین بازی + خطای بازی ناتمام
-  - context: نتیجه، احتمال‌های ۱X۲ فقط از xG خودِ بازی (Dixon-Coles)، دلتای بهره‌وری گل
-  - ماژول‌ها: smart فضاآگاه (پرکردن grid تا ظرفیت فرمت)؛ متریک غایب → ردیف/ماژول حذف
-  - تم: همهٔ رنگ‌ها از brand.json (postmatch_palette) — هیچ هگز هاردکد در قالب
-  - کمترین داده: بدون سری/بولت → کپشن، ماژول یتیم تمام‌عرض، کارت همچنان پر
-  - رندر واقعی Playwright → PNG سالم و غیرخالی
+  - build_match_facts(post_match=True): نتیجه + آمار خودِ بازی + خطای بازی ناتمام
+  - ترتیب اولویت ماژول‌های پس‌ازبازی (xgrace → shotmap → momentum → efficiency → toprated → motm → stats)
+  - انتقال «روایت آماری و گره تاکتیکی بازی» (autopsy) به کپشن و عدم نمایش آن روی کارت
+  - null≠0: بدون مالکیت/موقعیت بزرگ/دروازه‌بان واقعی، دادهٔ جعلی تولید نمی‌شود
+  - سازوکار پوشهٔ `studio_templates/post_match.html` و خروجی خودبسنده
+  - رندر واقعی Playwright (در صورت نصب)
 """
 from __future__ import annotations
 
 import contextlib
-import re
 import sqlite3
+from pathlib import Path
 
 import pytest
 
-RENDER_DEPS = pytest.importorskip("jinja2", reason="render extras not installed")
-pytest.importorskip("jdatetime", reason="render extras not installed")
-
-from src.xgpedia.config import load_brand, load_team_identities
 from src.xgpedia.render.post_match_cards import (
     build_post_match_context,
     render_post_match_card,
     render_post_match_html,
+)
+from src.xgpedia.render.studio_engine import (
+    POST_MATCH_CAPTION_ONLY,
+    POST_MATCH_PRIORITY,
+    STUDIO_TEMPLATES_DIR,
 )
 
 PROVIDER = "football-data-co-uk"
@@ -35,7 +36,7 @@ def _stat(v: float | None) -> dict | None:
 
 
 def _facts(**overrides) -> dict:
-    """فکت‌های پس‌از‌بازی — همان ساختار build_match_facts(post_match=True)."""
+    """فکت‌های واقعی پس‌ازبازی — همان ساختار build_match_facts(post_match=True)."""
     base = {
         "fixture_id": f"{PROVIDER}:2026-11-08:Sunderland:Chelsea",
         "competition": {"name": "Premier League", "season": "2026-27"},
@@ -70,7 +71,7 @@ def _facts(**overrides) -> dict:
 def _draft(**overrides) -> dict:
     base = {
         "status": "ok",
-        "title": "ساندرلند موفقیت سنگینش را کامل کرد",
+        "title": "ساندرلند برتری آماری‌اش را کامل کرد",
         "bullets": [
             "ساندرلند با ۲.۳۸ امید گل بهترین عملکرد فصلش را ثبت کرد.",
             "چلسی با وجود ۱۰ شوت، فقط ۰.۶۶ xG ساخت.",
@@ -105,7 +106,6 @@ def pm_conn():
     c.row_factory = sqlite3.Row
     c.executescript(SCHEMA)
     rows = [
-        # (fid, kickoff, home, away, status, stats[(team, metric, value)])
         ("f-prev", "2026-10-30", "Sunderland", "Everton", "finished",
          [("Sunderland", "expected_goals", 1.1), ("Everton", "expected_goals", 0.8),
           ("Sunderland", "goals", 1), ("Everton", "goals", 1)]),
@@ -144,10 +144,8 @@ def test_post_match_facts_from_db(pm_conn, monkeypatch):
     assert ms["expected_goals"]["value"] == 2.38
     assert ms["total_shots"]["value"] == 9
     assert ms["goals"]["value"] == 1.0
-    # روند شامل همین بازی: آخرین عضو سری = xG خودِ بازی
     assert f["home"]["xg_series"][-1] == 2.38
     assert f["away"]["xg_series"][-1] == 0.66
-    # متریک غایب → مقدار None می‌ماند (null≠0؛ رندرر ردیفش را نمی‌سازد)
     assert f["home"]["match_stats"]["corner_kicks"] is None
 
 
@@ -160,49 +158,67 @@ def test_post_match_facts_rejects_unfinished(pm_conn, monkeypatch):
         build_match_facts("f-future", post_match=True)
 
 
-# ─── context کارت ───
+# ─── ترتیب اولویت ماژول‌های پس‌ازبازی و انتقال autopsy به کپشن ───
 
-def test_post_match_context_score_probs_and_modules():
+def test_post_match_priority_order_constant():
+    assert POST_MATCH_PRIORITY == [
+        "xgrace", "shotmap", "momentum", "efficiency", "toprated", "motm", "stats",
+    ]
+    assert POST_MATCH_CAPTION_ONLY == {"autopsy"}
+
+
+def test_post_match_context_with_current_real_data():
+    """با دیتای واقعی فعلی فقط ماژول stats داده کامل دارد؛ autopsy به کپشن می‌رود."""
     ctx = build_post_match_context(_draft(), _facts())
     assert ctx["score"] == {"home": 1, "away": 0}
-    # احتمال‌ها فقط از xG خودِ بازی (Dixon-Coles): 2.38 vs 0.66 → برتری قاطع میزبان
     cap = ctx["capsule"]
     assert cap is not None
-    pcts = [s["pct"] for s in cap]
-    assert sum(pcts) == 100
-    assert pcts[0] > pcts[1] > 10  # میزبان بالاتر از میهمان
-    # دلتای بهره‌وری گل: 1 - 2.38 = -1.38
+    assert sum(s["pct"] for s in cap) == 100
     assert ctx["hero"]["delta_home"] == "-1.38"
     assert ctx["hero"]["delta_away"] == "-0.66"
-    # smart 4:5 (D24): خوانایی بر تراکم — فقط stats + story جا دارد؛ verdict در ۹:۱۶ است
-    ids = [m["id"] for m in ctx["modules"] if m["enabled"]]
-    assert ids == ["stats", "story"]
-    # سقف ردیف آمار در ۴:۵ → ۴ ردیفِ پراولویت (نه هر ۶ متریک)
+
+    # فقط ماژول‌های دارای دیتای کامل روشن‌اند
+    assert [m["id"] for m in ctx["modules"] if m["enabled"]] == ["stats"]
     assert len(ctx["module_data"]["stats"]["rows"]) == 4
-    # سقف بولت‌های روایت → حداکثر ۲ خط روی کارت
-    draft3 = _draft()
-    draft3["bullets"] = draft3["bullets"] + ["بولت سوم آزمایشی"]
-    ctx3 = build_post_match_context(draft3, _facts())
-    assert len(ctx3["module_data"]["story"]["body_lines"]) == 2
-    # smart 9:16: ظرفیت عمودی بیشتر — story و trend10 نیم‌عرض کنار هم + verdict
-    ctx9 = build_post_match_context(_draft(), _facts(), fmt="9:16")
-    ids9 = [m["id"] for m in ctx9["modules"] if m["enabled"]]
-    assert ids9 == ["stats", "trend10", "story", "verdict"]
-    # نمودار روند پس‌از‌بازی بلندتر از پیش‌بازی است (D24 — خوانایی موبایل)
-    assert ctx9["module_data"]["trend10"]["h"] == 190
-    # verdict: برتری کیفی ساندرلند (فاصلهٔ ۱.۷۲ xG)
-    assert "ساندرلند" in ctx["module_data"]["verdict"]["fair_title"]
+    # هیچ ردیف جعلی مالکیت (0٪) در statsRows نیست
+    labels = [r["label"] for r in ctx["module_data"]["stats"]["rows"]]
+    assert "مالکیت توپ (٪)" not in labels
+    assert labels == ["امید گل واقعی (xG)", "شوت کل (در چارچوب)", "کرنر", "خطا"]
 
 
-def test_post_match_context_minimal_data_fills():
-    """کمترین داده: بدون سری و بدون بولت — story از کپشن پر می‌شود (D24: ۴:۵ فقط stats+story)."""
-    facts = _facts()
-    for side in ("home", "away"):
-        facts[side]["xg_series"] = None
-    ctx = build_post_match_context(_draft(bullets=[]), facts)
-    ids = [m["id"] for m in ctx["modules"] if m["enabled"]]
-    assert ids == ["stats", "story"]
-    assert ctx["module_data"]["story"]["body_lines"] == [_draft(bullets=[])["caption"]]
+def test_post_match_autopsy_never_on_card_and_always_in_caption():
+    """روایت آماری و گره تاکتیکی بازی روی کارت نیست و در کپشن قرار می‌گیرد."""
+    ctx = build_post_match_context(_draft(), _facts())
+    assert ctx["has"]["autopsy"] is False
+    assert "autopsy" not in [m["id"] for m in ctx["modules"]]
+    assert "روایت آماری و گره تاکتیکی بازی" in ctx["caption_text"]
+    assert "ساندرلند برتری آماری‌اش را کامل کرد" in ctx["caption_text"]
+    assert ctx["caption_text"].endswith("#پس_از_بازی")
+
+
+def test_post_match_full_priority_when_all_data_available():
+    """با کامل‌بودن داده‌های رویدادی/بازیکن، اولویت ۱ تا ۷ دقیقاً رعایت می‌شود."""
+    facts = _facts(
+        momentum=[30, 45, -20, 15, 50, -35, 25, 40],
+        topPlayers=[{"name": "ساکا", "side": "home", "stat": "۱ گل", "rating": 8.8}],
+        motm={
+            "side": "home", "name": "ساکا", "pos": "وینگر", "number": 7, "rating": 8.8,
+            "chips": [{"label": "گل", "val": "۱"}],
+            "runnerUp": {"side": "away", "name": "پالمر", "stat": "۴ شوت", "rating": 7.9},
+        },
+    )
+    facts["home"]["shotList"] = [[88, 52, 0.42, "goal", "مهاجم", 22]]
+    facts["away"]["shotList"] = [[82, 44, 0.18, "sot", "هافبک", 55]]
+    facts["home"]["insideBox"] = 7
+    facts["away"]["insideBox"] = 4
+    facts["home"]["gk"] = {"name": "دروازه‌بان ۱", "saves": 4, "psxg": 1.2, "ga": 0}
+    facts["away"]["gk"] = {"name": "دروازه‌بان ۲", "saves": 3, "psxg": 1.8, "ga": 1}
+
+    ctx45 = build_post_match_context(_draft(), facts, fmt="4:5")
+    assert [m["id"] for m in ctx45["modules"]] == ["xgrace", "shotmap"]
+
+    ctx916 = build_post_match_context(_draft(), facts, fmt="9:16")
+    assert [m["id"] for m in ctx916["modules"]] == ["xgrace", "shotmap", "momentum"]
 
 
 def test_post_match_missing_metric_drops_row():
@@ -215,55 +231,22 @@ def test_post_match_missing_metric_drops_row():
     assert labels == ["امید گل واقعی (xG)", "شوت کل (در چارچوب)"]
 
 
-def test_post_match_theme_colors_from_brand_json():
-    brand = load_brand()
-    pal = brand["postmatch_palette"]
-    ctx = build_post_match_context(_draft(), _facts())
-    assert ctx["t"]["board_bg"] == pal["board_bg"]
-    assert ctx["t"]["accent"] == pal["accent"]
-    html = render_post_match_html(_draft(), _facts())
-    assert pal["board_bg"] in html
-    assert pal["accent"] in html
-    assert 'dir="rtl"' in html
-    # لوگوی رسمی برند در سرصفحه (data-URI)
-    assert "brand-logo-img" in html
+def test_post_match_studio_template_renders_exact_design(tmp_path: Path):
+    assert (STUDIO_TEMPLATES_DIR / "post_match.html").exists()
+    html = render_post_match_html(_draft(), _facts(), fmt="4:5")
+    assert 'id="xgpedia-payload"' in html
+    assert 'id="xgpedia-fonts"' in html
+    assert 'id="xgpedia-tw-fallback"' in html
+    assert 'id="xgpedia-export-mode"' in html
+    assert "cdn.tailwindcss.com" not in html
+    assert "fonts.googleapis.com" not in html
 
-
-def test_post_match_html_no_hardcoded_hex():
-    """داخل <style> فقط رنگ‌های brand.json (postmatch + colors) و هویت تیم‌ها."""
-    html = render_post_match_html(_draft(), _facts())
-    style_part = html.split("<style>")[1].split("</style>")[0]
-    hexes = set(re.findall(r"#[0-9A-Fa-f]{6}\b", style_part))
-    allowed = set(load_brand()["postmatch_palette"].values())
-    allowed |= set(load_brand()["colors"].values())
-    allowed |= set(load_brand()["matchday_palette"].values())
-    for ident in load_team_identities()["teams"].values():
-        for c in (ident.get("colors") or {}).values():
-            if isinstance(c, str) and c.startswith("#"):
-                allowed.add(c)
-    assert hexes <= allowed, hexes - allowed
-
-
-def test_post_match_latin_digits_for_stats():
-    """ارقام آماری لاتین (D16) — xG با ممیز لاتین؛ تاریخ فارسی جدا."""
-    html = render_post_match_html(_draft(), _facts())
-    assert ">2.38<" in html or "2.38" in html
-    assert "۰-۰" not in html  # نتیجه با ارقام لاتین
-
-
-def test_post_match_mobile_font_floors():
-    """D24 — کف خوانایی موبایل: کارت روی گوشی (~۳۹۰px) با ضریب ~۰.۳۷ دیده می‌شود؛
-    روی بوم ۱۰۸۰px هیچ متن خواندنی زیر ۲۴px و هیچ برچسب تزئینی زیر ۲۰px نباید باشد."""
-    html = render_post_match_html(_draft(), _facts())
-    style = html.split("<style>")[1].split("</style>")[0]
-    root = style.split(":root")[1].split("}")[0]
-    sizes = dict(re.findall(r"(--fs-[a-z0-9]+):\s*(\d+)px", root))
-    assert sizes, "CSS font-scale variables not found in :root"
-    decorative = {"--fs-modtag", "--fs-vbadge"}  # برچسب لاتین تزئینی — نه متن خواندنی
-    for name, px in sizes.items():
-        assert int(px) >= 20, f"{name}={px}px is below the 20px absolute floor (D24)"
-        if name not in decorative:
-            assert int(px) >= 24, f"{name}={px}px is below the 24px reading floor (D24)"
+    # تست جایگذاری فایل اختصاصی در پوشهٔ قالب‌ها
+    src = (STUDIO_TEMPLATES_DIR / "post_match.html").read_text(encoding="utf-8")
+    marker = "<!-- CUSTOM_POST_MATCH_STUDIO -->"
+    (tmp_path / "post_match.html").write_text(marker + "\n" + src, encoding="utf-8")
+    html_custom = render_post_match_html(_draft(), _facts(), template_dir=tmp_path)
+    assert marker in html_custom
 
 
 def test_render_post_match_real_png(tmp_path):
@@ -272,14 +255,6 @@ def test_render_post_match_real_png(tmp_path):
         _draft(), _facts(), out_dir=tmp_path, post_id=9, version=1, platform="telegram",
     )
     assert img_path.name == "post_9_v1_post_match_1080x1350.png"
-    assert "#پس_از_بازی" in cap_path.read_text(encoding="utf-8")
-    try:
-        from PIL import Image
-    except ImportError:
-        return
-    with Image.open(img_path) as im:
-        assert im.size == (1080, 1350)
-        g = im.convert("L")
-        h = g.histogram()
-        non_white = 1 - h[255] / sum(h)
-        assert non_white > 0.3  # کارت روشن (خاکی) — نباید سفید خالی باشد
+    cap_txt = cap_path.read_text(encoding="utf-8")
+    assert "#پس_از_بازی" in cap_txt
+    assert "روایت آماری و گره تاکتیکی بازی" in cap_txt

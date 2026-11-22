@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>XGPedia Matchday Studio — Lite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Space+Grotesk:wght@600;700;800&family=Vazirmatn:wght@400..900&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{font-family:Vazirmatn,system-ui,-apple-system,sans-serif;background:#030711;color:#F8FAFC;overflow:hidden;font-feature-settings:"tnum";font-variant-numeric:tabular-nums}
+.fm{font-family:'JetBrains Mono','Space Grotesk',monospace}
+.fd{font-family:'Space Grotesk',sans-serif}
+.fi{display:flex;align-items:center}
+.fc{display:flex;align-items:center;justify-content:center}
+.fbw{display:flex;align-items:center;justify-content:space-between}
+.fcol{display:flex;flex-direction:column}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:#050914b3}
+::-webkit-scrollbar-thumb{background:#94a3b847;border-radius:99px}
+::-webkit-scrollbar-thumb:hover{background:#e62e45bf}
+._bg{background:#02050D radial-gradient(circle at 50% 30%,#e62e4514,transparent 55%)}
+#vp{-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;&.cp{cursor:grab;&:active{cursor:grabbing}}}
+#aw{position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 32px 90px -12px #000000eb,0 0 0 1px #ffffff24;border-radius:20px;overflow:hidden;transition:width .16s ease-out,height .16s ease-out}
+._sl{background:repeating-linear-gradient(to bottom,#ffffff04 0 1px,#0000 1px 4px)}
+.xm,.xe{position:relative;border-radius:24px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;box-shadow:0 14px 36px -10px #0000008c,inset 0 1px 0 #ffffff17}
+.xm{background:linear-gradient(165deg,#101d3bdb,#091023f2);border:1.5px solid #f8fafc24;padding:14px 26px 16px}
+.xe{background:linear-gradient(155deg,#121f3deb,#090f20f7);border:1.5px solid #7fa6e83d;padding:20px 26px;box-shadow:0 14px 36px -10px #0000008c,inset 0 1px 0 #ffffff1a}
+.pc{width:100%;height:56px;border-radius:999px;overflow:hidden;display:flex;background:#0f172aeb;border:2px solid #ffffff2e;box-shadow:inset 0 2px 8px #00000073}
+.pcc{height:36px;border-width:1.5px;& .ps{font-size:20px}}
+.ps{height:100%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:27px;transition:width .25s ease;border-radius:0!important;white-space:nowrap}
+.ct{height:14px;background:#ffffff1a;overflow:hidden;display:flex;align-items:center;&.hs{justify-content:flex-end}&.as{justify-content:flex-start}}
+.ct.hs,.ch{border-radius:0 99px 99px 0}
+.ct.as,.ca{border-radius:99px 0 0 99px}
+.ch,.ca{height:100%;transition:width .25s ease}
+.fdt{width:46px;height:36px;border-radius:11px;display:inline-flex;align-items:center;justify-content:center;font-family:'Space Grotesk','JetBrains Mono',sans-serif;font-size:19px;font-weight:800;letter-spacing:.02em;line-height:1;border:1.5px solid #0000;box-shadow:0 4px 10px #0004;&.fl{border-width:2.5px}}
+.fW{background:#10b98124;color:#34D399;border-color:#2ed38c42;&.fl{border-color:#34D399;box-shadow:0 0 12px #34d39959,inset 0 0 6px #34d3991f}}
+.fD{background:#f59e0b26;color:#F5B041;border-color:#f5a62347;&.fl{border-color:#FBBF24;color:#FBBF24;box-shadow:0 0 12px #fbbf2459,inset 0 0 6px #fbbf241f}}
+.fL{background:#e62e4529;color:#F43F5E;border-color:#f43f5e47;&.fl{border-color:#F43F5E;box-shadow:0 0 12px #f43f5e66,inset 0 0 6px #f43f5e24}}
+.el{display:flex;flex-direction:column;gap:12px;margin:auto 0}
+.er{display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.55fr) auto;align-items:center;gap:18px;padding:14px 18px;border-radius:18px;background:#161b2ed6;border:1px solid #ffffff17;box-shadow:inset 0 1px 0 #ffffff0a}
+.et{font-size:23px;font-weight:900;color:#F8FAFC;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.em{font-size:16px;font-weight:600;color:#94A3B8;margin-top:4px;white-space:nowrap}
+.ebc{display:flex;flex-direction:column;gap:10px;min-width:0}
+.ebr{display:flex;align-items:center;gap:12px}
+.ebl{width:132px;font-size:15px;font-weight:700;text-align:right;flex-shrink:0;line-height:1.1;white-space:nowrap}
+.ebt{flex:1;height:22px;border-radius:99px;background:#262B3D;overflow:hidden;direction:ltr;display:flex;align-items:center;box-shadow:inset 0 1px 3px #00000059}
+.efm,.efk{height:100%;border-radius:99px;transition:width .25s ease;display:flex;align-items:center;justify-content:flex-end;flex-shrink:0}
+.efm{background:linear-gradient(90deg,#2EB7EB,#40C8F5);box-shadow:0 0 10px #40c0ef52}
+.efk{background:#696F7D}
+.evv{font-size:13.5px;font-weight:900;line-height:1;white-space:nowrap;letter-spacing:.01em}
+.eim{color:#04111F;padding-right:9px}
+.eom{color:#7DD3FC;padding-left:8px}
+.eik{color:#fff;padding-right:9px}
+.eok{color:#CBD5E1;padding-left:8px}
+.epw{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:154px;flex-shrink:0}
+.epb{width:100%;padding:8px 14px;border-radius:12px;display:inline-flex;align-items:baseline;justify-content:center;gap:6px;font-size:23px;font-weight:900;text-align:center;line-height:1.1;white-space:nowrap;border:1.5px solid var(--ebd,#0000);background:var(--eb);color:var(--ec);box-shadow:var(--es)}
+.ept{font-family:'Space Grotesk','JetBrains Mono',monospace;font-size:.72em;font-weight:800;letter-spacing:.04em;opacity:.92}
+.eps{font-size:15px;font-weight:800;margin-top:5px;line-height:1;color:var(--ec)}
+.eh{--eb:#10b9812b;--ebd:#34d3997a;--ec:#34D399;--es:0 0 14px #34d39924,inset 0 1px 0 #34d39929}
+.ed{--eb:#38bdf829;--ebd:#38bdf875;--ec:#38BDF8;--es:0 0 14px #38bdf824,inset 0 1px 0 #38bdf829}
+.ew{--eb:#f59e0b29;--ebd:#fbbf2475;--ec:#FBBF24;--es:0 0 14px #fbbf241f,inset 0 1px 0 #fbbf2426}
+.en{--eb:#8b5cf629;--ebd:#a78bfa6b;--ec:#A78BFA;--es:inset 0 1px 0 #a78bfa24}
+#ea{position:absolute;top:0;left:0;transform-origin:0 0;background:#0D1730;color:#F8FAFC;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;user-select:none;transition:transform .16s ease-out;&.f9{padding:135px 0 165px}&.f4{padding:20px 0 13px}&.f16{padding:19px 0 7px;.xm,.xe{padding:16px 22px}.pc{height:48px}.ps{font-size:23px}.fdt{width:40px;height:32px;border-radius:9px;font-size:16px}.el{gap:8px}.er{padding:10px 16px;gap:14px;border-radius:14px}.et{font-size:20px}.em{font-size:14px;margin-top:2px}.ebl{width:120px;font-size:14px}.ebt{height:19px}.evv{font-size:12px}.epw{min-width:134px}.epb{padding:6px 10px;font-size:19px;border-radius:10px;gap:5px}.eps{font-size:13px;margin-top:4px}}&.dc{.xm,.xe{padding:14px 20px;border-radius:18px}.mh{padding-bottom:8px;margin-bottom:8px}.mt{font-size:25px}.ct{height:14px}.rs{max-height:290px}.ws{max-height:190px}.el{gap:8px}.er{padding:10px 15px;gap:12px;border-radius:14px}.et{font-size:19px}.em{font-size:13px;margin-top:2px}.ebc{gap:7px}.ebl{font-size:13px;width:112px}.ebt{height:18px}.evv{font-size:11.5px}.epw{min-width:128px}.epb{padding:6px 10px;font-size:18px;border-radius:10px;gap:5px}.eps{font-size:13px;margin-top:3px}}}
+#mg{.w-full,.mf:last-child:nth-child(odd){grid-column:1/-1}.mf{grid-column:span 1;min-width:0;&.xm,.xm{padding:12px 16px;border-radius:18px}.mt,.text-\[30px\]{font-size:23px}.mh{padding-bottom:6px;margin-bottom:6px}.text-\[28px\]{font-size:22px}.text-\[25px\]{font-size:20px}.text-\[24px\],.text-\[23px\]{font-size:19px}.text-\[22px\]{font-size:18px}.text-\[21px\],.text-\[20px\]{font-size:17px}.text-\[19px\]{font-size:16px}}}
+#ea.dv{#cm{padding-inline:30px;padding-bottom:6px;.text-\[24px\]{font-size:17px}.text-\[22px\]{font-size:16px}.text-\[21px\]{font-size:15px}.text-\[20px\]{font-size:14px}svg{width:17px;height:17px}}#bl{svg{width:40px;height:40px}.text-\[34px\]{font-size:24px}}#cmb{padding-inline:28px}#cf{padding-inline:30px;padding-top:8px;.text-\[21px\]{font-size:15px}.text-\[19px\]{font-size:14px}.text-\[18px\]{font-size:13px}}.fdt{width:34px;height:27px;border-radius:8px;font-size:14px;&.fl{border-width:2px}}.pc{height:36px;& .ps{font-size:17px}}.text-\[48px\]{font-size:32px}.text-\[42px\]{font-size:28px}#hs{.text-\[32px\]{font-size:22px}.text-\[22px\]{font-size:15px}.text-\[21px\],.text-\[20px\]{font-size:14px}.text-\[15px\]{font-size:12px}.gap-5{gap:12px}.mt-3{margin-top:6px}.py-3\.5{padding-block:8px}.py-1\.5{padding-block:4px}}.xm,.xe{padding:7px 12px;border-radius:14px}.mh{padding-bottom:5px;margin-bottom:5px;gap:6px;&>div:last-child{gap:8px}}.mt,.text-\[30px\]{font-size:16px}.mh .text-\[20px\],.mh>div:last-child,.text-\[22px\],.text-\[21px\],.text-\[20px\]{font-size:12px}.ct{height:9px}.rs{max-height:132px}.ws{max-height:112px}.text-\[34px\]{font-size:17px}.text-\[28px\]{font-size:15px}.text-\[25px\],.text-\[24px\],.text-\[23px\]{font-size:13px}.text-\[19px\],.text-\[18px\]{font-size:11px}.leading-\[1\.62\],.leading-relaxed{line-height:1.34}.leading-snug{line-height:1.3}.p-5{padding:6px 8px}.p-4{padding:5px 7px}.px-5,.px-4{padding-inline:8px}.py-2\.5{padding-block:4px}.rounded-xl.py-2{padding-block:3px}.gap-2{gap:6px}.space-y-2>*+*{margin-top:5px}.el{gap:5px}.er{padding:5px 10px;gap:10px;border-radius:10px}.et{font-size:13px}.em{font-size:10px;margin-top:1px}.ebc{gap:4px}.ebr{gap:6px}.ebl{font-size:10px;width:84px}.ebt{height:14px}.evv{font-size:9.5px}.eim,.eik{padding-right:6px}.eom,.eok{padding-left:5px}.epw{min-width:90px}.epb{padding:3px 7px;font-size:12px;border-radius:7px;border-width:1px;gap:4px}.eps{font-size:10px;margin-top:2px}.vt{height:38px}.vb{height:34px}.hx{margin-top:4px}}
+#ea.f4.dc .mf{&.xm,&.xe{padding:10px 14px}.mt{font-size:21px}}
+#ea.dc .mf{.rs{max-height:240px}.ws{max-height:160px}}
+#hs .whitespace-nowrap{min-width:0}
+.vt,.vb{width:2px}.vt{height:58px}.vb{height:52px}.hx{margin-top:10px}
+.spb{padding-bottom:env(safe-area-inset-bottom,0)}
+.ns{-ms-overflow-style:none;scrollbar-width:none;&::-webkit-scrollbar{display:none}}
+.fb{min-height:36px;border-radius:8px;font-size:12px;font-weight:600;color:#94a3b8;transition:all .15s;&:hover{color:#fff}}
+.zb{min-height:36px;padding-inline:10px;border-radius:12px;background:#ffffff0d;color:#e2e8f0;font-size:12px;font-weight:700;transition:all .15s;&:hover{background:#ffffff26}}
+.zpm{min-width:36px;min-height:36px;border-radius:12px;background:#ffffff0d;color:#fff;font-weight:900;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .15s;&:hover{background:#ffffff26}&:active{transform:scale(.95)}}
+.hb{min-height:46px;padding:8px 12px;border-radius:12px;border:1px solid #ffffff1a;background:#ffffff0d;color:#cbd5e1;font-size:12px;font-weight:700;transition:all .15s;&:hover{background:#ffffff1a}&.on{border-color:#E62E45;background:#e62e452e;color:#fff;font-weight:800}}
+.mnb{min-height:56px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#94a3b8;transition:all .15s;&:hover{color:#e2e8f0}&.on{color:#FF556B;background:#e62e4526}}
+@media(min-width:1024px){.fb{min-height:32px;padding-inline:12px}.zb{min-height:32px}.zpm{min-width:32px;min-height:32px}}
+.fb.on,.qb.on,.zb.on{background:#E62E45;color:#fff;font-weight:800;border-color:#E62E45}
+.zb.on{padding-inline:12px}
+.sb.on{border-color:#E62E45;background:#e62e4526;color:#fff}
+#ts.on{background:#f59e0b40;border-color:#fbbf24b3;color:#fde68a;font-weight:800}
+#db.warn{border-color:#f59e0b66;background:#f59e0b1f;color:#fde68a}
+#dd.warn{background:#fbbf24}
+#sdp.warn{background:#f59e0b26;border-color:#f59e0b66;color:#fcd34d}
+</style>
+</head>
+<body class="h-[100dvh] fcol bg-[#030711] text-[#F8FAFC]">
+<div class="flex-1 fcol lg:flex-row min-h-0 overflow-hidden relative">
+<aside id="sp" class="hidden lg:flex w-full lg:w-[425px] bg-[#070D1D] lg:border-l border-white/10 flex-col shrink-0 h-full min-h-0 overflow-hidden">
+<div class="lg:hidden sticky top-0 z-20 bg-[#040814]/95 backdrop-blur-md border-b border-white/10 px-3.5 py-2.5 fbw gap-2 shrink-0">
+<div class="min-w-0"><div id="mt" class="text-sm font-black text-white truncate"></div><div id="mm" class="text-xs font-bold text-slate-400 mt-0.5"></div></div>
+<button id="jp" class="min-h-[40px] px-3.5 py-2 rounded-xl bg-[#E62E45]/20 hover:bg-[#E62E45]/30 active:scale-95 border border-[#E62E45]/50 text-[#FF5E72] text-xs font-extrabold fi gap-1.5 shrink-0 transition"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg><span>پیش‌نمایش</span></button>
+</div>
+<div class="hidden lg:flex items-center justify-between bg-[#040814] border-b border-white/10 px-3.5 py-2.5 shrink-0"><span class="text-xs font-black text-white">اسلایدها و ماژول‌ها</span><span class="text-[10px] font-bold text-slate-500">ادیت داده‌ها: بلوک PRESETS در ابتدای &lt;script&gt;</span></div>
+<div id="es" class="flex-1 overflow-y-auto p-4 pb-24 lg:pb-4 space-y-5">
+<div id="db" class="rounded-2xl px-3.5 py-2.5 border border-emerald-500/35 bg-emerald-500/12 text-emerald-200 fbw gap-2 text-xs font-extrabold"><div class="fi gap-2"><span id="dd" class="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0"></span><span id="dt"></span></div><span id="dc" class="fm text-[11px] opacity-80 shrink-0"></span></div>
+<div><label class="block text-sm lg:text-xs font-extrabold text-slate-200 mb-2.5">اسلایدهای آماده تلگرام و استوری (خلوت و خوانا)</label><div class="space-y-2" id="slb"></div></div>
+<div class="bg-[#040814] border border-white/10 rounded-2xl p-3.5 space-y-2.5"><span class="block text-sm lg:text-xs font-extrabold text-white">سبک بخش بالای کارت (هدر مسابقه)</span><div class="grid grid-cols-2 gap-2"><button data-h="full" class="hb">هدر کامل (اسلاید اول)</button><button data-h="compact" class="hb">هدر فشرده (اسلایدهای بعدی)</button></div></div>
+<div><label class="block text-sm lg:text-xs font-extrabold text-slate-200 mb-2.5">پریست‌های آماده مسابقات</label><div class="grid grid-cols-2 gap-2.5" id="prb"></div></div>
+<div class="bg-[#040814] border border-white/10 rounded-2xl p-3.5 space-y-3"><div class="fbw gap-2"><span class="text-sm lg:text-xs font-extrabold text-white">انتخاب ماژول‌های فعال (۹ ماژول)</span><span class="text-xs lg:text-[10px] text-slate-400">تمام‌عرض و خوانا در موبایل</span></div><div id="mcl" class="space-y-2"></div></div>
+</div>
+<div class="hidden lg:flex p-3 bg-[#040814] border-t border-white/10 items-center justify-between gap-2 shrink-0"><button id="cj" class="flex-1 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-slate-300 transition">کپی دیتای JSON</button><span id="adb" class="px-3 py-2 rounded-xl bg-black/50 border border-white/10 text-[11px] fm text-slate-400"></span></div>
+</aside>
+<main id="sc" class="flex-1 fcol _bg min-h-0 overflow-hidden relative">
+<div class="fcol lg:flex-row lg:items-center lg:justify-between gap-2 px-3 py-2 bg-[#070D1D]/92 backdrop-blur-md border-b border-white/10 shrink-0 z-10">
+<div class="fbw gap-2 shrink-0"><div class="flex-1 lg:flex-none grid grid-cols-3 lg:flex bg-[#030711] p-1 rounded-xl border border-white/10 gap-1"><button data-f="4:5" class="fb on">پست 4:5</button><button data-f="9:16" class="fb">استوری 9:16</button><button data-f="16:9" class="fb">بنر 16:9</button></div><span id="mdb" class="lg:hidden px-2.5 py-2 rounded-xl bg-[#030711] border border-white/10 text-[11px] fm text-slate-300 shrink-0"></span></div>
+<div class="fbw gap-2 min-w-0 lg:flex-1"><div id="qsb" class="fi gap-1.5 overflow-x-auto ns py-0.5"></div><span id="sdp" class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/35 text-emerald-300 text-[11px] font-extrabold shrink-0"></span></div>
+</div>
+<div id="vp" class="flex-1 w-full h-full overflow-auto flex p-3 sm:p-6 pb-32 lg:pb-16"><div class="m-auto fc"><div id="aw"><div id="ea" class="f4" dir="rtl">
+<div id="ag" class="absolute inset-0 pointer-events-none z-0"></div>
+<svg id="fs" class="absolute inset-0 w-full h-full pointer-events-none z-0" viewBox="0 0 1080 1350" preserveAspectRatio="xMidYMid slice" fill="none"><defs><pattern id="tg" width="54" height="54" patternUnits="userSpaceOnUse"><path d="M54 0H0v54" stroke="#F8FAFC" stroke-opacity=".055"/></pattern><radialGradient id="rf" cx="50%" cy="30%" r="44%"><stop offset="0" stop-color="#E62E45" stop-opacity=".22"/><stop offset=".55" stop-color="#E62E45" stop-opacity=".06"/><stop offset="1" stop-color="#E62E45" stop-opacity="0"/></radialGradient></defs><rect width="100%" height="100%" fill="url(#tg)"/><rect id="pr" x="12" y="12" width="1056" height="1326" rx="18" stroke="#F8FAFC" stroke-opacity=".11" stroke-width="1.5"/><g stroke="#F8FAFC" stroke-opacity=".09" stroke-width="1.5"><line id="hl" x1="540" y1="12" x2="540" y2="1338" stroke-dasharray="8 8"/><circle cx="540" cy="315" r="145"/></g><g stroke="#F8FAFC" stroke-opacity=".07" stroke-width="1.5"><rect x="12" y="145" width="135" height="360"/><path d="M147 245A95 95 0 0 1 147 405"/><rect id="rb" x="933" y="145" width="135" height="360"/><path id="ra" d="M933 245A95 95 0 0 0 933 405"/></g><circle cx="540" cy="315" r="245" fill="url(#rf)"/><circle cx="540" cy="315" r="215" stroke="#E62E45" stroke-opacity=".18" stroke-width="1.2" stroke-dasharray="4 6"/><circle cx="540" cy="315" r="295" stroke="#F8FAFC" stroke-opacity=".07"/><circle cx="540" cy="315" r="375" stroke="#F8FAFC" stroke-opacity=".045"/><path id="crh" d="M24 44V24H44M1056 44V24H1036M24 1306V1326H44M1056 1306V1326H1036" stroke="#E62E45" stroke-opacity=".55" stroke-width="2"/></svg>
+<div class="absolute inset-0 _sl pointer-events-none z-0"></div>
+<div id="sz" class="hidden absolute inset-0 pointer-events-none z-30 fcol justify-between">
+<div class="w-full h-[135px] bg-[#E62E45]/18 border-b-2 border-dashed border-[#FF6B7F]/80 flex items-end justify-center pb-3"><span class="px-4 py-1 rounded-full bg-[#070D1D]/90 border border-[#FF6B7F]/60 text-[#FF8A9A] text-[20px] font-extrabold">ناحیه امن بالای استوری (پروفایل اینستاگرام • ۱۳۵px)</span></div>
+<div class="w-full h-[165px] bg-[#E62E45]/18 border-t-2 border-dashed border-[#FF6B7F]/80 flex items-start justify-center pt-3"><span class="px-4 py-1 rounded-full bg-[#070D1D]/90 border border-[#FF6B7F]/60 text-[#FF8A9A] text-[20px] font-extrabold">ناحیه امن پایین استوری (نوار ارسال پیام • ۱۶۵px)</span></div>
+</div>
+<header id="cm" class="relative z-10 px-[44px] pt-3 pb-2 fbw gap-4 shrink-0">
+<div class="fcol items-start gap-2.5 min-w-0">
+<div class="fi flex-wrap gap-3"><div class="px-5 py-1.5 rounded-full text-[24px] font-black fi gap-2.5 border text-[#F8FAFC]" style="background:#152347e6;border-color:#ffffff2e"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E62E45" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8m-4-4v4m-5-17h10v5a5 5 0 01-10 0V4zM5 6H3v2a3 3 0 003 3h1m12-5h2v2a3 3 0 01-3 3h-1"/></svg><span id="cc"></span></div><span id="cr" class="px-5 py-1.5 rounded-full text-[22px] font-extrabold tracking-tight border" style="background:#e62e452e;border-color:#e62e4580;color:#FF6B7F"></span></div>
+<div class="fi flex-wrap gap-3 text-[21px] font-bold text-slate-100"><span id="cd"></span><span class="text-slate-500">•</span><span class="inline-flex items-center gap-2 text-white"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E62E45" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="8" rx="9" ry="3.5"/><path d="M3 8v6c0 1.93 4.03 3.5 9 3.5s9-1.57 9-3.5V8M7 11.2v5.8M12 11.5v6M17 11.2v5.8M6 4.8V3M18 4.8V3"/></svg><span id="cs"></span></span><span id="cb" class="px-3.5 py-0.5 rounded-full bg-[#10B981]/20 border border-[#10B981]/45 text-[#34D399] text-[20px] font-extrabold"></span></div>
+</div>
+<div id="bl" class="fi gap-3 shrink-0" dir="ltr"><svg width="56" height="56" viewBox="0 0 48 48" fill="none"><path d="M24 2.5L42 10.2V23.4C42 34.6 34.3 43 24 45.6C13.7 43 6 34.6 6 23.4V10.2Z" fill="#152347" stroke="#E62E45" stroke-width="2.6"/><circle cx="24" cy="24" r="9.5" stroke="#f8fafc47" stroke-width="1.5"/><line x1="24" y1="9" x2="24" y2="39" stroke="#f8fafc47" stroke-width="1.2" stroke-dasharray="2.5 2.5"/><path d="M16.5 16.5L31.5 31.5M31.5 16.5L16.5 31.5" stroke="#E62E45" stroke-width="3.2" stroke-linecap="round"/><circle cx="24" cy="24" r="3" fill="#F8FAFC"/></svg><div class="fd font-extrabold text-[34px] leading-none tracking-tight"><span style="color:#E62E45">XG</span><span style="color:#F8FAFC">Pedia</span></div></div>
+</header>
+<div id="cmb" class="relative z-10 flex-1 px-[44px] py-2 fcol justify-between gap-5 overflow-hidden"><section id="hs" class="shrink-0"></section><section id="mg" class="flex-1 fcol gap-5 min-h-0"></section></div>
+<footer id="cf" class="relative z-10 px-[44px] pt-3 pb-5 shrink-0"><div class="border-t border-white/12 mb-2.5"></div><div class="fbw gap-4"><div class="fi gap-2.5 min-w-0"><span class="w-3 h-3 rounded-full bg-[#E62E45] shrink-0"></span><span id="ct" dir="ltr" class="fm text-[19px] font-extrabold tracking-[0.14em] uppercase text-slate-100 truncate"></span></div><div class="fi gap-3 fm shrink-0" dir="ltr"><span class="text-[21px] font-extrabold text-white">@XGPedia</span><span class="text-slate-500 text-[18px]">|</span><span id="so" class="text-[18px] font-semibold text-slate-300"></span></div></div></footer>
+</div></div></div></div>
+<div class="fixed lg:absolute bottom-[78px] lg:bottom-4 left-1/2 -translate-x-1/2 z-20 fi gap-1.5 p-1.5 rounded-2xl bg-[#070D1D]/92 backdrop-blur-xl border border-white/15 shadow-2xl max-w-[96vw]">
+<button id="zo" title="کوچک‌نمایی" class="zpm">−</button>
+<button data-z="1" class="zb">تناسب</button>
+<button data-z="1.5" class="zb fm">1.5×</button>
+<button data-z="2" class="zb fm">2×</button>
+<button id="zi" title="بزرگ‌نمایی" class="zpm">+</button>
+<button id="ts" class="hidden min-h-[36px] lg:min-h-[32px] px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-slate-300 text-xs font-bold items-center gap-1.5 whitespace-nowrap transition mr-1"><span>راهنمای امن استوری</span></button>
+</div>
+</main>
+</div>
+<nav aria-label="ناوبری موبایل" class="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[#070D1D]/95 backdrop-blur-xl border-t border-white/12 spb">
+<div class="grid grid-cols-2 px-1.5 py-1.5 gap-1">
+<button data-n="preview" class="mnb"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span class="text-[11px] font-extrabold">پیش‌نمایش</span></button>
+<button data-n="slides" class="mnb"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg><span class="text-[11px] font-bold">اسلایدها</span></button>
+</div>
+</nav>
+<div id="to" role="status" aria-live="polite" class="fixed bottom-24 lg:bottom-5 left-1/2 -translate-x-1/2 lg:left-5 lg:translate-x-0 z-50 px-4 py-2.5 rounded-xl bg-[#0F172A]/95 backdrop-blur-md border border-[#E62E45]/60 text-white text-xs font-bold shadow-2xl whitespace-nowrap opacity-0 pointer-events-none transition-opacity duration-200"></div>
+<script>
+(()=>{
+'use strict';
+
+const PRESETS={
+ars_liv:{
+competition:'لیگ برتر انگلیس',round:'هفته نهم • نبرد صدرنشینان',leagueEn:'PREMIER LEAGUE',season:'26/27',weekCode:'W9',
+day:'یکشنبه ۶ آبان ۱۴۰۵',time:'۲۰:۰۰',stadium:'ورزشگاه امارات',broadcast:'پخش زنده: شبکه سه',source:'Opta / Dixon-Coles 10K',
+probHome:42,probDraw:27,probAway:31,
+home:{name:'آرسنال',sub:'میکل آرتتا • مستحکم‌ترین خط دفاع',code:'ARS',color:'#EF0107',secondary:'#FFFFFF',logoUrl:null,form:['W','W','D','W','W'],xg:2.12,xga:.71,sot:6.4,radar:[94,92,96,98,91,93],last10:[1.85,2.2,1.7,2.3,1.95,2.15,1.9,2.25,1.8,2.12],wave:[.25,.36,.4,.29,.44,.38],kp:{name:'بوکایو ساکا',pos:'وینگر راست',s1:'۰.۸۹ xG+xA',s2:'۳.۵ پاس کلیدی'},watchout:'انتقال‌های سریع محمد صلاح در فضای پشت مدافع چپ و ضربات ایستگاهی'},
+away:{name:'لیورپول',sub:'آرنه اسلوت • بهترین حمله خارج خانه',code:'LIV',color:'#38BDF8',secondary:'#F6EB61',logoUrl:null,form:['W','W','W','W','D'],xg:2.24,xga:.82,sot:6.8,radar:[96,94,84,90,92,95],last10:[2.1,1.95,2.4,2.05,2.35,1.9,2.45,2.15,2.2,2.24],wave:[.3,.38,.34,.42,.41,.39],kp:{name:'محمد صلاح',pos:'وینگر راست',s1:'۱.۰۸ xG+xA',s2:'۳.۲ پاس کلیدی'},watchout:'کرنرهای کات‌دار آرسنال و برتری هوایی گابریل در محوطه ۶ قدم'},
+focus:{title:'دوئل مالکیت صبورانه با ضدحملات برق‌آسا',body:'کنترل ریتم در یک‌سوم میانی توسط آرسنال در برابر پاس‌های عمقی ترنت و سرعت وینگرهای لیورپول در فضاهای باز.',tag:'خط پرس ۴۲.۴ متری • نبرد مستقیم صدر جدول'}
+},
+ars_bay:{
+competition:'لیگ قهرمانان اروپا',round:'دور رفت یک‌چهارم نهایی',leagueEn:'CHAMPIONS LEAGUE',season:'26/27',weekCode:'QF1',
+day:'امشب',time:'۲۳:۳۰',stadium:'ورزشگاه امارات',broadcast:'پخش زنده: شبکه سه',source:'Opta / Dixon-Coles 10K',
+probHome:49,probDraw:24,probAway:27,
+home:{name:'آرسنال',sub:'میکل آرتتا • میانگین امتیاز ۲.۴',code:'ARS',color:'#EF0107',secondary:'#FFFFFF',logoUrl:null,form:['W','W','D','W','W'],xg:1.94,xga:.71,sot:6.3,radar:[94,92,96,95,91,93],last10:[1.8,2.15,1.65,2.25,1.9,2.05,1.85,2.1,1.75,1.94],wave:[.22,.34,.38,.27,.42,.31],kp:{name:'بوکایو ساکا',pos:'وینگر راست',s1:'۰.۸۴ xG+xA',s2:'۳.۴ پاس کلیدی'},watchout:'فرارهای هری کین در نیم‌فضاها و ضربات ایستگاهی کات‌دار کیمیش'},
+away:{name:'بایرن مونیخ',sub:'ونسان کمپانی • مالکیت ۶۱.۲٪',code:'BAY',color:'#38BDF8',secondary:'#DC2626',logoUrl:null,form:['W','L','W','W','D'],xg:1.38,xga:1.08,sot:5.5,radar:[90,86,75,79,89,92],last10:[1.6,1.15,1.45,1.35,1.7,1.2,1.5,1.18,1.32,1.38],wave:[.18,.24,.21,.29,.22,.24],kp:{name:'جمال موسیالا',pos:'هافبک تهاجمی',s1:'۰.۷۹ xG+xA',s2:'۴.۲ دریبل موفق'},watchout:'ضربات ایستگاهی کیمیش و حرکات بدون توپ کین پشت خط دفاع آرسنال'},
+focus:{title:'فشار روی خروج توپ از عقب',body:'توجه ویژه به فاصلهٔ هافبک‌های بایرن با خط دفاع و فضاهای نیم‌فضای راست که ساکا و اودگارد روی آن متمرکزند.',tag:'خط پرس ۴۲.۸ متری • ۶۲٪ مالکیت در یک‌سوم هجومی'}
+},
+prs_est:{
+competition:'لیگ برتر خلیج فارس',round:'هفته یازدهم • شهرآورد پایتخت',leagueEn:'PERSIAN GULF PRO LEAGUE',season:'26/27',weekCode:'W11',
+day:'فردا شب',time:'۱۹:۳۰',stadium:'ورزشگاه آزادی',broadcast:'پخش زنده: شبکه سه',source:'Metrica / XGPedia',
+probHome:46,probDraw:31,probAway:23,
+home:{name:'پرسپولیس',sub:'کارلوس گاریدو • میانگین امتیاز ۲.۳',code:'PRS',color:'#E62E45',secondary:'#FFFFFF',logoUrl:null,form:['W','W','D','W','W'],xg:1.68,xga:.74,sot:5.4,radar:[89,92,85,95,93,88],last10:[1.45,1.85,1.3,2.05,1.7,1.55,2.1,1.65,1.6,1.68],wave:[.2,.28,.34,.25,.36,.25],kp:{name:'اوستون اورونوف',pos:'وینگر چپ',s1:'۰.۶۸ xG+xA',s2:'۶.۲ لمس در محوطه'},watchout:'پاس‌های عمقی ماشاریپوف و ضدحملات سریع استقلال از جناحین'},
+away:{name:'استقلال',sub:'پیتسو موسیمانه • میانگین امتیاز ۱.۹',code:'EST',color:'#3B82F6',secondary:'#F8FAFC',logoUrl:null,form:['W','D','W','L','W'],xg:1.24,xga:.96,sot:4.1,radar:[82,84,90,87,81,83],last10:[1.2,1.05,1.45,.9,1.4,1.25,1.55,1.15,1.3,1.24],wave:[.16,.2,.22,.25,.2,.21],kp:{name:'جلال‌الدین ماشاریپوف',pos:'بازی‌ساز',s1:'۰.۶۱ xG+xA',s2:'۲.۹ پاس کلیدی'},watchout:'نفوذهای ترکیبی از کانال چپ و توپ‌های دوم پشت محوطه جریمه'},
+focus:{title:'مالکیت صبورانه در برابر بلاک فشرده',body:'کنترل ریتم بازی توسط هافبک‌های پرسپولیس در برابر انتقال‌های سریع استقلال پس از بازپس‌گیری توپ.',tag:'اهمیت حیاتی گل اول در تعیین استراتژی نیمه دوم'}
+},
+rma_bar:{
+competition:'لالیگا اسپانیا',round:'هفته ۳۲ • ال‌کلاسیکو',leagueEn:'LALIGA',season:'26/27',weekCode:'W32',
+day:'امشب',time:'۲۲:۳۰',stadium:'سانتیاگو برنابئو',broadcast:'پخش زنده: شبکه ورزش',source:'Opta / LaLiga',
+probHome:44,probDraw:23,probAway:33,
+home:{name:'رئال مادرید',sub:'کارلو آنچلوتی • قهرمان اروپا',code:'RMA',color:'#F59E0B',secondary:'#FFFFFF',logoUrl:null,form:['W','W','W','D','W'],xg:2.18,xga:.92,sot:6.9,radar:[95,85,88,90,91,94],last10:[2.1,1.85,2.45,2.3,1.9,2.6,2.05,1.75,2.35,2.18],wave:[.28,.35,.4,.32,.42,.41],kp:{name:'کیلیان امباپه',pos:'مهاجم نوک',s1:'۱.۰۲ xG+xA',s2:'۴.۸ شوت در بازی'},watchout:'تله آفساید خط دفاعی بالای بارسلونا و خلاقیت لامین یامال'},
+away:{name:'بارسلونا',sub:'هانسی فلیک • صدرنشین لالیگا',code:'BAR',color:'#E62E45',secondary:'#004D98',logoUrl:null,form:['W','L','W','W','W'],xg:1.96,xga:1.05,sot:6.4,radar:[97,96,84,83,95,96],last10:[2.2,1.6,2.45,2,2.3,1.95,2.5,1.85,2.15,1.96],wave:[.3,.36,.34,.38,.31,.27],kp:{name:'لامین یامال',pos:'وینگر راست',s1:'۰.۹۵ xG+xA',s2:'۰.۴۱ تهدید پاس (xT)'},watchout:'فرارهای عمقی وینیسیوس و امباپه در فضای پشت مدافعان کناری'},
+focus:{title:'دوئل خط دفاعی بالا با پاس‌های عمقی',body:'خط دفاعی بسیار بالای بارسلونا در برابر پاس‌های مستقیم بلینگام برای زوج سرعتی خط حمله رئال.',tag:'میانگین ۴.۵ آفساید حریف به ازای هر ۹۰ دقیقه'}
+}
+};
+
+const F={'4:5':[1080,1350,'پست 4:5'],'9:16':[1080,1920,'استوری 9:16'],'16:9':[1920,1080,'بنر 16:9']};
+const MD=[['stats','مقایسه شاخص‌های فنی (xG / xGA / SOT)',0],['focus','نقطه تمرکز بازی (تحلیل تاکتیکی)',1],['radar','رادار ۶ محوره تاکتیکی',1],['keyduel','تقابل مهره‌های کلیدی',1],['poisson','ماتریس احتمال دقیق نتیجه (پواسون ۵×۵)',1],['signals','سیگنال‌های آماری و ارزش بازار (+EV)',0],['wave','موج زمانی امید گل (۱۵ دقیقه‌ای)',1],['watchout','باید حواسشون بهش باشه (هشدارها)',1],['trend10','روند امید گل در ۱۰ بازی اخیر',1]];
+const SU=[['slide1','اسلاید ۱: پیش‌بازی اصلی (پیشنهادی)','SLIDE 1','اسلاید ۱ • اصلی'],['slide2','اسلاید ۲: رادار تاکتیکی و تقابل مهره‌ها','SLIDE 2','اسلاید ۲ • رادار و مهره'],['slide3','اسلاید ۳: پواسون و سیگنال‌های ارزش (+EV)','SLIDE 3','اسلاید ۳ • پواسون و +EV'],['slide4','اسلاید ۴: موج زمانی و هشدارهای بازی','SLIDE 4','اسلاید ۴ • موج و هشدار'],['slide5','اسلاید ۵: نسخه کامل پرجزئیات (خروجی سایت)','SLIDE 5','اسلاید ۵ • کامل پرجزئیات'],['custom','حالت کاستوم (دلخواه)','CUSTOM']];
+
+const $=i=>document.getElementById(i),$$=s=>document.querySelectorAll(s),on=(s,f)=>$$(s).forEach(e=>e.onclick=()=>f(e));
+const f1=v=>v.toFixed(1),f2=v=>v.toFixed(2),fa=v=>String(v).replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d]);
+const S={fmt:'4:5',sp:'slide1',hm:'full',sz:true,mv:'preview',zm:1,mods:MD.map(([id,,h])=>({id,e:id==='stats'||id==='focus',s:h?'half':'full'})),m:structuredClone(PRESETS.ars_liv)};
+
+const lum=h=>{const c=(h||'#E62E45').replace('#',''),n=parseInt(c.length===3?c.replace(/./g,x=>x+x):c,16)||0,a=[n>>16&255,n>>8&255,n&255].map(v=>(v/=255)<=.03928?v/12.92:((v+.055)/1.055)**2.4);return a[0]*.2126+a[1]*.7152+a[2]*.0722};
+const ctr=h=>lum(h)>.55?'#070D1D':'#fff';
+const T=msg=>{const e=$('to');if(!e)return;e.textContent=msg;e.classList.replace('opacity-0','opacity-100');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.replace('opacity-100','opacity-0'),2300)};
+const spL=(P,t=.25)=>P.length<2?P[0]?`M${P[0].x} ${P[0].y}`:'':P.reduce((d,p,i)=>{if(!i)return`M${f1(p.x)} ${f1(p.y)}`;const a=P[i-2]||P[0],b=P[i-1],c=P[i+1]||p;return`${d} C${f1(b.x+(p.x-a.x)*t)} ${f1(b.y+(p.y-a.y)*t)},${f1(p.x-(c.x-b.x)*t)} ${f1(p.y-(c.y-b.y)*t)},${f1(p.x)} ${f1(p.y)}`},'');
+const cc=(a,k,r,w)=>a.map(p=>`<circle cx="${f1(p.x)}" cy="${f1(p.y)}" r="${r}" fill="${k}" stroke="#fff" stroke-width="${w}"/>`).join('');
+
+const poi=(lh,la)=>{let f=1,F=[1],M=[],pH=0,pD=0,pA=0,pO=0,pB=0,h,a,p,t;for(h=1;h<7;h++)F[h]=f*=h;for(h=0;h<7;h++){M[h]=[];for(a=0;a<7;a++){t=!h&&!a?1+lh*la*.07:!h&&a===1?1-lh*.07:h===1&&!a?1-la*.07:h===1&&a===1?1.07:1;p=Math.max(0,lh**h*Math.exp(-lh)/F[h]*(la**a*Math.exp(-la)/F[a])*t);M[h][a]=p;h>a?pH+=p:h===a?pD+=p:pA+=p;if(h+a>2)pO+=p;if(h&&a)pB+=p}}t=pH+pD+pA||1;return{M,pH:pH/t,pD:pD/t,pA:pA/t,pO:pO/t,pB:pB/t}};
+
+const cr=(t,sd,sz)=>{
+const ds='filter:drop-shadow(0 12px 22px #0000008c)';
+if(t.logoUrl)return`<img src="${t.logoUrl}" alt="${t.name}" style="width:${sz}px;height:${sz}px;object-fit:contain;${ds}">`;
+const p=t.color||'#EF0107',s=t.secondary||'#fff',cd=(t.code||'FC').slice(0,3).toUpperCase(),u=`${sd}_${sz}`,d='M90 16L150 40V88C150 128 124.5 156.5 90 166C55.5 156.5 30 128 30 88V40Z';
+return`<svg width="${sz}" height="${sz}" viewBox="0 0 180 180" fill="none" style="${ds}"><defs><linearGradient id="g${u}" x1="20" y1="15" x2="160" y2="165" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="${s}" stop-opacity=".95"/><stop offset=".5" stop-color="${p}" stop-opacity=".92"/><stop offset="1" stop-color="${s}" stop-opacity=".72"/></linearGradient><clipPath id="c${u}"><path d="${d}"/></clipPath></defs><path d="M90 12L154 38V88C154 130.5 127 160.5 90 170.5C53 160.5 26 130.5 26 88V38Z" fill="${p}" fill-opacity=".22"/><g clip-path="url(#c${u})"><rect x="25" y="12" width="130" height="158" fill="${p}"/><path d="M25 112L155 56V84L25 140Z" fill="${s}" fill-opacity=".28"/><path d="M90 16L150 40V58L90 34L30 58V40Z" fill="${s}" fill-opacity=".9"/><ellipse cx="90" cy="30" rx="65" ry="28" fill="#fff" fill-opacity=".14"/></g><path d="${d}" stroke="url(#g${u})" stroke-width="5"/><rect x="42" y="68" width="96" height="48" rx="14" fill="${lum(p)>.65?'#0D1730':'#070d1d9e'}" stroke="${s}" stroke-opacity=".52" stroke-width="2"/><text x="90" y="102" text-anchor="middle" fill="#fff" font-family="Space Grotesk,JetBrains Mono,sans-serif" font-weight="800" font-size="32" letter-spacing="2">${cd}</text><circle cx="90" cy="136" r="5" fill="${ctr(p)}" fill-opacity=".85"/></svg>`;
+};
+
+const mh=(t,r,b='bg-[#E62E45]',mb='mb-3 pb-3')=>`<div class="mh fbw ${mb} border-b border-white/12"><div class="fi gap-3"><span class="w-2 h-7 rounded-full ${b}"></span><h3 class="mt text-[30px] font-black text-white">${t}</h3></div>${r}</div>`;
+const lg=(m,hc,ac)=>`<div class="fi gap-4 text-[20px] font-extrabold"><span class="inline-flex items-center gap-2"><span class="w-3.5 h-3.5 rounded-full" style="background:${hc}"></span>${m.home.name}</span><span class="inline-flex items-center gap-2"><span class="w-3.5 h-3.5 rounded-full" style="background:${ac}"></span>${m.away.name}</span></div>`;
+const pc=(m,hc,ac,mn,cp)=>`<div class="pc${cp?' pcc':''}"><div class="ps" style="width:${m.probHome}%;background:${hc};color:${ctr(hc)}">${m.probHome>=mn?fa(m.probHome)+'٪':''}</div><div class="ps" style="width:${m.probDraw}%;background:#475569;color:#fff">${m.probDraw>=mn?fa(m.probDraw)+'٪':''}</div><div class="ps" style="width:${m.probAway}%;background:${ac};color:${ctr(ac)}">${m.probAway>=mn?fa(m.probAway)+'٪':''}</div></div>`;
+
+const hl=()=>{$$('.sb').forEach(b=>b.classList.toggle('on',b.dataset.s===S.sp));$$('.qb').forEach(b=>b.classList.toggle('on',b.dataset.q===S.sp));$$('.hb').forEach(b=>b.classList.toggle('on',b.dataset.h===S.hm))};
+
+function setSlide(id){
+S.sp=id;
+const set=(ids,rst)=>S.mods.forEach((m,i)=>{m.e=ids.includes(m.id);if(rst&&m.e)m.s=MD[i][2]?'half':'full'});
+if(id==='slide1'){S.hm='full';set(S.fmt==='9:16'?['stats','focus','signals']:['stats','focus'])}
+else if(id==='slide2'){S.hm='compact';set(['radar','keyduel'],1)}
+else if(id==='slide3'){S.hm='compact';set(['poisson','signals'],1)}
+else if(id==='slide4'){S.hm='compact';set(['wave','watchout'],1)}
+else if(id==='slide5'){S.hm='full';set(S.fmt==='9:16'?MD.map(x=>x[0]):['stats','radar','focus','keyduel','watchout','signals'],1)}
+hl();modUI();draw();
+}
+
+function heroH(){
+const m=S.m,hc=m.home.color,ac=m.away.color,hX=+m.home.xg||1.6,aX=+m.away.xg||1.3;
+if(S.hm==='compact'){
+const c=(t,sd,k,lb,rv)=>{const a=`<div class="shrink-0">${cr(t,sd,76)}</div>`,b=`<div class="min-w-0"><div class="text-[34px] font-black text-white leading-tight truncate">${t.name}</div><div class="text-[20px] font-bold truncate" style="color:${k}">${lb}</div></div>`;return`<div class="col-span-4 fi ${rv?'justify-end text-left':''} gap-3.5 min-w-0">${rv?b+a:a+b}</div>`};
+return`<div class="rounded-[24px] bg-[#0B162F]/90 border border-white/15 px-6 py-4 fcol gap-3.5 shadow-xl"><div class="grid grid-cols-11 items-center gap-3">${c(m.home,'h',hc,'میزبان',0)}<div class="col-span-3 fcol items-center justify-center"><div class="px-4 py-1 rounded-full bg-[#E62E45] text-white fd font-extrabold text-[20px] leading-none tracking-wider shadow-lg shadow-[#E62E45]/35 mb-1.5">VS</div><div class="fc gap-2.5 px-4 py-1.5 rounded-2xl bg-[#060D1E] border border-white/15"><span class="text-[32px] font-black leading-none" style="color:${hc}">${fa(f2(hX))}</span><span class="text-[19px] font-extrabold text-slate-400 fm">xG</span><span class="text-[32px] font-black leading-none" style="color:${ac}">${fa(f2(aX))}</span></div></div>${c(m.away,'a',ac,'میهمان',1)}</div>${pc(m,hc,ac,12,1)}</div>`;
+}
+const od=p=>fa(f2(100/Math.max(1,p))),xH=m.probHome*.03+m.probDraw*.01,xA=m.probAway*.03+m.probDraw*.01,dp=Math.min(78,Math.max(22,m.probHome+m.probDraw/2));
+const fm=a=>a.map((f,i)=>{const c='WDL'.includes(f)?f:'D';return`<span class="fdt f${c}${i===a.length-1?' fl':''}">${c}</span>`}).join('');
+const dt=S.sp==='slide5',b16=S.fmt==='16:9',cS=dt?104:b16?140:156,nS=dt?'text-[28px]':b16?'text-[42px]':'text-[48px]',xS=dt?'text-[22px]':b16?'text-[32px]':'text-[34px]';
+const tc=(t,sd,tg,dr)=>`<div class="col-span-4 fcol items-center text-center"><div class="fc mb-2">${cr(t,sd,cS)}</div><${tg} class="${nS} font-black text-white leading-[1.08] tracking-tight">${t.name}</${tg}><p class="text-[22px] font-bold text-slate-200 mt-1.5 line-clamp-1 max-w-[330px]">${t.sub||''}</p><div dir="${dr}" class="fi gap-2 mt-3">${fm(t.form)}</div></div>`;
+const fo=(l,p,k)=>`<div class="fi gap-2 rounded-2xl px-3 py-1.5 min-w-0 z-10"><span class="text-[20px] font-bold text-slate-300 whitespace-nowrap">ضریب منصفانه ${l}</span><span class="text-[24px] font-black leading-none" style="color:${k}">${od(p)}</span></div>`;
+return`<div class="fcol justify-between gap-5"><div class="grid grid-cols-11 items-center gap-2">${tc(m.home,'h','h1','rtl')}<div class="col-span-3 fcol items-center justify-center text-center gap-3.5 px-3"><div class="fcol items-center"><div class="vt" style="background:linear-gradient(to bottom,transparent,#E62E45)"></div><div class="relative fc"><div class="w-[84px] h-[84px] rounded-[22px] rotate-45 bg-[#E62E45] shadow-[0_0_40px_rgba(230,46,69,0.55)] border-2 border-white/30"></div><span class="absolute fd font-extrabold text-[35px] text-white tracking-tight">VS</span></div><div class="vb" style="background:linear-gradient(to top,transparent,#E62E45)"></div></div><div class="hx w-full py-3.5 px-3 rounded-3xl bg-[#091226]/90 border border-white/14 shadow-xl fcol items-center gap-2.5"><div class="fc gap-2.5 w-full min-w-0"><span class="${xS} font-black leading-none" style="color:${hc}">${fa(f2(hX))}</span><div class="fcol items-center leading-none shrink-0"><span class="text-[13px] font-extrabold text-slate-400 fm mb-0.5">xG</span><span class="text-[17px] font-black text-emerald-300 fm whitespace-nowrap">${fa(f2(hX+aX))}</span></div><span class="${xS} font-black leading-none" style="color:${ac}">${fa(f2(aX))}</span></div><div class="w-full pt-2 border-t border-white/12 fc gap-3 text-center"><span class="text-[19px] font-black text-white leading-tight whitespace-nowrap">${fa(f2(xH))}</span><span class="text-[15px] font-extrabold text-slate-400 fm leading-none">xPts</span><span class="text-[19px] font-black text-white leading-tight whitespace-nowrap">${fa(f2(xA))}</span></div></div></div>${tc(m.away,'a','h2','ltr')}</div><div class="mt-3 space-y-2">${pc(m,hc,ac,11,0)}<div class="relative w-full fbw gap-2 px-1">${fo('میزبان',m.probHome,hc)}<div class="absolute top-1/2 -translate-y-1/2 fi gap-2 rounded-2xl px-3 py-1.5 whitespace-nowrap z-10 transition-all duration-200" style="right:${f1(dp)}%;transform:translate(50%,-50%)"><span class="text-[20px] font-bold text-slate-300">مساوی</span><span class="text-[24px] font-black text-white leading-none">${od(m.probDraw)}</span></div>${fo('میهمان',m.probAway,ac)}</div></div></div>`;
+}
+
+function modH(mod,b2){
+const m=S.m,hc=m.home.color,ac=m.away.color,id=mod.id;
+const sc=b2?(['stats','signals','poisson','wave','trend10'].includes(id)?'col-span-2':'col-span-1'):mod.s==='half'?'mf':'w-full';
+
+if(id==='stats'){
+const rw=[['امید گل تولیدی (xG)',+m.home.xg,+m.away.xg,2],['امید گل دریافتی (xGA)',+m.home.xga,+m.away.xga,2],['شوت در چارچوب (SOT)',+m.home.sot,+m.away.sot,1]];
+return`<div class="xm flex-1 ${sc}">${mh('مقایسه شاخص‌های کلیدی (در ۹۰ دقیقه)','<span class="text-[20px] fm font-extrabold text-slate-300">PER 90</span>','bg-[#E62E45]','pb-2 mb-2.5')}<div class="flex-1 min-h-0 fcol justify-center gap-3">${rw.map(([l,h,a,d])=>{const mx=Math.max(h,a,.01);return`<div class="space-y-2"><div class="grid grid-cols-3 items-center"><span class="text-right text-[34px] font-black leading-none" style="color:${hc}">${fa(h.toFixed(d))}</span><span class="text-center text-[24px] font-extrabold text-slate-100 leading-tight">${l}</span><span class="text-left text-[34px] font-black leading-none" style="color:${ac}">${fa(a.toFixed(d))}</span></div><div class="grid grid-cols-2 gap-2"><div class="ct hs"><div class="ch" style="width:${f1(h/mx*100)}%;background:${hc}"></div></div><div class="ct as"><div class="ca" style="width:${f1(a/mx*100)}%;background:${ac}"></div></div></div></div>`}).join('')}</div></div>`;
+}
+
+if(id==='focus')return`<div class="xe flex-1 ${sc}"><svg class="absolute left-5 bottom-5 w-44 h-auto opacity-[0.09] pointer-events-none" viewBox="0 0 240 160" fill="none" stroke="#DCE6F8" stroke-width="2.5"><rect x="2" y="2" width="236" height="156" rx="8"/><line x1="120" y1="2" x2="120" y2="158"/><circle cx="120" cy="80" r="32"/></svg><div class="relative z-10 flex-1 fcol justify-between gap-3"><div>${mh('نقطه تمرکز بازی','<span class="text-[20px] fm font-extrabold text-slate-300">TACTICAL LENS</span>')}<h4 class="text-[30px] font-black text-amber-300 leading-snug mb-2">${m.focus.title}</h4><p class="text-[25px] leading-[1.62] text-slate-100 font-semibold">${m.focus.body}</p></div><div class="pt-3 border-t border-white/12 fi gap-2.5 text-[21px] font-extrabold text-slate-100"><span class="w-3 h-3 rounded-full bg-[#E62E45] shrink-0"></span><span>${m.focus.tag}</span></div></div></div>`;
+
+if(id==='radar'){
+const lb=['خلق موقعیت','شدت پرس','ایستگاهی','صلابت دفاعی','مالکیت مؤثر','تهدید پاس'],hV=m.home.radar||[90,88,92,91,89,90],aV=m.away.radar||[85,84,78,80,87,89],cx=450,cy=198,R=114,dx=R*.866+26;
+const pt=vs=>vs.map((v,i)=>{const a=(i*60-90)*Math.PI/180,r=Math.max(15,Math.min(100,v))/100*R;return{x:cx+r*Math.cos(a),y:cy+r*Math.sin(a)}});
+const py=a=>a.map(p=>`${f1(p.x)},${f1(p.y)}`).join(' '),rg=k=>Array.from({length:6},(_,i)=>{const a=(i*60-90)*Math.PI/180;return`${f1(cx+R*k*Math.cos(a))},${f1(cy+R*k*Math.sin(a))}`}).join(' ');
+const hC=pt(hV),aC=pt(aV),sp=[[cx,28,'middle'],[cx+dx,cy-R*.5-6,'start'],[cx+dx,cy+R*.5-2,'start'],[cx,cy+R+32,'middle'],[cx-dx,cy+R*.5-2,'end'],[cx-dx,cy-R*.5-6,'end']];
+return`<div class="xm flex-1 ${sc}">${mh('رادار ۶ محوره تاکتیکی',lg(m,hc,ac),'bg-[#E62E45]','pb-3 mb-2')}<div class="flex-1 fc min-h-0" dir="ltr"><svg class="rs w-full h-auto" viewBox="0 0 900 390" fill="none"><g stroke="#ffffff29" stroke-width="1.6">${[1,.75,.5,.25].map(k=>`<polygon points="${rg(k)}"/>`).join('')}<line x1="${cx}" y1="${cy-R}" x2="${cx}" y2="${cy+R}"/><line x1="${cx+R*.866}" y1="${cy-R*.5}" x2="${cx-R*.866}" y2="${cy+R*.5}"/><line x1="${cx+R*.866}" y1="${cy+R*.5}" x2="${cx-R*.866}" y2="${cy-R*.5}"/></g><polygon points="${py(aC)}" fill="${ac}" fill-opacity=".24" stroke="${ac}" stroke-width="3.6"/><polygon points="${py(hC)}" fill="${hc}" fill-opacity=".3" stroke="${hc}" stroke-width="4"/>${cc(aC,ac,4.5,1.8)}${cc(hC,hc,5.5,2)}${lb.map((l,i)=>{const[x,y,an]=sp[i];return`<g><text x="${f1(x)}" y="${f1(y)}" text-anchor="${an}" fill="#fff" font-family="Vazirmatn" font-weight="800" font-size="24">${l}</text><text x="${f1(x)}" y="${f1(y+30)}" text-anchor="${an}" font-family="Vazirmatn" font-weight="900" font-size="22"><tspan fill="${hc}">${fa(hV[i])}</tspan><tspan fill="#94A3B8"> / </tspan><tspan fill="${ac}">${fa(aV[i])}</tspan></text></g>`}).join('')}</svg></div></div>`;
+}
+
+if(id==='keyduel'){
+const cd=(k,c)=>`<div class="col-span-5 p-5 rounded-3xl bg-white/[0.05] border border-white/14 fcol justify-between gap-3" style="border-right:6px solid ${c}"><div class="flex items-start justify-between gap-2"><span class="text-[28px] font-black text-white leading-tight">${k.name}</span><span class="text-[20px] font-bold px-3 py-1 rounded-xl bg-white/12 text-slate-100 shrink-0">${k.pos}</span></div><div class="pt-3 border-t border-white/12 space-y-1.5"><div class="text-[25px] font-black" style="color:${c}">${k.s1}</div><div class="text-[22px] font-bold text-slate-200">${k.s2}</div></div></div>`;
+return`<div class="xm flex-1 ${sc}">${mh('تقابل مهره‌های کلیدی','<span class="text-[20px] fm font-extrabold text-slate-300">KEY DUEL</span>')}<div class="grid grid-cols-11 items-stretch gap-3 my-auto">${cd(m.home.kp,hc)}<div class="col-span-1 fc"><span class="w-14 h-14 rounded-2xl bg-[#E62E45]/25 border-2 border-[#E62E45]/60 fc fd text-[22px] font-extrabold text-[#FF6B7F]">VS</span></div>${cd(m.away.kp,ac)}</div></div>`;
+}
+
+if(id==='poisson'){
+const r=poi(+m.home.xg,+m.away.xg),tp=[];
+let cl=`<div class="fc text-[18px] font-extrabold text-slate-300 fm">${m.home.code}\\${m.away.code}</div>`;
+for(let a=0;a<5;a++)cl+=`<div class="fc text-[22px] font-black" style="color:${ac}">${fa(a)}</div>`;
+for(let h=0;h<5;h++){cl+=`<div class="fc text-[22px] font-black" style="color:${hc}">${fa(h)}</div>`;for(let a=0;a<5;a++){const p=r.M[h][a]*100,op=f2(Math.min(.82,.12+p/13*.68));tp.push([`${fa(h)} - ${fa(a)}`,p]);cl+=`<div class="rounded-xl py-2 px-0.5 text-center border border-white/12 fc overflow-hidden" style="background:rgba(${h>a?'230,46,69':h===a?'100,116,139':'56,189,248'},${op})"><div class="text-[21px] font-black text-white leading-none whitespace-nowrap">${fa(f1(p))}٪</div></div>`}}
+tp.sort((x,y)=>y[1]-x[1]);
+return`<div class="xm flex-1 ${sc}">${mh('ماتریس احتمال دقیق نتیجه (پواسون)','<span class="text-[20px] font-bold text-slate-300">محتمل‌ترین نتایج</span>','bg-[#E62E45]','pb-2.5 mb-3')}<div class="fi gap-3 mb-3.5">${tp.slice(0,3).map(([s,p],i)=>`<div class="flex-1 rounded-2xl px-4 py-2.5 border ${i?'bg-white/[0.06] border-white/14':'bg-emerald-500/20 border-emerald-400/50'} fbw gap-2"><span class="text-[30px] font-black text-white leading-none">${s}</span><span class="text-[22px] font-extrabold ${i?'text-slate-200':'text-emerald-300'} leading-none">${fa(f1(p))}٪</span></div>`).join('')}</div><div class="grid grid-cols-6 gap-2 flex-1 content-center">${cl}</div></div>`;
+}
+
+if(id==='signals'){
+const r=poi(+m.home.xg,+m.away.xg),fn=+m.probHome>=+m.probAway?m.home.name:m.away.name,fp=Math.max(+m.probHome,+m.probAway)/100;
+const tr=e=>e>=8?['eh','بسیار ارزشمند']:e>=5?['ed','ارزشمند']:e>=2.5?['ew','ارزش متوسط']:['en','ارزش جزئی'];
+const br=(lb,lc,k,pct)=>{const n=Math.min(100,pct),tx=`${fa(f1(pct))}٪`,inB=n>=70;return`<div class="ebr"><span class="ebl ${lc}">${lb}</span><div class="ebt"><div class="ef${k}" style="width:${f1(n)}%">${inB?`<span class="evv ei${k}">${tx}</span>`:''}</div>${inB?'':`<span class="evv eo${k}">${tx}</span>`}</div></div>`};
+const it=[[`برد ${fn}`,fp,1.092],['بیش از ۲.۵ گل',r.pO,1.068],['گلزنی هر دو تیم',r.pB,1.041]].map(([t,rw,ml])=>{
+const mp=Math.min(.92,Math.max(.14,rw)),od=Math.max(1.05,Math.round(ml/mp*100)/100),kp=1/od,ev=Math.max(.5,(mp*od-1)*100),[tc,tl]=tr(ev);
+return`<div class="er"><div class="min-w-0 text-right"><div class="et">${t}</div><div class="em">ضریب ${fa(f2(od))} · معادل ${fa(f1(kp*100))}٪</div></div><div class="ebc">${br('احتمال سنجی مدل','text-slate-300','m',mp*100)}${br('احتمال سنجی بازار','text-slate-400','k',kp*100)}</div><div class="epw ${tc}"><div dir="ltr" class="epb"><span>+${fa(f1(ev))}٪</span><span class="ept">EV</span></div><span class="eps">${tl}</span></div></div>`;
+}).join('');
+return`<div class="xm flex-1 ${sc}">${mh('سیگنال‌های ارزش','<span dir="ltr" class="text-[19px] fm font-bold tracking-[0.06em] text-slate-400 uppercase">EXPECTED VALUE · MODEL vs MARKET</span>','bg-emerald-400')}<div class="el">${it}</div></div>`;
+}
+
+if(id==='wave'||id==='trend10'){
+const w=id==='wave',sH=w?(m.home.wave||[.22,.34,.38,.27,.42,.31]):(m.home.last10||[1.8,2.1,1.7,2.2,1.9,2,1.8,2.1,1.8,1.9]),sA=w?(m.away.wave||[.18,.24,.21,.29,.22,.24]):(m.away.last10||[1.6,1.2,1.5,1.4,1.7,1.2,1.5,1.2,1.3,1.4]);
+const mx=Math.max(...sH,...sA,w?.48:2.6),W=900,H=200,px=w?42:36,py=20,pW=W-px*2,pH=H-py*2,toP=a=>a.map((v,i)=>({x:px+i/(a.length-1)*pW,y:py+pH-v/mx*pH}));
+const hP=toP(sH),aP=toP(sA),hC=spL(hP,w?.25:.22),aC=spL(aP,w?.25:.22),mn=["۱۵'","۳۰'","۴۵'","۶۰'","۷۵'","۹۰'"],av=a=>fa(f2(a.reduce((x,y)=>x+y,0)/a.length));
+const rt=w?lg(m,hc,ac):`<div class="fi gap-3 text-[24px] font-black"><span class="px-3 py-0.5 rounded-xl bg-white/[0.07]" style="color:${hc}">${av(sH)}</span><span class="text-slate-500">/</span><span class="px-3 py-0.5 rounded-xl bg-white/[0.07]" style="color:${ac}">${av(sA)}</span></div>`;
+return`<div class="xm flex-1 ${sc}">${mh(w?'موج زمانی امید گل (۱۵ دقیقه‌ای)':'روند xG در ۱۰ بازی اخیر',rt,'bg-[#E62E45]','pb-3 mb-2')}<div class="flex-1 fi" dir="ltr"><svg class="ws w-full h-auto max-h-[250px]" viewBox="0 0 ${W} ${H+46}" fill="none">${w?`<defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${hc}" stop-opacity=".38"/><stop offset="1" stop-color="${hc}" stop-opacity="0"/></linearGradient></defs>`:''}<g stroke="#ffffff1c" stroke-width="1.5" stroke-dasharray="6 6">${[0,.5,1].map(k=>`<line x1="${px}" y1="${py+pH*k}" x2="${W-px}" y2="${py+pH*k}"/>`).join('')}</g>${w?`<path d="${hC} L ${hP[5].x} ${py+pH} L ${hP[0].x} ${py+pH} Z" fill="url(#wg)"/>`:''}<path d="${aC}" stroke="${ac}" stroke-width="4.5" fill="none" stroke-linecap="round"/><path d="${hC}" stroke="${hc}" stroke-width="5" fill="none" stroke-linecap="round"/>${w?cc(aP,ac,5.5,2):''}${hP.map((p,i)=>`<circle cx="${f1(p.x)}" cy="${f1(p.y)}" r="${w?6.5:5.5}" fill="${hc}" stroke="#fff" stroke-width="${w?2.2:2}"/><text x="${f1(p.x)}" y="${H+34}" text-anchor="middle" fill="#E2E8F0" font-family="Vazirmatn" font-weight="800" font-size="${w?22:21}">${w?mn[i]:fa(i+1)}</text>`).join('')}</svg></div></div>`;
+}
+
+if(id==='watchout'){
+const bx=(t,c)=>`<div class="p-4 px-5 rounded-2xl bg-white/[0.06] border border-white/14" style="border-right:6px solid ${c}"><div class="text-[23px] font-black mb-1.5" style="color:${c}">هشدار برای ${t.name}:</div><p class="text-[24px] text-slate-100 leading-relaxed font-semibold">${t.watchout}</p></div>`;
+return`<div class="xe flex-1 ${sc}">${mh('باید حواسشون بهش باشه','<span class="text-[20px] fm font-extrabold text-amber-300">WATCHLIST</span>','bg-[#F59E0B]')}<div class="flex-1 fcol justify-center gap-4">${bx(m.home,hc)}${bx(m.away,ac)}</div></div>`;
+}
+return'';
+}
+
+function dens(n){
+const f=S.fmt,h=S.hm,cr=S.sp==='slide5'?(f==='16:9'?n>6:n>9):f==='4:5'?(h==='full'?n>2:n>3):f==='9:16'?(h==='full'?n>3:n>4):n>4;
+$('dc').textContent=`${fa(n)} ماژول`;
+$('dt').textContent=cr?'کمی شلوغ — کاهش ماژول یا هدر فشرده پیشنهاد می‌شود':'تراکم ایده‌آل برای موبایل';
+$('sdp').textContent=cr?'⚠ کمی شلوغ':'✓ تراکم ایده‌آل';
+['db','dd','sdp'].forEach(i=>$(i).classList.toggle('warn',cr));
+return cr;
+}
+
+function draw(){
+const m=S.m,[w,h,lb]=F[S.fmt],bd=$('ea'),by=$('cmb'),hr=$('hs'),gd=$('mg');
+const ac=S.mods.filter(x=>x.e),crw=dens(ac.length),b2=S.fmt==='16:9',dt=S.sp==='slide5',s9=S.fmt==='9:16';
+bd.style.width=`${w}px`;bd.style.height=`${h}px`;
+$('fs').setAttribute('viewBox',`0 0 ${w} ${h}`);
+bd.className=`f${S.fmt.split(':')[0]}${crw?' dc':''}${dt?' dv':''}`;
+
+const sb=$('ts');
+$('sz').classList.toggle('hidden',!(s9&&S.sz));
+sb.classList.toggle('hidden',!s9);sb.classList.toggle('flex',s9);sb.classList.toggle('on',s9&&S.sz);
+
+const rx=w-147,rx1=w-24,rx2=w-44,by1=h-24,by2=h-44;
+const sa=(i,o)=>{const e=$(i);for(const k in o)e.setAttribute(k,o[k])};
+sa('pr',{width:w-24,height:h-24});
+sa('hl',{x1:w/2,x2:w/2,y2:h-12});
+sa('rb',{x:rx});sa('ra',{d:`M${rx} 245A95 95 0 0 0 ${rx} 405`});
+sa('crh',{d:`M24 44V24H44M${rx1} 44V24H${rx2}M24 ${by2}V${by1}H44M${rx1} ${by2}V${by1}H${rx2}`});
+
+const dm=`${w}×${h}`,up=(v,d)=>(v||d).trim().toUpperCase();
+const tx={adb:dm,mdb:dm,mt:`${m.home.name} × ${m.away.name}`,mm:`${fa(m.probHome)}٪ / ${fa(m.probDraw)}٪ / ${fa(m.probAway)}٪ • ${lb}`,cc:m.competition,cr:fa(m.round),cd:`${fa(m.day)} • ${fa(m.time)}`,cs:m.stadium,cb:m.broadcast,so:m.source,ct:`${[up(m.leagueEn,'PREMIER LEAGUE'),up(m.season,'26/27'),up(m.weekCode,'W9')].filter(Boolean).join(' ')} • PRE-MATCH`};
+for(const k in tx)$(k).textContent=tx[k];
+
+const gp=b2?'':s9?(dt?'gap-2.5':'gap-3'):dt?'gap-2':crw?'gap-2.5':'gap-3';
+by.className=`relative z-10 flex-1 py-2 overflow-hidden ${b2?'px-[44px] grid grid-cols-12 gap-8 items-stretch':`px-[36px] fcol justify-between ${gp}`}`;
+hr.className=b2?'col-span-5 fcol justify-center border-l border-white/12 pl-7':'shrink-0';
+gd.className=b2?'col-span-7 grid grid-cols-2 auto-rows-min gap-3 content-start min-h-0':`flex-1 grid grid-cols-2 ${dt?'auto-rows-min content-start':'auto-rows-fr'} ${s9?'gap-3':`${gp} overflow-hidden`} min-h-0`;
+
+$('ag').style.background=`radial-gradient(circle at 86% 32%,${m.home.color}38,transparent 48%),radial-gradient(circle at 14% 32%,${m.away.color}38,transparent 48%),radial-gradient(circle at 50% 36%,#e62e4524,transparent 52%)`;
+hr.innerHTML=heroH();gd.innerHTML=ac.map(x=>modH(x,b2)).join('');
+fit();
+}
+
+function fit(){
+const vp=$('vp'),wr=$('aw'),bd=$('ea'),[w,h]=F[S.fmt];
+if(!vp||!vp.clientWidth||!vp.clientHeight)return;
+const dk=innerWidth>=1024,sc=Math.min(Math.max(200,vp.clientWidth-(dk?48:22))/w,Math.max(200,vp.clientHeight-(dk?76:138))/h,1)*S.zm;
+wr.style.width=`${Math.round(w*sc)}px`;wr.style.height=`${Math.round(h*sc)}px`;
+bd.style.transform=`scale(${sc})`;vp.classList.toggle('cp',S.zm>1.01);
+$$('.zb').forEach(b=>b.classList.toggle('on',Math.abs(S.zm-+b.dataset.z)<.05));
+}
+
+const zoom=z=>{S.zm=Math.max(.75,Math.min(2.5,+z));fit();if(S.zm<=1){const v=$('vp');v.scrollLeft=v.scrollTop=0}};
+
+function mob(v){
+S.mv=v;const dk=innerWidth>=1024,sh=(e,ok)=>{e.classList.toggle('hidden',!ok);e.classList.toggle('flex',ok)};
+if(!dk){sh($('sp'),v!=='preview');sh($('sc'),v==='preview');v==='preview'?requestAnimationFrame(fit):($('es').scrollTop=0)}
+else{sh($('sp'),1);sh($('sc'),1);requestAnimationFrame(fit)}
+$$('.mnb').forEach(b=>b.classList.toggle('on',b.dataset.n===v));
+}
+
+function modUI(){
+const host=$('mcl');
+host.innerHTML=S.mods.map((m,i)=>{
+const[,t,h]=MD[i];
+return`<div class="fbw gap-2 p-3 lg:p-2.5 min-h-[48px] lg:min-h-[40px] rounded-xl bg-[#091124] border ${m.e?'border-white/20':'border-white/5 opacity-65'} transition"><label class="fi gap-2.5 min-w-0 flex-1 cursor-pointer"><input type="checkbox" data-m="${m.id}" ${m.e?'checked':''} class="mc accent-[#E62E45] w-5 h-5 lg:w-4 lg:h-4 cursor-pointer shrink-0"><span class="text-sm lg:text-xs font-bold text-slate-100 truncate">${t}</span></label>${h?`<div class="fi bg-[#040814] rounded-lg p-0.5 border border-white/10 shrink-0"><button data-m="${m.id}" data-w="half" class="spn px-2 py-1 rounded text-[11px] lg:text-[10px] font-bold ${m.s==='half'?'bg-[#E62E45] text-white':'text-slate-400'}">نیم‌عرض ½</button><button data-m="${m.id}" data-w="full" class="spn px-2 py-1 rounded text-[11px] lg:text-[10px] font-bold ${m.s==='full'?'bg-[#E62E45] text-white':'text-slate-400'}">تمام‌عرض ۱</button></div>`:'<span class="text-[11px] lg:text-[10px] text-slate-500 px-1.5 shrink-0">تمام‌عرض</span>'}</div>`;
+}).join('');
+host.querySelectorAll('.mc').forEach(c=>c.onchange=()=>{
+const t=S.mods.find(x=>x.id===c.dataset.m);
+if(!c.checked&&S.mods.filter(x=>x.e).length<=1){c.checked=true;return T('حداقل یک ماژول باید فعال بماند')}
+t.e=c.checked;S.sp='custom';hl();modUI();draw();
+});
+host.querySelectorAll('.spn').forEach(b=>b.onclick=()=>{
+const t=S.mods.find(x=>x.id===b.dataset.m);if(!t)return;
+t.s=b.dataset.w;t.e=true;S.sp='custom';hl();modUI();draw();
+});
+}
+
+$('slb').innerHTML=SU.map(([id,l,tg])=>`<button data-s="${id}" class="sb w-full min-h-[50px] lg:min-h-[44px] text-right px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-200 text-sm lg:text-xs font-bold fbw gap-2 transition"><span>${l}</span><span class="text-[11px] lg:text-[10px] fm ${id==='slide1'?'px-2 py-0.5 rounded bg-[#E62E45] text-white':id==='custom'?'text-amber-400':'text-slate-400'} shrink-0">${tg}</span></button>`).join('');
+$('qsb').innerHTML=SU.filter(x=>x[3]).map(([id,,,sh])=>`<button data-q="${id}" class="qb min-h-[34px] px-3 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 shrink-0 transition">${sh}</button>`).join('');
+$('prb').innerHTML=Object.entries(PRESETS).map(([k,p])=>`<button data-p="${k}" class="pb min-h-[58px] p-3 rounded-xl bg-white/5 hover:bg-white/10 active:scale-[0.98] border border-white/10 text-right text-sm lg:text-xs font-bold transition">${p.home.name} × ${p.away.name}<span class="block text-xs lg:text-[10px] text-slate-400 font-normal mt-0.5">${p.competition} • ${p.weekCode}</span></button>`).join('');
+
+on('.mnb',e=>mob(e.dataset.n));
+$('jp').onclick=()=>mob('preview');
+on('.fb',e=>{S.fmt=e.dataset.f;S.zm=1;$$('.fb').forEach(x=>x.classList.toggle('on',x.dataset.f===S.fmt));S.sp==='slide1'||S.sp==='slide5'?setSlide(S.sp):draw()});
+on('.sb',e=>setSlide(e.dataset.s));
+on('.qb',e=>setSlide(e.dataset.q));
+on('.hb',e=>{S.hm=e.dataset.h;S.sp='custom';hl();draw()});
+$('ts').onclick=()=>{S.sz=!S.sz;draw();T(S.sz?'راهنمای امن استوری فعال شد':'راهنمای امن استوری مخفی شد')};
+on('.zb',e=>zoom(e.dataset.z));
+$('zi').onclick=()=>zoom(S.zm+.25);
+$('zo').onclick=()=>zoom(S.zm-.25);
+on('.pb',e=>{S.m=structuredClone(PRESETS[e.dataset.p]);modUI();draw();T(`مسابقه ${S.m.home.name} × ${S.m.away.name} بارگذاری شد`)});
+$('cj').onclick=()=>{const t=document.createElement('textarea');t.value=JSON.stringify(S.m,null,2);t.style.cssText='position:fixed;opacity:0';document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();T('دیتای JSON کپی شد')};
+
+const vp=$('vp');let dn=0,sx=0,sy=0,sl=0,st=0;
+vp.onmousedown=e=>{if(S.zm<=1.01)return;dn=1;sx=e.pageX-vp.offsetLeft;sy=e.pageY-vp.offsetTop;sl=vp.scrollLeft;st=vp.scrollTop};
+addEventListener('mouseup',()=>dn=0);
+vp.onmousemove=e=>{if(!dn)return;e.preventDefault();vp.scrollLeft=sl-(e.pageX-vp.offsetLeft-sx);vp.scrollTop=st-(e.pageY-vp.offsetTop-sy)};
+if(typeof ResizeObserver!=='undefined')new ResizeObserver(fit).observe(vp);
+addEventListener('resize',()=>{mob(S.mv);fit()});
+
+setSlide('slide1');mob('preview');
+})();
+</script>
+</body>
+</html>

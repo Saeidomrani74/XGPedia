@@ -469,6 +469,111 @@ def cmd_daily(args: argparse.Namespace) -> None:
         sys.exit(res.exit_code)
 
 
+
+
+def cmd_bot(_args: argparse.Namespace) -> None:
+    """اجرای ربات تلگرام ادمین + زمان‌بند خودکار پس‌زمینه."""
+    import asyncio
+    from src.xgpedia.publishers.telegram_bot import main as bot_main
+
+    asyncio.run(bot_main())
+
+
+def cmd_today(args: argparse.Namespace) -> None:
+    """گردش‌کار یک‌دستوری تعاملی برای بازی‌های شروع‌نشدهٔ امروز (همگام‌سازی → انتخاب → تولید → انتشار فوری/زمان‌بندی)."""
+    import asyncio
+    from src.xgpedia.config import ADMIN_TELEGRAM_IDS, TELEGRAM_BOT_TOKEN
+    from src.xgpedia import today_workflow as tw
+
+    if not args.no_sync:
+        print("Step 1/2: syncing season stats + today unstarted fixtures...")
+        report = tw.sync_today_matches()
+        print(f"  [{OK if report.sync_results_ok else FAIL}] stats: {report.sync_results_detail}")
+        print(f"  [{OK if report.sync_fixtures_ok else FAIL}] fixtures: {report.sync_fixtures_detail}")
+        for err in report.errors:
+            print(f"  [ERROR] {err}")
+        matches = report.matches
+    else:
+        matches = tw.list_today_matches()
+
+    while True:
+        eligible = [m for m in matches if m.eligible]
+        ineligible = [m for m in matches if not m.eligible]
+        print(f"\n=== Today unstarted matches ({len(eligible)} eligible, {len(ineligible)} missing data) ===")
+        for idx, m in enumerate(eligible, 1):
+            st = ""
+            if m.existing_post_status == "published":
+                st = " [PUBLISHED]"
+            elif m.scheduled_time:
+                st = f" [SCHEDULED {m.scheduled_time}]"
+            elif m.existing_post_id:
+                st = f" [POST #{m.existing_post_id} {m.existing_post_status}]"
+            print(f"  {idx}) {m.home_en} vs {m.away_en} | Tehran {m.kickoff_tehran} | {m.fixture_id}{st}")
+        for m in ineligible:
+            print(f"  -) [INELIGIBLE] {m.home_en} vs {m.away_en} ({m.kickoff_tehran}) -> {m.ineligible_reason}")
+
+        if not eligible:
+            print("No eligible unstarted matches found for today.")
+            return
+
+        choice = input("\nSelect match number (or 'r' refresh, 'q' quit): ").strip().lower()
+        if choice in {"q", "quit", "exit"}:
+            return
+        if choice == "r":
+            matches = tw.list_today_matches()
+            continue
+        if not choice.isdigit() or not (1 <= int(choice) <= len(eligible)):
+            print("[WARN] invalid choice")
+            continue
+
+        picked = eligible[int(choice) - 1]
+        print(f"Generating full post for {picked.home_en} vs {picked.away_en} ({picked.fixture_id})...")
+        res = tw.generate_match_post(picked.fixture_id, fmt=args.format)
+        if not res.ok:
+            print(f"[FAIL] stage={res.failed_stage} | {res.error_title}")
+            print(f"  detail: {res.error_detail}")
+            continue
+
+        print(f"OK - post #{res.post_id} v{res.content_version} generated:")
+        print(f"  image:   {res.image_path}")
+        print(f"  caption: {res.caption_path}")
+        print(f"  html:    {res.html_path}")
+
+        act = input("Action: [1] Publish now  [2] Schedule today (HH:MM)  [3] Back to list: ").strip()
+        if act == "1":
+            if not TELEGRAM_BOT_TOKEN or not ADMIN_TELEGRAM_IDS:
+                print("[FAIL] TELEGRAM_BOT_TOKEN or ADMIN_TELEGRAM_IDS missing in .env")
+                continue
+            from aiogram import Bot
+            from src.xgpedia.publishers import telegram_publish as tp
+            from src.xgpedia.publishers.telegram_bot import make_transport
+
+            async def _pub_now():
+                async with Bot(TELEGRAM_BOT_TOKEN) as bot:
+                    return await tp.approve_and_publish(res.post_id, min(ADMIN_TELEGRAM_IDS), make_transport(bot))
+
+            try:
+                out = asyncio.run(_pub_now())
+                print(f"OK - published to channel (message_id={out['message_id']})")
+            except Exception as e:
+                print(f"[FAIL] publish error: {type(e).__name__}: {e}")
+        elif act == "2":
+            if not ADMIN_TELEGRAM_IDS:
+                print("[FAIL] ADMIN_TELEGRAM_IDS missing in .env")
+                continue
+            hhmm = input("Enter today Tehran 24h time (e.g. 09:35 or 21:15): ").strip()
+            try:
+                s = tw.schedule_post_publish(res.post_id, hhmm, min(ADMIN_TELEGRAM_IDS))
+                print(
+                    f"OK - scheduled post #{res.post_id} for today {s['scheduled_time_tehran']} Tehran "
+                    "(keep 'python run.py bot' running for automatic publish)"
+                )
+            except Exception as e:
+                print(f"[FAIL] schedule error: {e}")
+
+        matches = tw.list_today_matches()
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="xgpedia",
@@ -549,6 +654,15 @@ def main(argv: list[str] | None = None) -> int:
     p_daily.add_argument("--no-sync", action="store_true",
                          help="skip data sync and use DB as-is (testing / offline rerun)")
 
+    p_today = sub.add_parser(
+        "today",
+        help="interactive 1-command workflow: sync today unstarted matches -> pick -> generate -> publish or schedule HH:MM",
+    )
+    p_today.add_argument("--no-sync", action="store_true", help="skip API/CSV sync and use DB as-is")
+    p_today.add_argument("--format", default="4:5", choices=["4:5", "9:16", "16:9"], help="card format (default 4:5)")
+
+    sub.add_parser("bot", help="run interactive Telegram admin bot + automatic publish scheduler")
+
     args = parser.parse_args(argv)
     if args.cmd == "init":
         init_db()
@@ -583,6 +697,10 @@ def main(argv: list[str] | None = None) -> int:
         cmd_weekly_report(args)
     elif args.cmd == "daily":
         cmd_daily(args)
+    elif args.cmd == "today":
+        cmd_today(args)
+    elif args.cmd == "bot":
+        cmd_bot(args)
     else:
         parser.error("unknown command")
     return 0

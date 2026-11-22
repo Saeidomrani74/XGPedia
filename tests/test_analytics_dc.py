@@ -86,18 +86,16 @@ def test_display_colors_missing_identity_uses_fallback():
     assert hc == "#38BDF8" and ac == "#38BDF8"
 
 
-# ─── انتخاب ماژول‌ها (port از applyVersion استودیو) ───
+# ─── انتخاب ماژول‌ها (موتور اولویت‌بندی استودیو — D31) ───
 
 def test_smart_selects_only_available_modules():
-    has = {"stats": True, "focus": True, "signals": True, "radar": False, "poisson": False}
-    # 4:5 (D24): فقط stats + focus — سیگنال‌ها فقط در 9:16 جا می‌شوند
-    mods = _select_modules("smart", has)
-    ids = [m["id"] for m in mods]
-    assert ids == ["stats", "focus"]
+    has = {"stats": True, "trend10": True, "signals": True, "radar": False, "poisson": True}
+    # اولویت: signals (3) -> trend10 (5) -> stats (6) -> poisson (7)
+    mods = _select_modules("smart", has, fmt="4:5")
+    assert [m["id"] for m in mods] == ["signals", "trend10"]
     assert all(m["enabled"] for m in mods)
-    # 9:16: سیگنال‌ها هم می‌آیند
     mods9 = _select_modules("smart", has, fmt="9:16")
-    assert [m["id"] for m in mods9] == ["stats", "focus", "signals"]
+    assert [m["id"] for m in mods9] == ["signals", "trend10", "stats"]
 
 
 def test_v2_includes_poisson_and_wave_only_with_data():
@@ -108,5 +106,5 @@ def test_v2_includes_poisson_and_wave_only_with_data():
 
 
 def test_unknown_layout_falls_back_to_v1():
-    mods = _select_modules("nope", {"stats": True, "radar": True, "focus": True, "keyduel": True})
-    assert [m["id"] for m in mods] == ["stats", "radar", "focus", "keyduel"]
+    mods = _select_modules("nope", {"stats": True, "radar": True, "keyduel": True})
+    assert [m["id"] for m in mods] == ["radar", "keyduel"]
