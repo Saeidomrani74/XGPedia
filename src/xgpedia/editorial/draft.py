@@ -50,6 +50,8 @@ def generate_draft(
     facts: dict,
     post_type: str = "preview",
     target_platform: str = "telegram",
+    edit_instruction: str = "",
+    current_draft_json: str = "",
 ) -> tuple[DraftOutput, ValidationReport, int]:
     """تولید پیش‌نویس + اعتبارسنجی + retry (حداکثر ۲ تلاش).
 
@@ -64,12 +66,26 @@ def generate_draft(
     previous_raw = ""
 
     for attempt in (1, 2):
-        if attempt == 1 or not hasattr(provider, "generate"):
-            draft = provider.generate(SYSTEM_PROMPT, match)
+        if attempt == 1:
+            if edit_instruction:
+                try:
+                    draft = provider.generate(
+                        SYSTEM_PROMPT, match,
+                        edit_instruction=edit_instruction,
+                        current_draft_json=current_draft_json,
+                    )
+                except TypeError:
+                    draft = provider.generate(SYSTEM_PROMPT, match)
+            else:
+                draft = provider.generate(SYSTEM_PROMPT, match)
         else:
             try:
                 draft = provider.generate(
-                    SYSTEM_PROMPT, match, repair_feedback=feedback, previous_raw=previous_raw
+                    SYSTEM_PROMPT, match,
+                    repair_feedback=feedback,
+                    previous_raw=previous_raw,
+                    edit_instruction=edit_instruction,
+                    current_draft_json=current_draft_json,
                 )
             except TypeError:
                 # providerهای ساده (مثل FakeLLM تست) آرگومان اصلاحی نمی‌گیرند

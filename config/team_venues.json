@@ -1,0 +1,130 @@
+{
+  "updated": "2026-11-22",
+  "note": "نگاشت نام فارسی ورزشگاه‌ها و ترجمهٔ فارسی نام سرمربی‌ها (کلید: نام انگلیسی زنده از football-data.org). سرمربی هیچ تیمی به‌صورت ثابت ذخیره نمی‌شود و همیشه زنده از API خوانده می‌شود.",
+  "teams": {
+    "Arsenal": {
+      "stadium_fa": "ورزشگاه امارات"
+    },
+    "Aston Villa": {
+      "stadium_fa": "ویلا پارک"
+    },
+    "Bournemouth": {
+      "stadium_fa": "ورزشگاه وایتالیتی"
+    },
+    "Brentford": {
+      "stadium_fa": "ورزشگاه Gtech"
+    },
+    "Brighton": {
+      "stadium_fa": "ورزشگاه آمکس"
+    },
+    "Chelsea": {
+      "stadium_fa": "استمفورد بریج"
+    },
+    "Coventry": {
+      "stadium_fa": "ورزشگاه CBS آرنا"
+    },
+    "Crystal Palace": {
+      "stadium_fa": "سلهارست پارک"
+    },
+    "Everton": {
+      "stadium_fa": "ورزشگاه هیل دیکینسون"
+    },
+    "Fulham": {
+      "stadium_fa": "کریون کاتج"
+    },
+    "Hull": {
+      "stadium_fa": "ورزشگاه MKM"
+    },
+    "Ipswich": {
+      "stadium_fa": "پورتمن رود"
+    },
+    "Leeds": {
+      "stadium_fa": "الند رود"
+    },
+    "Liverpool": {
+      "stadium_fa": "ورزشگاه آنفیلد"
+    },
+    "Manchester City": {
+      "stadium_fa": "ورزشگاه اتحاد"
+    },
+    "Manchester United": {
+      "stadium_fa": "الدترافورد"
+    },
+    "Newcastle": {
+      "stadium_fa": "سنت جیمز پارک"
+    },
+    "Nottingham Forest": {
+      "stadium_fa": "سیتی گراند"
+    },
+    "Sunderland": {
+      "stadium_fa": "ورزشگاه لایت"
+    },
+    "Tottenham": {
+      "stadium_fa": "ورزشگاه تاتنهام"
+    }
+  },
+  "coach_translations_fa": {
+    "Mikel Arteta": "میکل آرتتا",
+    "Unai Emery": "اونای امری",
+    "Marco Rose": "مارکو روزه",
+    "Keith Andrews": "کیث اندروز",
+    "Fabian Hürzeler": "فابیان هورزلر",
+    "Fabian Hurzeler": "فابیان هورزلر",
+    "Xabi Alonso": "ژابی آلونسو",
+    "Frank Lampard": "فرانک لمپارد",
+    "David Moyes": "دیوید مویس",
+    "Álvaro Arbeloa": "آلوارو آربلوا",
+    "Alvaro Arbeloa": "آلوارو آربلوا",
+    "Sergej Jakirović": "سرگی یاکیروویچ",
+    "Sergej Jakirovic": "سرگی یاکیروویچ",
+    "Gary O'Neil": "گری اونیل",
+    "Daniel Farke": "دنیل فارکه",
+    "Andoni Iraola": "آندونی ایرائولا",
+    "Enzo Maresca": "انزو مارسکا",
+    "Mauricio Pochettino": "مائوریسیو پوچتینو",
+    "Matthias Jaissle": "ماتیاس یایسله",
+    "Oliver Glasner": "الیور گلاسنر",
+    "Régis Le Bris": "رجیس لو بریس",
+    "Regis Le Bris": "رجیس لو بریس",
+    "Roberto De Zerbi": "روبرتو د زربی",
+    "Michael Carrick": "مایکل کریک",
+    "Rúben Amorim": "روبن آموریم",
+    "Ruben Amorim": "روبن آموریم",
+    "Arne Slot": "آرنه اسلوت",
+    "Pep Guardiola": "پپ گواردیولا",
+    "Josep Guardiola": "پپ گواردیولا",
+    "Eddie Howe": "ادی هاو",
+    "Ange Postecoglou": "آنژه پوستکوگلو",
+    "Thomas Frank": "توماس فرانک",
+    "Marco Silva": "مارکو سیلوا",
+    "Nuno Espírito Santo": "نونو اسپیریتو سانتو",
+    "Nuno Espirito Santo": "نونو اسپیریتو سانتو",
+    "Graham Potter": "گراهام پاتر",
+    "Vítor Pereira": "ویتور پریرا",
+    "Vitor Pereira": "ویتور پریرا",
+    "Ruud van Nistelrooy": "رود فن نیستلروی",
+    "Liam Rosenior": "لیام روزنیور",
+    "Scott Parker": "اسکات پارکر",
+    "Kieran McKenna": "کیران مک‌کنا",
+    "Thomas Tuchel": "توماس توخل",
+    "Sean Dyche": "شان دایش",
+    "Julen Lopetegui": "خولن لوپتگی",
+    "Ivan Jurić": "ایوان یوریچ",
+    "Ivan Juric": "ایوان یوریچ",
+    "Russell Martin": "راسل مارتین",
+    "Steve Cooper": "استیو کوپر",
+    "Erik ten Hag": "اریک تن هاخ",
+    "Darren Fletcher": "دارن فلچر",
+    "Ole Gunnar Solskjær": "اوله گونار سولسشر",
+    "Ole Gunnar Solskjaer": "اوله گونار سولسشر",
+    "Gareth Southgate": "گرت ساوتگیت",
+    "Simone Inzaghi": "سیمونه اینزاگی",
+    "Carlo Ancelotti": "کارلو آنچلوتی",
+    "Hansi Flick": "هانسی فلیک",
+    "Luis Enrique": "لوئیس انریکه",
+    "Vincent Kompany": "ونسان کمپانی",
+    "Julian Nagelsmann": "یولیان ناگلزمن",
+    "Massimiliano Allegri": "ماسیمیلیانو آلگری",
+    "Antonio Conte": "آنتونیو کونته"
+  }
+}

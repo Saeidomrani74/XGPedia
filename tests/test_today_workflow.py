@@ -82,7 +82,7 @@ def _seed_today_fixtures(conn: sqlite3.Connection) -> None:
     ]
     for f in fixtures:
         conn.execute(
-            "INSERT INTO fixtures VALUES (?,?,?,?,?,?,?,?,NULL,'2026-11-21T09:00:00Z')", f
+            "INSERT INTO fixtures (fixture_id, provider, competition, season, kickoff_utc, home_team, away_team, status, raw_payload_hash, collected_at) VALUES (?,?,?,?,?,?,?,?,NULL,'2026-11-21T09:00:00Z')", f
         )
     stats = [
         ("fdcouk:2026-11-01:Arsenal:Everton", "Arsenal", "expected_goals", 1.53),
@@ -316,7 +316,7 @@ def test_raw_fdo_team_names_match_csv_stats(tmp_path, monkeypatch):
     with db_mod.db() as conn:
         _seed_today_fixtures(conn)
         conn.execute(
-            "INSERT INTO fixtures VALUES (?, 'football-data-org', 'Premier League', '2026-27', ?, ?, ?, 'scheduled', NULL, '2026-11-21T09:00:00Z')",
+            "INSERT INTO fixtures (fixture_id, provider, competition, season, kickoff_utc, home_team, away_team, status, raw_payload_hash, collected_at) VALUES (?, 'football-data-org', 'Premier League', '2026-27', ?, ?, ?, 'scheduled', NULL, '2026-11-21T09:00:00Z')",
             ("fdo:2001", "2026-11-21T19:00:00Z", "Arsenal FC", "Liverpool FC"),
         )
     now = datetime(2026, 11, 21, 10, 0, tzinfo=timezone.utc)

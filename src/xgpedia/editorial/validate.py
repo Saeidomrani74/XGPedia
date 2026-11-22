@@ -116,6 +116,13 @@ def _input_numbers(match: MatchFacts) -> set[float]:
                 nums.add(sv.value)
                 if sv.n is not None:
                     nums.add(sv.n)
+    for item in getattr(match, "recent_news", None) or []:
+        title = str(item.get("title") or "") if isinstance(item, dict) else ""
+        for raw_n in re.findall(r"\d+(?:\.\d+)?", title):
+            try:
+                nums.add(float(raw_n))
+            except ValueError:
+                pass
     return nums
 
 

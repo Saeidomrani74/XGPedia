@@ -574,6 +574,77 @@ def cmd_today(args: argparse.Namespace) -> None:
         matches = tw.list_today_matches()
 
 
+
+def cmd_llm_status(_args: argparse.Namespace) -> None:
+    """نمایش زنجیرهٔ فعال و اولویت‌بندی‌شدهٔ مدل‌های LLM و روترهای تصویر/ویدیو."""
+    from src.xgpedia.editorial.llm_provider import build_free_llm_chain_from_env
+    from src.xgpedia.media.free_media import FreeImageRouter, FreeVideoRouter
+
+    chain = build_free_llm_chain_from_env()
+    print(f"=== Active LLM Fallback Chain ({len(chain)} endpoints) ===")
+    for i, ep in enumerate(chain, 1):
+        auth = "API-KEY" if ep.api_key else ("NO-KEY" if not ep.require_auth else "MISSING-KEY")
+        print(f"  {i:2d}) {ep.label:<42s} [{auth}] -> {ep.base_url}")
+    print("\n=== Active Free Image Providers ===")
+    print("  " + " -> ".join(FreeImageRouter().available_providers()))
+    print("\n=== Active Free Video Providers ===")
+    vp = FreeVideoRouter().available_providers()
+    print("  " + (" -> ".join(vp) if vp else "none (set REPLICATE_API_TOKEN / HF_TOKEN or install ffmpeg)"))
+
+
+def cmd_gen_image(args: argparse.Namespace) -> None:
+    from src.xgpedia.media.free_media import generate_free_image
+
+    res = generate_free_image(args.prompt, args.out, width=args.width, height=args.height)
+    if res.ok:
+        print(f"OK - image saved to {res.output_path} via {res.provider}")
+    else:
+        print("[FAIL] all free image providers failed:")
+        for e in (res.errors or []):
+            print(f"  - {e}")
+        sys.exit(1)
+
+
+def cmd_gen_video(args: argparse.Namespace) -> None:
+    from src.xgpedia.media.free_media import generate_free_video
+
+    res = generate_free_video(
+        args.prompt or "",
+        args.out,
+        source_image=args.image,
+        duration_sec=args.duration,
+        width=args.width,
+        height=args.height,
+    )
+    if res.ok:
+        print(f"OK - video saved to {res.output_path} via {res.provider}")
+    else:
+        print("[FAIL] all free video providers failed:")
+        for e in (res.errors or []):
+            print(f"  - {e}")
+        sys.exit(1)
+
+
+
+def cmd_diagnose_modules(_args: argparse.Namespace) -> None:
+    """تشخیص زندهٔ علت نبود دیتای ماژول‌های keyduel، signals و wave در DB و منابع رایگان."""
+    from src.xgpedia.db import db, init_db
+    init_db()
+    with db() as conn:
+        for tbl in ("fixture_odds", "team_enrichments", "team_metadata", "fixture_broadcasts"):
+            try:
+                cnt = conn.execute(f"SELECT COUNT(*) FROM {tbl}").fetchone()[0]
+                print(f"DB table {tbl:<20s}: {cnt} rows")
+            except Exception as e:
+                print(f"DB table {tbl:<20s}: ERROR {e}")
+        print("\nSample team_enrichments:")
+        for r in conn.execute("SELECT team, season, provider, key_player_json IS NOT NULL AS has_kp, wave_json IS NOT NULL AS has_wave FROM team_enrichments LIMIT 10").fetchall():
+            print(f"  {r['team']:<20s} | {r['season']} | {r['provider']:<18s} | kp={r['has_kp']} wave={r['has_wave']}")
+        print("\nSample fixture_odds:")
+        for r in conn.execute("SELECT home_team, away_team, match_date, home_odds, draw_odds, away_odds, provider FROM fixture_odds ORDER BY match_date DESC LIMIT 10").fetchall():
+            print(f"  {r['match_date']} | {r['home_team']} vs {r['away_team']} | {r['home_odds']}/{r['draw_odds']}/{r['away_odds']} ({r['provider']})")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="xgpedia",
@@ -662,6 +733,22 @@ def main(argv: list[str] | None = None) -> int:
     p_today.add_argument("--format", default="4:5", choices=["4:5", "9:16", "16:9"], help="card format (default 4:5)")
 
     sub.add_parser("bot", help="run interactive Telegram admin bot + automatic publish scheduler")
+    sub.add_parser("llm-status", help="show prioritized free LLM + image/video fallback chain")
+    sub.add_parser("diagnose-modules", help="inspect DB counts for keyduel, signals (+EV), wave, and coaches")
+
+    p_img = sub.add_parser("gen-image", help="generate a high-quality free image using multi-provider fallback")
+    p_img.add_argument("--prompt", required=True)
+    p_img.add_argument("--out", default="output/generated_image.png")
+    p_img.add_argument("--width", type=int, default=1080)
+    p_img.add_argument("--height", type=int, default=1350)
+
+    p_vid = sub.add_parser("gen-video", help="generate a high-quality free video or animated Reel from image")
+    p_vid.add_argument("--prompt", default="")
+    p_vid.add_argument("--image", default=None, help="optional source image/card PNG for local FFmpeg animated Reel")
+    p_vid.add_argument("--out", default="output/generated_video.mp4")
+    p_vid.add_argument("--duration", type=int, default=6)
+    p_vid.add_argument("--width", type=int, default=1080)
+    p_vid.add_argument("--height", type=int, default=1920)
 
     args = parser.parse_args(argv)
     if args.cmd == "init":
@@ -701,6 +788,14 @@ def main(argv: list[str] | None = None) -> int:
         cmd_today(args)
     elif args.cmd == "bot":
         cmd_bot(args)
+    elif args.cmd == "llm-status":
+        cmd_llm_status(args)
+    elif args.cmd == "diagnose-modules":
+        cmd_diagnose_modules(args)
+    elif args.cmd == "gen-image":
+        cmd_gen_image(args)
+    elif args.cmd == "gen-video":
+        cmd_gen_video(args)
     else:
         parser.error("unknown command")
     return 0

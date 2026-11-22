@@ -197,14 +197,39 @@ class UnderstatProvider:
         )
 
     def fetch_epl_league_data(self, season_start: int = CURRENT_SEASON_START) -> dict[str, Any]:
-        """دریافت مهره‌های کلیدی + PPDA/Deep تمام ۲۰ تیم لیگ برتر از صفحهٔ فصل Understat."""
-        resp = self._client.get(f"/league/EPL/{season_start}")
-        if resp.status_code != 200:
-            raise RuntimeError(f"Understat league page HTTP {resp.status_code}")
-        html_text = resp.text
-        players_raw = _decode_embedded_json(html_text, "playersData") or []
-        teams_raw = _decode_embedded_json(html_text, "teamsData") or {}
-        dates_raw = _decode_embedded_json(html_text, "datesData") or []
+        """دریافت مهره‌های کلیدی + PPDA/Deep تمام ۲۰ تیم لیگ برتر از XHR API داخلی Understat (با پشتیبان HTML)."""
+        players_raw: list[dict[str, Any]] = []
+        teams_raw: dict[str, Any] = {}
+        dates_raw: list[dict[str, Any]] = []
+
+        # مسیر ۱ (جدید ۲۰۲۶): XHR API مستقیم /getLeagueData/EPL/{season}
+        xhr = self._client.get(
+            f"/getLeagueData/EPL/{season_start}",
+            headers={
+                "X-Requested-With": "XMLHttpRequest",
+                "Referer": f"{BASE_URL}/league/EPL/{season_start}",
+                "Accept": "application/json, text/javascript, */*; q=0.01",
+            },
+        )
+        if xhr.status_code == 200:
+            try:
+                j = xhr.json()
+                if isinstance(j, dict):
+                    players_raw = j.get("players") or []
+                    teams_raw = j.get("teams") or {}
+                    dates_raw = j.get("dates") or []
+            except Exception:
+                pass
+
+        # مسیر ۲ (پشتیبان کلاسیک): استخراج از HTML صفحه
+        if not players_raw and not teams_raw:
+            resp = self._client.get(f"/league/EPL/{season_start}")
+            if resp.status_code != 200:
+                raise RuntimeError(f"Understat league page HTTP {resp.status_code}")
+            html_text = resp.text
+            players_raw = _decode_embedded_json(html_text, "playersData") or []
+            teams_raw = _decode_embedded_json(html_text, "teamsData") or {}
+            dates_raw = _decode_embedded_json(html_text, "datesData") or []
 
         key_players = parse_league_key_players(players_raw)
         team_metrics = parse_league_team_ppda(teams_raw)

@@ -96,7 +96,7 @@ def test_full_free_enrichment_unlocks_radar_keyduel_and_signals(tmp_path, monkey
             h, a = teams[i], teams[i + 1]
             fid = f"fdcouk:2026-11-0{i + 1}:{h}:{a}"
             conn.execute(
-                "INSERT INTO fixtures VALUES (?, 'football-data-co-uk', 'Premier League', '2026-27', ?, ?, ?, 'finished', NULL, '2026-11-20T00:00:00Z')",
+                "INSERT INTO fixtures (fixture_id, provider, competition, season, kickoff_utc, home_team, away_team, status, raw_payload_hash, collected_at) VALUES (?, 'football-data-co-uk', 'Premier League', '2026-27', ?, ?, ?, 'finished', NULL, '2026-11-20T00:00:00Z')",
                 (fid, f"2026-11-0{i + 1}", h, a),
             )
             for t, xg, sh, sot, cor, g in [
@@ -113,7 +113,7 @@ def test_full_free_enrichment_unlocks_radar_keyduel_and_signals(tmp_path, monkey
                     )
         # بازی پیش‌رو امروز با نام خام football-data.org
         conn.execute(
-            "INSERT INTO fixtures VALUES ('fdo:999', 'football-data-org', 'Premier League', '2026-27', '2026-11-22T16:30:00Z', 'Liverpool FC', 'Manchester United FC', 'scheduled', NULL, '2026-11-22T07:00:00Z')"
+            "INSERT INTO fixtures (fixture_id, provider, competition, season, kickoff_utc, home_team, away_team, status, raw_payload_hash, collected_at) VALUES ('fdo:999', 'football-data-org', 'Premier League', '2026-27', '2026-11-22T16:30:00Z', 'Liverpool FC', 'Manchester United FC', 'scheduled', NULL, '2026-11-22T07:00:00Z')"
         )
 
     sync_upcoming_odds([{

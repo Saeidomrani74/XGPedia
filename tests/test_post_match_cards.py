@@ -234,10 +234,8 @@ def test_post_match_missing_metric_drops_row():
 def test_post_match_studio_template_renders_exact_design(tmp_path: Path):
     assert (STUDIO_TEMPLATES_DIR / "post_match.html").exists()
     html = render_post_match_html(_draft(), _facts(), fmt="4:5")
-    assert 'id="xgpedia-payload"' in html
-    assert 'id="xgpedia-fonts"' in html
-    assert 'id="xgpedia-tw-fallback"' in html
-    assert 'id="xgpedia-export-mode"' in html
+    assert 'id="xgpedia-unified"' in html
+    assert "width:1080px;height:1350px;" in html
     assert "cdn.tailwindcss.com" not in html
     assert "fonts.googleapis.com" not in html
 

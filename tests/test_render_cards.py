@@ -270,12 +270,9 @@ def test_zero_orphan_half_width_modules():
 def test_studio_template_folder_exists_and_renders_exact_design():
     assert (STUDIO_TEMPLATES_DIR / "pre_match.html").exists()
     html = render_preview_html(_draft(), _facts(), fmt="4:5")
-    assert 'id="xgpedia-payload"' in html
-    assert 'id="xgpedia-fonts"' in html
-    assert 'id="xgpedia-tw-fallback"' in html
-    assert 'id="xgpedia-export-mode"' in html
+    assert 'id="xgpedia-unified"' in html
     assert "data:font/woff2;base64," in html
-    assert "width: 1080px !important; height: 1350px !important;" in html
+    assert "width:1080px;height:1350px;" in html
     # لینک‌های خارجی CDN حذف شده‌اند تا رندر ۱۰۰٪ خودبسنده و بدون وابستگی شبکه باشد
     assert "cdn.tailwindcss.com" not in html
     assert "fonts.googleapis.com" not in html
@@ -293,7 +290,7 @@ def test_custom_studio_template_dir_drop_in(tmp_path: Path):
 def test_formats_change_artboard_dimensions():
     for fmt, (w, h) in (("4:5", (1080, 1350)), ("9:16", (1080, 1920)), ("16:9", (1920, 1080))):
         html = render_preview_html(_draft(), _facts(), fmt=fmt)
-        assert f"width: {w}px !important; height: {h}px !important;" in html
+        assert f"width:{w}px;height:{h}px;" in html
 
 
 def test_identity_codes_match_glossary():

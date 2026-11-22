@@ -55,6 +55,8 @@ class SyncTodayReport:
     sync_odds_detail: str = ""
     sync_understat_ok: bool = True
     sync_understat_detail: str = ""
+    sync_broadcasts_ok: bool = True
+    sync_broadcasts_detail: str = ""
     matches: list[TodayMatchInfo] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
 
@@ -270,13 +272,64 @@ def list_today_matches(
     return result
 
 
+def _cache_fresh_summary(source_key: str, tehran_date: str, ttl_hours: float, now: datetime) -> str | None:
+    """اگر همین منبع امروز در بازهٔ TTL قبلاً با موفقیت در DB ذخیره شده باشد، خلاصهٔ کش را برمی‌گرداند."""
+    try:
+        with db() as conn:
+            row = conn.execute(
+                "SELECT tehran_date, last_synced_at, summary FROM sync_cache WHERE source_key = ?",
+                (source_key,),
+            ).fetchone()
+            if not row or row["tehran_date"] != tehran_date:
+                return None
+            last_dt = _parse_utc(row["last_synced_at"])
+            age_h = (now - last_dt).total_seconds() / 3600.0
+            if age_h > ttl_hours:
+                return None
+            if source_key == "results":
+                cnt = conn.execute("SELECT COUNT(*) AS c FROM fixtures WHERE status='finished'").fetchone()["c"]
+                if cnt == 0:
+                    return None
+            elif source_key == "fixtures":
+                cnt = conn.execute("SELECT COUNT(*) AS c FROM fixtures WHERE status!='finished'").fetchone()["c"]
+                if cnt == 0:
+                    return None
+            elif source_key == "understat":
+                cnt = conn.execute("SELECT COUNT(*) AS c FROM team_enrichments").fetchone()["c"]
+                if cnt == 0:
+                    return None
+            return f"از کش دیتابیس (بدون مصرف API — {row['summary'] or 'به‌روز'})"
+    except Exception:
+        return None
+
+
+def _save_sync_cache(source_key: str, tehran_date: str, now: datetime, summary: str) -> None:
+    try:
+        with db() as conn:
+            conn.execute(
+                """
+                INSERT INTO sync_cache (source_key, tehran_date, last_synced_at, summary)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(source_key) DO UPDATE SET
+                  tehran_date=excluded.tehran_date,
+                  last_synced_at=excluded.last_synced_at,
+                  summary=excluded.summary
+                """,
+                (source_key, tehran_date, now.strftime("%Y-%m-%dT%H:%M:%SZ"), summary),
+            )
+    except Exception:
+        pass
+
+
 def sync_today_matches(
     *,
     now_utc: datetime | None = None,
+    force: bool = False,
     sync_results_fn: Callable[[], str] | None = None,
     sync_fixtures_fn: Callable[[], str] | None = None,
     sync_odds_fn: Callable[[], str] | None = None,
     sync_understat_fn: Callable[[], str] | None = None,
+    sync_broadcasts_fn: Callable[[], str] | None = None,
 ) -> SyncTodayReport:
     """دریافت آمار نتایج فصل + بازی‌های شروع‌نشدهٔ امروز و ذخیره در DB با گزارش کامل خطاها."""
     init_db()
@@ -291,94 +344,343 @@ def sync_today_matches(
 
             api = FootballDataCoUk()
             try:
-                rows, payload_hash, _ = api.fetch_season_rows(CURRENT_SEASON_START)
+                rows, payload_hash, saved_csv_path = api.fetch_season_rows(CURRENT_SEASON_START)
             finally:
                 api.close()
             if not rows:
                 return "0 بازی پایان‌یافته در CSV"
             s = sync_csv_results(rows, payload_hash, season_start=CURRENT_SEASON_START)
-            return f"{len(rows)} بازی بررسی شد (جدید: {s['fixtures_new']}، آمار جدید: {s['stats_rows']})"
+            wave_cnt = 0
+            try:
+                from src.xgpedia.providers.football_data_couk import compute_wave_from_csv
+                from src.xgpedia.sync import sync_csv_waves
+
+                if saved_csv_path and saved_csv_path.exists():
+                    wmap = compute_wave_from_csv(saved_csv_path.read_text(encoding="utf-8", errors="ignore"))
+                    ws = sync_csv_waves(wmap, season_start=CURRENT_SEASON_START)
+                    wave_cnt = ws.get("waves", 0)
+            except Exception:
+                pass
+            wave_note = f"، موج زمانی: {wave_cnt} تیم" if wave_cnt else ""
+            return f"{len(rows)} بازی بررسی شد (جدید: {s['fixtures_new']}، آمار جدید: {s['stats_rows']}{wave_note})"
 
         sync_results_fn = _default_sync_results
 
     if sync_fixtures_fn is None:
         def _default_sync_fixtures() -> str:
             from src.xgpedia.providers.football_data_org import FootballDataOrg
-            from src.xgpedia.sync import sync_upcoming_fixtures
+            from src.xgpedia.sync import sync_team_metadata, sync_upcoming_fixtures
 
             api = FootballDataOrg()
             try:
                 raw = api.upcoming_fixtures(days=2)
                 s = sync_upcoming_fixtures(raw)
+                # همگام‌سازی زندهٔ سرمربی و ورزشگاه تیم‌ها (حداکثر روزی ۱ بار با کش ۲۴ ساعته)
+                if force or _cache_fresh_summary("teams", tehran_date, 24.0, now) is None:
+                    try:
+                        t_raw = api.teams(CURRENT_SEASON_START)
+                        ts = sync_team_metadata(t_raw, season_start=CURRENT_SEASON_START)
+                        try:
+                            from src.xgpedia.sync import sync_fdo_scorers
+                            sc_raw = api.scorers(limit=100, season_start=CURRENT_SEASON_START)
+                            sync_fdo_scorers(sc_raw, season_start=CURRENT_SEASON_START)
+                        except Exception:
+                            pass
+                        try:
+                            from src.xgpedia.sync import sync_live_coaches_for_teams
+
+                            upcoming_teams = []
+                            for _m in (raw.payload or {}).get("matches") or []:
+                                ht = ((_m.get("homeTeam") or {}).get("name") or "").strip()
+                                at = ((_m.get("awayTeam") or {}).get("name") or "").strip()
+                                if ht:
+                                    upcoming_teams.append(ht)
+                                if at:
+                                    upcoming_teams.append(at)
+                            if upcoming_teams:
+                                sync_live_coaches_for_teams(upcoming_teams, season_start=CURRENT_SEASON_START)
+                        except Exception:
+                            pass
+                        _save_sync_cache("teams", tehran_date, now, f"{ts['teams_saved']} تیم")
+                    except Exception:
+                        pass
                 return f"{s['total_in_payload']} بازی پیش‌رو دریافت شد (جدید: {s['upcoming_new']})"
             finally:
                 api.close()
 
         sync_fixtures_fn = _default_sync_fixtures
 
-    try:
-        report.sync_results_detail = sync_results_fn()
-    except Exception as e:
-        report.sync_results_ok = False
-        title, detail = _diagnose_exception("sync_results", e)
-        report.sync_results_detail = f"{title}: {detail}"
-        report.errors.append(f"[آمار فصل] {title} — {detail}")
+    cached_res = _cache_fresh_summary("results", tehran_date, 6.0, now) if (not force and getattr(sync_results_fn, "__name__", "") == "_default_sync_results") else None
+    if cached_res is not None:
+        report.sync_results_detail = cached_res
+    else:
+        try:
+            report.sync_results_detail = sync_results_fn()
+            _save_sync_cache("results", tehran_date, now, report.sync_results_detail)
+        except Exception as e:
+            report.sync_results_ok = False
+            title, detail = _diagnose_exception("sync_results", e)
+            report.sync_results_detail = f"{title}: {detail}"
+            report.errors.append(f"[آمار فصل] {title} — {detail}")
 
-    try:
-        report.sync_fixtures_detail = sync_fixtures_fn()
-    except Exception as e:
-        report.sync_fixtures_ok = False
-        title, detail = _diagnose_exception("sync_fixtures", e)
-        report.sync_fixtures_detail = f"{title}: {detail}"
-        report.errors.append(f"[بازی‌های امروز] {title} — {detail}")
+    cached_fix = _cache_fresh_summary("fixtures", tehran_date, 3.0, now) if (not force and getattr(sync_fixtures_fn, "__name__", "") == "_default_sync_fixtures") else None
+    if cached_fix is not None:
+        report.sync_fixtures_detail = cached_fix
+    else:
+        try:
+            report.sync_fixtures_detail = sync_fixtures_fn()
+            _save_sync_cache("fixtures", tehran_date, now, report.sync_fixtures_detail)
+        except Exception as e:
+            report.sync_fixtures_ok = False
+            title, detail = _diagnose_exception("sync_fixtures", e)
+            report.sync_fixtures_detail = f"{title}: {detail}"
+            report.errors.append(f"[بازی‌های امروز] {title} — {detail}")
 
     if sync_odds_fn is None:
         def _default_sync_odds() -> str:
             from src.xgpedia.providers.football_data_couk import FootballDataCoUk
+            from src.xgpedia.providers.the_odds_api import TheOddsAPIProvider
             from src.xgpedia.sync import sync_upcoming_odds
 
-            api = FootballDataCoUk()
+            total_saved = 0
+            sources_used: list[str] = []
             try:
-                rows = api.fetch_upcoming_odds()
-            finally:
-                api.close()
-            s = sync_upcoming_odds(rows)
-            return f"{s['odds_saved']} بازی دارای ضریب بازار (+EV)"
+                api = FootballDataCoUk()
+                try:
+                    rows = api.fetch_upcoming_odds()
+                finally:
+                    api.close()
+                s = sync_upcoming_odds(rows)
+                total_saved += s["odds_saved"]
+                if s["odds_saved"]:
+                    sources_used.append(f"CSV:{s['odds_saved']}")
+            except Exception:
+                pass
+            try:
+                oapi = TheOddsAPIProvider()
+                try:
+                    orows = oapi.fetch_epl_odds()
+                finally:
+                    oapi.close()
+                if orows:
+                    s2 = sync_upcoming_odds(orows, provider="the-odds-api")
+                    total_saved += s2["odds_saved"]
+                    sources_used.append(f"OddsAPI:{s2['odds_saved']}")
+            except Exception:
+                pass
+            src_note = f" ({'، '.join(sources_used)})" if sources_used else ""
+            return f"{total_saved} بازی دارای ضریب بازار (+EV){src_note}"
 
         sync_odds_fn = _default_sync_odds
 
     if sync_understat_fn is None:
         def _default_sync_understat() -> str:
-            from src.xgpedia.providers.understat import UnderstatProvider
-            from src.xgpedia.sync import sync_understat_league
-
-            api = UnderstatProvider()
+            parts: list[str] = []
             try:
-                data = api.fetch_epl_league_data(CURRENT_SEASON_START)
-            finally:
-                api.close()
-            s = sync_understat_league(data, season_start=CURRENT_SEASON_START)
-            return f"{s['key_players']} مهرهٔ کلیدی و PPDA از Understat"
+                from src.xgpedia.providers.football_data_org import FootballDataOrg
+                from src.xgpedia.sync import sync_fdo_scorers
+
+                fdo_api = FootballDataOrg()
+                try:
+                    sc_raw = fdo_api.scorers(limit=100, season_start=CURRENT_SEASON_START)
+                    fdo_s = sync_fdo_scorers(sc_raw, season_start=CURRENT_SEASON_START)
+                    parts.append(f"FDO-Scorers ({fdo_s['key_players']} ستاره)")
+                finally:
+                    fdo_api.close()
+            except Exception as e_fdo_sc:
+                parts.append(f"FDO-Scorers خطا ({type(e_fdo_sc).__name__})")
+            try:
+                from src.xgpedia.providers.fpl_free import FPLFreeProvider
+                from src.xgpedia.sync import sync_fpl_key_players
+
+                fapi = FPLFreeProvider()
+                try:
+                    kp_map = fapi.fetch_key_players()
+                finally:
+                    fapi.close()
+                fs = sync_fpl_key_players(kp_map, season_start=CURRENT_SEASON_START)
+                parts.append(f"FPL ({fs['key_players']} ستاره)")
+            except Exception as e_fpl:
+                parts.append(f"FPL خطا ({type(e_fpl).__name__})")
+            try:
+                from src.xgpedia.providers.espn_free import ESPNFreeProvider
+                from src.xgpedia.sync import sync_espn_enrichments
+
+                eapi = ESPNFreeProvider()
+                try:
+                    with db() as _c:
+                        _mdates = [r[0] for r in _c.execute(
+                            "SELECT DISTINCT substr(kickoff_utc,1,10) FROM fixtures WHERE status='finished' ORDER BY kickoff_utc DESC LIMIT 12"
+                        ).fetchall()]
+                    edata = eapi.fetch_epl_enrichments(now_utc=now, match_dates=_mdates)
+                finally:
+                    eapi.close()
+                es = sync_espn_enrichments(edata, season_start=CURRENT_SEASON_START)
+                parts.append(f"ESPN ({es['waves']} موج، {es['key_players']} ستاره، {es['odds_saved']} ضریب)")
+            except Exception as e_espn:
+                parts.append(f"ESPN خطا ({type(e_espn).__name__}: {str(e_espn)[:60]})")
+            try:
+                from src.xgpedia.providers.understat import UnderstatProvider
+                from src.xgpedia.sync import sync_understat_league
+
+                api = UnderstatProvider()
+                try:
+                    data = api.fetch_epl_league_data(CURRENT_SEASON_START)
+                finally:
+                    api.close()
+                s = sync_understat_league(data, season_start=CURRENT_SEASON_START)
+                parts.append(f"Understat ({s['key_players']} ستاره)")
+            except Exception as e_us:
+                parts.append(f"Understat خطا ({type(e_us).__name__}: {str(e_us)[:60]})")
+            if not parts:
+                raise RuntimeError("هیچ‌یک از منابع تکمیلی (ESPN/Understat) در دسترس نبودند")
+            return " + ".join(parts)
 
         sync_understat_fn = _default_sync_understat
 
-    try:
-        report.sync_odds_detail = sync_odds_fn()
-    except Exception as e:
-        report.sync_odds_ok = False
-        report.sync_odds_detail = f"اختیاری — در دسترس نبود ({type(e).__name__}: {str(e)[:120]})"
+    cached_odds = _cache_fresh_summary("odds", tehran_date, 3.0, now) if (not force and getattr(sync_odds_fn, "__name__", "") == "_default_sync_odds") else None
+    if cached_odds is not None:
+        report.sync_odds_detail = cached_odds
+    else:
+        try:
+            report.sync_odds_detail = sync_odds_fn()
+            _save_sync_cache("odds", tehran_date, now, report.sync_odds_detail)
+        except Exception as e:
+            report.sync_odds_ok = False
+            report.sync_odds_detail = f"اختیاری — در دسترس نبود ({type(e).__name__}: {str(e)[:120]})"
 
-    try:
-        report.sync_understat_detail = sync_understat_fn()
-    except Exception as e:
-        report.sync_understat_ok = False
-        report.sync_understat_detail = f"اختیاری — در دسترس نبود ({type(e).__name__}: {str(e)[:120]})"
+    cached_us = _cache_fresh_summary("understat", tehran_date, 6.0, now) if (not force and getattr(sync_understat_fn, "__name__", "") == "_default_sync_understat") else None
+    if cached_us is not None:
+        report.sync_understat_detail = cached_us
+    else:
+        try:
+            report.sync_understat_detail = sync_understat_fn()
+            _save_sync_cache("understat", tehran_date, now, report.sync_understat_detail)
+        except Exception as e:
+            report.sync_understat_ok = False
+            report.sync_understat_detail = f"اختیاری — در دسترس نبود ({type(e).__name__}: {str(e)[:120]})"
 
     report.matches = list_today_matches(now_utc=now)
+
+    if sync_broadcasts_fn is None:
+        def _default_sync_broadcasts() -> str:
+            from src.xgpedia.providers.irib_conductor import IRIBConductorProvider
+            from src.xgpedia.sync import sync_irib_broadcasts
+
+            if not report.matches:
+                return "بدون بازی شروع‌نشده برای بررسی پخش"
+            api = IRIBConductorProvider()
+            try:
+                progs, errs = api.fetch_all_programs()
+            finally:
+                api.close()
+            fx_list = [
+                {
+                    "fixture_id": m.fixture_id,
+                    "home_en": m.home_en,
+                    "away_en": m.away_en,
+                    "home_fa": m.home_fa,
+                    "away_fa": m.away_fa,
+                    "kickoff_tehran": m.kickoff_tehran,
+                }
+                for m in report.matches
+            ]
+            s = sync_irib_broadcasts(progs, fx_list, tehran_date=tehran_date)
+            err_note = (" (خطا: " + "؛ ".join(errs) + ")") if errs and not progs else ""
+            return f"{s['matched']} بازی با پخش زنده (شبکه سه/ورزش){err_note}"
+
+        sync_broadcasts_fn = _default_sync_broadcasts
+
+    cached_bc = _cache_fresh_summary("broadcasts", tehran_date, 2.0, now) if (not force and getattr(sync_broadcasts_fn, "__name__", "") == "_default_sync_broadcasts") else None
+    if cached_bc is not None:
+        report.sync_broadcasts_detail = cached_bc
+    else:
+        try:
+            report.sync_broadcasts_detail = sync_broadcasts_fn()
+            _save_sync_cache("broadcasts", tehran_date, now, report.sync_broadcasts_detail)
+        except Exception as e:
+            report.sync_broadcasts_ok = False
+            report.sync_broadcasts_detail = f"اختیاری — در دسترس نبود ({type(e).__name__}: {str(e)[:120]})"
+
     return report
 
 
 # ─── ۲) تولید پست کامل (فکت + متن LLM + کارت PNG + کپشن) برای بازی انتخاب‌شده ───
+
+def get_match_card_options(
+    fixture_id: str,
+    *,
+    post_type: str = "preview",
+    fmt: str = "4:5",
+) -> dict[str, Any]:
+    """استخراج لیست ماژول‌های دارای دیتای کامل برای یک بازی + قابلیت نیم‌عرض بودن هر ماژول."""
+    from src.xgpedia.render.card_kit import MODULE_REGISTRY
+    from src.xgpedia.render.cards import build_preview_context
+    from src.xgpedia.render.post_match_cards import build_post_match_context
+    from src.xgpedia.render.studio_engine import POST_MATCH_PRIORITY, PRE_MATCH_PRIORITY
+    from src.xgpedia.sync import build_match_facts
+
+    init_db()
+    facts = build_match_facts(fixture_id, post_match=(post_type == "post_match"))
+    dummy_draft = {"title": "", "bullets": [], "caption": ""}
+    if post_type == "post_match":
+        ctx = build_post_match_context(dummy_draft, facts, fmt=fmt)
+        priority = POST_MATCH_PRIORITY
+    else:
+        ctx = build_preview_context(dummy_draft, facts, fmt=fmt)
+        priority = PRE_MATCH_PRIORITY
+
+    default_ids = {m["id"]: m["span"] for m in ctx["modules"] if m.get("enabled")}
+    available: list[dict[str, Any]] = []
+    for mod_id in priority:
+        if not ctx["has"].get(mod_id):
+            continue
+        spec = MODULE_REGISTRY.get(mod_id)
+        if spec is None:
+            continue
+        available.append({
+            "id": mod_id,
+            "title_fa": spec.title_fa,
+            "can_half": spec.can_half,
+            "enabled": mod_id in default_ids,
+            "span": default_ids.get(mod_id, "full"),
+        })
+
+    missing_mods: list[str] = []
+    for mod_id in priority:
+        if not ctx["has"].get(mod_id):
+            spec = MODULE_REGISTRY.get(mod_id)
+            if spec:
+                missing_mods.append(spec.title_fa)
+    return {
+        "fixture_id": fixture_id,
+        "home_fa": facts["home"]["name_fa"],
+        "away_fa": facts["away"]["name_fa"],
+        "round": facts.get("round") or "",
+        "stadium": facts.get("stadium") or "",
+        "broadcast": facts.get("broadcast") or "",
+        "available_modules": available,
+        "missing_modules": missing_mods,
+    }
+
+
+
+def _attach_live_breaking_news(facts: dict[str, Any]) -> None:
+    """افزودن خودکار اخبار مهم ۷ روز اخیر دو تیم (تغییر سرمربی، مصدومیت، محرومیت) به فکت‌ها برای کپشن."""
+    if facts.get("recent_news"):
+        return
+    try:
+        from src.xgpedia.providers.live_intel_free import fetch_match_breaking_news
+
+        h_en = ((facts.get("home") or {}).get("name_en") or "").strip()
+        a_en = ((facts.get("away") or {}).get("name_en") or "").strip()
+        if h_en and a_en:
+            news = fetch_match_breaking_news(h_en, a_en, max_items=6, timeout=8.0)
+            if news:
+                facts["recent_news"] = news
+    except Exception:
+        pass
+
 
 def generate_match_post(
     fixture_id: str,
@@ -386,6 +688,9 @@ def generate_match_post(
     post_type: str = "preview",
     fmt: str = "4:5",
     platform: str = "telegram",
+    header_mode: str = "full",
+    custom_modules: list[dict[str, Any]] | None = None,
+    broadcast_override: str | None = None,
     out_dir: Path | None = None,
     llm_provider: Any = None,
     render_fn: Callable[..., tuple[Path, Path, Path]] | None = None,
@@ -401,6 +706,7 @@ def generate_match_post(
     # گام ۱: استخراج فکت‌ها
     try:
         facts = build_match_facts(fixture_id, post_match=(post_type == "post_match"))
+        _attach_live_breaking_news(facts)
     except Exception as e:
         title, detail = _diagnose_exception("facts", e)
         return PostGenerationResult(
@@ -411,9 +717,9 @@ def generate_match_post(
     # گام ۲: تولید متن LLM + اعتبارسنجی + ذخیره در DB
     try:
         if llm_provider is None:
-            from src.xgpedia.editorial.llm_provider import OpenAICompatibleLLM
+            from src.xgpedia.editorial.llm_provider import build_default_llm
 
-            llm_provider = OpenAICompatibleLLM()
+            llm_provider = build_default_llm()
         draft_obj, _, _ = generate_draft(
             llm_provider, facts, post_type=post_type, target_platform=platform
         )
@@ -437,16 +743,19 @@ def generate_match_post(
         fact_dict = json.loads(post["fact_json"] or "{}")
         target_out = out_dir or (ROOT / "output")
         do_render = render_fn or render_preview_card
-        html_path, img_path, cap_path = do_render(
-            draft_dict,
-            fact_dict,
-            out_dir=target_out,
-            post_id=post_id,
-            version=post["content_version"],
-            platform=platform,
-            post_type=post_type,
-            fmt=fmt,
-        )
+        render_kw: dict[str, Any] = {
+            "out_dir": target_out,
+            "post_id": post_id,
+            "version": post["content_version"],
+            "platform": platform,
+            "post_type": post_type,
+            "fmt": fmt,
+        }
+        if render_fn is None:
+            render_kw["header_mode"] = header_mode
+            render_kw["custom_modules"] = custom_modules
+            render_kw["broadcast_override"] = broadcast_override
+        html_path, img_path, cap_path = do_render(draft_dict, fact_dict, **render_kw)
         # آماده‌سازی وضعیت برای انتشار فوری یا زمان‌بندی‌شده
         with db() as conn:
             conn.execute(
@@ -646,3 +955,213 @@ async def run_due_scheduled_publishes(
                     f"علت دقیق: {err_msg}",
                 )
     return outcomes
+
+
+async def generate_match_post_async(
+    fixture_id: str,
+    *,
+    post_type: str = "preview",
+    fmt: str = "4:5",
+    platform: str = "telegram",
+    header_mode: str = "full",
+    custom_modules: list[dict[str, Any]] | None = None,
+    broadcast_override: str | None = None,
+    out_dir: Path | None = None,
+    llm_provider: Any = None,
+    progress_cb: Callable[[str], Awaitable[None]] | None = None,
+) -> PostGenerationResult:
+    """نسخهٔ ناهمزمان تولید پست برای ربات تلگرام — رندر Playwright مستقیم روی event loop اصلی (بدون هنگ ویندوز)."""
+    import asyncio
+    from src.xgpedia.editorial.draft import generate_draft, save_draft
+    from src.xgpedia.normalization.models import MatchFacts
+    from src.xgpedia.render.cards import FORMATS, render_preview_html
+    from src.xgpedia.render.post_match_cards import render_post_match_html
+    from src.xgpedia.render.render_png import render as render_png_async
+    from src.xgpedia.render.studio_engine import build_card_caption
+    from src.xgpedia.sync import build_match_facts
+
+    init_db()
+
+    if progress_cb:
+        await progress_cb("⏳ (۱/۳) در حال استخراج داده‌ها و نگارش متن تحریریه (LLM)...")
+
+    def _step1_facts_and_draft() -> tuple[int, dict, dict, str]:
+        facts = build_match_facts(fixture_id, post_match=(post_type == "post_match"))
+        _attach_live_breaking_news(facts)
+        prov = llm_provider
+        if prov is None:
+            from src.xgpedia.editorial.llm_provider import build_default_llm
+
+            prov = build_default_llm()
+        draft_obj, _, _ = generate_draft(
+            prov, facts, post_type=post_type, target_platform=platform
+        )
+        pid = save_draft(
+            draft_obj,
+            facts=MatchFacts.model_validate(facts),
+            post_type=post_type,
+            target_platform=platform,
+        )
+        post = tp.load_post(pid)
+        return (
+            pid,
+            json.loads(post["draft_json"] or "{}"),
+            json.loads(post["fact_json"] or "{}"),
+            draft_obj.title,
+        )
+
+    try:
+        post_id, draft_dict, fact_dict, title = await asyncio.wait_for(
+            asyncio.to_thread(_step1_facts_and_draft), timeout=120.0
+        )
+    except Exception as e:
+        title_err, detail = _diagnose_exception("editorial", e)
+        return PostGenerationResult(
+            ok=False, fixture_id=fixture_id, failed_stage="editorial",
+            error_title=title_err, error_detail=detail,
+        )
+
+    if progress_cb:
+        await progress_cb(f"⏳ (۲/۳) متن تحریریه آماده شد! در حال رندر کارت {fmt}...")
+
+    try:
+        post = tp.load_post(post_id)
+        version = post["content_version"]
+        target_out = Path(out_dir or (ROOT / "output"))
+        target_out.mkdir(parents=True, exist_ok=True)
+        w, hgt = FORMATS.get(fmt, FORMATS["4:5"])
+        stem = f"post_{post_id}_v{version}_{post_type}"
+        html_path = target_out / f"{stem}_{w}x{hgt}.html"
+        if post_type == "post_match":
+            html_str = render_post_match_html(
+                draft_dict, fact_dict, fmt=fmt, header_mode=header_mode,
+                custom_modules=custom_modules, broadcast_override=broadcast_override,
+            )
+        else:
+            html_str = render_preview_html(
+                draft_dict, fact_dict, post_type=post_type, fmt=fmt,
+                header_mode=header_mode, custom_modules=custom_modules,
+                broadcast_override=broadcast_override,
+            )
+        html_path.write_text(html_str, encoding="utf-8")
+
+        img_fmt = "jpeg" if platform == "instagram" else "png"
+        img_path = target_out / f"{stem}_{w}x{hgt}.{img_fmt}"
+        await asyncio.wait_for(
+            render_png_async(str(html_path), str(img_path), w, hgt, img_fmt),
+            timeout=45.0,
+        )
+
+        cap_path = target_out / f"post_{post_id}_v{version}_caption.txt"
+        caption_text = build_card_caption(draft_dict, fact_dict, post_type)
+        cap_path.write_text(caption_text, encoding="utf-8")
+
+        with db() as conn:
+            conn.execute(
+                "UPDATE posts SET status = 'awaiting_approval' WHERE post_id = ?",
+                (post_id,),
+            )
+
+        return PostGenerationResult(
+            ok=True,
+            fixture_id=fixture_id,
+            post_id=post_id,
+            content_version=version,
+            image_path=img_path,
+            html_path=html_path,
+            caption_path=cap_path,
+            caption_text=caption_text,
+            title=title,
+        )
+    except Exception as e:
+        title_err, detail = _diagnose_exception("render", e)
+        return PostGenerationResult(
+            ok=False, fixture_id=fixture_id, post_id=post_id, failed_stage="render",
+            error_title=title_err, error_detail=detail,
+        )
+
+
+def regenerate_or_edit_post_text(
+    post_id: int,
+    *,
+    instruction: str = "",
+    llm_provider: Any = None,
+    out_dir: Path | None = None,
+) -> PostGenerationResult:
+    """تولید مجدد متن یا ویرایش متن فعلی پست با توضیح ادمین (بدون نیاز به رندر مجدد تصویر)."""
+    from src.xgpedia.editorial.draft import generate_draft
+    from src.xgpedia.render.studio_engine import build_card_caption
+
+    init_db()
+    try:
+        post = tp.load_post(post_id)
+    except Exception as e:
+        return PostGenerationResult(
+            ok=False, fixture_id="", post_id=post_id, failed_stage="db",
+            error_title="پست یافت نشد", error_detail=str(e),
+        )
+
+    fixture_id = post["fixture_id"]
+    post_type = post["post_type"]
+    platform = post["target_platform"]
+    version = post["content_version"]
+    facts = json.loads(post["fact_json"] or "{}")
+    current_draft_json = post["draft_json"] or "{}"
+
+    try:
+        prov = llm_provider
+        if prov is None:
+            from src.xgpedia.editorial.llm_provider import build_default_llm
+
+            prov = build_default_llm()
+        draft_obj, _, _ = generate_draft(
+            prov,
+            facts,
+            post_type=post_type,
+            target_platform=platform,
+            edit_instruction=instruction.strip(),
+            current_draft_json=current_draft_json if instruction.strip() else "",
+        )
+    except Exception as e:
+        title_err, detail = _diagnose_exception("editorial", e)
+        return PostGenerationResult(
+            ok=False, fixture_id=fixture_id, post_id=post_id, failed_stage="editorial",
+            error_title=title_err, error_detail=detail,
+        )
+
+    payload = {
+        "status": draft_obj.status,
+        "title": draft_obj.title,
+        "bullets": draft_obj.bullets,
+        "caption": draft_obj.caption,
+        "source_note": draft_obj.source_note,
+        "uncertainties": draft_obj.uncertainties,
+    }
+    with db() as conn:
+        conn.execute(
+            "UPDATE posts SET title = ?, caption = ?, draft_json = ?, status = 'awaiting_approval' WHERE post_id = ?",
+            (draft_obj.title, draft_obj.caption, json.dumps(payload, ensure_ascii=False), post_id),
+        )
+
+    target_out = Path(out_dir or (ROOT / "output"))
+    cap_path = target_out / f"post_{post_id}_v{version}_caption.txt"
+    caption_text = build_card_caption(payload, facts, post_type)
+    if target_out.exists():
+        cap_path.write_text(caption_text, encoding="utf-8")
+
+    img_path: Path | None = None
+    try:
+        img_path = tp.find_card_image(post_id, version, out_dir=target_out)
+    except Exception:
+        img_path = None
+
+    return PostGenerationResult(
+        ok=True,
+        fixture_id=fixture_id,
+        post_id=post_id,
+        content_version=version,
+        image_path=img_path,
+        caption_path=cap_path if cap_path.exists() else None,
+        caption_text=caption_text,
+        title=draft_obj.title,
+    )

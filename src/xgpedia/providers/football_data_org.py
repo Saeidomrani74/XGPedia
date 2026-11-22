@@ -107,5 +107,13 @@ class FootballDataOrg:
         """جدول لیگ (TOTAL/HOME/AWAY) — مبنای فرم و جایگاه."""
         return self._get(f"/competitions/{PL_CODE}/standings", {"season": season_start})
 
+    def teams(self, season_start: int = CURRENT_SEASON_START) -> RawResponse:
+        """اطلاعات زندهٔ تیم‌های فصل (ورزشگاه و سرمربی فعلی) — رایگان با ۱ درخواست."""
+        return self._get(f"/competitions/{PL_CODE}/teams", {"season": season_start})
+
+    def scorers(self, limit: int = 50, season_start: int = CURRENT_SEASON_START) -> RawResponse:
+        """برترین گلزنان و پاسورهای فصل لیگ برتر (رایگان) — منبع مطمئن ماژول مهرهٔ کلیدی."""
+        return self._get(f"/competitions/{PL_CODE}/scorers", {"season": season_start, "limit": limit})
+
     def close(self) -> None:
         self._client.close()

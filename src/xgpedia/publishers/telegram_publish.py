@@ -63,6 +63,31 @@ def is_admin(user_id: int) -> bool:
     return user_id in ADMIN_TELEGRAM_IDS
 
 
+
+_SOURCE_LINKS: dict[str, tuple[str, str]] = {
+    "football-data-org": ("Football-Data.org", "https://www.football-data.org"),
+    "football-data.org": ("Football-Data.org", "https://www.football-data.org"),
+    "football-data-co-uk": ("Football-Data.co.uk", "https://www.football-data.co.uk"),
+    "football-data.co.uk": ("Football-Data.co.uk", "https://www.football-data.co.uk"),
+    "understat": ("Understat", "https://understat.com"),
+    "api-football": ("API-Football", "https://www.api-football.com"),
+}
+
+
+def _format_source_html(raw_source: str, facts: dict) -> str:
+    """تبدیل نام منبع به هایپرلینک تمیز تلگرام بدون تاریخ جمع‌آوری و بدون hash."""
+    prov = str((facts.get("source") or {}).get("provider") or "").strip().lower()
+    raw_low = (raw_source or "").lower()
+    for key, (label, url) in _SOURCE_LINKS.items():
+        if key == prov or key in raw_low:
+            return f'<i>منبع: <a href="{url}">{label}</a></i>'
+    if prov:
+        return f"<i>منبع: {html.escape(prov)}</i>"
+    # حذف بخش‌های «جمع‌آوری ...» و «hash ...» در صورت نبود provider
+    cleaned = (raw_source or "").split("·")[0].replace("منبع داده:", "").strip()
+    return f"<i>منبع: {html.escape(cleaned)}</i>" if cleaned else ""
+
+
 def build_caption(post: dict) -> str:
     """کپشن HTML تلگرام از پست آرشیوشده — همهٔ متن LLM با escape ایمن می‌شود.
 
@@ -90,8 +115,9 @@ def build_caption(post: dict) -> str:
         bullets = [html.escape(str(b).strip()) for b in (draft.get("bullets") or []) if str(b).strip()]
         if bullets:
             parts.append("🎯 <b>روایت آماری و گره تاکتیکی بازی:</b>\n" + "\n".join(f"• {b}" for b in bullets))
-    if source:
-        parts.append(f"<i>منبع: {source}</i>")
+    src_html = _format_source_html(draft.get("source_note") or "", facts)
+    if src_html:
+        parts.append(src_html)
     if tag:
         parts.append(tag)
     return "\n\n".join(parts)
@@ -142,7 +168,7 @@ def _plain_body(post: dict) -> str:
     parts = [
         (post["title"] or draft.get("title") or "").strip(),
         (post["caption"] or draft.get("caption") or "").strip(),
-        (draft.get("source_note") or "").strip(),
+        (draft.get("source_note") or "").split("·")[0].strip(),
         HASHTAG_BY_TYPE.get(post["post_type"], ""),
     ]
     return "\n\n".join(p for p in parts if p)

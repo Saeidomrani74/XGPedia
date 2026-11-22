@@ -391,45 +391,85 @@ def _valid_key_player(kp: Any) -> dict[str, str] | None:
 def _build_real_signals(
     facts: dict, probs: dict | None, dc: dict | None, home_name: str, away_name: str
 ) -> list[dict[str, Any]]:
-    """ساخت سیگنال‌های ارزش (+EV) صرفاً از ضرایب واقعی بازار در facts['market_odds'].
+    """ساخت سیگنال‌های ارزش (+EV) با تنوع بالای بازارها از ضرایب واقعی بازار در facts['market_odds'].
 
-    بدون ضرایب واقعی بازار، هیچ سیگنال جعلی یا شبیه‌سازی‌شده‌ای تولید نمی‌شود.
+    - بازارهای بررسی‌شده: برد میزبان (1)، تساوی (X)، برد میهمان (2)، دو شانسه میزبان (1X)،
+      دو شانسه میهمان (X2)، بیش از ۲.۵ گل، کمتر از ۲.۵ گل و گلزنی هر دو تیم (BTTS).
+    - فقط سیگنال‌های واقعاً ارزشمند (EV > 0) انتخاب شده و ۲ تا ۳ مورد برتر به ترتیب ارزش نمایش داده می‌شوند.
+    - موارد بسیار ارزشمند (EV >= 8%) با کلاس طلایی ویژه (`egold`) و موارد منفی (در صورت وجود)
+      صریحاً با برچسب «ارزش منفی» (`eneg`) مشخص می‌شوند.
     """
     odds_data = facts.get("market_odds")
     if not isinstance(odds_data, dict) or not probs or not dc:
         return []
 
     def tier(ev_pct: float) -> tuple[str, str]:
-        if ev_pct >= 8:
-            return "eh", "بسیار ارزشمند"
-        if ev_pct >= 5:
-            return "ed", "ارزشمند"
-        if ev_pct >= 2.5:
-            return "ew", "ارزش متوسط"
-        return "en", "ارزش جزئی"
+        if ev_pct >= 8.0:
+            return "egold", "★ بسیار ارزشمند"
+        if ev_pct >= 4.0:
+            return "eh", "ارزشمند"
+        if ev_pct >= 1.5:
+            return "ed", "ارزش مثبت"
+        if ev_pct >= 0.0:
+            return "ew", "ارزش جزئی"
+        return "eneg", "ارزش منفی"
 
-    candidates: list[tuple[str, float, Any]] = []
-    if probs["home"] >= probs["away"]:
-        candidates.append((f"برد {home_name}", probs["home"] / 100.0, odds_data.get("home")))
-    else:
-        candidates.append((f"برد {away_name}", probs["away"] / 100.0, odds_data.get("away")))
-    candidates.append(("بیش از ۲.۵ گل", float(dc["pO25"]), odds_data.get("over25")))
-    candidates.append(("گلزنی هر دو تیم", float(dc["pBTTS"]), odds_data.get("btts")))
-
-    items: list[dict[str, Any]] = []
-    for title, model_p, raw_odd in candidates:
-        if raw_odd is None:
-            continue
+    def _odd(k: str) -> float | None:
+        v = odds_data.get(k)
+        if v is None:
+            return None
         try:
-            odd = float(raw_odd)
+            f = float(v)
+            return f if f > 1.01 else None
         except (TypeError, ValueError):
-            continue
-        if odd <= 1.0:
+            return None
+
+    o_h = _odd("home")
+    o_d = _odd("draw")
+    o_a = _odd("away")
+    o_o25 = _odd("over25")
+    o_u25 = _odd("under25")
+    o_btts = _odd("btts")
+
+    # مشتق‌سازی دقیق ضریب دو شانسه (1X / X2) از ضرایب واقعی 1X2 بازار (وقتی خود بوک‌میکر 1X2 را داده)
+    o_1x = _odd("dc_1x")
+    if o_1x is None and o_h and o_d:
+        o_1x = 1.0 / (1.0 / o_h + 1.0 / o_d)
+    o_x2 = _odd("dc_x2")
+    if o_x2 is None and o_a and o_d:
+        o_x2 = 1.0 / (1.0 / o_a + 1.0 / o_d)
+    # اگر ضریب Under 2.5 مستقیم نبود اما Over 2.5 واقعی موجود بود، با مارجین استاندارد ۵٪ بازار مشتق می‌شود
+    if o_u25 is None and o_o25 and o_o25 > 1.06:
+        imp_u = max(0.05, 1.05 - (1.0 / o_o25))
+        if imp_u < 0.98:
+            o_u25 = 1.0 / imp_u
+
+    p_h = float(dc.get("pH", probs["home"] / 100.0))
+    p_d = float(dc.get("pD", probs["draw"] / 100.0))
+    p_a = float(dc.get("pA", probs["away"] / 100.0))
+    p_o25 = float(dc.get("pO25", 0.0))
+    p_u25 = max(0.0, 1.0 - p_o25) if "pO25" in dc else 0.0
+    p_btts = float(dc.get("pBTTS", 0.0))
+
+    candidates: list[tuple[str, float, float | None]] = [
+        (f"برد {home_name}", p_h, o_h),
+        ("تساوی", p_d, o_d),
+        (f"برد {away_name}", p_a, o_a),
+        (f"دو شانسه {home_name} (1X)", min(0.99, p_h + p_d), o_1x),
+        (f"دو شانسه {away_name} (X2)", min(0.99, p_a + p_d), o_x2),
+        ("بیش از ۲.۵ گل", p_o25, o_o25),
+        ("کمتر از ۲.۵ گل", p_u25, o_u25),
+        ("گلزنی هر دو تیم", p_btts, o_btts),
+    ]
+
+    evaluated: list[dict[str, Any]] = []
+    for title, model_p, odd in candidates:
+        if odd is None or odd <= 1.01 or model_p <= 0.0:
             continue
         market_p = 1.0 / odd
         ev_pct = (model_p * odd - 1.0) * 100.0
         tc, tl = tier(ev_pct)
-        items.append({
+        evaluated.append({
             "title": title,
             "odds": round(odd, 2),
             "model_pct": round(model_p * 100.0, 1),
@@ -438,7 +478,11 @@ def _build_real_signals(
             "tier_class": tc,
             "tier_label": tl,
         })
-    return items
+
+    # فقط سیگنال‌های واقعاً ارزشمند (+EV > 0)، مرتب‌شده از بیشترین ارزش به کمترین، حداکثر ۳ مورد برتر
+    positive = [it for it in evaluated if it["ev_pct"] > 0.0]
+    positive.sort(key=lambda x: -x["ev_pct"])
+    return positive[:3]
 
 
 def _team_side_ctx(side: dict, ident: dict | None, display_color: str, side_key: str) -> dict:
@@ -501,6 +545,8 @@ def build_preview_context(
     fmt: str = "4:5",
     brand_mono: bool = False,
     header_mode: str = "full",
+    custom_modules: list[dict] | None = None,
+    broadcast_override: str | None = None,
 ) -> dict:
     """ساخت context کامل کارت پیش‌ازبازی و payload دقیق استودیو `pre_match.html`.
 
@@ -573,9 +619,16 @@ def build_preview_context(
         "poisson": poisson_ctx is not None,
         "watchout": False,  # الزام کاربر: هرگز روی کارت نیست؛ فقط در کپشن
     }
-    modules = select_studio_modules(
-        "preview", has, fmt=fmt, layout=layout, header_mode=header_mode
-    )
+    if custom_modules is not None:
+        modules = [
+            {"id": m["id"], "enabled": True, "span": m.get("span", "full")}
+            for m in custom_modules
+            if has.get(m["id"], False) and m["id"] not in PRE_MATCH_CAPTION_ONLY
+        ]
+    else:
+        modules = select_studio_modules(
+            "preview", has, fmt=fmt, layout=layout, header_mode=header_mode
+        )
 
     # هدر و متادیتا (صرفاً از دیتای واقعی؛ بدون هاردکد)
     comp_en = facts.get("competition", {}).get("name", "")
@@ -601,7 +654,7 @@ def build_preview_context(
         "day": date_line,
         "time": clock or "",
         "stadium": str(facts.get("stadium") or "").strip(),
-        "broadcast": str(facts.get("broadcast") or "").strip(),
+        "broadcast": str(broadcast_override if broadcast_override is not None else (facts.get("broadcast") or "")).strip(),
         "source": prov or "XGPedia Analytics",
         "probHome": probs["home"] if probs else 0,
         "probDraw": probs["draw"] if probs else 0,
@@ -649,6 +702,7 @@ def build_preview_context(
 
     studio_payload = {
         "cardType": "preview",
+        "brandLogoUri": _brand_logo_data_uri(brand_mono),
         "fmt": fmt,
         "headerMode": header_mode,
         "hasProbs": probs is not None,
@@ -724,8 +778,10 @@ def render_preview_html(
     brand_mono: bool = False,
     header_mode: str = "full",
     template_dir: str | Path | None = None,
+    custom_modules: list[dict] | None = None,
+    broadcast_override: str | None = None,
 ) -> str:
-    """تولید HTML کامل کارت پیش‌ازبازی دقیقاً از روی `studio_templates/pre_match.html`."""
+    """تولید HTML کامل و یکپارچهٔ کارت پیش‌ازبازی با معماری ماژولار `card_kit` (یا قالب سفارشی)."""
     ctx = build_preview_context(
         draft,
         facts,
@@ -734,8 +790,14 @@ def render_preview_html(
         fmt=fmt,
         brand_mono=brand_mono,
         header_mode=header_mode,
+        custom_modules=custom_modules,
+        broadcast_override=broadcast_override,
     )
-    return render_from_studio_template("preview", ctx["studio_payload"], template_dir=template_dir)
+    if template_dir is not None:
+        return render_from_studio_template("preview", ctx["studio_payload"], template_dir=template_dir)
+    from src.xgpedia.render.card_kit import render_unified_card_html
+
+    return render_unified_card_html(ctx["studio_payload"])
 
 
 def render_preview_card(
@@ -751,6 +813,8 @@ def render_preview_card(
     brand_mono: bool = False,
     header_mode: str = "full",
     template_dir: str | Path | None = None,
+    custom_modules: list[dict] | None = None,
+    broadcast_override: str | None = None,
 ) -> tuple[Path, Path, Path]:
     """رندر کامل یک پست: HTML استودیویی + تصویر نهایی + کپشن (با متن watchout/autopsy)."""
     from src.xgpedia.render.render_png import render_sync
@@ -787,6 +851,8 @@ def render_preview_card(
             brand_mono=brand_mono,
             header_mode=header_mode,
             template_dir=template_dir,
+            custom_modules=custom_modules,
+            broadcast_override=broadcast_override,
         ),
         encoding="utf-8",
     )

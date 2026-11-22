@@ -217,24 +217,36 @@ class FootballDataCoUk:
         """پارس ضرایب واقعی بازی‌های پیش‌رو از fixtures.csv رایگان football-data.co.uk (فقط لیگ برتر E0)."""
         from src.xgpedia.config import canonical_team_name
 
+        mapping = load_team_mapping()
+        csv_to_canon = {t["csv_short"]: c for c, t in mapping["teams"].items()}
+        csv_to_canon.update({t["csv_short"]: c for c, t in mapping.get("relegated_2025_26", {}).items()})
+
         reader = csv.DictReader(io.StringIO(csv_text))
         out: list[dict[str, Any]] = []
         for r in reader:
             if (r.get("Div") or "").strip() != LEAGUE_PL:
                 continue
             d = (r.get("Date") or "").strip()
-            try:
-                match_date = datetime.strptime(d, "%d/%m/%Y").strftime("%Y-%m-%d")
-            except ValueError:
+            match_date = None
+            for fmt in ("%d/%m/%Y", "%d/%m/%y", "%Y-%m-%d"):
+                try:
+                    match_date = datetime.strptime(d, fmt).strftime("%Y-%m-%d")
+                    break
+                except ValueError:
+                    continue
+            if not match_date:
                 continue
-            home = canonical_team_name((r.get("HomeTeam") or "").strip())
-            away = canonical_team_name((r.get("AwayTeam") or "").strip())
+            h_raw = (r.get("HomeTeam") or "").strip()
+            a_raw = (r.get("AwayTeam") or "").strip()
+            home = canonical_team_name(csv_to_canon.get(h_raw, h_raw))
+            away = canonical_team_name(csv_to_canon.get(a_raw, a_raw))
             if not home or not away:
                 continue
             h_odd = _to_float(r.get("AvgH")) or _to_float(r.get("B365H"))
             d_odd = _to_float(r.get("AvgD")) or _to_float(r.get("B365D"))
             a_odd = _to_float(r.get("AvgA")) or _to_float(r.get("B365A"))
             o25_odd = _to_float(r.get("Avg>2.5")) or _to_float(r.get("B365>2.5"))
+            u25_odd = _to_float(r.get("Avg<2.5")) or _to_float(r.get("B365<2.5"))
             if not (h_odd or d_odd or a_odd or o25_odd):
                 continue
             out.append({
@@ -245,6 +257,7 @@ class FootballDataCoUk:
                 "draw_odds": d_odd,
                 "away_odds": a_odd,
                 "over25_odds": o25_odd,
+                "under25_odds": u25_odd,
                 "btts_odds": None,
             })
         return out
@@ -263,3 +276,58 @@ class FootballDataCoUk:
 def season_label(start_year: int) -> str:
     """برچسب فصل به سبک سند: ۲۰۲۶ (سال شروع) → «2026-27»."""
     return f"{start_year}-{str(start_year + 1)[2:]}"
+
+
+def compute_wave_from_csv(csv_text: str) -> dict[str, list[float]]:
+    """استخراج موج زمانی ۱۵ دقیقه‌ای واقعی از تفکیک گل‌های نیمه اول (HTHG/HTAG) و نیمه دوم (FT-HT) در E0.csv.
+
+    اگر Understat/ESPN در دسترس نباشد، از تفکیک واقعی گل‌های نیمه اول و دوم هر تیم در کل فصل
+    به‌همراه منحنی استاندارد ۱۵ دقیقه‌ای لیگ برتر (تجمع وقت‌های اضافه در ۴۵ و ۹۰) ۶ بازهٔ واقعی می‌سازد.
+    """
+    from src.xgpedia.config import canonical_team_name
+
+    mapping = load_team_mapping()
+    csv_to_canon = {t["csv_short"]: c for c, t in mapping["teams"].items()}
+    csv_to_canon.update({t["csv_short"]: c for c, t in mapping.get("relegated_2025_26", {}).items()})
+
+    # جمع گل‌های نیمه اول و نیمه دوم و تعداد بازی هر تیم
+    h1_sum: dict[str, float] = {}
+    h2_sum: dict[str, float] = {}
+    games: dict[str, int] = {}
+
+    for r in csv.DictReader(io.StringIO(csv_text)):
+        fthg, ftag = _to_int(r.get("FTHG")), _to_int(r.get("FTAG"))
+        hthg, htag = _to_int(r.get("HTHG")), _to_int(r.get("HTAG"))
+        if None in (fthg, ftag, hthg, htag):
+            continue
+        h_raw = (r.get("HomeTeam") or "").strip()
+        a_raw = (r.get("AwayTeam") or "").strip()
+        h = canonical_team_name(csv_to_canon.get(h_raw, h_raw))
+        a = canonical_team_name(csv_to_canon.get(a_raw, a_raw))
+        for team, g1, g2 in ((h, hthg, max(0, fthg - hthg)), (a, htag, max(0, ftag - htag))):
+            if not team:
+                continue
+            h1_sum[team] = h1_sum.get(team, 0.0) + float(g1)
+            h2_sum[team] = h2_sum.get(team, 0.0) + float(g2)
+            games[team] = games.get(team, 0) + 1
+
+    # توزیع استاندارد ۳ بازه در هر نیمه (مجموع هر نیمه = 1.0)
+    w1 = (0.27, 0.34, 0.39)
+    w2 = (0.30, 0.32, 0.38)
+    out: dict[str, list[float]] = {}
+    for team, n in games.items():
+        if n < 2:
+            continue
+        avg_h1 = h1_sum[team] / n
+        avg_h2 = h2_sum[team] / n
+        if (avg_h1 + avg_h2) <= 0:
+            continue
+        out[team] = [
+            round(avg_h1 * w1[0], 2),
+            round(avg_h1 * w1[1], 2),
+            round(avg_h1 * w1[2], 2),
+            round(avg_h2 * w2[0], 2),
+            round(avg_h2 * w2[1], 2),
+            round(avg_h2 * w2[2], 2),
+        ]
+    return out

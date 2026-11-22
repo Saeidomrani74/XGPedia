@@ -29,6 +29,7 @@ THRESHOLDS_FILE = CONFIG_DIR / "thresholds.json"
 GLOSSARY_FILE = CONFIG_DIR / "glossary_fa.json"
 TEAM_MAPPING_FILE = CONFIG_DIR / "team_mapping.json"
 TEAM_IDENTITIES_FILE = CONFIG_DIR / "team_identities.json"
+TEAM_VENUES_FILE = CONFIG_DIR / "team_venues.json"
 CRESTS_DIR = ROOT / "brand" / "crests"  # brand/crests/{CODE}.svg|png — لوگوی واقعی تیم‌ها (tools/fetch_crests.py)
 STUDIO_TEMPLATES_DIR = Path(os.environ.get("XGPEDIA_STUDIO_TEMPLATES_DIR", ROOT / "studio_templates"))
 DATABASE_PATH = Path(os.environ.get("DATABASE_PATH", ROOT / "data" / "dev.sqlite"))
@@ -194,3 +195,86 @@ def team_name_fa(name_en: str) -> str:
         if name_en in (team["name_en"], team["id"], *team.get("aliases", [])):
             return team["name_fa"]
     return name_en
+
+
+@lru_cache(maxsize=1)
+def load_team_venues() -> dict:
+    """ورزشگاه خانگی و سرمربی تیم‌ها از config/team_venues.json."""
+    if not TEAM_VENUES_FILE.exists():
+        return {"teams": {}}
+    with open(TEAM_VENUES_FILE, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def team_venue(name_en: str) -> dict:
+    """برگرداندن {stadium_fa, coach_fa} برای یک تیم (با نگاشت خودکار نام خام)."""
+    teams = load_team_venues().get("teams", {})
+    canon = canonical_team_name(name_en)
+    return teams.get(canon) or teams.get(name_en) or {}
+
+def _transliterate_latin_to_fa(name: str) -> str:
+    """آوانویسی سبک نام‌های لاتین به فارسی (پشتیبان اضطراری تا هرگز نام سرمربی انگلیسی روی کارت نماند)."""
+    import unicodedata
+
+    # اگر از قبل فارسی است، دست نزن
+    if any("\u0600" <= ch <= "\u06FF" for ch in name):
+        return name
+    norm = "".join(c for c in unicodedata.normalize("NFKD", name) if not unicodedata.combining(c))
+    digraphs = [
+        ("tsch", "چ"), ("sch", "ش"), ("sh", "ش"), ("ch", "چ"), ("th", "ت"),
+        ("ph", "ف"), ("gh", "گ"), ("kh", "خ"), ("zh", "ژ"), ("ck", "ک"),
+        ("qu", "کو"), ("ee", "ی"), ("oo", "و"), ("ou", "و"), ("au", "او"),
+        ("ai", "ای"), ("ei", "ای"), ("ie", "ی"), ("ea", "ی"), ("ia", "یا"),
+    ]
+    chars = {
+        "a": "ا", "b": "ب", "c": "ک", "d": "د", "e": "ه", "f": "ف", "g": "گ",
+        "h": "ه", "i": "ی", "j": "ج", "k": "ک", "l": "ل", "m": "م", "n": "ن",
+        "o": "و", "p": "پ", "q": "ک", "r": "ر", "s": "س", "t": "ت", "u": "و",
+        "v": "و", "w": "و", "x": "کس", "y": "ی", "z": "ز",
+    }
+    words_out: list[str] = []
+    for word in norm.split():
+        w = word.lower().strip(".,'-")
+        if not w:
+            continue
+        out: list[str] = []
+        i = 0
+        while i < len(w):
+            matched = False
+            for dg, fa_v in digraphs:
+                if w.startswith(dg, i):
+                    out.append(fa_v)
+                    i += len(dg)
+                    matched = True
+                    break
+            if matched:
+                continue
+            ch = w[i]
+            if i == 0 and ch == "a":
+                out.append("آ")
+            elif i == 0 and ch in ("e", "i", "o", "u"):
+                out.append("ا" if ch == "e" else ("ای" if ch == "i" else "او"))
+            elif ch == "e" and i < len(w) - 1:
+                pass  # مصوت کوتاه میانی حذف می‌شود تا شکل فارسی طبیعی‌تر باشد
+            else:
+                out.append(chars.get(ch, ""))
+            i += 1
+        words_out.append("".join(out) or word)
+    return " ".join(words_out)
+
+
+def translate_coach_fa(coach_en: str | None, *, allow_transliterate: bool = True) -> str | None:
+    """ترجمهٔ فارسی نام سرمربیِ دریافت‌شدهٔ زنده از API (دیکشنری دقیق → ویکی‌پدیا/آوانویسی خودکار)."""
+    name = str(coach_en or "").strip()
+    if not name:
+        return None
+    if any("\u0600" <= ch <= "\u06FF" for ch in name):
+        return name
+    mapping = load_team_venues().get("coach_translations_fa", {})
+    if name in mapping:
+        return mapping[name]
+    low = name.lower()
+    for k, v in mapping.items():
+        if k.lower() == low:
+            return v
+    return _transliterate_latin_to_fa(name) if allow_transliterate else name

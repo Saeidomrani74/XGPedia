@@ -18,6 +18,8 @@
 """
 from __future__ import annotations
 
+from src.xgpedia.render.cards import _brand_logo_data_uri
+
 import math
 from pathlib import Path
 from typing import Any
@@ -221,6 +223,7 @@ def build_post_match_context(
     fmt: str = "4:5",
     brand_mono: bool = False,
     header_mode: str = "full",
+    custom_modules: list[dict] | None = None,
 ) -> dict:
     """ساخت context کامل کارت پس‌ازبازی و payload دقیق استودیو `post_match.html`.
 
@@ -290,9 +293,16 @@ def build_post_match_context(
         "stats": bool(stats_rows),
         "autopsy": False,  # الزام کاربر: هرگز روی کارت نیست؛ فقط در کپشن
     }
-    modules = select_studio_modules(
-        "post_match", has, fmt=fmt, layout=layout, header_mode=header_mode
-    )
+    if custom_modules is not None:
+        modules = [
+            {"id": m["id"], "enabled": True, "span": m.get("span", "full")}
+            for m in custom_modules
+            if has.get(m["id"], False) and m["id"] not in POST_MATCH_CAPTION_ONLY
+        ]
+    else:
+        modules = select_studio_modules(
+            "post_match", has, fmt=fmt, layout=layout, header_mode=header_mode
+        )
 
     # ساخت هویت تیم‌ها برای payload استودیو
     def _build_team(f: dict, ident: dict | None, color: str, stats: dict[str, float],
@@ -372,6 +382,7 @@ def build_post_match_context(
 
     studio_payload = {
         "cardType": "post_match",
+        "brandLogoUri": _brand_logo_data_uri(brand_mono),
         "fmt": fmt,
         "headerMode": header_mode,
         "hasProbs": probs is not None,
@@ -439,7 +450,11 @@ def render_post_match_html(
         brand_mono=brand_mono,
         header_mode=header_mode,
     )
-    return render_from_studio_template("post_match", ctx["studio_payload"], template_dir=template_dir)
+    if template_dir is not None:
+        return render_from_studio_template("post_match", ctx["studio_payload"], template_dir=template_dir)
+    from src.xgpedia.render.card_kit import render_unified_card_html
+
+    return render_unified_card_html(ctx["studio_payload"])
 
 
 def render_post_match_card(

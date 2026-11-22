@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS fixtures (
   home_team TEXT NOT NULL,
   away_team TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'scheduled',
+  matchday INTEGER,
   raw_payload_hash TEXT,
   collected_at TEXT NOT NULL
 );
@@ -113,6 +114,33 @@ CREATE TABLE IF NOT EXISTS team_enrichments (
   key_player_json TEXT,                  -- {"name", "pos", "s1", "s2"}
   ppda REAL,
   deep_passes REAL,
+  wave_json TEXT,
+  provider TEXT NOT NULL,
+  collected_at TEXT NOT NULL,
+  PRIMARY KEY (team, season, provider)
+);
+
+CREATE TABLE IF NOT EXISTS fixture_broadcasts (
+  fixture_id TEXT PRIMARY KEY,
+  channel_label TEXT NOT NULL,           -- "پخش زنده: شبکه سه" | "پخش زنده: شبکه ورزش"
+  program_title TEXT,
+  broadcast_time TEXT,                   -- "HH:MM"
+  tehran_date TEXT NOT NULL,
+  collected_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS sync_cache (
+  source_key TEXT PRIMARY KEY,           -- results | fixtures | odds | understat | broadcasts
+  tehran_date TEXT NOT NULL,
+  last_synced_at TEXT NOT NULL,
+  summary TEXT
+);
+
+CREATE TABLE IF NOT EXISTS team_metadata (
+  team TEXT NOT NULL,
+  season TEXT NOT NULL,
+  venue_en TEXT,
+  coach_en TEXT,
   provider TEXT NOT NULL,
   collected_at TEXT NOT NULL,
   PRIMARY KEY (team, season, provider)
@@ -144,6 +172,9 @@ def init_db() -> None:
 
 def _migrate(conn: sqlite3.Connection) -> None:
     """مهاجرت سبک و idempotent برای DBهای نسخه‌های قبل."""
+    fx_cols = {r["name"] for r in conn.execute("PRAGMA table_info(fixtures)")}
+    if "matchday" not in fx_cols:
+        conn.execute("ALTER TABLE fixtures ADD COLUMN matchday INTEGER")
     cols = {r["name"] for r in conn.execute("PRAGMA table_info(posts)")}
     if "draft_json" not in cols:
         conn.execute("ALTER TABLE posts ADD COLUMN draft_json TEXT")
@@ -202,3 +233,40 @@ def _migrate(conn: sqlite3.Connection) -> None:
 if __name__ == "__main__":
     init_db()
     print(f"OK - database initialized at {DATABASE_PATH}")
+
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS fixture_broadcasts (
+          fixture_id TEXT PRIMARY KEY,
+          channel_label TEXT NOT NULL,
+          program_title TEXT,
+          broadcast_time TEXT,
+          tehran_date TEXT NOT NULL,
+          collected_at TEXT NOT NULL
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sync_cache (
+          source_key TEXT PRIMARY KEY,
+          tehran_date TEXT NOT NULL,
+          last_synced_at TEXT NOT NULL,
+          summary TEXT
+        )
+        """
+    )
+    conn.execute("""
+CREATE TABLE IF NOT EXISTS team_metadata (
+  team TEXT NOT NULL,
+  season TEXT NOT NULL,
+  venue_en TEXT,
+  coach_en TEXT,
+  provider TEXT NOT NULL,
+  collected_at TEXT NOT NULL,
+  PRIMARY KEY (team, season, provider)
+);
+    """)
+    enr_cols = {r["name"] for r in conn.execute("PRAGMA table_info(team_enrichments)")}
+    if "wave_json" not in enr_cols:
+        conn.execute("ALTER TABLE team_enrichments ADD COLUMN wave_json TEXT")
