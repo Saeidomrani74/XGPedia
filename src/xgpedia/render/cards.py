@@ -654,7 +654,7 @@ def build_preview_context(
         "day": date_line,
         "time": clock or "",
         "stadium": str(facts.get("stadium") or "").strip(),
-        "broadcast": str(broadcast_override if broadcast_override is not None else (facts.get("broadcast") or "")).strip(),
+        "broadcast": str(broadcast_override if broadcast_override is not None else (facts.get("broadcast") or "پخش آنلاین")).strip(),
         "source": prov or "XGPedia Analytics",
         "probHome": probs["home"] if probs else 0,
         "probDraw": probs["draw"] if probs else 0,

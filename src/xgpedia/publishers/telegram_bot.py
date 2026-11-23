@@ -46,9 +46,10 @@ _FIXTURE_ALIAS: dict[str, str] = {}
 _CUSTOMIZER_STATE: dict[int, dict[str, Any]] = {}
 
 BROADCAST_CYCLE: list[tuple[str, str]] = [
-    ("", "بدون برچسب پخش"),
+    ("پخش آنلاین", "پخش آنلاین"),
     ("پخش زنده: شبکه سه", "شبکه سه"),
     ("پخش زنده: شبکه ورزش", "شبکه ورزش"),
+    ("", "بدون برچسب پخش"),
 ]
 
 
@@ -62,6 +63,19 @@ def _broadcast_index_for(label: str) -> int:
     if "سه" in s:
         return 1
     return 0
+
+
+async def _safe_cb_answer(
+    cb: CallbackQuery, text: str | None = None, *, show_alert: bool = False
+) -> None:
+    """پاسخ امن به CallbackQuery — در صورت انقضای کوئری (query is too old) هندلر کرش نمی‌کند."""
+    try:
+        if text is None:
+            await cb.answer(show_alert=show_alert)
+        else:
+            await cb.answer(text, show_alert=show_alert)
+    except Exception as e:
+        log.debug("cb.answer ignored (%s): %s", type(e).__name__, e)
 
 
 def validate_env() -> None:
@@ -617,9 +631,9 @@ async def on_any_text(m: Message, bot: Bot | None = None) -> None:
 
 async def _run_sync_flow(cb: CallbackQuery, *, force: bool) -> None:
     if not tp.is_admin(cb.from_user.id):
-        await cb.answer("شما مجاز نیستید.", show_alert=True)
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
         return
-    await cb.answer("در حال دریافت دیتای بازی‌های امروز...")
+    await _safe_cb_answer(cb, "در حال دریافت دیتای بازی‌های امروز...")
     mode_lbl = "اجباری از API" if force else "هوشمند (با استفاده از کش دیتابیس)"
     status_msg = await cb.message.answer(
         f"⏳ در حال بررسی بازی‌های امروز ({mode_lbl}) + جدول پخش شبکه سه و ورزش..."
@@ -658,9 +672,9 @@ async def _run_sync_flow(cb: CallbackQuery, *, force: bool) -> None:
 @router.callback_query(F.data == "nav:home")
 async def on_nav_home(cb: CallbackQuery) -> None:
     if not tp.is_admin(cb.from_user.id):
-        await cb.answer("شما مجاز نیستید.", show_alert=True)
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
         return
-    await cb.answer()
+    await _safe_cb_answer(cb)
     await cb.message.answer(
         "🎛 <b>منوی اصلی XGPedia</b> — گزینهٔ دلخواه را انتخاب کنید:",
         parse_mode="HTML",
@@ -705,9 +719,9 @@ def _render_llm_settings_view() -> tuple[str, InlineKeyboardMarkup]:
 @router.callback_query(F.data == "llm:menu")
 async def on_llm_menu(cb: CallbackQuery) -> None:
     if not tp.is_admin(cb.from_user.id):
-        await cb.answer("شما مجاز نیستید.", show_alert=True)
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
         return
-    await cb.answer()
+    await _safe_cb_answer(cb)
     text, markup = _render_llm_settings_view()
     await cb.message.answer(text, parse_mode="HTML", reply_markup=markup)
 
@@ -715,14 +729,14 @@ async def on_llm_menu(cb: CallbackQuery) -> None:
 @router.callback_query(F.data.startswith("llm:set:"))
 async def on_llm_set_start(cb: CallbackQuery) -> None:
     if not tp.is_admin(cb.from_user.id):
-        await cb.answer("شما مجاز نیستید.", show_alert=True)
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
         return
     from src.xgpedia.editorial.llm_provider import clear_llm_cooldowns, set_llm_start_index
 
     idx = int(cb.data.split(":")[2])
     set_llm_start_index(idx)
     clear_llm_cooldowns()
-    await cb.answer(f"✅ مدل شروع روی #{idx} تنظیم و ذخیره شد.")
+    await _safe_cb_answer(cb, f"✅ مدل شروع روی #{idx} تنظیم و ذخیره شد.")
     text, markup = _render_llm_settings_view()
     try:
         await cb.message.edit_text(text, parse_mode="HTML", reply_markup=markup)
@@ -733,12 +747,12 @@ async def on_llm_set_start(cb: CallbackQuery) -> None:
 @router.callback_query(F.data == "llm:reset_cd")
 async def on_llm_reset_cooldown(cb: CallbackQuery) -> None:
     if not tp.is_admin(cb.from_user.id):
-        await cb.answer("شما مجاز نیستید.", show_alert=True)
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
         return
     from src.xgpedia.editorial.llm_provider import clear_llm_cooldowns
 
     clear_llm_cooldowns()
-    await cb.answer("✅ کول‌داون موقت مدل‌ها پاک شد.")
+    await _safe_cb_answer(cb, "✅ کول‌داون موقت مدل‌ها پاک شد.")
 
 
 @router.callback_query(F.data == "today:sync")
@@ -754,9 +768,9 @@ async def on_today_force_sync(cb: CallbackQuery) -> None:
 @router.callback_query(F.data == "today:list")
 async def on_today_list(cb: CallbackQuery) -> None:
     if not tp.is_admin(cb.from_user.id):
-        await cb.answer("شما مجاز نیستید.", show_alert=True)
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
         return
-    await cb.answer()
+    await _safe_cb_answer(cb)
     matches = await asyncio.to_thread(tw.list_today_matches)
     text, markup = _format_matches_message(
         matches, header="📋 <b>لیست بازی‌های شروع‌نشدهٔ امروز (آماده در دیتابیس)</b>"
@@ -767,9 +781,9 @@ async def on_today_list(cb: CallbackQuery) -> None:
 @router.callback_query(F.data == "today:schedules")
 async def on_today_schedules(cb: CallbackQuery) -> None:
     if not tp.is_admin(cb.from_user.id):
-        await cb.answer("شما مجاز نیستید.", show_alert=True)
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
         return
-    await cb.answer()
+    await _safe_cb_answer(cb)
     items = await asyncio.to_thread(tw.list_pending_schedules)
     if not items:
         await cb.message.answer(
@@ -799,18 +813,18 @@ async def on_today_schedules(cb: CallbackQuery) -> None:
 @router.callback_query(F.data.startswith("csched:"))
 async def on_cancel_schedule(cb: CallbackQuery) -> None:
     if not tp.is_admin(cb.from_user.id):
-        await cb.answer("شما مجاز نیستید.", show_alert=True)
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
         return
     sched_id = int(cb.data.split(":", 1)[1])
     try:
         tw.cancel_scheduled_publish(sched_id, cb.from_user.id)
-        await cb.answer("زمان‌بندی لغو شد.")
+        await _safe_cb_answer(cb, "زمان‌بندی لغو شد.")
         await cb.message.answer(
             f"✅ زمان‌بندی #{sched_id} لغو شد و پست به حالت آمادهٔ انتشار بازگشت.",
             reply_markup=_main_panel_markup(),
         )
     except Exception as e:
-        await cb.answer(str(e)[:200], show_alert=True)
+        await _safe_cb_answer(cb, str(e)[:200], show_alert=True)
 
 
 # ─── هندلرهای پنل کاستومایز تعاملی کارت ───
@@ -818,10 +832,10 @@ async def on_cancel_schedule(cb: CallbackQuery) -> None:
 @router.callback_query(F.data.startswith(("cust:", "gen:")))
 async def on_open_customizer(cb: CallbackQuery) -> None:
     if not tp.is_admin(cb.from_user.id):
-        await cb.answer("شما مجاز نیستید.", show_alert=True)
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
         return
     fixture_id = _resolve_fixture(cb.data.split(":", 1)[1])
-    await cb.answer("در حال بارگذاری ماژول‌های موجود...")
+    await _safe_cb_answer(cb, "در حال بارگذاری ماژول‌های موجود...")
     try:
         opts = await asyncio.to_thread(tw.get_match_card_options, fixture_id)
     except Exception as e:
@@ -851,73 +865,73 @@ async def on_open_customizer(cb: CallbackQuery) -> None:
 @router.callback_query(F.data.startswith("cz:"))
 async def on_customizer_action(cb: CallbackQuery, bot: Bot) -> None:
     if not tp.is_admin(cb.from_user.id):
-        await cb.answer("شما مجاز نیستید.", show_alert=True)
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
         return
     st = _CUSTOMIZER_STATE.get(cb.from_user.id)
     if not st:
-        await cb.answer("لطفاً دوباره بازی را از لیست انتخاب کنید.", show_alert=True)
+        await _safe_cb_answer(cb, "لطفاً دوباره بازی را از لیست انتخاب کنید.", show_alert=True)
         return
 
     parts = cb.data.split(":")
     action = parts[1]
 
     if action == "noop":
-        await cb.answer("این ماژول فقط تمام‌عرض است.")
+        await _safe_cb_answer(cb, "این ماژول فقط تمام‌عرض است.")
         return
     if action == "noop_edge":
-        await cb.answer("این ماژول در ابتدا یا انتهای لیست است.")
+        await _safe_cb_answer(cb, "این ماژول در ابتدا یا انتهای لیست است.")
         return
     if action == "fmt":
         st["fmt"] = f"{parts[2]}:{parts[3]}"
-        await cb.answer(f"فرمت روی {st['fmt']} تنظیم شد.")
+        await _safe_cb_answer(cb, f"فرمت روی {st['fmt']} تنظیم شد.")
     elif action == "hm":
         st["header_mode"] = "compact" if st["header_mode"] == "full" else "full"
-        await cb.answer(f"هدر: {'کامل' if st['header_mode'] == 'full' else 'فشرده'}")
+        await _safe_cb_answer(cb, f"هدر: {'کامل' if st['header_mode'] == 'full' else 'فشرده'}")
     elif action == "bc":
         st["broadcast_idx"] = (st["broadcast_idx"] + 1) % len(BROADCAST_CYCLE)
-        await cb.answer(f"پخش: {BROADCAST_CYCLE[st['broadcast_idx']][1]}")
+        await _safe_cb_answer(cb, f"پخش: {BROADCAST_CYCLE[st['broadcast_idx']][1]}")
     elif action == "tog":
         mod_id = parts[2]
         target = next((m for m in st["modules"] if m["id"] == mod_id), None)
         if target:
             active_cnt = sum(1 for m in st["modules"] if m["enabled"])
             if target["enabled"] and active_cnt <= 1:
-                await cb.answer("حداقل یک ماژول باید فعال بماند.", show_alert=True)
+                await _safe_cb_answer(cb, "حداقل یک ماژول باید فعال بماند.", show_alert=True)
                 return
             target["enabled"] = not target["enabled"]
-            await cb.answer(f"{target['title_fa']}: {'فعال' if target['enabled'] else 'غیرفعال'}")
+            await _safe_cb_answer(cb, f"{target['title_fa']}: {'فعال' if target['enabled'] else 'غیرفعال'}")
     elif action == "sp":
         mod_id = parts[2]
         target = next((m for m in st["modules"] if m["id"] == mod_id), None)
         if target and target["can_half"]:
             target["span"] = "half" if target["span"] == "full" else "full"
             target["enabled"] = True
-            await cb.answer(f"{target['title_fa']}: {'نیم‌عرض ½' if target['span'] == 'half' else 'تمام‌عرض ۱'}")
+            await _safe_cb_answer(cb, f"{target['title_fa']}: {'نیم‌عرض ½' if target['span'] == 'half' else 'تمام‌عرض ۱'}")
     elif action == "up":
         mod_id = parts[2]
         mods_list = st["modules"]
         idx = next((i for i, m in enumerate(mods_list) if m["id"] == mod_id), -1)
         if idx > 0:
             mods_list[idx - 1], mods_list[idx] = mods_list[idx], mods_list[idx - 1]
-            await cb.answer(f"⬆️ {mods_list[idx - 1]['title_fa']} یک ردیف بالا رفت.")
+            await _safe_cb_answer(cb, f"⬆️ {mods_list[idx - 1]['title_fa']} یک ردیف بالا رفت.")
         else:
-            await cb.answer("در بالاترین ردیف است.")
+            await _safe_cb_answer(cb, "در بالاترین ردیف است.")
     elif action == "dn":
         mod_id = parts[2]
         mods_list = st["modules"]
         idx = next((i for i, m in enumerate(mods_list) if m["id"] == mod_id), -1)
         if 0 <= idx < len(mods_list) - 1:
             mods_list[idx + 1], mods_list[idx] = mods_list[idx], mods_list[idx + 1]
-            await cb.answer(f"⬇️ {mods_list[idx + 1]['title_fa']} یک ردیف پایین رفت.")
+            await _safe_cb_answer(cb, f"⬇️ {mods_list[idx + 1]['title_fa']} یک ردیف پایین رفت.")
         else:
-            await cb.answer("در پایین‌ترین ردیف است.")
+            await _safe_cb_answer(cb, "در پایین‌ترین ردیف است.")
     elif action == "build":
         active_mods = [m for m in st["modules"] if m["enabled"]]
         layout_errors = validate_half_width_layout(active_mods)
         if layout_errors:
-            await cb.answer("❌ " + layout_errors[0][:190], show_alert=True)
+            await _safe_cb_answer(cb, "❌ " + layout_errors[0][:190], show_alert=True)
             return
-        await cb.answer("در حال ساخت کارت و کپشن نهایی...")
+        await _safe_cb_answer(cb, "در حال ساخت کارت و کپشن نهایی...")
         selected = [{"id": m["id"], "span": m["span"]} for m in active_mods]
         bc_val = BROADCAST_CYCLE[st["broadcast_idx"]][0]
         wait_msg = await cb.message.answer(
@@ -981,12 +995,19 @@ async def on_customizer_action(cb: CallbackQuery, bot: Bot) -> None:
         )
         return
 
-    # به‌روزرسانی آنی پیام کاستومایزر پس از هر تغییر دکمه
+    # به‌روزرسانی آنی پیام کاستومایزر پس از هر تغییر دکمه (با تلاش مجدد در قطعی لحظه‌ای VPN/شبکه)
     text, markup = _render_customizer_view(st)
-    try:
-        await cb.message.edit_text(text, parse_mode="HTML", reply_markup=markup)
-    except TelegramBadRequest:
-        pass
+    for _attempt in range(3):
+        try:
+            await cb.message.edit_text(text, parse_mode="HTML", reply_markup=markup)
+            break
+        except TelegramBadRequest:
+            break
+        except Exception as e:
+            if _attempt == 2:
+                log.warning("customizer edit_text failed after retries: %s", e)
+            else:
+                await asyncio.sleep(1.0)
 
 
 # ─── تولید مجدد متن و ویرایش متن با توضیح ادمین ───
@@ -994,10 +1015,10 @@ async def on_customizer_action(cb: CallbackQuery, bot: Bot) -> None:
 @router.callback_query(F.data.startswith("resend_prev:"))
 async def on_resend_preview(cb: CallbackQuery, bot: Bot) -> None:
     if not tp.is_admin(cb.from_user.id):
-        await cb.answer("شما مجاز نیستید.", show_alert=True)
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
         return
     post_id = int(cb.data.split(":", 1)[1])
-    await cb.answer("در حال ارسال مجدد پیش‌نمایش...")
+    await _safe_cb_answer(cb, "در حال ارسال مجدد پیش‌نمایش...")
     cached = _LAST_GENERATED_PREVIEW.get(post_id)
     if cached is None:
         try:
@@ -1028,10 +1049,10 @@ async def on_resend_preview(cb: CallbackQuery, bot: Bot) -> None:
 @router.callback_query(F.data.startswith("regen_txt:"))
 async def on_regen_text(cb: CallbackQuery, bot: Bot) -> None:
     if not tp.is_admin(cb.from_user.id):
-        await cb.answer("شما مجاز نیستید.", show_alert=True)
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
         return
     post_id = int(cb.data.split(":", 1)[1])
-    await cb.answer("در حال تولید مجدد متن...")
+    await _safe_cb_answer(cb, "در حال تولید مجدد متن...")
     wait_msg = await cb.message.answer(
         f"⏳ در حال تولید مجدد متن تحریریه (LLM) برای <b>پست #{post_id}</b>...",
         parse_mode="HTML",
@@ -1059,12 +1080,12 @@ async def on_regen_text(cb: CallbackQuery, bot: Bot) -> None:
 @router.callback_query(F.data.startswith("edit_txt:"))
 async def on_ask_edit_text(cb: CallbackQuery) -> None:
     if not tp.is_admin(cb.from_user.id):
-        await cb.answer("شما مجاز نیستید.", show_alert=True)
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
         return
     post_id = int(cb.data.split(":", 1)[1])
     _AWAITING_SCHEDULE_TIME.pop(cb.from_user.id, None)
     _AWAITING_EDIT_INSTRUCTION[cb.from_user.id] = post_id
-    await cb.answer("توضیح ویرایش را در چت بنویسید.")
+    await _safe_cb_answer(cb, "توضیح ویرایش را در چت بنویسید.")
     await cb.message.answer(
         f"✏️ توضیح خود را برای ویرایش متن <b>پست #{post_id}</b> بفرستید.\n"
         f"مثلاً: <i>«تیتر را کوتاه‌تر و جذاب‌تر کن و بیشتر روی خط حمله لیورپول تمرکز کن»</i>\n"
@@ -1076,12 +1097,12 @@ async def on_ask_edit_text(cb: CallbackQuery) -> None:
 @router.callback_query(F.data.startswith("sched:"))
 async def on_ask_schedule_time(cb: CallbackQuery) -> None:
     if not tp.is_admin(cb.from_user.id):
-        await cb.answer("شما مجاز نیستید.", show_alert=True)
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
         return
     post_id = int(cb.data.split(":", 1)[1])
     _AWAITING_EDIT_INSTRUCTION.pop(cb.from_user.id, None)
     _AWAITING_SCHEDULE_TIME[cb.from_user.id] = post_id
-    await cb.answer("ساعت را در چت ارسال کنید.")
+    await _safe_cb_answer(cb, "ساعت را در چت ارسال کنید.")
     await cb.message.answer(
         f"⏰ برای زمان‌بندی انتشار خودکار <b>پست #{post_id}</b> در امروز، ساعت را با فرمت ۲۴ ساعته "
         f"(به وقت تهران) ارسال کنید — مثلاً <code>09:35</code> یا <code>21:15</code>.\n"
@@ -1093,7 +1114,7 @@ async def on_ask_schedule_time(cb: CallbackQuery) -> None:
 @router.callback_query(F.data.startswith(("approve:", "reject:", "edit:")))
 async def on_decision(cb: CallbackQuery, bot: Bot) -> None:
     if not tp.is_admin(cb.from_user.id):
-        await cb.answer("شما مجاز به تصمیم‌گیری نیستید.", show_alert=True)
+        await _safe_cb_answer(cb, "شما مجاز به تصمیم‌گیری نیستید.", show_alert=True)
         return
     action, post_id_s = cb.data.split(":", 1)
     post_id = int(post_id_s)
@@ -1105,7 +1126,7 @@ async def on_decision(cb: CallbackQuery, bot: Bot) -> None:
                 cb.message.chat.id, cb.message.message_id,
                 f"✅ منتشر شد — پیام کانال {result['message_id']}",
             )
-            await cb.answer("منتشر شد.")
+            await _safe_cb_answer(cb, "منتشر شد.")
             await cb.message.answer(
                 "پست با موفقیت در کانال منتشر شد. برای انتخاب بازی بعدی امروز:",
                 reply_markup=_main_panel_markup(),
@@ -1115,15 +1136,15 @@ async def on_decision(cb: CallbackQuery, bot: Bot) -> None:
             await transport.edit_text(
                 cb.message.chat.id, cb.message.message_id, "❌ رد شد — بازگشت به صف تحریریه."
             )
-            await cb.answer("رد شد.")
+            await _safe_cb_answer(cb, "رد شد.")
         else:
             await tp.back_to_draft(post_id, cb.from_user.id, action="edit")
             await transport.edit_text(
                 cb.message.chat.id, cb.message.message_id, "✏️ به صف تحریریه بازگشت (draft)."
             )
-            await cb.answer("بازگشت به صف.")
+            await _safe_cb_answer(cb, "بازگشت به صف.")
     except Exception as e:
-        await cb.answer(f"خطا: {str(e)[:180]}", show_alert=True)
+        await _safe_cb_answer(cb, f"خطا: {str(e)[:180]}", show_alert=True)
     log.info("moderation action=%s post=%s by=%s", action, post_id, cb.from_user.id)
 
 
@@ -1148,9 +1169,16 @@ async def _scheduler_loop(bot: Bot, interval_seconds: int = 15) -> None:
 
 
 async def main() -> None:
+    import os
+    from aiogram.client.session.aiohttp import AiohttpSession
+
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s")
     validate_env()
-    bot = Bot(TELEGRAM_BOT_TOKEN)
+    proxy_url = (os.getenv("TELEGRAM_PROXY_URL") or "").strip() or None
+    session = AiohttpSession(proxy=proxy_url) if proxy_url else AiohttpSession()
+    if proxy_url:
+        log.info("using TELEGRAM_PROXY_URL=%s", proxy_url)
+    bot = Bot(TELEGRAM_BOT_TOKEN, session=session)
     dp = Dispatcher()
     dp.include_router(router)
 

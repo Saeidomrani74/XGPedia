@@ -790,7 +790,7 @@ def build_match_facts(fixture_id: str, post_match: bool = False) -> dict:
             matchday=fx_matchday,
             round=round_label,
             stadium=stadium_fa,
-            broadcast=_fixture_broadcast(conn, fixture_id),
+            broadcast=_fixture_broadcast(conn, fixture_id) or "پخش آنلاین",
         )
         facts.triggers = evaluate_triggers(facts)
         return json.loads(facts.model_dump_json())
@@ -870,21 +870,30 @@ def sync_irib_broadcasts(
     return {"matched": matched, "programs_checked": len(programs)}
 
 def _team_live_metadata(conn: sqlite3.Connection, team: str, season: str) -> dict[str, str | None] | None:
+    """خواندن سرمربی و ورزشگاه تیم با اولویت سرمربی زندهٔ ویکی‌پدیا و ادغام ورزشگاه از football-data.org."""
     try:
-        row = conn.execute(
+        rows = conn.execute(
             """
-            SELECT venue_en, coach_en FROM team_metadata
+            SELECT venue_en, coach_en, provider FROM team_metadata
             WHERE team = ? AND season = ?
-            ORDER BY collected_at DESC LIMIT 1
+            ORDER BY CASE provider WHEN 'wikipedia-live' THEN 1 ELSE 2 END, collected_at DESC
             """,
             (team, season),
-        ).fetchone()
-        if not row:
-            row = conn.execute(
-                "SELECT venue_en, coach_en FROM team_metadata WHERE team = ? ORDER BY collected_at DESC LIMIT 1",
+        ).fetchall()
+        if not rows:
+            rows = conn.execute(
+                """
+                SELECT venue_en, coach_en, provider FROM team_metadata
+                WHERE team = ?
+                ORDER BY CASE provider WHEN 'wikipedia-live' THEN 1 ELSE 2 END, collected_at DESC
+                """,
                 (team,),
-            ).fetchone()
-        return {"venue_en": row["venue_en"], "coach_en": row["coach_en"]} if row else None
+            ).fetchall()
+        if not rows:
+            return None
+        venue_en = next((r["venue_en"] for r in rows if r["venue_en"]), None)
+        coach_en = next((r["coach_en"] for r in rows if r["coach_en"]), None)
+        return {"venue_en": venue_en, "coach_en": coach_en}
     except sqlite3.OperationalError:
         return None
 
@@ -1031,9 +1040,10 @@ def sync_csv_waves(wave_map: dict[str, list[float]], season_start: int = CURRENT
 
 
 def sync_live_coaches_for_teams(
-    teams: list[str], *, season_start: int = 2026
+    teams: list[str], *, season_start: int = CURRENT_SEASON_START, timeout: float = 8.0
 ) -> dict[str, int]:
     """به‌روزرسانی زندهٔ سرمربی تیم‌ها از ویکی‌پدیای انگلیسی+فارسی برای پوشش تغییرات لحظه‌ای (اخراج/استخدام)."""
+    from src.xgpedia.db import init_db
     from src.xgpedia.providers.live_intel_free import fetch_live_coach_wikipedia
 
     init_db()
@@ -1055,12 +1065,83 @@ def sync_live_coaches_for_teams(
                 """
                 INSERT INTO team_metadata (team, season, venue_en, coach_en, provider, collected_at)
                 VALUES (?, ?, NULL, ?, 'wikipedia-live', ?)
-                ON CONFLICT(team, season) DO UPDATE SET
+                ON CONFLICT(team, season, provider) DO UPDATE SET
                   coach_en=excluded.coach_en,
-                  provider=excluded.provider,
                   collected_at=excluded.collected_at
                 """,
                 (canon, season_label, best_coach, now_iso),
             )
             updated += 1
     return {"coaches_updated": updated}
+
+
+def ensure_live_coaches_fresh(
+    teams: list[str],
+    *,
+    season_start: int = CURRENT_SEASON_START,
+    max_age_hours: float = 4.0,
+    timeout: float = 6.0,
+) -> dict[str, Any]:
+    """تضمین به‌روز بودن سرمربی زنده (`wikipedia-live`) برای تیم‌های یک مسابقه پیش از ساخت کارت و کپشن.
+
+    اگر برای تیمی رکورد `wikipedia-live` وجود نداشته باشد یا قدیمی‌تر از `max_age_hours` باشد،
+    همان‌لحظه زنده از ویکی‌پدیا/ویکی‌دیتا به‌روزرسانی می‌شود.
+    خروجی: `{"coaches_updated": int, "coaches_fa": {canon_team: coach_fa}}`
+    """
+    from src.xgpedia.db import init_db
+
+    init_db()
+    s_label = f"{season_start}-{str(season_start + 1)[-2:]}"
+    now = datetime.now(timezone.utc)
+    stale_teams: list[str] = []
+    coaches_fa: dict[str, str] = {}
+    seen: set[str] = set()
+
+    with db() as conn:
+        for raw_t in teams:
+            canon = canonical_team_name(raw_t)
+            if not canon or canon in seen:
+                continue
+            seen.add(canon)
+            row = conn.execute(
+                """
+                SELECT coach_en, collected_at FROM team_metadata
+                WHERE team = ? AND season = ? AND provider = 'wikipedia-live'
+                LIMIT 1
+                """,
+                (canon, s_label),
+            ).fetchone()
+            is_fresh = False
+            if row and row["coach_en"] and row["collected_at"]:
+                try:
+                    dt = datetime.fromisoformat(str(row["collected_at"]).replace("Z", "+00:00"))
+                    if (now - dt).total_seconds() <= max_age_hours * 3600.0:
+                        is_fresh = True
+                        fa_name = translate_coach_fa(row["coach_en"])
+                        if fa_name:
+                            coaches_fa[canon] = fa_name
+                except Exception:
+                    is_fresh = False
+            if not is_fresh:
+                stale_teams.append(canon)
+
+    updated = 0
+    if stale_teams:
+        res = sync_live_coaches_for_teams(stale_teams, season_start=season_start, timeout=timeout)
+        updated = res.get("coaches_updated", 0)
+        with db() as conn:
+            for canon in stale_teams:
+                row = conn.execute(
+                    """
+                    SELECT coach_en FROM team_metadata
+                    WHERE team = ? AND season = ? AND provider = 'wikipedia-live'
+                    LIMIT 1
+                    """,
+                    (canon, s_label),
+                ).fetchone()
+                if row and row["coach_en"]:
+                    fa_name = translate_coach_fa(row["coach_en"])
+                    if fa_name:
+                        coaches_fa[canon] = fa_name
+
+    return {"coaches_updated": updated, "coaches_fa": coaches_fa}

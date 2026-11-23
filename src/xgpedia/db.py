@@ -230,10 +230,6 @@ def _migrate(conn: sqlite3.Connection) -> None:
     )
 
 
-if __name__ == "__main__":
-    init_db()
-    print(f"OK - database initialized at {DATABASE_PATH}")
-
     conn.execute(
         """
         CREATE TABLE IF NOT EXISTS fixture_broadcasts (
@@ -256,17 +252,24 @@ if __name__ == "__main__":
         )
         """
     )
-    conn.execute("""
-CREATE TABLE IF NOT EXISTS team_metadata (
-  team TEXT NOT NULL,
-  season TEXT NOT NULL,
-  venue_en TEXT,
-  coach_en TEXT,
-  provider TEXT NOT NULL,
-  collected_at TEXT NOT NULL,
-  PRIMARY KEY (team, season, provider)
-);
-    """)
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS team_metadata (
+          team TEXT NOT NULL,
+          season TEXT NOT NULL,
+          venue_en TEXT,
+          coach_en TEXT,
+          provider TEXT NOT NULL,
+          collected_at TEXT NOT NULL,
+          PRIMARY KEY (team, season, provider)
+        )
+        """
+    )
     enr_cols = {r["name"] for r in conn.execute("PRAGMA table_info(team_enrichments)")}
     if "wave_json" not in enr_cols:
         conn.execute("ALTER TABLE team_enrichments ADD COLUMN wave_json TEXT")
+
+
+if __name__ == "__main__":
+    init_db()
+    print(f"OK - database initialized at {DATABASE_PATH}")

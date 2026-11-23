@@ -1,8 +1,8 @@
 """منابع زنده و ۱۰۰٪ رایگان اطلاعاتی مسابقه (بدون نیاز به کلید API):
 
-1) استخراج زندهٔ نام سرمربی فعلی تیم‌ها از ویکی‌پدیای انگلیسی (به‌روزرسانی لحظه‌ای پس از هر
-   اخراج یا استخدام، حتی وقتی football-data.org هنوز به‌روز نشده) + دریافت نام فارسی رسمی
-   سرمربی از ویکی‌پدیای فارسی (langlinks).
+1) استخراج زندهٔ نام سرمربی فعلی تیم‌ها از ویکی‌پدیای انگلیسی (با پارس مقاوم چندخطی Infobox)
+   + پشتیبان ساختاری Wikidata (`P286` head coach) برای زمانی که الگوی ویکی‌پدیا تغییر کند
+   + دریافت نام فارسی رسمی سرمربی از ویکی‌پدیای فارسی (langlinks / Wikidata fa label).
 2) دریافت اخبار تازه و مهم دو تیم (۷ روز اخیر) از Google News RSS و BBC Sport RSS برای
    تزریق هوشمند و مستند به کپشن تحریریه (تغییر سرمربی، اولین بازی مربی جدید، مصدومیت، محرومیت).
 """
@@ -18,6 +18,7 @@ import httpx
 from src.xgpedia.config import canonical_team_name, translate_coach_fa
 
 WIKI_API_EN = "https://en.wikipedia.org/w/api.php"
+WIKIDATA_API = "https://www.wikidata.org/w/api.php"
 GOOGLE_NEWS_RSS = "https://news.google.com/rss/search"
 BBC_FOOTBALL_RSS = "https://feeds.bbci.co.uk/sport/football/rss.xml"
 
@@ -62,45 +63,165 @@ def _clean_wikitext_value(raw: str) -> str:
     """پاک‌سازی مقدار فیلد Infobox ویکی‌پدیا (حذف ref، لینک [[A|B]]، قالب‌ها و پرانتزهای اضافه)."""
     s = re.sub(r"<ref[^>]*>.*?</ref>", "", raw, flags=re.IGNORECASE | re.DOTALL)
     s = re.sub(r"<ref[^/>]*/>", "", s, flags=re.IGNORECASE)
+    # برش در محل تگ‌های بازماندهٔ چندخطی مثل <ref name="..."> یا <br> یا کامنت باز
+    s = re.split(r"<ref\b|<br\b|<!--", s, maxsplit=1, flags=re.IGNORECASE)[0]
     s = re.sub(r"<!--.*?-->", "", s, flags=re.DOTALL)
     # حفظ متن نمایشی لینک [[Target|Label]] -> Label و [[Target]] -> Target
     s = re.sub(r"\[\[(?:[^|\]]+\|)?([^\]]+)\]\]", r"\1", s)
     # حذف قالب‌های کوچک مثل {{nowrap|...}} با حفظ محتوا یا حذف {{flagicon|...}}
-    s = re.sub(r"\{\{(?:nowrap|sortname)\|([^}|]+)(?:\|([^}]+))?\}\}", lambda m: f"{m.group(1)} {m.group(2) or ''}".strip(), s, flags=re.IGNORECASE)
-    s = re.sub(r"\{\{[^{}]*\}\}", "", s)
+    s = re.sub(
+        r"\{\{(?:nowrap|sortname)\|([^}|]+)(?:\|([^}]+))?\}\}",
+        lambda m: f"{m.group(1)} {m.group(2) or ''}".strip(),
+        s,
+        flags=re.IGNORECASE,
+    )
+    # حذف قالب‌های تو در تو یا باقی‌مانده (مثل {{flagicon|ARG}} یا {{cite... باز)
+    for _ in range(3):
+        prev = s
+        s = re.sub(r"\{\{[^{}]*\}\}", "", s)
+        if s == prev:
+            break
+    s = s.split("{{")[0]
     # حذف برچسب‌های موقت مثل (interim) یا (caretaker)
-    s = re.sub(r"\((?:interim|caretaker|head coach|manager)[^)]*\)", "", s, flags=re.IGNORECASE)
+    s = re.sub(r"\((?:interim|caretaker|acting|head coach|manager)[^)]*\)", "", s, flags=re.IGNORECASE)
     s = re.sub(r"\s+", " ", s).strip(" \t\r\n,;-•|")
     return s
 
 
 def parse_coach_from_wikitext(wikitext: str) -> str | None:
-    """استخراج نام سرمربی فعلی از بخش Infobox ویکی‌پدیا."""
+    """استخراج نام سرمربی فعلی از بخش Infobox ویکی‌پدیا (مقاوم به ref چندخطی و مقدار در خط بعد)."""
     if not wikitext:
         return None
-    for pat in (
-        r"^\|\s*(?:manager|head\s*coach|coach)\s*=\s*(.+)$",
-    ):
-        m = re.search(pat, wikitext, flags=re.IGNORECASE | re.MULTILINE)
-        if m:
-            cleaned = _clean_wikitext_value(m.group(1))
-            if cleaned and cleaned.lower() not in {"vacant", "tba", "tbd", "none", "n/a"}:
-                # فقط بخش اول اگر خط یا کاما چندتایی داشت
-                cleaned = cleaned.split("<br")[0].strip()
-                if 3 <= len(cleaned) <= 50:
-                    return cleaned
+    # اول همهٔ refها و کامنت‌های چندخطی را در کل متن پاک می‌کنیم تا خط فیلد manager خراب نشود
+    stripped = re.sub(r"<!--.*?-->", "", wikitext, flags=re.DOTALL)
+    stripped = re.sub(r"<ref[^>]*>.*?</ref>", "", stripped, flags=re.IGNORECASE | re.DOTALL)
+    stripped = re.sub(r"<ref[^/>]*/>", "", stripped, flags=re.IGNORECASE)
+
+    # تمرکز روی بلوک Infobox در صورت وجود تا فیلدهای مشابه بیرون از Infobox اشتباهاً خوانده نشوند
+    ib_idx = stripped.lower().find("{{infobox")
+    search_text = stripped[ib_idx:] if ib_idx != -1 else stripped
+
+    lines = search_text.splitlines()
+    field_re = re.compile(r"^\|\s*(?:manager|head[\s_]*coach|coach)\s*=\s*(.*)$", flags=re.IGNORECASE)
+    for idx, line in enumerate(lines):
+        m = field_re.match(line)
+        if not m:
+            continue
+        raw_val = m.group(1).strip()
+        if not raw_val:
+            # گاهی مقدار در خط بعدی قرار می‌گیرد
+            for nxt in lines[idx + 1 : idx + 4]:
+                nxt_s = nxt.strip()
+                if not nxt_s:
+                    continue
+                if nxt_s.startswith("|") or nxt_s.startswith("}}"):
+                    break
+                raw_val = nxt_s
+                break
+        cleaned = _clean_wikitext_value(raw_val)
+        if cleaned and cleaned.lower() not in {"vacant", "tba", "tbd", "none", "n/a", "unknown"}:
+            if 3 <= len(cleaned) <= 50:
+                return cleaned
     return None
 
 
+def parse_coach_qid_from_wikidata_claims(claims: dict[str, Any]) -> str | None:
+    """استخراج شناسهٔ Wikidata (`Q...`) سرمربی فعلی از ویژگی `P286` (head coach)."""
+    p286 = claims.get("P286") or []
+    if not isinstance(p286, list) or not p286:
+        return None
+
+    def _extract_qid(stmt: dict[str, Any]) -> str | None:
+        dv = ((stmt.get("mainsnak") or {}).get("datavalue") or {}).get("value")
+        if isinstance(dv, dict) and isinstance(dv.get("id"), str):
+            return dv["id"]
+        return None
+
+    # اولویت ۱: ردیف preferred بدون تاریخ پایان (P582)
+    for stmt in p286:
+        if stmt.get("rank") == "preferred" and "P582" not in (stmt.get("qualifiers") or {}):
+            qid = _extract_qid(stmt)
+            if qid:
+                return qid
+    # اولویت ۲: هر ردیف غیر-deprecated بدون تاریخ پایان (P582) — جدیدترین (معمولاً آخرین در لیست یا بیشترین P580)
+    active: list[tuple[str, str]] = []
+    for stmt in p286:
+        if stmt.get("rank") == "deprecated":
+            continue
+        quals = stmt.get("qualifiers") or {}
+        if "P582" in quals:
+            continue
+        qid = _extract_qid(stmt)
+        if not qid:
+            continue
+        start_time = ""
+        p580 = quals.get("P580") or []
+        if p580 and isinstance(p580, list):
+            tval = ((p580[0].get("datavalue") or {}).get("value") or {})
+            if isinstance(tval, dict):
+                start_time = str(tval.get("time") or "")
+        active.append((start_time, qid))
+    if active:
+        active.sort(key=lambda x: x[0])
+        return active[-1][1]
+    return None
+
+
+def _fetch_coach_from_wikidata(
+    client: httpx.Client, club_qid: str
+) -> tuple[str | None, str | None]:
+    """پشتیبان ساختاری: خواندن سرمربی فعلی (`P286`) و برچسب انگلیسی+فارسی از Wikidata."""
+    try:
+        r = client.get(
+            WIKIDATA_API,
+            params={
+                "action": "wbgetentities",
+                "ids": club_qid,
+                "props": "claims",
+                "format": "json",
+            },
+        )
+        if r.status_code != 200:
+            return None, None
+        entity = ((r.json().get("entities") or {}).get(club_qid) or {})
+        coach_qid = parse_coach_qid_from_wikidata_claims(entity.get("claims") or {})
+        if not coach_qid:
+            return None, None
+        r2 = client.get(
+            WIKIDATA_API,
+            params={
+                "action": "wbgetentities",
+                "ids": coach_qid,
+                "props": "labels",
+                "languages": "en|fa",
+                "format": "json",
+            },
+        )
+        if r2.status_code != 200:
+            return None, None
+        labels = (((r2.json().get("entities") or {}).get(coach_qid) or {}).get("labels") or {})
+        coach_en = ((labels.get("en") or {}).get("value") or "").strip() or None
+        coach_fa = ((labels.get("fa") or {}).get("value") or "").strip() or None
+        if not coach_en and not coach_fa:
+            return None, None
+        if coach_en:
+            local_fa = translate_coach_fa(coach_en, allow_transliterate=False)
+            if local_fa and local_fa != coach_en:
+                coach_fa = local_fa
+        return coach_en, (coach_fa or translate_coach_fa(coach_en))
+    except Exception:
+        return None, None
+
+
 def fetch_live_coach_wikipedia(team_en: str, *, timeout: float = 10.0) -> tuple[str | None, str | None]:
-    """دریافت زندهٔ `(coach_en, coach_fa)` برای یک تیم از ویکی‌پدیای انگلیسی + فارسی.
+    """دریافت زندهٔ `(coach_en, coach_fa)` برای یک تیم از ویکی‌پدیای انگلیسی + پشتیبان Wikidata.
 
     اگر مقالهٔ فارسی سرمربی وجود داشته باشد نام فارسی رسمی آن برگردانده می‌شود؛
     در غیر این صورت `translate_coach_fa(coach_en)` (دیکشنری + آوانویسی خودکار) استفاده می‌شود.
     """
     canon = canonical_team_name(team_en)
     wiki_title = TEAM_WIKI_TITLES.get(canon) or f"{canon} F.C."
-    headers = {"User-Agent": "XGPediaBot/0.21 (https://xgpedia.local; football-analytics)"}
+    headers = {"User-Agent": "XGPediaBot/0.24 (https://xgpedia.local; football-analytics)"}
 
     try:
         with httpx.Client(timeout=timeout, follow_redirects=True, headers=headers) as client:
@@ -108,10 +229,11 @@ def fetch_live_coach_wikipedia(team_en: str, *, timeout: float = 10.0) -> tuple[
                 WIKI_API_EN,
                 params={
                     "action": "query",
-                    "prop": "revisions",
+                    "prop": "revisions|pageprops",
                     "rvprop": "content",
                     "rvslots": "main",
                     "rvsection": "0",
+                    "ppprop": "wikibase_item",
                     "redirects": "1",
                     "format": "json",
                     "titles": wiki_title,
@@ -120,15 +242,22 @@ def fetch_live_coach_wikipedia(team_en: str, *, timeout: float = 10.0) -> tuple[
             r.raise_for_status()
             pages = (r.json().get("query") or {}).get("pages") or {}
             wikitext = ""
+            club_qid: str | None = None
             for p in pages.values():
                 revs = p.get("revisions") or []
                 if revs:
                     slots = revs[0].get("slots") or {}
                     wikitext = (slots.get("main") or {}).get("*") or revs[0].get("*") or ""
+                pp = p.get("pageprops") or {}
+                if isinstance(pp.get("wikibase_item"), str):
+                    club_qid = pp["wikibase_item"]
+                if wikitext or club_qid:
                     break
 
             coach_en = parse_coach_from_wikitext(wikitext)
             if not coach_en:
+                if club_qid:
+                    return _fetch_coach_from_wikidata(client, club_qid)
                 return None, None
 
             # بررسی اینکه آیا در دیکشنری محلی ترجمهٔ دقیق دارد

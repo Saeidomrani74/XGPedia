@@ -42,6 +42,104 @@ def luminance(h: str) -> float:
 def contrast_ink(h: str) -> str:
     return "#070D1D" if luminance(h) > 0.55 else "#FFFFFF"
 
+def wcag_contrast(h1: str, h2: str) -> float:
+    """نسبت کنتراست استاندارد WCAG 2.1 بین دو رنگ hex (محدوده ۱ تا ۲۱)."""
+    l1, l2 = luminance(h1), luminance(h2)
+    hi, lo = max(l1, l2), min(l1, l2)
+    return (hi + 0.05) / (lo + 0.05)
+
+
+def _rgb_to_hex(r: int, g: int, b: int) -> str:
+    return f"#{max(0, min(255, r)):02X}{max(0, min(255, g)):02X}{max(0, min(255, b)):02X}"
+
+
+def _color_distance(h1: str, h2: str) -> float:
+    r1, g1, b1 = _hex_to_rgb(h1)
+    r2, g2, b2 = _hex_to_rgb(h2)
+    return math.sqrt((r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2)
+
+
+def ensure_dark_bg_contrast(
+    hex_color: str,
+    *,
+    bg: str = "#0D1730",
+    min_ratio: float = 4.8,
+    secondary: str | None = None,
+) -> str:
+    """تضمین خوانایی رنگ تیم روی پس‌زمینهٔ سرمه‌ای تیره (`#0D1730`) با حفظ هویت رنگی باشگاه.
+
+    - اگر کنتراست رنگ اصلی کافی باشد (`>= min_ratio`)، عیناً حفظ می‌شود.
+    - برای رنگ‌های مشکی/خاکستری خیلی تیره (مثل نیوکاسل `#241F20`)، از نقره‌ای-سفید خوانا (`#E2E8F0`) یا رنگ دوم روشن استفاده می‌شود.
+    - برای رنگ‌های رنگی تیره (مثل تاتنهام `#132257`، چلسی `#034694`، اورتون `#003399`، استون‌ویلا `#670E36`)،
+      فام (Hue) اصلی باشگاه دقیقاً حفظ شده و صرفاً روشنایی (Lightness) در فضای HSL تا رسیدن به کنتراست WCAG AA بالا برده می‌شود.
+    """
+    import colorsys
+
+    col = (hex_color or "#38BDF8").strip()
+    if not col.startswith("#"):
+        col = f"#{col}"
+    if wcag_contrast(col, bg) >= min_ratio:
+        return col.upper()
+
+    r, g, b = _hex_to_rgb(col)
+    h, l_val, s = colorsys.rgb_to_hls(r / 255.0, g / 255.0, b / 255.0)
+
+    # رنگ‌های خنثی/مشکی (مثل نیوکاسل): استفاده از رنگ دوم روشن یا نقره‌ای روشن خوانا
+    if s < 0.16 and l_val < 0.28:
+        if secondary and wcag_contrast(secondary, bg) >= min_ratio:
+            return secondary.upper()
+        return "#E2E8F0"
+
+    # حفظ دقیق Hue باشگاه + اشباع زنده + جست‌وجوی دودویی Lightness تا رسیدن به min_ratio
+    target_s = max(s, 0.74)
+    lo, hi = max(l_val, 0.30), 0.92
+    best = col.upper()
+    for _ in range(18):
+        mid = (lo + hi) / 2.0
+        rr, gg, bb = colorsys.hls_to_rgb(h, mid, target_s)
+        cand = _rgb_to_hex(int(round(rr * 255)), int(round(gg * 255)), int(round(bb * 255)))
+        if wcag_contrast(cand, bg) >= min_ratio:
+            best = cand
+            hi = mid
+        else:
+            lo = mid
+    return best
+
+
+def resolve_visible_team_colors(
+    home: dict[str, Any],
+    away: dict[str, Any],
+    *,
+    bg: str = "#0D1730",
+    min_ratio: float = 4.8,
+) -> tuple[str, str]:
+    """محاسبهٔ جفت رنگ خوانا و متمایز برای میزبان و میهمان روی پس‌زمینهٔ تیره."""
+    hc = ensure_dark_bg_contrast(
+        str(home.get("color") or "#E62E45"),
+        bg=bg,
+        min_ratio=min_ratio,
+        secondary=home.get("secondary"),
+    )
+    ac = ensure_dark_bg_contrast(
+        str(away.get("color") or "#38BDF8"),
+        bg=bg,
+        min_ratio=min_ratio,
+        secondary=away.get("secondary"),
+    )
+    # جلوگیری از نزدیک‌بودن بیش‌ازحد دو رنگ پس از روشن‌سازی (مثلاً دو تیم آبی یا دو تیم سفید/نقره‌ای)
+    if _color_distance(hc, ac) < 95.0:
+        sec = away.get("secondary")
+        if sec:
+            sec_vis = ensure_dark_bg_contrast(str(sec), bg=bg, min_ratio=min_ratio)
+            if _color_distance(hc, sec_vis) >= 95.0:
+                ac = sec_vis
+        if _color_distance(hc, ac) < 95.0:
+            for fb in ("#38BDF8", "#FBBF24", "#34D399", "#F472B6"):
+                if _color_distance(hc, fb) >= 110.0:
+                    ac = fb
+                    break
+    return hc, ac
+
 
 def smooth_spline(pts: list[tuple[float, float]], tension: float = 0.25) -> str:
     """منحنی نرم Cubic Bezier برای نمودارهای روند و موج."""
@@ -98,13 +196,14 @@ def team_crest_svg_or_img(team: dict[str, Any], side: str, size: int) -> str:
 
 def module_header(title: str, right_html: str = "", accent: str = "#E62E45", is_half: bool = False) -> str:
     """سرصفحهٔ یکپارچهٔ هر ماژول با پشتیبانی از حالت نیم‌عرض و تمام‌عرض."""
+    right_block = f'<div class="mh-right">{right_html}</div>' if right_html else ""
     return (
         f'<div class="mh{" mh-half" if is_half else ""}">'
         f'<div class="mh-left">'
         f'<span class="mh-bar" style="background:{accent};"></span>'
         f'<h3 class="mh-title">{esc(title)}</h3>'
         f'</div>'
-        f'<div class="mh-right">{right_html}</div>'
+        f'{right_block}'
         f'</div>'
     )
 

@@ -90,12 +90,12 @@ def test_display_colors_missing_identity_uses_fallback():
 
 def test_smart_selects_only_available_modules():
     has = {"stats": True, "trend10": True, "signals": True, "radar": False, "poisson": True}
-    # اولویت: signals (3) -> trend10 (5) -> stats (6) -> poisson (7)
+    # طبق قالب پیش‌فرض قفل‌شده (D43): radar (ناموجود) -> trend10 -> signals
     mods = _select_modules("smart", has, fmt="4:5")
-    assert [m["id"] for m in mods] == ["signals", "trend10"]
+    assert [m["id"] for m in mods] == ["trend10", "signals"]
     assert all(m["enabled"] for m in mods)
     mods9 = _select_modules("smart", has, fmt="9:16")
-    assert [m["id"] for m in mods9] == ["signals", "trend10", "stats"]
+    assert [m["id"] for m in mods9] == ["trend10", "signals"]
 
 
 def test_v2_includes_poisson_and_wave_only_with_data():

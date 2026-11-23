@@ -140,6 +140,7 @@ def test_full_free_enrichment_unlocks_radar_keyduel_and_signals(tmp_path, monkey
 
     draft = {"title": "نبرد بزرگ آنفیلد", "bullets": ["نکته"], "caption": "پیش‌بازی لیورپول و منچستریونایتد."}
     ctx45 = build_preview_context(draft, facts, fmt="4:5")
-    assert [m["id"] for m in ctx45["modules"]] == ["radar", "keyduel"]
+    assert ctx45["has"]["radar"] and ctx45["has"]["keyduel"] and ctx45["has"]["signals"]
+    assert [m["id"] for m in ctx45["modules"]] == ["radar", "signals"]
     ctx916 = build_preview_context(draft, facts, fmt="9:16")
-    assert [m["id"] for m in ctx916["modules"]] == ["radar", "keyduel", "signals"]
+    assert [m["id"] for m in ctx916["modules"]] == ["radar", "signals"]

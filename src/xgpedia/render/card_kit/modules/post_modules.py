@@ -42,7 +42,7 @@ def render_xgrace(payload: dict[str, Any], span: str = "full", fmt: str = "4:5")
     max_y = max(2.2, math.ceil(2.0 * (max(h_t, a_t) + 0.35)) / 2.0)
 
     vb_w, vb_h = (560, 260) if is_half else (920, 250)
-    left, right_pad, top, bot = 46, 78, 26, 36
+    left, right_pad, top, bot = 56, 88, 26, 42
     p_w, p_h = vb_w - left - right_pad, vb_h - top - bot
     fx = lambda v: left + (v / 92.0) * p_w
     fy = lambda v: top + p_h - (v / max_y) * p_h
@@ -59,12 +59,12 @@ def render_xgrace(payload: dict[str, Any], span: str = "full", fmt: str = "4:5")
         y = fy(v)
         grid.append(
             f'<line x1="{left}" y1="{f1(y)}" x2="{f1(left + p_w)}" y2="{f1(y)}" stroke="rgba(255,255,255,{0.2 if v == 0 else 0.08})" stroke-width="{1.6 if v == 0 else 1.2}" {"" if v == 0 else "stroke-dasharray=5,6"}/>'
-            f'<text x="{left - 8}" y="{f1(y + 5)}" text-anchor="end" fill="#94A3B8" font-weight="800" font-size="14">{fa(f1(v))}</text>'
+            f'<text x="{left - 8}" y="{f1(y + 5)}" text-anchor="end" fill="#CBD5E1" font-weight="800" font-size="18">{fa(f1(v))}</text>'
         )
         v += step
 
     xticks = "".join(
-        f'<text x="{f1(fx(t))}" y="{vb_h - 10}" text-anchor="middle" fill="{"#FF6B7F" if t == 45 else "#94A3B8"}" font-weight="800" font-size="14">{fa(t)}\'</text>'
+        f'<text x="{f1(fx(t))}" y="{vb_h - 10}" text-anchor="middle" fill="{"#FF6B7F" if t == 45 else "#94A3B8"}" font-weight="800" font-size="18">{fa(t)}\'</text>'
         for t in (0, 15, 30, 45, 60, 75, 90)
     )
     def goal_marks(gs, c):
@@ -78,10 +78,10 @@ def render_xgrace(payload: dict[str, Any], span: str = "full", fmt: str = "4:5")
         hy, ay = (hy - 13, ay + 13) if hy <= ay else (hy + 13, ay - 13)
     bx = left + p_w + 8
     badges = (
-        f'<rect x="{f1(bx)}" y="{f1(hy - 13)}" width="62" height="24" rx="7" fill="{hc}"/>'
-        f'<text x="{f1(bx + 31)}" y="{f1(hy + 4)}" text-anchor="middle" fill="{contrast_ink(hc)}" font-weight="900" font-size="15">{fa(f2(h["xg"]))}</text>'
-        f'<rect x="{f1(bx)}" y="{f1(ay - 13)}" width="62" height="24" rx="7" fill="{ac}"/>'
-        f'<text x="{f1(bx + 31)}" y="{f1(ay + 4)}" text-anchor="middle" fill="{contrast_ink(ac)}" font-weight="900" font-size="15">{fa(f2(a["xg"]))}</text>'
+        f'<rect x="{f1(bx)}" y="{f1(hy - 13)}" width="74" height="28" rx="8" fill="{hc}"/>'
+        f'<text x="{f1(bx + 37)}" y="{f1(hy + 6)}" text-anchor="middle" fill="{contrast_ink(hc)}" font-weight="900" font-size="19">{fa(f2(h["xg"]))}</text>'
+        f'<rect x="{f1(bx)}" y="{f1(ay - 13)}" width="74" height="28" rx="8" fill="{ac}"/>'
+        f'<text x="{f1(bx + 37)}" y="{f1(ay + 6)}" text-anchor="middle" fill="{contrast_ink(ac)}" font-weight="900" font-size="19">{fa(f2(a["xg"]))}</text>'
     )
 
     title = "جریان امید گل" if is_half else "نمودار جریان امید گل (xG Race)"
@@ -129,8 +129,8 @@ def render_shotmap(payload: dict[str, Any], span: str = "full", fmt: str = "4:5"
         f'{module_header(title, "<span class=mod-tag>SHOT MAP</span>", "#E62E45", is_half=is_half)}'
         f'<div class="mod-body-svg" dir="ltr">'
         f'<svg class="fit-svg" viewBox="0 0 720 345" preserveAspectRatio="xMidYMid meet" fill="none" font-family="Vazirmatn">'
-        f'<text x="191" y="19" text-anchor="middle" fill="{ac}" font-weight="900" font-size="16">← {esc(a["name"])} ({fa(a["shots"])})</text>'
-        f'<text x="529" y="19" text-anchor="middle" fill="{hc}" font-weight="900" font-size="16">{esc(h["name"])} ({fa(h["shots"])}) →</text>'
+        f'<text x="191" y="19" text-anchor="middle" fill="{ac}" font-weight="900" font-size="21">← {esc(a["name"])} ({fa(a["shots"])})</text>'
+        f'<text x="529" y="19" text-anchor="middle" fill="{hc}" font-weight="900" font-size="21">{esc(h["name"])} ({fa(h["shots"])}) →</text>'
         f'<rect x="22" y="30" width="676" height="299" rx="12" fill="#0A1328" stroke="rgba(248,250,252,.22)" stroke-width="2"/>'
         f'<g stroke="rgba(248,250,252,.17)" stroke-width="1.8">'
         f'<line x1="360" y1="30" x2="360" y2="329"/><circle cx="360" cy="179.5" r="46"/>'
@@ -158,7 +158,7 @@ def render_momentum(payload: dict[str, Any], span: str = "full", fmt: str = "4:5
         for i, v in enumerate(arr)
     )
     xticks = "".join(
-        f'<text x="{f1(24 + t / 90.0 * 712)}" y="298" text-anchor="middle" fill="{"#FBBF24" if t == 45 else "#94A3B8"}" font-weight="800" font-size="14">{fa(t)}\'</text>'
+        f'<text x="{f1(24 + t / 90.0 * 712)}" y="298" text-anchor="middle" fill="{"#FBBF24" if t == 45 else "#94A3B8"}" font-weight="800" font-size="18">{fa(t)}\'</text>'
         for t in (0, 15, 30, 45, 60, 75, 90)
     )
     title = "موج فشار" if is_half else "موج فشار و برتری حملات (۵ دقیقه‌ای)"
@@ -167,8 +167,8 @@ def render_momentum(payload: dict[str, Any], span: str = "full", fmt: str = "4:5
         f'{module_header(title, "<span class=mod-tag>MOMENTUM</span>", "#38BDF8", is_half=is_half)}'
         f'<div class="mod-body-svg" dir="ltr">'
         f'<svg class="fit-svg" viewBox="0 0 760 310" preserveAspectRatio="xMidYMid meet" fill="none" font-family="Vazirmatn">'
-        f'<text x="24" y="22" fill="{hc}" font-weight="900" font-size="16">▲ {esc(m["home"]["name"])}</text>'
-        f'<text x="736" y="22" text-anchor="end" fill="{ac}" font-weight="900" font-size="16">▼ {esc(m["away"]["name"])}</text>'
+        f'<text x="24" y="22" fill="{hc}" font-weight="900" font-size="21">▲ {esc(m["home"]["name"])}</text>'
+        f'<text x="736" y="22" text-anchor="end" fill="{ac}" font-weight="900" font-size="21">▼ {esc(m["away"]["name"])}</text>'
         f'<line x1="380" y1="36" x2="380" y2="272" stroke="#FBBF24" stroke-opacity=".5" stroke-width="1.6" stroke-dasharray="5 5"/>'
         f'{bars}<line x1="24" y1="154" x2="736" y2="154" stroke="#F8FAFC" stroke-opacity=".45" stroke-width="2"/>{xticks}'
         f'</svg></div></div>'

@@ -86,6 +86,16 @@ def resolve_studio_template(
     return path
 
 
+# قالب پیش‌فرض رسمی و قفل‌شدهٔ کارت پیش‌ازبازی (D43) برای خودکارسازی و کاستومایزر
+DEFAULT_PRE_MATCH_TEMPLATE: list[tuple[str, str]] = [
+    ("radar", "half"),
+    ("trend10", "half"),
+    ("signals", "full"),
+]
+DEFAULT_PRE_MATCH_HEADER_MODE: str = "full"
+DEFAULT_PRE_MATCH_BROADCAST_FALLBACK: str = "پخش آنلاین"
+
+
 def _fix_orphan_halves(modules: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """جلوگیری کامل از نیم‌فضای خالی در گرید ۲ ستونه (#mg).
 
@@ -129,6 +139,22 @@ def select_studio_modules(
     capacity = cap_map.get(fmt, 2)
 
     if layout == "smart":
+        if not is_post:
+            # قالب پیش‌فرض قفل‌شدهٔ XGPedia (D43): رادار تاکتیکی ½ + روند xG اخیر ½ | سیگنال‌های ارزش ۱
+            selected: list[dict[str, Any]] = []
+            used: set[str] = set()
+            for mod_id, span in DEFAULT_PRE_MATCH_TEMPLATE:
+                if mod_id not in caption_only and has.get(mod_id, False):
+                    selected.append({"id": mod_id, "enabled": True, "span": span})
+                    used.add(mod_id)
+            if len(selected) < 2:
+                for mod_id in priority:
+                    if mod_id not in caption_only and mod_id not in used and has.get(mod_id, False):
+                        selected.append({"id": mod_id, "enabled": True, "span": "full"})
+                        used.add(mod_id)
+                        if len(selected) >= capacity:
+                            break
+            return _fix_orphan_halves(selected)
         chosen_ids = [
             mod_id
             for mod_id in priority

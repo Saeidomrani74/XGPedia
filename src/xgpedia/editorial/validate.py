@@ -104,6 +104,18 @@ def validate(draft: DraftOutput, match: MatchFacts, derived_numbers: set[float])
 
 def _input_numbers(match: MatchFacts) -> set[float]:
     nums: set[float] = set()
+    if getattr(match, "matchday", None) is not None:
+        nums.add(float(match.matchday))
+    if getattr(match, "result", None) is not None:
+        for g in (match.result.home_goals, match.result.away_goals):
+            if g is not None:
+                nums.add(float(g))
+    if getattr(match, "market_odds", None) is not None:
+        mo = match.market_odds
+        for attr in ("home", "draw", "away", "over25", "under25", "btts"):
+            val = getattr(mo, attr, None)
+            if val is not None:
+                nums.add(float(val))
     for side in (match.home, match.away):
         if side.last5:
             nums.update(
@@ -116,6 +128,23 @@ def _input_numbers(match: MatchFacts) -> set[float]:
                 nums.add(sv.value)
                 if sv.n is not None:
                     nums.add(sv.n)
+        for v in getattr(side, "xg_series", None) or []:
+            if v is not None:
+                nums.add(float(v))
+        ms = getattr(side, "match_stats", None)
+        if ms is not None:
+            for attr in ("expected_goals", "total_shots", "shots_on_target", "corners", "possession"):
+                sv = getattr(ms, attr, None)
+                if sv and getattr(sv, "value", None) is not None:
+                    nums.add(float(sv.value))
+        kp = getattr(side, "kp", None)
+        if isinstance(kp, dict):
+            for k in ("s1", "s2"):
+                for raw_n in re.findall(r"\d+(?:\.\d+)?", str(kp.get(k) or "")):
+                    try:
+                        nums.add(float(raw_n))
+                    except ValueError:
+                        pass
     for item in getattr(match, "recent_news", None) or []:
         title = str(item.get("title") or "") if isinstance(item, dict) else ""
         for raw_n in re.findall(r"\d+(?:\.\d+)?", title):

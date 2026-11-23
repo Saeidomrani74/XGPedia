@@ -2,166 +2,26 @@
   "updated": "2026-11-17",
   "note": "هویت بصری هر تیم برای کارت‌ها: کد سه‌حرفی (هم‌سان با glossary_fa.json) + رنگ اصلی/ثانویه که در طراحی کارت بازی‌ها مصرف می‌شوند. رنگ‌ها ارزش رسمی باشگاه‌اند (استاندارد رایج/اینفوباکس ویکی‌پدیا) و باید با دفترچه برند هر باشگاه راستی‌آزمایی شوند — به‌ویژه HUL و COV که آستانهٔ دقیق بین نسخه‌های کهربایی/آبی‌آسمانی دارند. crest خالی یعنی لوگوی واقعی هنوز دانلود نشده (tools/fetch_crests.py) و رندرر نشان انتزاعی یک‌دست خودش را می‌سازد. این فایل فقط دادهٔ تیم است؛ رنگ برند XGPedia جدا در brand/brand.json می‌ماند.",
   "teams": {
-    "Arsenal": {
-      "code": "ARS",
-      "colors": {
-        "primary": "#EF0107",
-        "secondary": "#FFFFFF"
-      },
-      "crest": null
-    },
-    "Aston Villa": {
-      "code": "AVL",
-      "colors": {
-        "primary": "#670E36",
-        "secondary": "#95BFE8"
-      },
-      "crest": null
-    },
-    "Bournemouth": {
-      "code": "BOU",
-      "colors": {
-        "primary": "#DA291C",
-        "secondary": "#000000"
-      },
-      "crest": null
-    },
-    "Brentford": {
-      "code": "BRE",
-      "colors": {
-        "primary": "#E30613",
-        "secondary": "#FFFFFF"
-      },
-      "crest": null
-    },
-    "Brighton": {
-      "code": "BHA",
-      "colors": {
-        "primary": "#0057B8",
-        "secondary": "#FFFFFF"
-      },
-      "crest": null
-    },
-    "Chelsea": {
-      "code": "CHE",
-      "colors": {
-        "primary": "#034694",
-        "secondary": "#FFFFFF"
-      },
-      "crest": null
-    },
-    "Coventry City": {
-      "code": "COV",
-      "colors": {
-        "primary": "#78D2F7",
-        "secondary": "#0B2537"
-      },
-      "crest": null
-    },
-    "Crystal Palace": {
-      "code": "CRY",
-      "colors": {
-        "primary": "#1B458F",
-        "secondary": "#C4122E"
-      },
-      "crest": null
-    },
-    "Everton": {
-      "code": "EVE",
-      "colors": {
-        "primary": "#003399",
-        "secondary": "#FFFFFF"
-      },
-      "crest": null
-    },
-    "Fulham": {
-      "code": "FUL",
-      "colors": {
-        "primary": "#FFFFFF",
-        "secondary": "#000000"
-      },
-      "crest": null
-    },
-    "Hull City": {
-      "code": "HUL",
-      "colors": {
-        "primary": "#EEA320",
-        "secondary": "#000000"
-      },
-      "crest": null
-    },
-    "Ipswich Town": {
-      "code": "IPS",
-      "colors": {
-        "primary": "#3A64A0",
-        "secondary": "#FFFFFF"
-      },
-      "crest": null
-    },
-    "Leeds United": {
-      "code": "LEE",
-      "colors": {
-        "primary": "#FFFFFF",
-        "secondary": "#1D428A"
-      },
-      "crest": null
-    },
-    "Liverpool": {
-      "code": "LIV",
-      "colors": {
-        "primary": "#C8102E",
-        "secondary": "#F6EB61"
-      },
-      "crest": null
-    },
-    "Manchester City": {
-      "code": "MCI",
-      "colors": {
-        "primary": "#6CABDD",
-        "secondary": "#FFFFFF"
-      },
-      "crest": null
-    },
-    "Manchester United": {
-      "code": "MUN",
-      "colors": {
-        "primary": "#DA291C",
-        "secondary": "#FBE122"
-      },
-      "crest": null
-    },
-    "Newcastle United": {
-      "code": "NEW",
-      "colors": {
-        "primary": "#241F20",
-        "secondary": "#FFFFFF"
-      },
-      "crest": null
-    },
-    "Nottingham Forest": {
-      "code": "NFO",
-      "colors": {
-        "primary": "#DD0000",
-        "secondary": "#FFFFFF"
-      },
-      "crest": null
-    },
-    "Sunderland": {
-      "code": "SUN",
-      "colors": {
-        "primary": "#EB172B",
-        "secondary": "#FFFFFF"
-      },
-      "crest": null
-    },
-    "Tottenham": {
-      "code": "TOT",
-      "colors": {
-        "primary": "#132257",
-        "secondary": "#FFFFFF"
-      },
-      "crest": null
-    }
+    "Arsenal": {"code": "ARS", "colors": {"primary": "#EF0107", "secondary": "#FFFFFF"}, "crest": null},
+    "Aston Villa": {"code": "AVL", "colors": {"primary": "#670E36", "secondary": "#95BFE8"}, "crest": null},
+    "Bournemouth": {"code": "BOU", "colors": {"primary": "#DA291C", "secondary": "#000000"}, "crest": null},
+    "Brentford": {"code": "BRE", "colors": {"primary": "#E30613", "secondary": "#FFFFFF"}, "crest": null},
+    "Brighton": {"code": "BHA", "colors": {"primary": "#0057B8", "secondary": "#FFFFFF"}, "crest": null},
+    "Chelsea": {"code": "CHE", "colors": {"primary": "#034694", "secondary": "#FFFFFF"}, "crest": null},
+    "Coventry City": {"code": "COV", "colors": {"primary": "#78D2F7", "secondary": "#0B2537"}, "crest": null},
+    "Crystal Palace": {"code": "CRY", "colors": {"primary": "#1B458F", "secondary": "#C4122E"}, "crest": null},
+    "Everton": {"code": "EVE", "colors": {"primary": "#003399", "secondary": "#FFFFFF"}, "crest": null},
+    "Fulham": {"code": "FUL", "colors": {"primary": "#FFFFFF", "secondary": "#000000"}, "crest": null},
+    "Hull City": {"code": "HUL", "colors": {"primary": "#EEA320", "secondary": "#000000"}, "crest": null},
+    "Ipswich Town": {"code": "IPS", "colors": {"primary": "#3A64A0", "secondary": "#FFFFFF"}, "crest": null},
+    "Leeds United": {"code": "LEE", "colors": {"primary": "#FFFFFF", "secondary": "#1D428A"}, "crest": null},
+    "Liverpool": {"code": "LIV", "colors": {"primary": "#C8102E", "secondary": "#F6EB61"}, "crest": null},
+    "Manchester City": {"code": "MCI", "colors": {"primary": "#6CABDD", "secondary": "#FFFFFF"}, "crest": null},
+    "Manchester United": {"code": "MUN", "colors": {"primary": "#DA291C", "secondary": "#FBE122"}, "crest": null},
+    "Newcastle United": {"code": "NEW", "colors": {"primary": "#241F20", "secondary": "#FFFFFF"}, "crest": null},
+    "Nottingham Forest": {"code": "NFO", "colors": {"primary": "#DD0000", "secondary": "#FFFFFF"}, "crest": null},
+    "Sunderland": {"code": "SUN", "colors": {"primary": "#EB172B", "secondary": "#FFFFFF"}, "crest": null},
+    "Tottenham": {"code": "TOT", "colors": {"primary": "#132257", "secondary": "#FFFFFF"}, "crest": null}
   },
   "display_color_rule": "میزبان همیشه رنگ اصلی رسمی. میهمان هم رنگ اصلی رسمی؛ فقط اگر با رنگ میزبان بیش‌ازحد نزدیک بود (فاصلهٔ رنگی زیر آستانه) رنگ ثانویهٔ میهمان به‌کار می‌رود و اگر آن هم نزدیک بود، رنگ ذخیرهٔ contrast یعنی matchday_palette.sky_bright — تا دو تیم روی کارت هرگز یک‌شکل دیده نشوند.",
   "contrast_fallback_color": "#38BDF8"

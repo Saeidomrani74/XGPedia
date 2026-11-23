@@ -239,10 +239,14 @@ def test_smart_modules_full_priority_when_all_data_available():
     facts["away"]["wave"] = [0.2, 0.25, 0.3, 0.35, 0.3, 0.25]
 
     ctx45 = build_preview_context(_draft(), facts, fmt="4:5")
-    assert [m["id"] for m in ctx45["modules"]] == ["radar", "keyduel"]
+    assert [(m["id"], m["span"]) for m in ctx45["modules"]] == [
+        ("radar", "half"), ("trend10", "half"), ("signals", "full")
+    ]
 
     ctx916 = build_preview_context(_draft(), facts, fmt="9:16")
-    assert [m["id"] for m in ctx916["modules"]] == ["radar", "keyduel", "signals"]
+    assert [(m["id"], m["span"]) for m in ctx916["modules"]] == [
+        ("radar", "half"), ("trend10", "half"), ("signals", "full")
+    ]
 
 
 def test_watchout_never_on_card_and_always_in_caption():

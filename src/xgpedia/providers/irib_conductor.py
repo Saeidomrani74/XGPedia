@@ -253,7 +253,20 @@ class IRIBConductorProvider:
         )
         for key, label, url in sources:
             try:
-                r = self._client.get(url)
+                try:
+                    r = self._client.get(url)
+                except httpx.ConnectError as ssl_err:
+                    # برخی سایت‌های صداوسیما (tv3.ir / varzeshtv.ir) روی ویندوز زنجیرهٔ گواهی ناقص دارند
+                    if "CERTIFICATE_VERIFY_FAILED" in str(ssl_err) or "SSL" in str(ssl_err).upper():
+                        with httpx.Client(
+                            timeout=self._client.timeout,
+                            follow_redirects=True,
+                            verify=False,
+                            headers=dict(self._client.headers),
+                        ) as insecure_client:
+                            r = insecure_client.get(url)
+                    else:
+                        raise
                 r.raise_for_status()
                 all_progs.extend(parse_conductor_html(r.text, key, label))
             except Exception as e:

@@ -14,7 +14,7 @@ def render_signals(payload: dict[str, Any], span: str = "full", fmt: str = "4:5"
     def bar(lbl: str, cls_lbl: str, k: str, pct: float) -> str:
         n = min(100.0, max(0.0, float(pct)))
         txt = f"{fa(f1(pct))}٪"
-        in_bar = n >= 68.0
+        in_bar = n >= 58.0
         inside = f'<span class="evv ei{k}">{txt}</span>' if in_bar else ""
         outside = "" if in_bar else f'<span class="evv eo{k}">{txt}</span>'
         return (
@@ -45,8 +45,8 @@ def render_signals(payload: dict[str, Any], span: str = "full", fmt: str = "4:5"
             f'<div class="em">ضریب {fa(f2(it["odds"]))} · معادل {fa(f1(it["market_pct"]))}٪</div>'
             f'</div>'
             f'<div class="ebc">'
-            f'{bar("احتمال مدل", "ebl-m", "m", it["model_pct"])}'
-            f'{bar("احتمال بازار", "ebl-k", "k", it["market_pct"])}'
+            f'{bar("مدل", "ebl-m", "m", it["model_pct"])}'
+            f'{bar("بازار", "ebl-k", "k", it["market_pct"])}'
             f'</div>'
             f'<div class="epw {esc(tc)}">'
             f'<div dir="ltr" class="epb"><span>{ev_sign}{fa(f1(abs(ev_val)))}٪</span><span class="ept">EV</span></div>'

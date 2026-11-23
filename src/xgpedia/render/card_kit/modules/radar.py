@@ -21,19 +21,19 @@ def render_radar(payload: dict[str, Any], span: str = "full", fmt: str = "4:5") 
     is_half = span == "half"
     # فاصلهٔ متوازن و نزدیک به شش‌ضلعی (به‌ویژه رأس بالا) همراه با فونت خواناتر و بزرگ‌تر
     if is_half:
-        vb_w, vb_h, cx, cy, R = 560, 420, 280, 214, 112
-        dx = R * 0.866 + 14
-        lbl_fs, val_fs = 23, 21
-        val_dy = 26
-        top_y = cy - R - 40
-        bot_y = cy + R + 26
+        vb_w, vb_h, cx, cy, R = 560, 420, 280, 212, 116
+        dx = R * 0.866 + 12
+        lbl_fs, val_fs = 31, 29
+        val_dy = 34
+        top_y = cy - R - 46
+        bot_y = cy + R + 34
     else:
-        vb_w, vb_h, cx, cy, R = 900, 420, 450, 214, 122
-        dx = R * 0.866 + 16
-        lbl_fs, val_fs = 27, 25
-        val_dy = 30
-        top_y = cy - R - 44
-        bot_y = cy + R + 28
+        vb_w, vb_h, cx, cy, R = 900, 420, 450, 212, 130
+        dx = R * 0.866 + 18
+        lbl_fs, val_fs = 40, 36
+        val_dy = 38
+        top_y = cy - R - 46
+        bot_y = cy + R + 34
 
     def pts(vals: list[float]) -> list[tuple[float, float]]:
         out = []
@@ -80,7 +80,7 @@ def render_radar(payload: dict[str, Any], span: str = "full", fmt: str = "4:5") 
     )
 
     title = "رادار تاکتیکی" if is_half else "رادار ۶ محوره تاکتیکی"
-    right = team_legend_html(h["name"], a["name"], hc, ac, is_half=is_half)
+    right = ""
     span_cls = "mod-half" if is_half else "mod-full"
 
     return (

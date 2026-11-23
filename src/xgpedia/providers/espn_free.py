@@ -61,13 +61,17 @@ def parse_espn_upcoming(payload: dict[str, Any]) -> dict[str, Any]:
     odds_rows: list[dict[str, Any]] = []
     key_players: dict[str, dict[str, str]] = {}
 
+    if not isinstance(payload, dict):
+        return {"odds_rows": odds_rows, "key_players": key_players}
     for ev in payload.get("events") or []:
+        if not isinstance(ev, dict):
+            continue
         comps = ev.get("competitions") or []
-        if not comps:
+        if not comps or not isinstance(comps[0], dict):
             continue
         comp = comps[0]
         date_str = str(comp.get("date") or ev.get("date") or "")[:10]
-        competitors = comp.get("competitors") or []
+        competitors = [c for c in (comp.get("competitors") or []) if isinstance(c, dict)]
         home_c = next((c for c in competitors if c.get("homeAway") == "home"), None)
         away_c = next((c for c in competitors if c.get("homeAway") == "away"), None)
         if not (home_c and away_c):
@@ -77,7 +81,7 @@ def parse_espn_upcoming(payload: dict[str, Any]) -> dict[str, Any]:
         a_name = _norm_espn_team((away_c.get("team") or {}).get("displayName") or "")
 
         # ۱) ضرایب زنده
-        odds_list = comp.get("odds") or []
+        odds_list = [o for o in (comp.get("odds") or []) if isinstance(o, dict)]
         if odds_list and date_str and h_name and a_name:
             od = odds_list[0]
             h_odd = american_to_decimal_odds((od.get("homeTeamOdds") or {}).get("moneyLine"))
@@ -101,7 +105,7 @@ def parse_espn_upcoming(payload: dict[str, Any]) -> dict[str, Any]:
         for c_obj, t_canon in ((home_c, h_name), (away_c, a_name)):
             if not t_canon or t_canon in key_players:
                 continue
-            leaders = c_obj.get("leaders") or []
+            leaders = [cat for cat in (c_obj.get("leaders") or []) if isinstance(cat, dict)]
             scorer_cat = next(
                 (cat for cat in leaders if "goal" in str(cat.get("name") or "").lower()),
                 leaders[0] if leaders else None,
@@ -110,17 +114,19 @@ def parse_espn_upcoming(payload: dict[str, Any]) -> dict[str, Any]:
                 (cat for cat in leaders if "assist" in str(cat.get("name") or "").lower()),
                 None,
             )
-            if scorer_cat and (scorer_cat.get("leaders") or []):
-                top = scorer_cat["leaders"][0]
-                ath = top.get("athlete") or {}
+            sc_leaders = [x for x in (scorer_cat.get("leaders") or []) if isinstance(x, dict)] if scorer_cat else []
+            if sc_leaders:
+                top = sc_leaders[0]
+                ath = top.get("athlete") if isinstance(top.get("athlete"), dict) else {}
                 pname = str(ath.get("displayName") or ath.get("shortName") or "").strip()
                 val = str(top.get("displayValue") or top.get("value") or "").strip()
                 pos = str((ath.get("position") or {}).get("abbreviation") or "").upper()
                 pos_fa = {"F": "مهاجم", "FW": "مهاجم", "M": "هافبک", "MF": "هافبک", "D": "مدافع"}.get(pos, "مهاجم")
                 s2 = "مهره کلیدی تیم"
-                if assist_cat and (assist_cat.get("leaders") or []):
-                    a_top = assist_cat["leaders"][0]
-                    a_ath = a_top.get("athlete") or {}
+                as_leaders = [x for x in (assist_cat.get("leaders") or []) if isinstance(x, dict)] if assist_cat else []
+                if as_leaders:
+                    a_top = as_leaders[0]
+                    a_ath = a_top.get("athlete") if isinstance(a_top.get("athlete"), dict) else {}
                     if str(a_ath.get("displayName") or "").strip() == pname:
                         s2 = f"{a_top.get('displayValue') or a_top.get('value')} پاس گل"
                 if pname:
@@ -139,27 +145,37 @@ def parse_espn_timing_wave(payload: dict[str, Any]) -> dict[str, list[float]]:
     buckets_by_team: dict[str, list[float]] = {}
     matches_by_team: dict[str, int] = {}
 
+    if not isinstance(payload, dict):
+        return {}
     for ev in payload.get("events") or []:
+        if not isinstance(ev, dict):
+            continue
         comps = ev.get("competitions") or []
-        if not comps:
+        if not comps or not isinstance(comps[0], dict):
             continue
         comp = comps[0]
-        status_state = str(((comp.get("status") or {}).get("type") or {}).get("state") or "").lower()
+        st_obj = comp.get("status") if isinstance(comp.get("status"), dict) else {}
+        st_type = st_obj.get("type") if isinstance(st_obj.get("type"), dict) else {}
+        status_state = str(st_type.get("state") or "").lower()
         if status_state != "post":
             continue
         id_to_team: dict[str, str] = {}
         for c in comp.get("competitors") or []:
-            tid = str((c.get("team") or {}).get("id") or "")
-            tname = _norm_espn_team((c.get("team") or {}).get("displayName") or "")
+            if not isinstance(c, dict):
+                continue
+            tm_obj = c.get("team") if isinstance(c.get("team"), dict) else {}
+            tid = str(tm_obj.get("id") or "")
+            tname = _norm_espn_team(tm_obj.get("displayName") or "")
             if tid and tname:
                 id_to_team[tid] = tname
                 buckets_by_team.setdefault(tname, [0.0] * 6)
                 matches_by_team[tname] = matches_by_team.get(tname, 0) + 1
 
         for det in comp.get("details") or []:
-            if not det.get("scoringPlay"):
+            if not isinstance(det, dict) or not det.get("scoringPlay"):
                 continue
-            tid = str((det.get("team") or {}).get("id") or "")
+            dtm = det.get("team") if isinstance(det.get("team"), dict) else {}
+            tid = str(dtm.get("id") or "")
             tname = id_to_team.get(tid)
             if not tname:
                 continue

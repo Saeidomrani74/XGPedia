@@ -386,22 +386,26 @@ def sync_today_matches(
                             sync_fdo_scorers(sc_raw, season_start=CURRENT_SEASON_START)
                         except Exception:
                             pass
-                        try:
-                            from src.xgpedia.sync import sync_live_coaches_for_teams
-
-                            upcoming_teams = []
-                            for _m in (raw.payload or {}).get("matches") or []:
-                                ht = ((_m.get("homeTeam") or {}).get("name") or "").strip()
-                                at = ((_m.get("awayTeam") or {}).get("name") or "").strip()
-                                if ht:
-                                    upcoming_teams.append(ht)
-                                if at:
-                                    upcoming_teams.append(at)
-                            if upcoming_teams:
-                                sync_live_coaches_for_teams(upcoming_teams, season_start=CURRENT_SEASON_START)
-                        except Exception:
-                            pass
                         _save_sync_cache("teams", tehran_date, now, f"{ts['teams_saved']} تیم")
+                    except Exception:
+                        pass
+                # همگام‌سازی مستقل و ۴ ساعتهٔ سرمربی زنده (جدا از کش ۲۴ ساعتهٔ teams؛ فقط در صورت موفقیت کش می‌شود)
+                if force or _cache_fresh_summary("coaches", tehran_date, 4.0, now) is None:
+                    try:
+                        from src.xgpedia.sync import sync_live_coaches_for_teams
+
+                        upcoming_teams = []
+                        for _m in (raw.payload or {}).get("matches") or []:
+                            ht = ((_m.get("homeTeam") or {}).get("name") or "").strip()
+                            at = ((_m.get("awayTeam") or {}).get("name") or "").strip()
+                            if ht:
+                                upcoming_teams.append(ht)
+                            if at:
+                                upcoming_teams.append(at)
+                        if upcoming_teams:
+                            c_res = sync_live_coaches_for_teams(upcoming_teams, season_start=CURRENT_SEASON_START)
+                            if c_res.get("coaches_updated", 0) > 0:
+                                _save_sync_cache("coaches", tehran_date, now, f"{c_res['coaches_updated']} مربی")
                     except Exception:
                         pass
                 return f"{s['total_in_payload']} بازی پیش‌رو دریافت شد (جدید: {s['upcoming_new']})"
@@ -630,9 +634,11 @@ def get_match_card_options(
         ctx = build_preview_context(dummy_draft, facts, fmt=fmt)
         priority = PRE_MATCH_PRIORITY
 
-    default_ids = {m["id"]: m["span"] for m in ctx["modules"] if m.get("enabled")}
+    default_ordered = [(m["id"], m.get("span", "full")) for m in ctx["modules"] if m.get("enabled")]
+    default_ids = dict(default_ordered)
+    ordered_ids = [mid for mid, _ in default_ordered] + [mid for mid in priority if mid not in default_ids]
     available: list[dict[str, Any]] = []
-    for mod_id in priority:
+    for mod_id in ordered_ids:
         if not ctx["has"].get(mod_id):
             continue
         spec = MODULE_REGISTRY.get(mod_id)
@@ -658,11 +664,42 @@ def get_match_card_options(
         "away_fa": facts["away"]["name_fa"],
         "round": facts.get("round") or "",
         "stadium": facts.get("stadium") or "",
-        "broadcast": facts.get("broadcast") or "",
+        "broadcast": facts.get("broadcast") or "پخش آنلاین",
         "available_modules": available,
         "missing_modules": missing_mods,
     }
 
+
+
+def _refresh_live_coaches_on_facts(facts: dict[str, Any]) -> None:
+    """به‌روزرسانی لحظه‌ای سرمربی دو تیم از ویکی‌پدیا/ویکی‌دیتا پیش از تولید کارت و کپشن.
+
+    تضمین می‌کند سرمربی روی کارت و سرمربی داخل کپشن همیشه یکسان و زنده باشند
+    و نام قدیمی football-data.org هرگز روی کارت باقی نماند.
+    """
+    try:
+        from src.xgpedia.config import canonical_team_name
+        from src.xgpedia.sync import ensure_live_coaches_fresh
+
+        h_obj = facts.get("home") or {}
+        a_obj = facts.get("away") or {}
+        h_en = (h_obj.get("name_en") or "").strip()
+        a_en = (a_obj.get("name_en") or "").strip()
+        teams = [t for t in (h_en, a_en) if t]
+        if not teams:
+            return
+        res = ensure_live_coaches_fresh(teams, season_start=CURRENT_SEASON_START, max_age_hours=4.0, timeout=6.0)
+        cmap = res.get("coaches_fa") or {}
+        if h_en:
+            hc = cmap.get(canonical_team_name(h_en))
+            if hc:
+                h_obj["sub"] = hc
+        if a_en:
+            ac = cmap.get(canonical_team_name(a_en))
+            if ac:
+                a_obj["sub"] = ac
+    except Exception:
+        pass
 
 
 def _attach_live_breaking_news(facts: dict[str, Any]) -> None:
@@ -706,6 +743,7 @@ def generate_match_post(
     # گام ۱: استخراج فکت‌ها
     try:
         facts = build_match_facts(fixture_id, post_match=(post_type == "post_match"))
+        _refresh_live_coaches_on_facts(facts)
         _attach_live_breaking_news(facts)
     except Exception as e:
         title, detail = _diagnose_exception("facts", e)
@@ -987,6 +1025,7 @@ async def generate_match_post_async(
 
     def _step1_facts_and_draft() -> tuple[int, dict, dict, str]:
         facts = build_match_facts(fixture_id, post_match=(post_type == "post_match"))
+        _refresh_live_coaches_on_facts(facts)
         _attach_live_breaking_news(facts)
         prov = llm_provider
         if prov is None:

@@ -178,3 +178,32 @@ def test_customizer_wide_name_row_and_llm_menu():
     panel = tb._main_panel_markup()
     cbs = [b.callback_data for r in panel.inline_keyboard for b in r]
     assert "llm:menu" in cbs
+
+
+def test_sync_live_coaches_sql_upsert_and_venue_merge(tmp_path, monkeypatch):
+    """تضمین ذخیرهٔ بدون خطای سرمربی ویکی‌پدیا روی کلید (team, season, provider) و حفظ ورزشگاه football-data.org."""
+    from src.xgpedia.providers import live_intel_free as lif
+    from src.xgpedia.sync import _team_live_metadata, sync_live_coaches_for_teams
+
+    db_path = tmp_path / "live_coach_merge.db"
+    monkeypatch.setattr(db_mod, "DATABASE_PATH", db_path)
+    db_mod.init_db()
+
+    with db_mod.db() as conn:
+        conn.execute(
+            "INSERT INTO team_metadata (team, season, venue_en, coach_en, provider, collected_at) "
+            "VALUES ('Manchester United', '2026-27', 'Old Trafford', 'Michael Carrick', 'football-data-org', '2026-11-22T08:00:00Z')"
+        )
+
+    monkeypatch.setattr(lif, "fetch_live_coach_wikipedia", lambda team: ("Mauricio Pochettino", "مائوریسیو پوچتینو"))
+    res = sync_live_coaches_for_teams(["Manchester United"], season_start=2026)
+    assert res["coaches_updated"] == 1
+    # اجرای مجدد (تست ON CONFLICT UPDATE) نباید خطا بدهد
+    res2 = sync_live_coaches_for_teams(["Manchester United"], season_start=2026)
+    assert res2["coaches_updated"] == 1
+
+    with db_mod.db() as conn:
+        meta = _team_live_metadata(conn, "Manchester United", "2026-27")
+    assert meta is not None
+    assert meta["coach_en"] == "مائوریسیو پوچتینو"
+    assert meta["venue_en"] == "Old Trafford"
