@@ -554,15 +554,26 @@ def _team_form_sequence(conn: sqlite3.Connection, team: str, before_date: str, l
 
 
 def _match_metrics(conn: sqlite3.Connection, fixture_id: str, team: str) -> dict[str, float]:
-    """آمار خودِ یک بازی برای یک تیم — {metric: value}؛ ردیف NULL اصلاً برنمی‌گردد."""
+    """آمار خودِ یک بازی برای یک تیم از همهٔ منابع معتبر با اولویت کیفیت (Understat/API-Football/ESPN/CSV)."""
     rows = conn.execute(
         """
-        SELECT metric, value FROM fixture_statistics
-        WHERE fixture_id = ? AND team = ? AND provider = ? AND value IS NOT NULL
+        SELECT metric, value, provider FROM fixture_statistics
+        WHERE fixture_id = ? AND team = ? AND value IS NOT NULL
+        ORDER BY CASE provider
+          WHEN 'understat' THEN 1
+          WHEN 'api-football' THEN 2
+          WHEN 'espn-public' THEN 3
+          WHEN 'football-data-co-uk' THEN 4
+          ELSE 5
+        END, collected_at DESC
         """,
-        (fixture_id, team, PRIMARY_STATS_PROVIDER),
+        (fixture_id, team),
     ).fetchall()
-    return {r["metric"]: float(r["value"]) for r in rows}
+    out: dict[str, float] = {}
+    for r in rows:
+        if r["metric"] not in out:
+            out[r["metric"]] = float(r["value"])
+    return out
 
 
 def _creative_match_descriptor(
@@ -574,9 +585,6 @@ def _creative_match_descriptor(
     post_match: bool = False,
 ) -> str:
     """تولید صفت توصیفی جذاب، خلاقانه و متناسب با هویت و آمار واقعی هر بازی برای هدر کارت."""
-    if post_match:
-        return "کالبدشکافی پس از بازی"
-
     pair = {canonical_team_name(home_en), canonical_team_name(away_en)}
     derbies: list[tuple[set[str], str]] = [
         ({"Arsenal", "Tottenham"}, "دربی شمال لندن"),
@@ -591,9 +599,39 @@ def _creative_match_descriptor(
         ({"Arsenal", "Manchester City"}, "دوئل مدعیان قهرمانی"),
         ({"Arsenal", "Liverpool"}, "تقابل صدرنشینان"),
     ]
-    for teams_set, lbl in derbies:
-        if pair == teams_set:
-            return lbl
+    derby_lbl = next((lbl for teams_set, lbl in derbies if pair == teams_set), None)
+
+    if post_match:
+        hg = home.match_stats.goals.value if (home.match_stats and home.match_stats.goals and home.match_stats.goals.value is not None) else None
+        ag = away.match_stats.goals.value if (away.match_stats and away.match_stats.goals and away.match_stats.goals.value is not None) else None
+        hxg = home.match_stats.expected_goals.value if (home.match_stats and home.match_stats.expected_goals and home.match_stats.expected_goals.value is not None) else None
+        axg = away.match_stats.expected_goals.value if (away.match_stats and away.match_stats.expected_goals and away.match_stats.expected_goals.value is not None) else None
+        if hg is not None and ag is not None:
+            hg_i, ag_i = int(round(hg)), int(round(ag))
+            diff = abs(hg_i - ag_i)
+            tot = hg_i + ag_i
+            if derby_lbl:
+                if diff >= 3:
+                    return f"توفان در {derby_lbl}"
+                if hg_i == ag_i:
+                    return f"تساوی در {derby_lbl}"
+                return f"برتری در {derby_lbl}"
+            if diff >= 3:
+                return "جشنواره گل و برد یک‌طرفه"
+            if tot >= 5:
+                return "نبرد پرگل و تماشایی"
+            if hg_i == ag_i:
+                return "شطرنج بدون گل" if tot == 0 else "تقسیم امتیاز در جدال پایاپای"
+            if hxg is not None and axg is not None:
+                if (hg_i > ag_i and hxg < axg - 0.35) or (ag_i > hg_i and axg < hxg - 0.35):
+                    return "برد خلاف جریان امید گل"
+                if diff >= 2 or abs(hxg - axg) >= 0.85:
+                    return "برتری مقتدرانه در زمین و آمار"
+            return "برد میلی‌متری در نبرد نزدیک"
+        return f"گزارش {derby_lbl}" if derby_lbl else "گزارش آماری مسابقه"
+
+    if derby_lbl:
+        return derby_lbl
 
     big6 = {"Arsenal", "Manchester City", "Liverpool", "Chelsea", "Manchester United", "Tottenham"}
     if len(pair & big6) == 2:
@@ -685,6 +723,8 @@ def build_match_facts(fixture_id: str, post_match: bool = False) -> dict:
                     shots_on_target=sv("shots_on_target"),
                     corner_kicks=sv("corner_kicks"),
                     fouls=sv("fouls"),
+                    possession=sv("possession"),
+                    big_chances=sv("big_chances"),
                     yellow_cards=sv("yellow_cards"),
                     red_cards=sv("red_cards"),
                 )
@@ -793,7 +833,41 @@ def build_match_facts(fixture_id: str, post_match: bool = False) -> dict:
             broadcast=_fixture_broadcast(conn, fixture_id) or "پخش آنلاین",
         )
         facts.triggers = evaluate_triggers(facts)
-        return json.loads(facts.model_dump_json())
+        out_dict = json.loads(facts.model_dump_json() if hasattr(facts, "model_dump_json") else facts.json())
+        if post_match:
+            try:
+                pm_row = conn.execute(
+                    "SELECT details_json FROM fixture_post_match WHERE fixture_id = ?",
+                    (fixture_id,),
+                ).fetchone()
+                if pm_row and pm_row["details_json"]:
+                    pm_det = json.loads(pm_row["details_json"])
+                    if isinstance(pm_det, dict):
+                        if pm_det.get("scorers_home"):
+                            out_dict["home"]["scorersText"] = pm_det["scorers_home"]
+                        if pm_det.get("scorers_away"):
+                            out_dict["away"]["scorersText"] = pm_det["scorers_away"]
+                        if pm_det.get("home_gk"):
+                            out_dict["home"]["gk"] = pm_det["home_gk"]
+                        if pm_det.get("away_gk"):
+                            out_dict["away"]["gk"] = pm_det["away_gk"]
+                        if pm_det.get("home_shots"):
+                            out_dict["home"]["shotList"] = pm_det["home_shots"]
+                        if pm_det.get("away_shots"):
+                            out_dict["away"]["shotList"] = pm_det["away_shots"]
+                        if pm_det.get("home_inside_box") is not None:
+                            out_dict["home"]["insideBox"] = int(pm_det["home_inside_box"])
+                        if pm_det.get("away_inside_box") is not None:
+                            out_dict["away"]["insideBox"] = int(pm_det["away_inside_box"])
+                        if pm_det.get("momentum"):
+                            out_dict["momentum"] = pm_det["momentum"]
+                        if pm_det.get("top_players"):
+                            out_dict["topPlayers"] = pm_det["top_players"]
+                        if pm_det.get("motm"):
+                            out_dict["motm"] = pm_det["motm"]
+            except Exception:
+                pass
+        return out_dict
 
 
 def data_freshness() -> dict:
@@ -1145,3 +1219,214 @@ def ensure_live_coaches_fresh(
                         coaches_fa[canon] = fa_name
 
     return {"coaches_updated": updated, "coaches_fa": coaches_fa}
+
+
+def sync_finished_matches_from_fdo(raw: RawResponse, season_start: int = CURRENT_SEASON_START) -> dict[str, int]:
+    """ذخیرهٔ بازی‌های پایان‌یافتهٔ ۲۴-۴۸ ساعت اخیر از football-data.org (وضعیت FINISHED + نتیجهٔ نهایی)."""
+    matches = (raw.payload or {}).get("matches") or []
+    s_label = f"{season_start}-{str(season_start + 1)[-2:]}"
+    saved = 0
+    with db() as conn:
+        for m in matches:
+            if str(m.get("status") or "").upper() != "FINISHED":
+                continue
+            mid = m.get("id")
+            h_obj = m.get("homeTeam") or {}
+            a_obj = m.get("awayTeam") or {}
+            h_raw = h_obj.get("name") or h_obj.get("shortName")
+            a_raw = a_obj.get("name") or a_obj.get("shortName")
+            if not (mid and h_raw and a_raw):
+                continue
+            h_canon = canonical_team_name(h_raw, h_obj.get("id"))
+            a_canon = canonical_team_name(a_raw, a_obj.get("id"))
+            ft = (m.get("score") or {}).get("fullTime") or {}
+            hg, ag = ft.get("home"), ft.get("away")
+            if hg is None or ag is None:
+                continue
+            fid = f"fdo:{mid}"
+            ko = str(m.get("utcDate") or "")
+            md = m.get("matchday")
+            conn.execute(
+                """
+                INSERT INTO fixtures
+                  (fixture_id, provider, competition, season, kickoff_utc, home_team, away_team,
+                   status, matchday, raw_payload_hash, collected_at)
+                VALUES (?, ?, 'Premier League', ?, ?, ?, ?, 'finished', ?, ?, ?)
+                ON CONFLICT(fixture_id) DO UPDATE SET
+                  status='finished',
+                  matchday=COALESCE(excluded.matchday, fixtures.matchday),
+                  collected_at=excluded.collected_at
+                """,
+                (fid, raw.provider, s_label, ko, h_canon, a_canon, md, raw.payload_hash, raw.collected_at),
+            )
+            for tm_g, g_val in ((h_canon, hg), (a_canon, ag)):
+                conn.execute(
+                    """
+                    INSERT INTO fixture_statistics
+                      (fixture_id, team, metric, value, n, provider, collected_at)
+                    VALUES (?, ?, 'goals', ?, NULL, ?, ?)
+                    ON CONFLICT(fixture_id, team, metric, provider) DO UPDATE SET
+                      value=excluded.value,
+                      collected_at=excluded.collected_at
+                    """,
+                    (fid, tm_g, float(g_val), raw.provider, raw.collected_at),
+                )
+            saved += 1
+    return {"finished_saved": saved}
+
+
+def sync_espn_finished_matches(
+    matches: list[dict[str, Any]], *, season_start: int = CURRENT_SEASON_START
+) -> dict[str, int]:
+    """ذخیرهٔ بازی‌های پایان‌یافتهٔ ۲۴ ساعت اخیر از ESPN + آمار واقعی مسابقه + جزئیات پس‌ازبازی (گلزنان/مومنتوم/دروازه‌بان)."""
+    from src.xgpedia.db import init_db
+
+    init_db()
+    s_label = f"{season_start}-{str(season_start + 1)[-2:]}"
+    now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    saved = 0
+    stats_rows = 0
+
+    with db() as conn:
+        for m in matches or []:
+            h_canon = canonical_team_name(m["home_team"])
+            a_canon = canonical_team_name(m["away_team"])
+            ko = str(m.get("kickoff_utc") or "")
+            ko_day = ko[:10]
+            hg = int(m["home_goals"])
+            ag = int(m["away_goals"])
+
+            # اگر همین بازی قبلاً از football-data.org در fixtures ثبت شده، روی همان fixture_id ادغام می‌کنیم
+            existing = conn.execute(
+                """
+                SELECT fixture_id FROM fixtures
+                WHERE home_team = ? AND away_team = ?
+                  AND substr(kickoff_utc, 1, 10) >= date(?, '-1 day')
+                  AND substr(kickoff_utc, 1, 10) <= date(?, '+1 day')
+                ORDER BY CASE provider WHEN 'football-data-org' THEN 1 ELSE 2 END
+                LIMIT 1
+                """,
+                (h_canon, a_canon, ko_day, ko_day),
+            ).fetchone() if ko_day else None
+
+            if existing:
+                fid = existing["fixture_id"]
+                conn.execute(
+                    "UPDATE fixtures SET status='finished', collected_at=? WHERE fixture_id=?",
+                    (now_iso, fid),
+                )
+            else:
+                fid = f"espn:{m.get('event_id') or f'{ko_day}:{h_canon}:{a_canon}'}"
+                conn.execute(
+                    """
+                    INSERT INTO fixtures
+                      (fixture_id, provider, competition, season, kickoff_utc, home_team, away_team,
+                       status, raw_payload_hash, collected_at)
+                    VALUES (?, 'espn-public', 'Premier League', ?, ?, ?, ?, 'finished', NULL, ?)
+                    ON CONFLICT(fixture_id) DO UPDATE SET
+                      status='finished',
+                      collected_at=excluded.collected_at
+                    """,
+                    (fid, s_label, ko, h_canon, a_canon, now_iso),
+                )
+
+            # ذخیرهٔ آمار واقعی مسابقه در fixture_statistics
+            for side_team, st_dict, g_val in (
+                (h_canon, m.get("home_stats") or {}, hg),
+                (a_canon, m.get("away_stats") or {}, ag),
+            ):
+                all_m = dict(st_dict)
+                all_m["goals"] = float(g_val)
+                for metric, val in all_m.items():
+                    if val is None or metric == "saves":
+                        continue
+                    conn.execute(
+                        """
+                        INSERT INTO fixture_statistics
+                          (fixture_id, team, metric, value, n, provider, collected_at)
+                        VALUES (?, ?, ?, ?, NULL, 'espn-public', ?)
+                        ON CONFLICT(fixture_id, team, metric, provider) DO UPDATE SET
+                          value=excluded.value,
+                          collected_at=excluded.collected_at
+                        """,
+                        (fid, side_team, metric, float(val), now_iso),
+                    )
+                    stats_rows += 1
+
+            # ذخیرهٔ جزئیات پس‌ازبازی (گلزنان، مومنتوم ۵ دقیقه‌ای، دروازه‌بان)
+            det = dict(m.get("details") or {})
+            det["synced_at_utc"] = now_iso
+            conn.execute(
+                """
+                INSERT INTO fixture_post_match (fixture_id, details_json, provider, collected_at)
+                VALUES (?, ?, 'espn-public', ?)
+                ON CONFLICT(fixture_id) DO UPDATE SET
+                  details_json=excluded.details_json,
+                  provider=excluded.provider,
+                  collected_at=excluded.collected_at
+                """,
+                (fid, json.dumps(det, ensure_ascii=False), now_iso),
+            )
+            saved += 1
+
+    return {"finished_saved": saved, "stats_rows": stats_rows}
+
+
+def merge_post_match_details(
+    fixture_id: str,
+    patch: dict[str, Any],
+    *,
+    provider: str,
+    extra_stats: dict[str, dict[str, float]] | None = None,
+) -> bool:
+    """ادغام امن جزئیات تکمیلی پس‌ازبازی (Understat شوت/xG، FPL امتیاز/MOTM/GK) بدون پاک‌کردن داده‌های ESPN."""
+    from src.xgpedia.db import init_db
+
+    init_db()
+    now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    with db() as conn:
+        row = conn.execute(
+            "SELECT details_json FROM fixture_post_match WHERE fixture_id = ?",
+            (fixture_id,),
+        ).fetchone()
+        existing: dict[str, Any] = {}
+        if row and row["details_json"]:
+            try:
+                loaded = json.loads(row["details_json"])
+                if isinstance(loaded, dict):
+                    existing = loaded
+            except Exception:
+                existing = {}
+        changed = False
+        for k, v in (patch or {}).items():
+            if v is not None and v != "" and v != []:
+                existing[k] = v
+                changed = True
+        if changed:
+            conn.execute(
+                """
+                INSERT INTO fixture_post_match (fixture_id, details_json, provider, collected_at)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(fixture_id) DO UPDATE SET
+                  details_json=excluded.details_json,
+                  collected_at=excluded.collected_at
+                """,
+                (fixture_id, json.dumps(existing, ensure_ascii=False), provider, now_iso),
+            )
+        for team_canon, metrics in (extra_stats or {}).items():
+            for met, val in (metrics or {}).items():
+                if val is None:
+                    continue
+                conn.execute(
+                    """
+                    INSERT INTO fixture_statistics
+                      (fixture_id, team, metric, value, n, provider, collected_at)
+                    VALUES (?, ?, ?, ?, 1, ?, ?)
+                    ON CONFLICT(fixture_id, team, metric, provider) DO UPDATE SET
+                      value=excluded.value,
+                      collected_at=excluded.collected_at
+                    """,
+                    (fixture_id, canonical_team_name(team_canon), met, float(val), provider, now_iso),
+                )
+                changed = True
+    return changed

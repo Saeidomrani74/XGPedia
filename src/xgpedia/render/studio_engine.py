@@ -93,6 +93,13 @@ DEFAULT_PRE_MATCH_TEMPLATE: list[tuple[str, str]] = [
     ("signals", "full"),
 ]
 DEFAULT_PRE_MATCH_HEADER_MODE: str = "full"
+# قالب پیش‌فرض رسمی و قفل‌شدهٔ کارت پس‌ازبازی (D44) برای خودکارسازی و کاستومایزر
+DEFAULT_POST_MATCH_TEMPLATE: list[tuple[str, str]] = [
+    ("momentum", "half"),
+    ("stats", "half"),
+    ("toprated", "half"),
+    ("efficiency", "half"),
+]
 DEFAULT_PRE_MATCH_BROADCAST_FALLBACK: str = "پخش آنلاین"
 
 
@@ -155,13 +162,21 @@ def select_studio_modules(
                         if len(selected) >= capacity:
                             break
             return _fix_orphan_halves(selected)
-        chosen_ids = [
-            mod_id
-            for mod_id in priority
-            if mod_id not in caption_only and has.get(mod_id, False)
-        ][:capacity]
-        selected = [{"id": mod_id, "enabled": True, "span": "full"} for mod_id in chosen_ids]
-        return _fix_orphan_halves(selected)
+        # قالب پیش‌فرض قفل‌شدهٔ پس‌ازبازی (D44): موج فشار ½ + آمار مسابقه ½ | برترین‌های زمین ½ + دقت شوت و دروازه‌بان ½
+        selected_pm: list[dict[str, Any]] = []
+        used_pm: set[str] = set()
+        for mod_id, span in DEFAULT_POST_MATCH_TEMPLATE:
+            if mod_id not in caption_only and has.get(mod_id, False):
+                selected_pm.append({"id": mod_id, "enabled": True, "span": span})
+                used_pm.add(mod_id)
+        if len(selected_pm) < 2:
+            for mod_id in priority:
+                if mod_id not in caption_only and mod_id not in used_pm and has.get(mod_id, False):
+                    selected_pm.append({"id": mod_id, "enabled": True, "span": "full"})
+                    used_pm.add(mod_id)
+                    if len(selected_pm) >= capacity:
+                        break
+        return _fix_orphan_halves(selected_pm)
 
     if is_post:
         presets: dict[str, list[tuple[str, str]]] = {

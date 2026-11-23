@@ -139,9 +139,10 @@ def _persistent_reply_keyboard() -> ReplyKeyboardMarkup:
     """کیبورد تاشو و دائمی پایین چت برای دسترسی سریع و یک‌لمسی ادمین در هر مرحله."""
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="📋 بازی‌های امروز"), KeyboardButton(text="🔄 دریافت هوشمند")],
-            [KeyboardButton(text="⚡ همگام‌سازی اجباری"), KeyboardButton(text="⏰ صف زمان‌بندی")],
-            [KeyboardButton(text="🧠 وضعیت AI"), KeyboardButton(text="🏠 منوی اصلی")],
+            [KeyboardButton(text="📋 بازی‌های امروز"), KeyboardButton(text="🏁 پس‌ازبازی (۲۴س)")],
+            [KeyboardButton(text="🔄 دریافت هوشمند"), KeyboardButton(text="⚡ همگام‌سازی اجباری")],
+            [KeyboardButton(text="⏰ صف زمان‌بندی"), KeyboardButton(text="🧠 وضعیت AI")],
+            [KeyboardButton(text="🏠 منوی اصلی")],
         ],
         resize_keyboard=True,
         is_persistent=True,
@@ -153,7 +154,10 @@ def _main_panel_markup() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="🔄 دریافت بازی‌های امروز (هوشمند/کش)", callback_data="today:sync")],
-            [InlineKeyboardButton(text="📋 لیست بازی‌های امروز", callback_data="today:list")],
+            [
+                InlineKeyboardButton(text="📋 بازی‌های امروز (پیش‌بازی)", callback_data="today:list"),
+                InlineKeyboardButton(text="🏁 پایان‌یافته (۲۴ ساعت اخیر)", callback_data="post:list"),
+            ],
             [
                 InlineKeyboardButton(text="⚡ دریافت اجباری از API", callback_data="today:force_sync"),
                 InlineKeyboardButton(text="⏰ صف زمان‌بندی", callback_data="today:schedules"),
@@ -165,7 +169,11 @@ def _main_panel_markup() -> InlineKeyboardMarkup:
     )
 
 
-def _preview_keyboard(post_id: int, fixture_id: str) -> dict[str, Any]:
+def _preview_keyboard(post_id: int, fixture_id: str, post_type: str = "preview") -> dict[str, Any]:
+    is_post = post_type == "post_match"
+    cust_prefix = "pcust" if is_post else "cust"
+    back_lbl = "🏁 لیست بازی‌های پایان‌یافته" if is_post else "📋 لیست بازی‌های امروز"
+    back_cb = "post:list" if is_post else "today:list"
     return {
         "inline_keyboard": [
             [
@@ -177,11 +185,11 @@ def _preview_keyboard(post_id: int, fixture_id: str) -> dict[str, Any]:
                 {"text": "✏️ ویرایش متن با توضیح", "callback_data": f"edit_txt:{post_id}"},
             ],
             [
-                {"text": "🎛 ویرایش چیدمان کارت", "callback_data": _cb_for_fixture("cust", fixture_id)},
+                {"text": "🎛 ویرایش چیدمان کارت", "callback_data": _cb_for_fixture(cust_prefix, fixture_id)},
                 {"text": "❌ رد", "callback_data": f"reject:{post_id}"},
             ],
             [
-                {"text": "📋 لیست بازی‌های امروز", "callback_data": "today:list"},
+                {"text": back_lbl, "callback_data": back_cb},
             ],
         ]
     }
@@ -254,16 +262,49 @@ def _format_matches_message(
     return "\n".join(lines), InlineKeyboardMarkup(inline_keyboard=rows)
 
 
+
+
+def _format_finished_matches_message(
+    matches: list[tw.RecentFinishedMatchInfo], header: str = ""
+) -> tuple[str, InlineKeyboardMarkup]:
+    lines: list[str] = []
+    if header:
+        lines.append(header)
+        lines.append("")
+    if not matches:
+        lines.append("ℹ️ در ۲۴ ساعت گذشته (از ۱ ثانیه پیش تا ۲۴ ساعت پیش) هیچ بازی پایان‌یافته‌ای در لیگ برتر ثبت نشده است.")
+    else:
+        lines.append(f"🏁 <b>بازی‌های پایان‌یافتهٔ ۲۴ ساعت اخیر ({len(matches)} بازی):</b>")
+        lines.append("روی هر بازی بزنید تا ماژول‌ها و چیدمان کارت پس‌ازبازی را انتخاب کنید:")
+
+    rows: list[list[InlineKeyboardButton]] = []
+    for m in matches:
+        badge = ""
+        if m.existing_post_status == "published":
+            badge = " ✅"
+        elif m.existing_post_id:
+            badge = " 📝"
+        btn_text = f"🏁 {m.home_fa} {m.home_goals}-{m.away_goals} {m.away_fa} | {m.elapsed_fa}{badge}"
+        rows.append([InlineKeyboardButton(text=btn_text, callback_data=_cb_for_fixture("pcust", m.fixture_id))])
+
+    rows.append([
+        InlineKeyboardButton(text="🔄 بررسی مجدد نتایج ۲۴س اخیر", callback_data="post:refresh"),
+        InlineKeyboardButton(text="🏠 منوی اصلی", callback_data="nav:home"),
+    ])
+    return "\n".join(lines), InlineKeyboardMarkup(inline_keyboard=rows)
+
+
 def _short_mod_name(title_fa: str, max_len: int = 13) -> str:
     t = title_fa.strip()
     return t if len(t) <= max_len else t[: max_len - 1].rstrip() + "…"
 
 
-def _build_layout_schematic(modules: list[dict[str, Any]]) -> tuple[str, list[str]]:
+def _build_layout_schematic(modules: list[dict[str, Any]], *, post_type: str = "preview") -> tuple[str, list[str]]:
     """ساخت پیش‌نمایش شماتیک مکانی ماژول‌ها (ردیف‌به‌ردیف) + لیست خطاهای نیم‌عرض بدون جفت."""
     active = [m for m in modules if m.get("enabled", True)]
     errors = validate_half_width_layout(active)
-    lines = ["┌─ 🏟 هدر + شانس برد ─┐"]
+    hdr_lbl = "🏟 هدر + نتیجه نهایی" if post_type == "post_match" else "🏟 هدر + شانس برد"
+    lines = [f"┌─ {hdr_lbl} ─┐"]
     i = 0
     row_no = 1
     while i < len(active):
@@ -296,18 +337,21 @@ def _render_customizer_view(st: dict[str, Any]) -> tuple[str, InlineKeyboardMark
     _, bc_lbl = BROADCAST_CYCLE[bc_idx]
     mods = st["modules"]
     active_cnt = sum(1 for m in mods if m["enabled"])
-    schematic, layout_errors = _build_layout_schematic(mods)
+    post_type = st.get("post_type", "preview")
+    is_post = post_type == "post_match"
+    schematic, layout_errors = _build_layout_schematic(mods, post_type=post_type)
 
     lines = [
-        "🎛 <b>تنظیم و کاستومایز کارت پیش‌ازبازی</b>",
+        "🏁 <b>تنظیم و کاستومایز کارت پس‌ازبازی</b>" if is_post else "🎛 <b>تنظیم و کاستومایز کارت پیش‌ازبازی</b>",
         f"⚽ <b>{html.escape(st['home_fa'])} × {html.escape(st['away_fa'])}</b>",
     ]
     meta_parts = [x for x in (st.get("round"), st.get("stadium")) if x]
     if meta_parts:
         lines.append("📍 " + html.escape(" • ".join(meta_parts)))
-    lines.append(
-        f"📐 فرمت: <b>{fmt}</b> | هدر: <b>{'کامل' if hm == 'full' else 'فشرده'}</b> | پخش: <b>{bc_lbl}</b>"
-    )
+    if is_post:
+        lines.append(f"📐 فرمت: <b>{fmt}</b> | هدر: <b>{'کامل' if hm == 'full' else 'فشرده'}</b> | وضعیت: <b>● پایان بازی</b>")
+    else:
+        lines.append(f"📐 فرمت: <b>{fmt}</b> | هدر: <b>{'کامل' if hm == 'full' else 'فشرده'}</b> | پخش: <b>{bc_lbl}</b>")
     lines.append(f"🧩 ماژول‌های فعال: <b>{active_cnt}</b> از {len(mods)} ماژول دارای دیتای واقعی")
     if st.get("missing_modules"):
         lines.append("ℹ️ ماژول‌های بدون دیتا در DB: " + html.escape("، ".join(st["missing_modules"])))
@@ -327,16 +371,14 @@ def _render_customizer_view(st: dict[str, Any]) -> tuple[str, InlineKeyboardMark
             InlineKeyboardButton(text=f"{'✅ ' if fmt == '9:16' else ''}استوری 9:16", callback_data="cz:fmt:9:16"),
             InlineKeyboardButton(text=f"{'✅ ' if fmt == '16:9' else ''}بنر 16:9", callback_data="cz:fmt:16:9"),
         ],
-        [
-            InlineKeyboardButton(
-                text=f"هدر: {'کامل' if hm == 'full' else 'فشرده'} 🔁",
-                callback_data="cz:hm",
-            ),
-            InlineKeyboardButton(
-                text=f"پخش: {bc_lbl} 🔁",
-                callback_data="cz:bc",
-            ),
-        ],
+        (
+            [InlineKeyboardButton(text=f"هدر: {'کامل' if hm == 'full' else 'فشرده'} 🔁", callback_data="cz:hm")]
+            if is_post
+            else [
+                InlineKeyboardButton(text=f"هدر: {'کامل' if hm == 'full' else 'فشرده'} 🔁", callback_data="cz:hm"),
+                InlineKeyboardButton(text=f"پخش: {bc_lbl} 🔁", callback_data="cz:bc"),
+            ]
+        ),
     ]
 
     total_mods = len(mods)
@@ -507,6 +549,14 @@ async def on_any_text(m: Message, bot: Bot | None = None) -> None:
             parse_mode="HTML",
             reply_markup=_main_panel_markup(),
         )
+        return
+    if raw_text == "🏁 پس‌ازبازی (۲۴س)":
+        status_msg = await m.answer("⏳ در حال دریافت زندهٔ بازی‌های پایان‌یافتهٔ ۲۴ ساعت اخیر (ESPN + FDO)...")
+        s_info = await asyncio.to_thread(tw.sync_recent_finished_matches)
+        matches = await asyncio.to_thread(tw.list_recent_finished_fixtures)
+        hdr = f"🏁 <b>گزارش بازی‌های پایان‌یافته (۱ ثانیه تا ۲۴ ساعت پیش)</b>\n✅ ESPN: {s_info['espn_saved']} بازی ({s_info['espn_stats']} آمار) | FDO: {s_info['fdo_saved']} بازی"
+        text, kb = _format_finished_matches_message(matches, header=hdr)
+        await status_msg.edit_text(text, parse_mode="HTML", reply_markup=kb)
         return
     if raw_text == "📋 بازی‌های امروز":
         matches = await asyncio.to_thread(tw.list_today_matches)
@@ -829,6 +879,67 @@ async def on_cancel_schedule(cb: CallbackQuery) -> None:
 
 # ─── هندلرهای پنل کاستومایز تعاملی کارت ───
 
+@router.message(Command("postmatch"))
+async def cmd_postmatch(m: Message) -> None:
+    if not tp.is_admin(m.from_user.id):
+        await m.answer("دسترسی غیرمجاز.")
+        return
+    status_msg = await m.answer("⏳ در حال دریافت زندهٔ بازی‌های پایان‌یافتهٔ ۲۴ ساعت اخیر...")
+    s_info = await asyncio.to_thread(tw.sync_recent_finished_matches)
+    matches = await asyncio.to_thread(tw.list_recent_finished_fixtures)
+    hdr = f"🏁 <b>بازی‌های پایان‌یافته (۱ ثانیه تا ۲۴ ساعت پیش)</b>\n✅ ESPN: {s_info['espn_saved']} بازی ({s_info['espn_stats']} آمار) | FDO: {s_info['fdo_saved']} بازی"
+    text, kb = _format_finished_matches_message(matches, header=hdr)
+    await status_msg.edit_text(text, parse_mode="HTML", reply_markup=kb)
+
+
+@router.callback_query(F.data.in_({"post:list", "post:refresh"}))
+async def on_post_match_list(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    await _safe_cb_answer(cb, "در حال دریافت نتایج پایان‌یافتهٔ ۲۴ ساعت اخیر...")
+    wait_msg = await cb.message.answer("⏳ در حال دریافت زندهٔ بازی‌های پایان‌یافتهٔ ۲۴ ساعت اخیر (ESPN + FDO)...")
+    s_info = await asyncio.to_thread(tw.sync_recent_finished_matches)
+    matches = await asyncio.to_thread(tw.list_recent_finished_fixtures)
+    hdr = f"🏁 <b>بازی‌های پایان‌یافته (۱ ثانیه تا ۲۴ ساعت پیش)</b>\n✅ ESPN: {s_info['espn_saved']} بازی ({s_info['espn_stats']} آمار) | FDO: {s_info['fdo_saved']} بازی"
+    text, kb = _format_finished_matches_message(matches, header=hdr)
+    await wait_msg.edit_text(text, parse_mode="HTML", reply_markup=kb)
+
+
+@router.callback_query(F.data.startswith("pcust:"))
+async def on_open_post_customizer(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    fixture_id = _resolve_fixture(cb.data.split(":", 1)[1])
+    await _safe_cb_answer(cb, "در حال بارگذاری ماژول‌های پس‌ازبازی...")
+    try:
+        opts = await asyncio.to_thread(tw.get_match_card_options, fixture_id, post_type="post_match")
+    except Exception as e:
+        await cb.message.answer(
+            f"❌ خطا در خواندن اطلاعات پس‌ازبازی:\n{html.escape(type(e).__name__)}: {html.escape(str(e))}",
+            parse_mode="HTML",
+        )
+        return
+
+    st = {
+        "fixture_id": fixture_id,
+        "post_type": "post_match",
+        "home_fa": opts["home_fa"],
+        "away_fa": opts["away_fa"],
+        "round": opts["round"],
+        "stadium": opts["stadium"],
+        "fmt": "4:5",
+        "header_mode": "full",
+        "broadcast_idx": 0,
+        "modules": opts["available_modules"],
+        "missing_modules": opts.get("missing_modules") or [],
+    }
+    _CUSTOMIZER_STATE[cb.from_user.id] = st
+    text, markup = _render_customizer_view(st)
+    await cb.message.answer(text, parse_mode="HTML", reply_markup=markup)
+
+
 @router.callback_query(F.data.startswith(("cust:", "gen:")))
 async def on_open_customizer(cb: CallbackQuery) -> None:
     if not tp.is_admin(cb.from_user.id):
@@ -933,7 +1044,8 @@ async def on_customizer_action(cb: CallbackQuery, bot: Bot) -> None:
             return
         await _safe_cb_answer(cb, "در حال ساخت کارت و کپشن نهایی...")
         selected = [{"id": m["id"], "span": m["span"]} for m in active_mods]
-        bc_val = BROADCAST_CYCLE[st["broadcast_idx"]][0]
+        post_type = st.get("post_type", "preview")
+        bc_val = None if post_type == "post_match" else BROADCAST_CYCLE[st["broadcast_idx"]][0]
         wait_msg = await cb.message.answer(
             f"⏳ (۱/۳) در حال استخراج داده‌ها و نگارش متن تحریریه (LLM) برای "
             f"<b>{html.escape(st['home_fa'])} × {html.escape(st['away_fa'])}</b>...",
@@ -952,6 +1064,7 @@ async def on_customizer_action(cb: CallbackQuery, bot: Bot) -> None:
         try:
             res = await tw.generate_match_post_async(
                 st["fixture_id"],
+                post_type=post_type,
                 fmt=st["fmt"],
                 header_mode=st["header_mode"],
                 custom_modules=selected,

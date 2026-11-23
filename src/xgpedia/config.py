@@ -278,3 +278,82 @@ def translate_coach_fa(coach_en: str | None, *, allow_transliterate: bool = True
         if k.lower() == low:
             return v
     return _transliterate_latin_to_fa(name) if allow_transliterate else name
+
+
+_PLAYER_NAMES_FA: dict[str, str] = {
+    "salah": "صلاح", "mohamed salah": "محمد صلاح",
+    "wirtz": "ویرتز", "florian wirtz": "فلوریان ویرتز",
+    "szoboszlai": "سوبوسلای", "dominik szoboszlai": "سوبوسلای",
+    "ngumoha": "انگوموها", "rio ngumoha": "انگوموها",
+    "diaz": "دیاز", "luis diaz": "لوئیس دیاز", "luis díaz": "لوئیس دیاز",
+    "gakpo": "خاکپو", "cody gakpo": "کودی خاکپو",
+    "nunez": "نونیز", "darwin nunez": "نونیز",
+    "jota": "ژوتا", "diogo jota": "دیوگو ژوتا",
+    "mac allister": "مک‌آلیستر", "van dijk": "فن دایک",
+    "haaland": "هالند", "erling haaland": "ارلینگ هالند",
+    "foden": "فودن", "phil foden": "فیل فودن",
+    "saka": "ساکا", "bukayo saka": "بوکایو ساکا",
+    "odegaard": "اودگارد", "martin odegaard": "اودگارد",
+    "havertz": "هاورتز", "palmer": "پالمر", "cole palmer": "کول پالمر",
+    "fernandes": "فرناندز", "bruno fernandes": "برونو فرناندز", "b.fernandes": "فرناندز",
+    "rashford": "رشفورد", "hojlund": "هویلوند", "garnacho": "گارناچو",
+    "isak": "ایساک", "alexander isak": "ایساک", "gordon": "گوردون",
+    "son": "سون", "heung-min son": "سون", "maddison": "مدیسون", "solanke": "سولانکه",
+    "watkins": "واتکینز", "rogers": "راجرز", "bowen": "بوون", "cunha": "کونیا",
+    "mbeumo": "امبومو", "wissa": "ویسا", "wood": "وود", "mitoma": "میتوما",
+    "munoz": "مونیوز", "víctor muñoz": "ویکتور مونیوز", "victor munoz": "ویکتور مونیوز",
+    "muñoz": "مونیوز", "ekitike": "اکیتیکه", "frimpong": "فریمپونگ", "kerkez": "کرکز",
+    "alisson": "آلیسون", "a.becker": "آلیسون", "lammens": "لامنس", "onana": "اونانا",
+    "raya": "رایا", "vicario": "ویکاریو", "pope": "پوپ", "pickford": "پیکفورد",
+}
+
+
+def translate_player_fa(name: str | None) -> str:
+    """تبدیل نام بازیکن/گلزن به فارسی روان (دیکشنری + glossary + آوانویسی خودکار)."""
+    s = str(name or "").strip()
+    if not s:
+        return ""
+    if any("\u0600" <= ch <= "\u06FF" for ch in s):
+        return s
+    low = s.lower().strip()
+    if low in _PLAYER_NAMES_FA:
+        return _PLAYER_NAMES_FA[low]
+    # بررسی نام خانوادگی (بخش آخر)
+    parts = low.split()
+    if len(parts) > 1 and parts[-1] in _PLAYER_NAMES_FA:
+        return _PLAYER_NAMES_FA[parts[-1]]
+    # بررسی glossary_fa.json
+    try:
+        for p in load_glossary().get("players", []):
+            en = str(p.get("name_en") or "").strip().lower()
+            fa_n = str(p.get("name_fa") or "").strip()
+            if fa_n and en and (en == low or (parts and en.endswith(" " + parts[-1]))):
+                return fa_n
+    except Exception:
+        pass
+    # آوانویسی خودکار نام خانوادگی یا نام کامل (کوتاه و خوانا)
+    target = s.split()[-1] if len(s.split()) >= 2 and len(s) > 12 else s
+    return _transliterate_latin_to_fa(target)
+
+
+def format_scorers_fa(raw_scorers: str | None) -> str:
+    """تبدیل رشتهٔ گلزنان (مثلاً `Wirtz 12′, Salah 64′`) به فارسی روان (`ویرتز ۱۲′، صلاح ۶۴′`)."""
+    import re as _re
+
+    s = str(raw_scorers or "").strip()
+    if not s:
+        return ""
+    items = [x.strip() for x in _re.split(r"[،,]+", s) if x.strip()]
+    out: list[str] = []
+    for it in items:
+        # جدا کردن نام بازیکن از دقیقه (مثلاً "Víctor Muñoz 82′" یا "Son 15'")
+        m = _re.match(r"^(.+?)\s+(\d+(?:\+\d+)?\s*[′']?)$", it)
+        if m:
+            nm_fa = translate_player_fa(m.group(1))
+            min_s = m.group(2).replace("'", "′")
+            if not min_s.endswith("′"):
+                min_s += "′"
+            out.append(f"{nm_fa} {min_s}")
+        else:
+            out.append(translate_player_fa(it))
+    return "، ".join(out)

@@ -183,7 +183,7 @@ def test_post_match_context_with_current_real_data():
     # هیچ ردیف جعلی مالکیت (0٪) در statsRows نیست
     labels = [r["label"] for r in ctx["module_data"]["stats"]["rows"]]
     assert "مالکیت توپ (٪)" not in labels
-    assert labels == ["امید گل واقعی (xG)", "شوت کل (در چارچوب)", "کرنر", "خطا"]
+    assert labels == ["شوت کل (در چارچوب)", "کیفیت هر شوت (xG/شوت)", "کرنر", "خطا"]
 
 
 def test_post_match_autopsy_never_on_card_and_always_in_caption():
@@ -215,10 +215,14 @@ def test_post_match_full_priority_when_all_data_available():
     facts["away"]["gk"] = {"name": "دروازه‌بان ۲", "saves": 3, "psxg": 1.8, "ga": 1}
 
     ctx45 = build_post_match_context(_draft(), facts, fmt="4:5")
-    assert [m["id"] for m in ctx45["modules"]] == ["xgrace", "shotmap"]
+    assert [(m["id"], m["span"]) for m in ctx45["modules"]] == [
+        ("momentum", "half"), ("stats", "half"), ("toprated", "half"), ("efficiency", "half")
+    ]
 
     ctx916 = build_post_match_context(_draft(), facts, fmt="9:16")
-    assert [m["id"] for m in ctx916["modules"]] == ["xgrace", "shotmap", "momentum"]
+    assert [(m["id"], m["span"]) for m in ctx916["modules"]] == [
+        ("momentum", "half"), ("stats", "half"), ("toprated", "half"), ("efficiency", "half")
+    ]
 
 
 def test_post_match_missing_metric_drops_row():
@@ -228,7 +232,7 @@ def test_post_match_missing_metric_drops_row():
         del facts["away"]["match_stats"][m]
     ctx = build_post_match_context(_draft(), facts)
     labels = [r["label"] for r in ctx["module_data"]["stats"]["rows"]]
-    assert labels == ["امید گل واقعی (xG)", "شوت کل (در چارچوب)"]
+    assert labels == ["شوت کل (در چارچوب)", "کیفیت هر شوت (xG/شوت)"]
 
 
 def test_post_match_studio_template_renders_exact_design(tmp_path: Path):

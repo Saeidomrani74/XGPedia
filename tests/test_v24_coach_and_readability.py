@@ -166,9 +166,9 @@ def test_mobile_readability_font_upgrades_in_card_kit():
     assert ">۰.۰<" in wave_html
     assert ">۰.۲<" in wave_html
     assert ">۰.۴<" in wave_html
-    assert 'font-size="18"' in render_xgrace(payload_svg, span="full")
-    assert 'font-size="21"' in render_shotmap(payload_svg, span="full")
-    assert 'font-size="21"' in render_momentum(payload_svg, span="full")
+    assert 'font-size="21"' in render_xgrace(payload_svg, span="full")
+    assert 'font-size="24"' in render_shotmap(payload_svg, span="full")
+    assert 'font-size="24"' in render_momentum(payload_svg, span="full")
 
 
 def test_dark_bg_contrast_auto_lift_and_pair_separation():

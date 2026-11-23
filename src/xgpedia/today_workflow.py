@@ -629,6 +629,14 @@ def get_match_card_options(
     dummy_draft = {"title": "", "bullets": [], "caption": ""}
     if post_type == "post_match":
         ctx = build_post_match_context(dummy_draft, facts, fmt=fmt)
+        # اگر ماژول‌های پس‌ازبازی هنوز کامل غنی‌سازی نشده بودند، همان‌لحظه از FPL/Understat تکمیل می‌کنیم
+        if sum(1 for k, v in ctx["has"].items() if v and k != "autopsy") <= 2:
+            try:
+                enrich_post_match_fixture(fixture_id)
+                facts = build_match_facts(fixture_id, post_match=True)
+                ctx = build_post_match_context(dummy_draft, facts, fmt=fmt)
+            except Exception:
+                pass
         priority = POST_MATCH_PRIORITY
     else:
         ctx = build_preview_context(dummy_draft, facts, fmt=fmt)
@@ -780,7 +788,13 @@ def generate_match_post(
         draft_dict = json.loads(post["draft_json"] or "{}")
         fact_dict = json.loads(post["fact_json"] or "{}")
         target_out = out_dir or (ROOT / "output")
-        do_render = render_fn or render_preview_card
+        if render_fn is not None:
+            do_render = render_fn
+        elif post_type == "post_match":
+            from src.xgpedia.render.post_match_cards import render_post_match_card
+            do_render = render_post_match_card
+        else:
+            do_render = render_preview_card
         render_kw: dict[str, Any] = {
             "out_dir": target_out,
             "post_id": post_id,
@@ -1204,3 +1218,245 @@ def regenerate_or_edit_post_text(
         caption_text=caption_text,
         title=draft_obj.title,
     )
+
+
+@dataclass
+class RecentFinishedMatchInfo:
+    fixture_id: str
+    home_en: str
+    away_en: str
+    home_fa: str
+    away_fa: str
+    home_goals: int
+    away_goals: int
+    kickoff_utc: str
+    kickoff_tehran: str
+    elapsed_fa: str
+    finished_seconds_ago: float
+    existing_post_id: int | None = None
+    existing_post_status: str | None = None
+
+
+def _format_elapsed_fa(seconds: float) -> str:
+    sec = max(1, int(seconds))
+    if sec < 60:
+        return "لحظاتی پیش"
+    mins = sec // 60
+    if mins < 60:
+        return f"{mins} دقیقه پیش"
+    hrs = mins // 60
+    rem_m = mins % 60
+    if rem_m >= 15 and hrs < 6:
+        return f"{hrs} ساعت و {rem_m} دقیقه پیش"
+    return f"{hrs} ساعت پیش"
+
+
+def sync_recent_finished_matches(
+    *, now_utc: datetime | None = None, hours: float = 24.0
+) -> dict[str, Any]:
+    """دریافت زندهٔ بازی‌های پایان‌یافته از ۱ ثانیه تا ۲۴ ساعت پیش از ESPN (/summary) + football-data.org."""
+    from src.xgpedia.providers.espn_free import ESPNFreeProvider
+    from src.xgpedia.sync import sync_espn_finished_matches, sync_finished_matches_from_fdo
+
+    init_db()
+    now = _now_utc(now_utc)
+    fdo_saved = 0
+    espn_saved = 0
+    espn_stats = 0
+    errors: list[str] = []
+
+    # ۱) football-data.org (بازی‌های FINISHED ۲ روز اخیر برای matchday و شناسهٔ استاندارد fdo:)
+    try:
+        from src.xgpedia.providers.football_data_org import FootballDataOrg
+
+        fdo = FootballDataOrg()
+        try:
+            raw_fin = fdo.played_fixtures(days_back=2, season_start=CURRENT_SEASON_START)
+            fdo_saved = sync_finished_matches_from_fdo(raw_fin, season_start=CURRENT_SEASON_START).get("finished_saved", 0)
+        finally:
+            fdo.close()
+    except Exception as e:
+        errors.append(f"FDO: {type(e).__name__}")
+
+    # ۲) ESPN Public /summary (آمار واقعی لحظه‌ای، گلزنان، مومنتوم ۵ دقیقه‌ای و دروازه‌بان بلافاصله پس از سوت پایان)
+    try:
+        espn = ESPNFreeProvider(timeout=12.0)
+        try:
+            finished_rows = espn.fetch_recent_finished_matches(now_utc=now, hours=hours)
+        finally:
+            espn.close()
+        if finished_rows:
+            s_res = sync_espn_finished_matches(finished_rows, season_start=CURRENT_SEASON_START)
+            espn_saved = s_res.get("finished_saved", 0)
+            espn_stats = s_res.get("stats_rows", 0)
+    except Exception as e:
+        errors.append(f"ESPN: {type(e).__name__}")
+
+    # ۳) تکمیل خودکار ماژول‌های پیشرفته (FPL: TopRated/MOTM/GK + Understat: xG Race/ShotMap) برای بازی‌های ۲۴ ساعت اخیر
+    enriched_cnt = 0
+    try:
+        recent = list_recent_finished_fixtures(now_utc=now, hours=hours)
+        for item in recent[:8]:
+            er = enrich_post_match_fixture(item.fixture_id)
+            if er.get("fpl") or er.get("understat"):
+                enriched_cnt += 1
+    except Exception:
+        pass
+
+    return {
+        "fdo_saved": fdo_saved,
+        "espn_saved": espn_saved,
+        "espn_stats": espn_stats,
+        "enriched": enriched_cnt,
+        "errors": errors,
+    }
+
+
+def list_recent_finished_fixtures(
+    *, now_utc: datetime | None = None, hours: float = 24.0
+) -> list[RecentFinishedMatchInfo]:
+    """فهرست بازی‌های پایان‌یافته دقیقاً در بازهٔ ۱ ثانیه پیش تا `hours` ساعت پیش (جدیدترین اول)."""
+    init_db()
+    now = _now_utc(now_utc)
+    min_ko = (now - timedelta(hours=hours + 3.0)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    with db() as conn:
+        rows = conn.execute(
+            """
+            SELECT fixture_id, provider, kickoff_utc, home_team, away_team
+            FROM fixtures
+            WHERE status = 'finished'
+              AND kickoff_utc >= ?
+            ORDER BY kickoff_utc DESC
+            """,
+            (min_ko,),
+        ).fetchall()
+
+        out: list[RecentFinishedMatchInfo] = []
+        seen_pair_day: set[tuple[str, str, str]] = set()
+        for r in rows:
+            ko_raw = str(r["kickoff_utc"] or "")
+            try:
+                ko_dt = datetime.fromisoformat(ko_raw.replace("Z", "+00:00"))
+                if ko_dt.tzinfo is None:
+                    ko_dt = ko_dt.replace(tzinfo=timezone.utc)
+            except Exception:
+                continue
+
+            # برآورد لحظهٔ سوت پایان: کیک‌آف + ۱۱۵ دقیقه (اگر بازی تازه تمام شده و هنوز < 115m از کیک‌آف گذشته، حداقل ۱ ثانیه)
+            est_end = ko_dt + timedelta(minutes=115)
+            if ko_dt > now:
+                continue
+            elapsed_sec = (now - est_end).total_seconds()
+            if elapsed_sec < 1.0:
+                # بازی واقعاً status='finished' است و همین لحظه (مثلاً در دقیقه ۹۴) تمام شده
+                if (now - ko_dt).total_seconds() >= 90 * 60:
+                    elapsed_sec = 1.0
+                else:
+                    continue
+            if elapsed_sec > hours * 3600.0:
+                continue
+
+            pair_key = (r["home_team"], r["away_team"], ko_raw[:10])
+            if pair_key in seen_pair_day:
+                continue
+            seen_pair_day.add(pair_key)
+
+            post_row = conn.execute(
+                """
+                SELECT post_id, status FROM posts
+                WHERE fixture_id = ? AND post_type = 'post_match'
+                ORDER BY post_id DESC LIMIT 1
+                """,
+                (r["fixture_id"],),
+            ).fetchone()
+
+            hg_row = conn.execute(
+                "SELECT value FROM fixture_statistics WHERE fixture_id=? AND team=? AND metric='goals' ORDER BY collected_at DESC LIMIT 1",
+                (r["fixture_id"], r["home_team"]),
+            ).fetchone()
+            ag_row = conn.execute(
+                "SELECT value FROM fixture_statistics WHERE fixture_id=? AND team=? AND metric='goals' ORDER BY collected_at DESC LIMIT 1",
+                (r["fixture_id"], r["away_team"]),
+            ).fetchone()
+            if not (hg_row and ag_row and hg_row["value"] is not None and ag_row["value"] is not None):
+                continue
+
+            out.append(
+                RecentFinishedMatchInfo(
+                    fixture_id=r["fixture_id"],
+                    home_en=r["home_team"],
+                    away_en=r["away_team"],
+                    home_fa=team_name_fa(r["home_team"]),
+                    away_fa=team_name_fa(r["away_team"]),
+                    home_goals=int(round(float(hg_row["value"]))),
+                    away_goals=int(round(float(ag_row["value"]))),
+                    kickoff_utc=ko_raw,
+                    kickoff_tehran=ko_dt.astimezone(TEHRAN_TZ).strftime("%H:%M"),
+                    elapsed_fa=_format_elapsed_fa(elapsed_sec),
+                    finished_seconds_ago=elapsed_sec,
+                    existing_post_id=post_row["post_id"] if post_row else None,
+                    existing_post_status=post_row["status"] if post_row else None,
+                )
+            )
+
+    out.sort(key=lambda x: x.finished_seconds_ago)
+    return out
+
+
+def enrich_post_match_fixture(fixture_id: str) -> dict[str, bool]:
+    """تکمیل خودکار دیتای پس‌ازبازی یک مسابقه از منابع رایگان FPL Official (TopRated/MOTM/GK) + Understat (xG Race/ShotMap)."""
+    from src.xgpedia.providers.fpl_free import FPLFreeProvider
+    from src.xgpedia.providers.understat import fetch_match_shots_understat
+    from src.xgpedia.sync import merge_post_match_details
+
+    init_db()
+    with db() as conn:
+        fx = conn.execute(
+            "SELECT home_team, away_team, kickoff_utc FROM fixtures WHERE fixture_id = ?",
+            (fixture_id,),
+        ).fetchone()
+    if not fx:
+        return {"fpl": False, "understat": False}
+
+    h_en, a_en = fx["home_team"], fx["away_team"]
+    m_date = str(fx["kickoff_utc"] or "")[:10]
+    fpl_ok = False
+    us_ok = False
+
+    # ۱) FPL Official Live GW -> toprated, motm, gk (PSxG/Saves Opta)
+    try:
+        fpl = FPLFreeProvider(timeout=12.0)
+        try:
+            fpl_det = fpl.fetch_match_post_details(h_en, a_en, m_date)
+        finally:
+            fpl.close()
+        if fpl_det:
+            fpl_ok = merge_post_match_details(fixture_id, fpl_det, provider="fpl-official")
+    except Exception:
+        pass
+
+    # ۲) Understat -> shotList + insideBox + real shot-level xG (xgrace + shotmap)
+    try:
+        us_det = fetch_match_shots_understat(h_en, a_en, m_date, season_start=CURRENT_SEASON_START, timeout=10.0)
+        if us_det:
+            extra_st = {}
+            if us_det.get("home_xg") is not None:
+                extra_st[h_en] = {"expected_goals": float(us_det["home_xg"])}
+            if us_det.get("away_xg") is not None:
+                extra_st[a_en] = {"expected_goals": float(us_det["away_xg"])}
+            us_ok = merge_post_match_details(
+                fixture_id,
+                {
+                    "home_shots": us_det["home_shots"],
+                    "away_shots": us_det["away_shots"],
+                    "home_inside_box": us_det["home_inside_box"],
+                    "away_inside_box": us_det["away_inside_box"],
+                },
+                provider="understat",
+                extra_stats=extra_st,
+            )
+    except Exception:
+        pass
+
+    return {"fpl": fpl_ok, "understat": us_ok}

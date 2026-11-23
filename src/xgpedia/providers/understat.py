@@ -251,3 +251,96 @@ class UnderstatProvider:
 
     def close(self) -> None:
         self._client.close()
+
+
+def parse_understat_match_shots(shots_data: dict[str, Any]) -> dict[str, Any] | None:
+    """تبدیل `shotsData` واقعی Understat به قالب استاندارد `xgrace` و `shotmap` در `card_kit`."""
+    if not isinstance(shots_data, dict):
+        return None
+    h_raw = shots_data.get("h") or []
+    a_raw = shots_data.get("a") or []
+    if not (h_raw and a_raw):
+        return None
+
+    def _conv(arr: list[dict[str, Any]]) -> tuple[list[list[Any]], int, float]:
+        out: list[list[Any]] = []
+        in_box = 0
+        tot_xg = 0.0
+        for s in arr:
+            if not isinstance(s, dict):
+                continue
+            try:
+                x = float(s.get("X") or 0.0)
+                y = float(s.get("Y") or 0.5)
+                xg = float(s.get("xG") or 0.0)
+                minute = int(float(s.get("minute") or 1))
+            except (TypeError, ValueError):
+                continue
+            res = str(s.get("result") or "").lower()
+            stype = "goal" if res == "goal" else ("sot" if "saved" in res else "miss")
+            player = str(s.get("player") or "").strip() or "Player"
+            out.append([round(x * 100.0, 1), round(y * 100.0, 1), round(xg, 3), stype, player, minute])
+            tot_xg += xg
+            if x >= 0.83 and 0.21 <= y <= 0.79:
+                in_box += 1
+        return out, in_box, round(tot_xg, 2)
+
+    h_shots, h_in, h_xg = _conv(h_raw)
+    a_shots, a_in, a_xg = _conv(a_raw)
+    if not (h_shots and a_shots):
+        return None
+    return {
+        "home_shots": h_shots,
+        "away_shots": a_shots,
+        "home_inside_box": h_in,
+        "away_inside_box": a_in,
+        "home_xg": h_xg,
+        "away_xg": a_xg,
+    }
+
+
+def fetch_match_shots_understat(
+    home_en: str,
+    away_en: str,
+    match_date: str = "",
+    *,
+    season_start: int = CURRENT_SEASON_START,
+    timeout: float = 12.0,
+) -> dict[str, Any] | None:
+    """دریافت شوت‌های دقیقه‌دار و مختصات واقعی (`X, Y, xG`) یک مسابقه از Understat (رایگان، بدون کلید)."""
+    h_canon = canonical_team_name(home_en)
+    a_canon = canonical_team_name(away_en)
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/126.0",
+        "Accept-Language": "en-US,en;q=0.9",
+    }
+    try:
+        with httpx.Client(timeout=timeout, follow_redirects=True, headers=headers) as client:
+            r = client.get(f"{BASE_URL}/league/EPL/{season_start}")
+            if r.status_code != 200:
+                return None
+            dates_data = _decode_embedded_json(r.text, "datesData")
+            if not isinstance(dates_data, list):
+                return None
+            match_id = None
+            for m in reversed(dates_data):
+                if not isinstance(m, dict) or not m.get("isResult"):
+                    continue
+                mh = _norm_team(str(((m.get("h") or {}).get("title")) or ""))
+                ma = _norm_team(str(((m.get("a") or {}).get("title")) or ""))
+                if mh == h_canon and ma == a_canon:
+                    if match_date:
+                        md = str(m.get("datetime") or "")[:10]
+                        if md and abs(int(md.replace("-", "")) - int(match_date.replace("-", ""))) > 2:
+                            continue
+                    match_id = str(m.get("id") or "")
+                    break
+            if not match_id:
+                return None
+            rm = client.get(f"{BASE_URL}/match/{match_id}")
+            if rm.status_code != 200:
+                return None
+            shots_data = _decode_embedded_json(rm.text, "shotsData")
+            return parse_understat_match_shots(shots_data)
+    except Exception:
+        return None

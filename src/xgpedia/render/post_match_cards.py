@@ -69,12 +69,19 @@ def _build_post_stats_rows(
     موقعیت بزرگ (اگر بود)، و در نبود مالکیت/موقعیت بزرگ، کرنر و خطای واقعی.
     """
     rows: list[dict[str, str]] = []
+    # حذف «امید گل واقعی (xG)» به‌دلیل تکرار در هیرو و جایگزینی با «کیفیت هر شوت (xG/شوت)»
+    hs_ext = dict(hs)
+    as_ext = dict(as_)
+    if hs.get("expected_goals") is not None and (hs.get("total_shots") or 0) > 0 and as_.get("expected_goals") is not None and (as_.get("total_shots") or 0) > 0:
+        hs_ext["xg_per_shot"] = round(hs["expected_goals"] / hs["total_shots"], 2)
+        as_ext["xg_per_shot"] = round(as_["expected_goals"] / as_["total_shots"], 2)
+    hs, as_ = hs_ext, as_ext
     specs = (
-        ("امید گل واقعی (xG)", "expected_goals", 2, "", None),
         ("مالکیت توپ (٪)", "possession", 0, "٪", None),
         ("شوت کل (در چارچوب)", "total_shots", 0, "", "shots_on_target"),
-        ("موقعیت بزرگ گلزنی", "big_chances", 0, "", None),
+        ("کیفیت هر شوت (xG/شوت)", "xg_per_shot", 2, "", None),
         ("کرنر", "corner_kicks", 0, "", None),
+        ("موقعیت بزرگ گلزنی", "big_chances", 0, "", None),
         ("خطا", "fouls", 0, "", None),
     )
     for label, metric, dec, suffix, sub_metric in specs:
@@ -439,9 +446,11 @@ def render_post_match_html(
     fmt: str = "4:5",
     brand_mono: bool = False,
     header_mode: str = "full",
+    custom_modules: list[dict] | None = None,
+    broadcast_override: str | None = None,
     template_dir: str | Path | None = None,
 ) -> str:
-    """تولید HTML کامل کارت پس‌ازبازی دقیقاً از روی `studio_templates/post_match.html`."""
+    """تولید HTML کامل کارت پس‌ازبازی روی سیستم یکپارچهٔ `card_kit` (و پشتیبان استودیو)."""
     ctx = build_post_match_context(
         draft,
         facts,
@@ -449,6 +458,7 @@ def render_post_match_html(
         fmt=fmt,
         brand_mono=brand_mono,
         header_mode=header_mode,
+        custom_modules=custom_modules,
     )
     if template_dir is not None:
         return render_from_studio_template("post_match", ctx["studio_payload"], template_dir=template_dir)
@@ -468,6 +478,8 @@ def render_post_match_card(
     fmt: str = "4:5",
     brand_mono: bool = False,
     header_mode: str = "full",
+    custom_modules: list[dict] | None = None,
+    broadcast_override: str | None = None,
     template_dir: str | Path | None = None,
 ) -> tuple[Path, Path, Path]:
     """رندر کامل پست پس‌ازبازی: HTML استودیویی + تصویر نهایی + کپشن (با روایت تاکتیکی)."""
@@ -486,6 +498,8 @@ def render_post_match_card(
             fmt=fmt,
             brand_mono=brand_mono,
             header_mode=header_mode,
+            custom_modules=custom_modules,
+            broadcast_override=broadcast_override,
             template_dir=template_dir,
         ),
         encoding="utf-8",

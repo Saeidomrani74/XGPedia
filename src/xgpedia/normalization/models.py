@@ -46,6 +46,8 @@ class MatchStats(BaseModel):
     shots_on_target: StatValue | None = None
     corner_kicks: StatValue | None = None
     fouls: StatValue | None = None
+    possession: StatValue | None = None
+    big_chances: StatValue | None = None
     yellow_cards: StatValue | None = None
     red_cards: StatValue | None = None
 
@@ -75,6 +77,11 @@ class TeamSide(BaseModel):
     kp: dict[str, str] | None = None
     wave: list[float] | None = None
     sub: str | None = None
+    # ── فیلدهای تکمیلی پس‌ازبازی (v0.25.1 — حفظ در fact_json بدون حذف توسط Pydantic) ──
+    scorersText: str | None = None
+    gk: dict[str, Any] | None = None
+    shotList: list[list[Any]] | None = None
+    insideBox: int | None = None
 
 
 class AvailabilityItem(BaseModel):
@@ -117,6 +124,10 @@ class MatchFacts(BaseModel):
     stadium: str | None = None
     broadcast: str | None = None
     recent_news: list[dict[str, str]] = Field(default_factory=list)  # اخبار تازه و مهم ۷ روز اخیر دو تیم
+    # ── ماژول‌های پس‌ازبازی (v0.25.1 — حفظ کامل در fact_json) ──
+    momentum: list[float] | None = None
+    topPlayers: list[dict[str, Any]] | None = None
+    motm: dict[str, Any] | None = None
 
     @property
     def kickoff_tehran(self) -> str:

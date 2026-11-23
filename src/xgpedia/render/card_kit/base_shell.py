@@ -177,8 +177,9 @@ def _render_post_hero(payload: dict[str, Any], fmt: str, header_mode: str) -> st
 
     def team_col(tm: dict[str, Any], side: str, score: int) -> str:
         sub = f'<p class="team-sub">{esc(tm.get("sub"))}</p>' if tm.get("sub") else ""
-        sc_txt = (tm.get("scorersText") or "").strip()
-        sc_pill = f'<div class="sc-pill">⚽ {fa(esc(sc_txt))}</div>' if sc_txt else ("<div class=sc-empty>بدون گل زده</div>" if score == 0 else "")
+        from src.xgpedia.config import format_scorers_fa
+        sc_txt = format_scorers_fa((tm.get("scorersText") or "").strip())
+        sc_pill = f'<div class="sc-pill">⚽ {esc(fa(sc_txt))}</div>' if sc_txt else ""
         return (
             f'<div class="team-col">'
             f'<div class="crest-wrap">{team_crest_svg_or_img(tm, side, cs)}</div>'
@@ -247,21 +248,21 @@ html,body{{width:{w}px;height:{h}px;overflow:hidden;background:#0D1730;color:#F8
 .scanlines{{position:absolute;inset:0;pointer-events:none;z-index:0;
   background:repeating-linear-gradient(to bottom,rgba(255,255,255,0.015) 0 1px,transparent 1px 4px)}}
 
-/* ─── Header (2-Line Full Identity) ─── */
-#cm{{position:relative;z-index:10;padding:8px 44px 8px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-shrink:0}}
-.hd-right{{display:flex;flex-direction:column;align-items:flex-start;gap:10px;min-width:0;flex:1}}
-.hd-line1,.hd-line2{{display:flex;align-items:center;flex-wrap:wrap;gap:12px}}
-.pill-league{{display:inline-flex;align-items:center;gap:10px;padding:6px 20px;border-radius:999px;
-  background:rgba(21,35,71,0.92);border:1.5px solid rgba(255,255,255,0.18);font-size:27px;font-weight:900;color:#F8FAFC}}
-.pill-round{{display:inline-flex;align-items:center;padding:6px 20px;border-radius:999px;
-  background:rgba(230,46,69,0.18);border:1.5px solid rgba(230,46,69,0.52);color:#FF6B7F;font-size:25px;font-weight:800}}
-.hd-line2{{font-size:24px;font-weight:800;color:#F1F5F9}}
-.hd-sep{{color:#64748B}}
-.hd-stadium{{display:inline-flex;align-items:center;gap:8px;color:#FFFFFF}}
-.pill-bcast{{display:inline-flex;align-items:center;gap:8px;padding:3px 14px;border-radius:999px;
-  background:rgba(16,185,129,0.18);border:1.5px solid rgba(16,185,129,0.46);color:#34D399;font-size:22px;font-weight:800}}
-#bl{{display:flex;align-items:center;gap:12px;flex-shrink:0}}
-.bl-img{{height:62px;width:auto;display:block;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.35))}}
+/* ─── Header (2-Line Strict Identity — قفل‌شده روی دقیقاً ۲ خط بدون شکست به خط ۳) ─── */
+#cm{{position:relative;z-index:10;padding:8px 36px 8px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0}}
+.hd-right{{display:flex;flex-direction:column;align-items:flex-start;gap:8px;min-width:0;flex:1}}
+.hd-line1,.hd-line2{{display:flex;align-items:center;flex-wrap:nowrap;gap:9px;max-width:100%;white-space:nowrap;overflow:hidden}}
+.pill-league{{display:inline-flex;align-items:center;gap:8px;padding:5px 15px;border-radius:999px;flex-shrink:0;
+  background:rgba(21,35,71,0.92);border:1.5px solid rgba(255,255,255,0.18);font-size:23px;font-weight:900;color:#F8FAFC}}
+.pill-round{{display:inline-flex;align-items:center;padding:5px 15px;border-radius:999px;min-width:0;overflow:hidden;text-overflow:ellipsis;
+  background:rgba(230,46,69,0.18);border:1.5px solid rgba(230,46,69,0.52);color:#FF6B7F;font-size:21px;font-weight:800}}
+.hd-line2{{font-size:21px;font-weight:800;color:#F1F5F9}}
+.hd-sep{{color:#64748B;flex-shrink:0}}
+.hd-stadium{{display:inline-flex;align-items:center;gap:6px;color:#FFFFFF;min-width:0;overflow:hidden;text-overflow:ellipsis}}
+.pill-bcast{{display:inline-flex;align-items:center;gap:6px;padding:3px 12px;border-radius:999px;flex-shrink:0;
+  background:rgba(16,185,129,0.18);border:1.5px solid rgba(16,185,129,0.46);color:#34D399;font-size:19px;font-weight:800}}
+#bl{{display:flex;align-items:center;gap:10px;flex-shrink:0}}
+.bl-img{{height:54px;width:auto;display:block;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.35))}}
 .bl-word{{font-size:34px;font-weight:800;line-height:1;letter-spacing:-0.02em}}
 
 /* ─── Body Layout ─── */
@@ -273,7 +274,7 @@ html,body{{width:{w}px;height:{h}px;overflow:hidden;background:#0D1730;color:#F8
 
 /* ─── Hero (Full & Compact) ─── */
 .hero-full{{display:flex;flex-direction:column;gap:12px}}
-.hero-grid{{display:grid;grid-template-columns:4fr 3fr 4fr;align-items:center;gap:8px}}
+.hero-grid{{display:grid;grid-template-columns:4fr 3fr 4fr;align-items:start;gap:8px}}
 .team-col{{display:flex;flex-direction:column;align-items:center;text-align:center;min-width:0}}
 .crest-wrap{{margin-bottom:8px;display:flex;align-items:center;justify-content:center}}
 .team-name{{font-size:{42 if is_wide else 50}px;font-weight:900;color:#fff;line-height:1.08;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
@@ -286,7 +287,7 @@ html,body{{width:{w}px;height:{h}px;overflow:hidden;background:#0D1730;color:#F8
 .fD{{background:rgba(245,158,11,0.16);color:#F5B041;border-color:rgba(245,166,35,0.3)}}.fD.fl{{border-color:#FBBF24;color:#FBBF24}}
 .fL{{background:rgba(230,46,69,0.17);color:#F43F5E;border-color:rgba(244,63,94,0.3)}}.fL.fl{{border-color:#F43F5E}}
 
-.vs-col{{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}}
+.vs-col{{display:flex;flex-direction:column;align-items:center;justify-content:center;align-self:center;gap:12px}}
 .vs-stack{{display:flex;flex-direction:column;align-items:center}}
 .vt,.vb{{width:2px;height:30px}}.vt{{background:linear-gradient(to bottom,transparent,#E62E45)}}.vb{{background:linear-gradient(to top,transparent,#E62E45)}}
 .vs-gem{{position:relative;display:flex;align-items:center;justify-content:center}}
@@ -332,7 +333,7 @@ html,body{{width:{w}px;height:{h}px;overflow:hidden;background:#0D1730;color:#F8
 .pm-dots i{{width:12px;height:12px;border-radius:99px;background:#E62E45;display:block}}.pm-dots .pm-dot2{{background:rgba(255,255,255,0.4)}}
 .pm-cscore{{font-size:44px;font-weight:900;color:#fff;display:flex;align-items:center;gap:10px;line-height:1}}
 .pm-colon{{color:#E62E45}}
-.sc-pill{{margin-top:8px;padding:4px 12px;border-radius:10px;background:rgba(15,23,42,0.88);border:1px solid rgba(255,255,255,0.12);font-size:19px;font-weight:800;color:#F1F5F9;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
+.sc-pill{{margin-top:6px;padding:4px 12px;border-radius:10px;background:rgba(15,23,42,0.88);border:1px solid rgba(255,255,255,0.12);font-size:16px;font-weight:800;line-height:1.35;color:#F1F5F9;max-width:100%;text-align:center;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}}
 .sc-empty{{margin-top:6px;font-size:18px;color:#CBD5E1;font-weight:700}}
 .ep-pill{{padding:3px 12px;border-radius:10px;font-size:22px;font-weight:900;border:1px solid}}
 .ep-pos{{background:rgba(16,185,129,0.16);border-color:rgba(52,211,153,0.45);color:#34D399}}
@@ -448,27 +449,39 @@ html,body{{width:{w}px;height:{h}px;overflow:hidden;background:#0D1730;color:#F8
 .egold{{--eb:linear-gradient(135deg,rgba(245,158,11,0.34),rgba(253,224,71,0.22));--ebd:#FBBF24;--ec:#FDE047}}
 .egold .epb{{box-shadow:0 0 14px rgba(251,191,36,0.36);text-shadow:0 0 8px rgba(253,224,71,0.4)}}
 
-/* Post-Match Extra Modules */
-.ef-wrap{{flex:1 1 0%;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:10px}}
-.ef-box{{padding:10px 14px;border-radius:14px;background:rgba(11,13,19,0.85);border:1px solid rgba(255,255,255,0.09);display:flex;flex-direction:column;gap:8px}}
-.ef-hd{{font-size:20px;font-weight:800;color:#E2E8F0}}.ef-grid{{display:grid;grid-template-columns:1fr 1fr;gap:14px}}.ef-stack{{grid-template-columns:1fr;gap:8px}}
-.ef-row{{display:flex;flex-direction:column;gap:4px}}.ef-top{{display:flex;justify-content:space-between;align-items:center;font-size:21px;font-weight:800}}
-.ef-nm{{display:inline-flex;align-items:center;gap:6px}}.ef-nm i{{width:8px;height:8px;border-radius:99px;display:inline-block}}.ef-nm small{{color:#94A3B8;font-weight:600}}
-.ef-track{{height:9px;border-radius:99px;background:rgba(255,255,255,0.09);overflow:hidden}}.ef-fill{{height:100%;border-radius:99px}}
-.tr-list{{flex:1 1 0%;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:7px}}
-.tr-row{{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 12px;border-radius:11px;background:rgba(13,15,22,0.82);border:1px solid rgba(255,255,255,0.09)}}
-.tr-l,.tr-r{{display:flex;align-items:center;gap:8px;min-width:0}}.tr-rk{{width:28px;height:28px;border-radius:7px;background:#181B25;display:inline-flex;align-items:center;justify-content:center;font-size:17px;font-weight:900;color:#E2E8F0}}
-.tr-rk1{{color:#FBBF24}}.tr-bar{{width:5px;height:18px;border-radius:99px}}.tr-nm{{font-size:22px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
-.tr-st{{font-size:18px;color:#E2E8F0;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}}
-.mod-half .tr-st{{max-width:120px;font-size:15px}}.tr-rt{{padding:3px 10px;border-radius:8px;background:rgba(16,185,129,0.16);border:1px solid rgba(52,211,153,0.45);color:#34D399;font-size:21px;font-weight:900}}
+/* Post-Match Extra Modules — چیدمان دقیق گرید بدون سرریز روی هدر یا بریدگی پایین در نیم‌عرض و تمام‌عرض */
+.ef-wrap{{flex:1 1 0%;min-height:0;overflow:hidden;display:grid;grid-template-rows:1fr 1fr;gap:8px}}
+.mod-half .ef-wrap{{gap:6px}}
+.ef-box{{padding:8px 12px;border-radius:12px;background:rgba(11,13,19,0.85);border:1px solid rgba(255,255,255,0.09);display:flex;flex-direction:column;justify-content:space-between;gap:4px;min-height:0;overflow:hidden}}
+.mod-half .ef-box{{padding:6px 10px;border-radius:10px;gap:3px}}
+.ef-hd{{font-size:18px;font-weight:800;color:#E2E8F0;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+.mod-half .ef-hd{{font-size:15px}}
+.ef-grid{{display:grid;grid-template-columns:1fr 1fr;gap:12px}}.ef-stack{{grid-template-columns:1fr;gap:4px}}
+.ef-row{{display:flex;flex-direction:column;gap:3px;min-width:0}}.ef-top{{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:19px;font-weight:800;line-height:1.15}}
+.mod-half .ef-top{{font-size:15px}}
+.ef-nm{{display:inline-flex;align-items:center;gap:5px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}.ef-nm i{{width:8px;height:8px;border-radius:99px;display:inline-block;flex-shrink:0}}.ef-nm small{{color:#CBD5E1;font-weight:700;font-size:0.86em}}
+.ef-val{{flex-shrink:0}}
+.ef-track{{height:8px;border-radius:99px;background:rgba(255,255,255,0.09);overflow:hidden}}.mod-half .ef-track{{height:6px}}.ef-fill{{height:100%;border-radius:99px}}
+.tr-list{{flex:1 1 0%;min-height:0;overflow:hidden;display:grid;grid-template-rows:repeat(5,minmax(0,1fr));gap:5px}}
+.mod-half .tr-list{{gap:4px}}
+.tr-row{{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:2px 12px;border-radius:10px;background:rgba(13,15,22,0.82);border:1px solid rgba(255,255,255,0.09);min-height:0;overflow:hidden}}
+.mod-half .tr-row{{padding:2px 8px;gap:5px;border-radius:8px}}
+.tr-l,.tr-r{{display:flex;align-items:center;gap:8px;min-width:0}}.mod-half .tr-l,.mod-half .tr-r{{gap:5px}}
+.tr-rk{{width:24px;height:24px;border-radius:6px;background:#181B25;display:inline-flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:#E2E8F0;flex-shrink:0}}
+.mod-half .tr-rk{{width:20px;height:20px;font-size:13px}}
+.tr-rk1{{color:#FBBF24}}.tr-bar{{width:4px;height:16px;border-radius:99px;flex-shrink:0}}.tr-nm{{font-size:19px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+.mod-half .tr-nm{{font-size:15px}}
+.tr-st{{font-size:16px;color:#CBD5E1;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px}}
+.mod-half .tr-st{{max-width:115px;font-size:13px}}.tr-rt{{padding:2px 9px;border-radius:7px;background:rgba(16,185,129,0.16);border:1px solid rgba(52,211,153,0.45);color:#34D399;font-size:18px;font-weight:900;flex-shrink:0}}
+.mod-half .tr-rt{{padding:1px 6px;font-size:15px}}
 .tr-rt1{{background:rgba(245,158,11,0.2);border-color:rgba(251,191,36,0.65);color:#FBBF24}}
-.mt-wrap{{flex:1 1 0%;min-height:0;display:flex;flex-direction:column;justify-content:space-between;gap:10px}}
+.mt-wrap{{flex:1 1 0%;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;gap:5px}}
 .mt-top{{display:flex;align-items:center;justify-content:space-between;gap:12px}}.mt-team{{display:inline-flex;align-items:center;gap:6px;font-size:19px;font-weight:800;color:#E2E8F0}}.mt-team i{{width:9px;height:9px;border-radius:99px;display:inline-block}}
-.mt-name{{font-size:31px;font-weight:900;color:#fff}}.mt-pos{{font-size:19px;color:#E2E8F0;font-weight:700}}
-.mt-badge{{padding:8px 14px;border-radius:14px;background:rgba(245,158,11,0.15);border:2px solid rgba(251,191,36,0.7);display:flex;flex-direction:column;align-items:center;color:#FCD34D;font-size:28px;font-weight:900}}
+.mt-name{{font-size:27px;font-weight:900;color:#fff;line-height:1.1}}.mt-pos{{font-size:17px;color:#E2E8F0;font-weight:700}}
+.mt-badge{{padding:5px 12px;border-radius:12px;background:rgba(245,158,11,0.15);border:2px solid rgba(251,191,36,0.7);display:flex;flex-direction:column;align-items:center;color:#FCD34D;font-size:24px;font-weight:900;line-height:1.1}}
 .mt-badge small{{font-size:14px;letter-spacing:0.08em}}.mt-chips{{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}}
-.mt-chip{{padding:8px;border-radius:12px;background:rgba(12,14,21,0.85);border:1px solid rgba(255,255,255,0.09);text-align:center}}.mt-cl{{font-size:16px;color:#CBD5E1;font-weight:700}}.mt-cv{{font-size:21px;font-weight:900;color:#fff;margin-top:2px}}
-.mt-ru{{display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid rgba(255,255,255,0.1);font-size:19px;color:#E2E8F0}}.mt-ru-rt{{padding:2px 8px;border-radius:7px;background:#161923;color:#7DD3FC;font-weight:900}}
+.mt-chip{{padding:5px 8px;border-radius:10px;background:rgba(12,14,21,0.85);border:1px solid rgba(255,255,255,0.09);text-align:center}}.mt-cl{{font-size:15px;color:#CBD5E1;font-weight:700}}.mt-cv{{font-size:20px;font-weight:900;color:#fff;margin-top:1px}}
+.mt-ru{{display:flex;justify-content:space-between;align-items:center;padding-top:5px;border-top:1px solid rgba(255,255,255,0.1);font-size:17px;color:#E2E8F0}}.mt-ru-rt{{padding:2px 8px;border-radius:7px;background:#161923;color:#7DD3FC;font-weight:900}}
 
 /* ─── Unified Footer ─── */
 #cf{{position:relative;z-index:10;padding:10px 44px 10px;flex-shrink:0}}

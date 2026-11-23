@@ -59,12 +59,12 @@ def render_xgrace(payload: dict[str, Any], span: str = "full", fmt: str = "4:5")
         y = fy(v)
         grid.append(
             f'<line x1="{left}" y1="{f1(y)}" x2="{f1(left + p_w)}" y2="{f1(y)}" stroke="rgba(255,255,255,{0.2 if v == 0 else 0.08})" stroke-width="{1.6 if v == 0 else 1.2}" {"" if v == 0 else "stroke-dasharray=5,6"}/>'
-            f'<text x="{left - 8}" y="{f1(y + 5)}" text-anchor="end" fill="#CBD5E1" font-weight="800" font-size="18">{fa(f1(v))}</text>'
+            f'<text x="{left - 8}" y="{f1(y + 5)}" text-anchor="end" fill="#CBD5E1" font-weight="800" font-size="21">{fa(f1(v))}</text>'
         )
         v += step
 
     xticks = "".join(
-        f'<text x="{f1(fx(t))}" y="{vb_h - 10}" text-anchor="middle" fill="{"#FF6B7F" if t == 45 else "#94A3B8"}" font-weight="800" font-size="18">{fa(t)}\'</text>'
+        f'<text x="{f1(fx(t))}" y="{vb_h - 10}" text-anchor="middle" fill="{"#FF6B7F" if t == 45 else "#94A3B8"}" font-weight="800" font-size="21">{fa(t)}\'</text>'
         for t in (0, 15, 30, 45, 60, 75, 90)
     )
     def goal_marks(gs, c):
@@ -79,9 +79,9 @@ def render_xgrace(payload: dict[str, Any], span: str = "full", fmt: str = "4:5")
     bx = left + p_w + 8
     badges = (
         f'<rect x="{f1(bx)}" y="{f1(hy - 13)}" width="74" height="28" rx="8" fill="{hc}"/>'
-        f'<text x="{f1(bx + 37)}" y="{f1(hy + 6)}" text-anchor="middle" fill="{contrast_ink(hc)}" font-weight="900" font-size="19">{fa(f2(h["xg"]))}</text>'
+        f'<text x="{f1(bx + 37)}" y="{f1(hy + 6)}" text-anchor="middle" fill="{contrast_ink(hc)}" font-weight="900" font-size="22">{fa(f2(h["xg"]))}</text>'
         f'<rect x="{f1(bx)}" y="{f1(ay - 13)}" width="74" height="28" rx="8" fill="{ac}"/>'
-        f'<text x="{f1(bx + 37)}" y="{f1(ay + 6)}" text-anchor="middle" fill="{contrast_ink(ac)}" font-weight="900" font-size="19">{fa(f2(a["xg"]))}</text>'
+        f'<text x="{f1(bx + 37)}" y="{f1(ay + 6)}" text-anchor="middle" fill="{contrast_ink(ac)}" font-weight="900" font-size="22">{fa(f2(a["xg"]))}</text>'
     )
 
     title = "جریان امید گل" if is_half else "نمودار جریان امید گل (xG Race)"
@@ -129,8 +129,8 @@ def render_shotmap(payload: dict[str, Any], span: str = "full", fmt: str = "4:5"
         f'{module_header(title, "<span class=mod-tag>SHOT MAP</span>", "#E62E45", is_half=is_half)}'
         f'<div class="mod-body-svg" dir="ltr">'
         f'<svg class="fit-svg" viewBox="0 0 720 345" preserveAspectRatio="xMidYMid meet" fill="none" font-family="Vazirmatn">'
-        f'<text x="191" y="19" text-anchor="middle" fill="{ac}" font-weight="900" font-size="21">← {esc(a["name"])} ({fa(a["shots"])})</text>'
-        f'<text x="529" y="19" text-anchor="middle" fill="{hc}" font-weight="900" font-size="21">{esc(h["name"])} ({fa(h["shots"])}) →</text>'
+        f'<text x="191" y="19" text-anchor="middle" fill="{ac}" font-weight="900" font-size="24">← {esc(a["name"])} ({fa(a["shots"])})</text>'
+        f'<text x="529" y="19" text-anchor="middle" fill="{hc}" font-weight="900" font-size="24">{esc(h["name"])} ({fa(h["shots"])}) →</text>'
         f'<rect x="22" y="30" width="676" height="299" rx="12" fill="#0A1328" stroke="rgba(248,250,252,.22)" stroke-width="2"/>'
         f'<g stroke="rgba(248,250,252,.17)" stroke-width="1.8">'
         f'<line x1="360" y1="30" x2="360" y2="329"/><circle cx="360" cy="179.5" r="46"/>'
@@ -150,15 +150,25 @@ def render_momentum(payload: dict[str, Any], span: str = "full", fmt: str = "4:5
     mx = max(68.0, *(abs(float(v)) for v in arr))
     step = 712.0 / len(arr)
     bw = 0.68 * step
-    bars = "".join(
-        f'<rect x="{f1(24 + i * step + (step - bw) / 2)}" '
-        f'y="{f1(154 - max(6.0, abs(float(v)) / mx * 100) if float(v) >= 0 else 154)}" '
-        f'width="{f1(bw)}" height="{f1(max(6.0, abs(float(v)) / mx * 100))}" rx="4" '
-        f'fill="{hc if float(v) >= 0 else ac}" fill-opacity=".88"/>'
-        for i, v in enumerate(arr)
-    )
+    bars_list = []
+    for i, v in enumerate(arr):
+        fv = float(v)
+        bx = f1(24 + i * step + (step - bw) / 2)
+        if abs(fv) < 0.05:
+            # بازهٔ خنثی بدون فشار — تیک ظریف خاکستری (نه ستون قرمز جعلی!)
+            bars_list.append(
+                f'<rect x="{bx}" y="152" width="{f1(bw)}" height="4" rx="2" fill="rgba(148,163,184,0.32)"/>'
+            )
+        else:
+            bh = max(10.0, abs(fv) / mx * 102.0)
+            by = 154.0 - bh if fv > 0 else 154.0
+            col = hc if fv > 0 else ac
+            bars_list.append(
+                f'<rect x="{bx}" y="{f1(by)}" width="{f1(bw)}" height="{f1(bh)}" rx="4" fill="{col}" fill-opacity=".90"/>'
+            )
+    bars = "".join(bars_list)
     xticks = "".join(
-        f'<text x="{f1(24 + t / 90.0 * 712)}" y="298" text-anchor="middle" fill="{"#FBBF24" if t == 45 else "#94A3B8"}" font-weight="800" font-size="18">{fa(t)}\'</text>'
+        f'<text x="{f1(24 + t / 90.0 * 712)}" y="298" text-anchor="middle" fill="{"#FBBF24" if t == 45 else "#94A3B8"}" font-weight="800" font-size="21">{fa(t)}\'</text>'
         for t in (0, 15, 30, 45, 60, 75, 90)
     )
     title = "موج فشار" if is_half else "موج فشار و برتری حملات (۵ دقیقه‌ای)"
@@ -167,8 +177,8 @@ def render_momentum(payload: dict[str, Any], span: str = "full", fmt: str = "4:5
         f'{module_header(title, "<span class=mod-tag>MOMENTUM</span>", "#38BDF8", is_half=is_half)}'
         f'<div class="mod-body-svg" dir="ltr">'
         f'<svg class="fit-svg" viewBox="0 0 760 310" preserveAspectRatio="xMidYMid meet" fill="none" font-family="Vazirmatn">'
-        f'<text x="24" y="22" fill="{hc}" font-weight="900" font-size="21">▲ {esc(m["home"]["name"])}</text>'
-        f'<text x="736" y="22" text-anchor="end" fill="{ac}" font-weight="900" font-size="21">▼ {esc(m["away"]["name"])}</text>'
+        f'<text x="24" y="22" fill="{hc}" font-weight="900" font-size="24">▲ {esc(m["home"]["name"])}</text>'
+        f'<text x="736" y="22" text-anchor="end" fill="{ac}" font-weight="900" font-size="24">▼ {esc(m["away"]["name"])}</text>'
         f'<line x1="380" y1="36" x2="380" y2="272" stroke="#FBBF24" stroke-opacity=".5" stroke-width="1.6" stroke-dasharray="5 5"/>'
         f'{bars}<line x1="24" y1="154" x2="736" y2="154" stroke="#F8FAFC" stroke-opacity=".45" stroke-width="2"/>{xticks}'
         f'</svg></div></div>'
@@ -183,13 +193,25 @@ def render_efficiency(payload: dict[str, Any], span: str = "full", fmt: str = "4
         return ""
     hc, ac = h["color"], a["color"]
     is_half = span == "half"
-    fh = float(m["scoreHome"]) - float(h["xg"])
-    fa_ = float(m["scoreAway"]) - float(a["xg"])
+    # حذف «بهره‌وری گل (G−xG)» به‌دلیل تکرار در هیرو → جایگزینی با «دقت شوت در چارچوب (٪)»
+    h_sh, h_sot = int(h.get("shots") or 0), int(h.get("sot") or 0)
+    a_sh, a_sot = int(a.get("shots") or 0), int(a.get("sot") or 0)
+    h_acc = round((h_sot / h_sh) * 100.0) if h_sh > 0 else 0
+    a_acc = round((a_sot / a_sh) * 100.0) if a_sh > 0 else 0
     gh = float(h_gk["psxg"]) - float(h_gk["ga"])
     ga = float(a_gk["psxg"]) - float(a_gk["ga"])
-    mf, mg = max(1.2, abs(fh), abs(fa_)), max(1.2, abs(gh), abs(ga))
+    mg = max(1.2, abs(gh), abs(ga))
 
-    def row(nm: str, sub: str, v: float, mx: float, c: str) -> str:
+    def row_pct(nm: str, sub: str, pct: int, c: str) -> str:
+        w = min(100, max(8, pct))
+        return (
+            f'<div class="ef-row"><div class="ef-top">'
+            f'<span class="ef-nm"><i style="background:{c}"></i>{esc(nm)} <small>{esc(sub)}</small></span>'
+            f'<span dir="ltr" class="ef-val" style="color:{c}">{fa(pct)}٪</span></div>'
+            f'<div class="ef-track" dir="ltr"><div class="ef-fill" style="width:{w}%;background:{c}"></div></div></div>'
+        )
+
+    def row_signed(nm: str, sub: str, v: float, mx: float, c: str) -> str:
         col = "#34D399" if v >= 0 else "#FB7185"
         w = min(100, max(10, round(abs(v) / mx * 100)))
         return (
@@ -199,15 +221,15 @@ def render_efficiency(payload: dict[str, Any], span: str = "full", fmt: str = "4
             f'<div class="ef-track" dir="ltr"><div class="ef-fill" style="width:{w}%;background:{col}"></div></div></div>'
         )
 
-    title = "دقت ضربه و دروازه‌بان" if is_half else "دقت ضربه نهایی و عملکرد دروازه‌بان‌ها"
+    title = "دقت ضربه و دروازه‌بان" if is_half else "دقت شوت‌زنی و عملکرد دروازه‌بان‌ها"
     return (
         f'<div class="xm {"mod-half" if is_half else "mod-full"}">'
-        f'{module_header(title, "<span class=mod-tag>FINISHING & GK</span>", "#10B981", is_half=is_half)}'
+        f'{module_header(title, "<span class=mod-tag>ACCURACY & GK</span>", "#10B981", is_half=is_half)}'
         f'<div class="ef-wrap">'
-        f'<div class="ef-box"><div class="ef-hd">بهره‌وری گلزنی (G − xG)</div><div class="ef-grid{" ef-stack" if is_half else ""}">'
-        f'{row(h["name"], "(" + fa(m["scoreHome"]) + " گل)", fh, mf, hc)}{row(a["name"], "(" + fa(m["scoreAway"]) + " گل)", fa_, mf, ac)}</div></div>'
-        f'<div class="ef-box"><div class="ef-hd">نجات گل دروازه‌بان (PSxG − GA)</div><div class="ef-grid{" ef-stack" if is_half else ""}">'
-        f'{row(h_gk["name"], "• " + fa(h_gk["saves"]) + " مهار", gh, mg, hc)}{row(a_gk["name"], "• " + fa(a_gk["saves"]) + " مهار", ga, mg, ac)}</div></div>'
+        f'<div class="ef-box"><div class="ef-hd">{"دقت شوت در چارچوب" if is_half else "دقت شوت‌زنی (در چارچوب / کل شوت)"}</div><div class="ef-grid{" ef-stack" if is_half else ""}">'
+        f'{row_pct(h["name"], f"({fa(h_sot)}/{fa(h_sh)})", h_acc, hc)}{row_pct(a["name"], f"({fa(a_sot)}/{fa(a_sh)})", a_acc, ac)}</div></div>'
+        f'<div class="ef-box"><div class="ef-hd">{"دروازه‌بان (PSxG−GA)" if is_half else "نجات گل دروازه‌بان (PSxG − GA)"}</div><div class="ef-grid{" ef-stack" if is_half else ""}">'
+        f'{row_signed(h_gk["name"], "(" + fa(h_gk["saves"]) + " مهار)", gh, mg, hc)}{row_signed(a_gk["name"], "(" + fa(a_gk["saves"]) + " مهار)", ga, mg, ac)}</div></div>'
         f'</div></div>'
     )
 
@@ -260,7 +282,7 @@ def render_motm(payload: dict[str, Any], span: str = "full", fmt: str = "4:5") -
         f'<div class="mt-name">{esc(mt["name"])}</div><div class="mt-pos">{esc(mt["pos"])}</div></div>'
         f'<div class="mt-badge"><span>★ {fa(f1(mt["rating"]))}</span><small>MOTM</small></div></div>'
         f'<div class="mt-chips">{chips}</div>'
-        f'<div class="mt-ru"><span>برترین حریف: <b>{esc(ru.get("name", ""))}</b></span>'
+        f'<div class="mt-ru"><span>برترین بازیکن حریف: <b>{esc(ru.get("name", ""))}</b></span>'
         f'<span class="mt-ru-rt">{fa(f1(ru.get("rating", 0)))}</span></div>'
         f'</div></div>'
     )

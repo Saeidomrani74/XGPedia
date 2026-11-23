@@ -136,6 +136,13 @@ CREATE TABLE IF NOT EXISTS sync_cache (
   summary TEXT
 );
 
+CREATE TABLE IF NOT EXISTS fixture_post_match (
+  fixture_id TEXT PRIMARY KEY,
+  details_json TEXT NOT NULL,
+  provider TEXT NOT NULL,
+  collected_at TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS team_metadata (
   team TEXT NOT NULL,
   season TEXT NOT NULL,
@@ -262,6 +269,16 @@ def _migrate(conn: sqlite3.Connection) -> None:
           provider TEXT NOT NULL,
           collected_at TEXT NOT NULL,
           PRIMARY KEY (team, season, provider)
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS fixture_post_match (
+          fixture_id TEXT PRIMARY KEY,
+          details_json TEXT NOT NULL,
+          provider TEXT NOT NULL,
+          collected_at TEXT NOT NULL
         )
         """
     )
