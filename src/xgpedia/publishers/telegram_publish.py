@@ -76,7 +76,13 @@ _SOURCE_LINKS: dict[str, tuple[str, str]] = {
 
 def _format_source_html(raw_source: str, facts: dict) -> str:
     """تبدیل نام منبع به هایپرلینک تمیز تلگرام بدون تاریخ جمع‌آوری و بدون hash."""
-    prov = str((facts.get("source") or {}).get("provider") or "").strip().lower()
+    src_obj = facts.get("source") if isinstance(facts, dict) else None
+    if isinstance(src_obj, dict):
+        prov = str(src_obj.get("provider") or "").strip().lower()
+    elif isinstance(src_obj, str):
+        prov = src_obj.strip()
+    else:
+        prov = ""
     raw_low = (raw_source or "").lower()
     for key, (label, url) in _SOURCE_LINKS.items():
         if key == prov or key in raw_low:
@@ -95,7 +101,11 @@ def build_caption(post: dict) -> str:
     """
     draft = json.loads(post["draft_json"] or "{}")
     title = html.escape((post["title"] or draft.get("title") or "").strip())
-    caption = html.escape((post["caption"] or draft.get("caption") or "").strip())
+    raw_cap = (post["caption"] or draft.get("caption") or "").strip()
+    if post.get("post_type") == "on_this_day":
+        import re as _re
+        raw_cap = _re.sub(r"</?(?:b|i|code)>", "", raw_cap)
+    caption = html.escape(raw_cap)
     source = html.escape((draft.get("source_note") or "").strip())
     tag = HASHTAG_BY_TYPE.get(post["post_type"], "")
     parts = [f"<b>{title}</b>"]

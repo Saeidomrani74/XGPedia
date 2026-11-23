@@ -26,8 +26,10 @@ from aiogram.types import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     KeyboardButton,
+    BotCommand,
     Message,
     ReplyKeyboardMarkup,
+    ReplyKeyboardRemove,
 )
 
 from src.xgpedia.config import ADMIN_TELEGRAM_IDS, TELEGRAM_BOT_TOKEN
@@ -136,40 +138,112 @@ def make_transport(bot: Bot) -> AiogramTransport:
 
 
 def _persistent_reply_keyboard() -> ReplyKeyboardMarkup:
-    """کیبورد تاشو و دائمی پایین چت برای دسترسی سریع و یک‌لمسی ادمین در هر مرحله."""
+    """کیبورد جمع‌شونده و خلوت پایین چت — فقط هاب‌های اصلی + دسترسی سریع /start + بستن کیبورد."""
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="📋 بازی‌های امروز"), KeyboardButton(text="🏁 پس‌ازبازی (۲۴س)")],
-            [KeyboardButton(text="🔄 دریافت هوشمند"), KeyboardButton(text="⚡ همگام‌سازی اجباری")],
-            [KeyboardButton(text="⏰ صف زمان‌بندی"), KeyboardButton(text="🧠 وضعیت AI")],
-            [KeyboardButton(text="🏠 منوی اصلی")],
+            [KeyboardButton(text="🎨 استودیو کارت‌ها"), KeyboardButton(text="📡 دیتای زنده")],
+            [KeyboardButton(text="⚙️ صف و هوش مصنوعی"), KeyboardButton(text="🚀 /start")],
+            [KeyboardButton(text="🔽 جمع کردن کیبورد")],
         ],
         resize_keyboard=True,
-        is_persistent=True,
-        input_field_placeholder="از دکمه‌های پایین انتخاب کنید...",
+        is_persistent=False,
+        one_time_keyboard=False,
+        input_field_placeholder="دستور یا بخش دلخواه را انتخاب کنید...",
+    )
+
+
+def _cards_studio_markup() -> InlineKeyboardMarkup:
+    """کاتالوگ دسته‌بندی‌شدهٔ تمام کارت‌های XGPedia (مقیاس‌پذیر برای کارت‌های آینده)."""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="📋 پیش‌ازبازی (امروز)", callback_data="today:list"),
+                InlineKeyboardButton(text="🏁 پس‌ازبازی (۲۴س)", callback_data="post:list"),
+            ],
+            [
+                InlineKeyboardButton(text="🕰 در چنین روزی (وقایع تاریخی)", callback_data="otd:list"),
+            ],
+            [
+                InlineKeyboardButton(text="📡 رفتن به مرکز دیتای زنده", callback_data="nav:sync"),
+                InlineKeyboardButton(text="🏠 پنل اصلی", callback_data="nav:home"),
+            ],
+        ]
+    )
+
+
+def _sync_hub_markup() -> InlineKeyboardMarkup:
+    """مرکز دریافت و همگام‌سازی دیتای زنده از APIها."""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="🔄 دریافت هوشمند بازی‌های امروز (با کش)", callback_data="today:sync")],
+            [InlineKeyboardButton(text="⚡ همگام‌سازی اجباری از APIها", callback_data="today:force_sync")],
+            [InlineKeyboardButton(text="🏁 بروزرسانی نتایج پایان‌یافته (۲۴س)", callback_data="post:refresh")],
+            [InlineKeyboardButton(text="🕰 بروزرسانی زندهٔ ویکی‌پدیا (در چنین روزی)", callback_data="otd:refresh")],
+            [
+                InlineKeyboardButton(text="🎨 استودیو کارت‌ها", callback_data="nav:cards"),
+                InlineKeyboardButton(text="🏠 پنل اصلی", callback_data="nav:home"),
+            ],
+        ]
+    )
+
+
+def _admin_hub_markup() -> InlineKeyboardMarkup:
+    """مرکز مدیریت صف انتشار، تنظیمات هوش مصنوعی و کنترل کیبورد."""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="⏰ صف انتشار زمان‌بندی‌شده", callback_data="today:schedules")],
+            [
+                InlineKeyboardButton(text="⚙️ انتخاب مدل شروع AI", callback_data="llm:menu"),
+                InlineKeyboardButton(text="🧠 وضعیت زنجیره AI", callback_data="nav:ai_status"),
+            ],
+            [
+                InlineKeyboardButton(text="⌨️ باز کردن کیبورد پایین", callback_data="nav:show_kb"),
+                InlineKeyboardButton(text="🏠 پنل اصلی", callback_data="nav:home"),
+            ],
+        ]
     )
 
 
 def _main_panel_markup() -> InlineKeyboardMarkup:
+    """پنل اینلاین اصلی: دسترسی مستقیم به کارت‌ها و اقدام‌های فوری (متفاوت از هاب‌های کیبورد پایین)."""
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="🔄 دریافت بازی‌های امروز (هوشمند/کش)", callback_data="today:sync")],
             [
-                InlineKeyboardButton(text="📋 بازی‌های امروز (پیش‌بازی)", callback_data="today:list"),
-                InlineKeyboardButton(text="🏁 پایان‌یافته (۲۴ ساعت اخیر)", callback_data="post:list"),
+                InlineKeyboardButton(text="📋 پیش‌ازبازی", callback_data="today:list"),
+                InlineKeyboardButton(text="🏁 پس‌ازبازی (۲۴س)", callback_data="post:list"),
             ],
             [
-                InlineKeyboardButton(text="⚡ دریافت اجباری از API", callback_data="today:force_sync"),
+                InlineKeyboardButton(text="🕰 در چنین روزی (وقایع تاریخی)", callback_data="otd:list"),
+            ],
+            [
+                InlineKeyboardButton(text="🔄 سینک سریع امروز", callback_data="today:sync"),
                 InlineKeyboardButton(text="⏰ صف زمان‌بندی", callback_data="today:schedules"),
             ],
             [
-                InlineKeyboardButton(text="⚙️ تنظیم مدل شروع هوش مصنوعی (LLM)", callback_data="llm:menu"),
+                InlineKeyboardButton(text="🎨 همه کارت‌ها", callback_data="nav:cards"),
+                InlineKeyboardButton(text="⚙️ تنظیمات AI", callback_data="llm:menu"),
             ],
         ]
     )
 
 
 def _preview_keyboard(post_id: int, fixture_id: str, post_type: str = "preview") -> dict[str, Any]:
+    if post_type == "on_this_day":
+        return {
+            "inline_keyboard": [
+                [
+                    {"text": "✅ انتشار فوری در کانال", "callback_data": f"approve:{post_id}"},
+                    {"text": "⏰ زمان‌بندی امروز (HH:MM)", "callback_data": f"sched:{post_id}"},
+                ],
+                [
+                    {"text": "🎛 تغییر اسلاید/تم/ماژول", "callback_data": "otd:back"},
+                    {"text": "❌ رد", "callback_data": f"reject:{post_id}"},
+                ],
+                [
+                    {"text": "🕰 لیست رویدادهای در چنین روزی", "callback_data": "otd:list"},
+                ],
+            ]
+        }
     is_post = post_type == "post_match"
     cust_prefix = "pcust" if is_post else "cust"
     back_lbl = "🏁 لیست بازی‌های پایان‌یافته" if is_post else "📋 لیست بازی‌های امروز"
@@ -514,21 +588,46 @@ async def _send_post_preview(
 
 # ─── هندلرهای دستورها و پیام‌های متنی ───
 
-@router.message(Command("start", "panel"))
-async def on_start(m: Message) -> None:
-    if tp.is_admin(m.from_user.id):
-        _AWAITING_SCHEDULE_TIME.pop(m.from_user.id, None)
-        _AWAITING_EDIT_INSTRUCTION.pop(m.from_user.id, None)
+async def _send_home_dashboard(m: Message, *, with_keyboard: bool = True) -> None:
+    _AWAITING_SCHEDULE_TIME.pop(m.from_user.id, None)
+    _AWAITING_EDIT_INSTRUCTION.pop(m.from_user.id, None)
+    if with_keyboard:
         await m.answer(
-            "🎛 <b>پنل مدیریت و انتشار خودکار XGPedia</b>\n\n"
-            "با دکمهٔ زیر دیتای بازی‌های شروع‌نشدهٔ امروز را دریافت کنید (داده‌های موجود از کش دیتابیس خوانده می‌شوند)، "
-            "ماژول‌ها و عرض هر ماژول را بچینید، متن را در صورت نیاز بازنویسی یا ویرایش کنید و فوری یا در ساعت دلخواه منتشر کنید.",
+            "🎛 <b>داشبورد XGPedia فعال شد</b>\n"
+            "از کیبورد جمع‌شوندهٔ پایین برای جابه‌جایی بین بخش‌ها (یا <code>🔽 جمع کردن کیبورد</code>) استفاده کنید.",
             parse_mode="HTML",
             reply_markup=_persistent_reply_keyboard(),
         )
-        await m.answer("📌 میانبرهای سریع اینلاین:", reply_markup=_main_panel_markup())
+    await m.answer(
+        "⚡ <b>دسترسی مستقیم کارت‌ها و عملیات سریع:</b>\n"
+        "• ⚽ مسابقات: پیش‌ازبازی و پس‌ازبازی (۲۴س)\n"
+        "• 🕰 آرشیو و تحریریه: در چنین روزی",
+        parse_mode="HTML",
+        reply_markup=_main_panel_markup(),
+    )
+
+
+@router.message(Command("start", "panel"))
+async def on_start(m: Message) -> None:
+    if tp.is_admin(m.from_user.id):
+        await _send_home_dashboard(m, with_keyboard=True)
     else:
         await m.answer("ربات انتشار XGPedia — فقط ادمین‌های مجاز به پنل مدیریت دسترسی دارند.")
+
+
+@router.message(Command("cards"))
+async def cmd_cards(m: Message) -> None:
+    if not tp.is_admin(m.from_user.id):
+        await m.answer("دسترسی غیرمجاز.")
+        return
+    await m.answer(
+        "🎨 <b>استودیو کارت‌های XGPedia</b>\n\n"
+        "⚽ <b>کارت‌های مسابقه:</b> پیش‌ازبازی · پس‌ازبازی (۲۴س)\n"
+        "🕰 <b>تاریخ و تحریریه:</b> در چنین روزی (وقایع تاریخی)\n\n"
+        "کارت مورد نظر را انتخاب کنید:",
+        parse_mode="HTML",
+        reply_markup=_cards_studio_markup(),
+    )
 
 
 @router.message(F.text)
@@ -540,8 +639,59 @@ async def on_any_text(m: Message, bot: Bot | None = None) -> None:
 
     raw_text = (m.text or "").strip()
 
-    # ۰) دکمه‌های کیبورد تاشو/دائمی پایین صفحه
-    if raw_text == "🏠 منوی اصلی":
+    # ۰) دکمه‌های کیبورد جمع‌شوندهٔ پایین صفحه (همیشه در اولویت، حتی در حالت انتظار متن)
+    if raw_text in {"🚀 /start", "/start", "🏠 منوی اصلی"}:
+        await _send_home_dashboard(m, with_keyboard=True)
+        return
+    if raw_text == "🔽 جمع کردن کیبورد":
+        await m.answer(
+            "✅ کیبورد پایین جمع شد.\nهر زمان خواستید دوباره باز شود روی دکمهٔ زیر بزنید یا <code>/start</code> بفرستید.",
+            parse_mode="HTML",
+            reply_markup=ReplyKeyboardRemove(),
+        )
+        await m.answer(
+            "📌 پنل اینلاین همیشه در دسترس است:",
+            reply_markup=InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [InlineKeyboardButton(text="⌨️ باز کردن مجدد کیبورد پایین", callback_data="nav:show_kb")],
+                    [InlineKeyboardButton(text="🎨 استودیو کارت‌ها", callback_data="nav:cards")],
+                ]
+            ),
+        )
+        return
+    if raw_text == "🎨 استودیو کارت‌ها":
+        _AWAITING_SCHEDULE_TIME.pop(user_id, None)
+        _AWAITING_EDIT_INSTRUCTION.pop(user_id, None)
+        await m.answer(
+            "🎨 <b>استودیو کارت‌های XGPedia</b>\n\n"
+            "⚽ <b>کارت‌های مسابقه:</b> پیش‌ازبازی · پس‌ازبازی (۲۴س)\n"
+            "🕰 <b>تاریخ و تحریریه:</b> در چنین روزی (وقایع تاریخی)\n\n"
+            "کارت مورد نظر را انتخاب کنید:",
+            parse_mode="HTML",
+            reply_markup=_cards_studio_markup(),
+        )
+        return
+    if raw_text == "📡 دیتای زنده":
+        _AWAITING_SCHEDULE_TIME.pop(user_id, None)
+        _AWAITING_EDIT_INSTRUCTION.pop(user_id, None)
+        await m.answer(
+            "📡 <b>مرکز دیتای زنده و همگام‌سازی</b>\n"
+            "نوع بروزرسانی را انتخاب کنید:",
+            parse_mode="HTML",
+            reply_markup=_sync_hub_markup(),
+        )
+        return
+    if raw_text == "⚙️ صف و هوش مصنوعی":
+        _AWAITING_SCHEDULE_TIME.pop(user_id, None)
+        _AWAITING_EDIT_INSTRUCTION.pop(user_id, None)
+        await m.answer(
+            "⚙️ <b>مدیریت صف انتشار و هوش مصنوعی</b>\n"
+            "بخش مورد نظر را انتخاب کنید:",
+            parse_mode="HTML",
+            reply_markup=_admin_hub_markup(),
+        )
+        return
+    if raw_text == "__legacy_home__":
         _AWAITING_SCHEDULE_TIME.pop(user_id, None)
         _AWAITING_EDIT_INSTRUCTION.pop(user_id, None)
         await m.answer(
@@ -556,6 +706,13 @@ async def on_any_text(m: Message, bot: Bot | None = None) -> None:
         matches = await asyncio.to_thread(tw.list_recent_finished_fixtures)
         hdr = f"🏁 <b>گزارش بازی‌های پایان‌یافته (۱ ثانیه تا ۲۴ ساعت پیش)</b>\n✅ ESPN: {s_info['espn_saved']} بازی ({s_info['espn_stats']} آمار) | FDO: {s_info['fdo_saved']} بازی"
         text, kb = _format_finished_matches_message(matches, header=hdr)
+        await status_msg.edit_text(text, parse_mode="HTML", reply_markup=kb)
+        return
+    if raw_text == "🕰 در چنین روزی":
+        from src.xgpedia.providers.on_this_day_free import list_on_this_day_events
+        status_msg = await m.answer("⏳ در حال دریافت زندهٔ رویدادهای تاریخی فوتبال امروز (ویکی‌پدیا فارسی/انگلیسی + آرشیو)...")
+        data = await asyncio.to_thread(list_on_this_day_events, include_live=True)
+        text, kb = _format_otd_list_message(data)
         await status_msg.edit_text(text, parse_mode="HTML", reply_markup=kb)
         return
     if raw_text == "📋 بازی‌های امروز":
@@ -726,9 +883,70 @@ async def on_nav_home(cb: CallbackQuery) -> None:
         return
     await _safe_cb_answer(cb)
     await cb.message.answer(
-        "🎛 <b>منوی اصلی XGPedia</b> — گزینهٔ دلخواه را انتخاب کنید:",
+        "⚡ <b>پنل اصلی XGPedia</b> — کارت یا اقدام سریع را انتخاب کنید:",
         parse_mode="HTML",
         reply_markup=_main_panel_markup(),
+    )
+
+
+@router.callback_query(F.data == "nav:cards")
+async def on_nav_cards(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    await _safe_cb_answer(cb)
+    await cb.message.answer(
+        "🎨 <b>استودیو کارت‌های XGPedia</b>\n\n"
+        "⚽ <b>کارت‌های مسابقه:</b> پیش‌ازبازی · پس‌ازبازی (۲۴س)\n"
+        "🕰 <b>تاریخ و تحریریه:</b> در چنین روزی (وقایع تاریخی)",
+        parse_mode="HTML",
+        reply_markup=_cards_studio_markup(),
+    )
+
+
+@router.callback_query(F.data == "nav:sync")
+async def on_nav_sync(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    await _safe_cb_answer(cb)
+    await cb.message.answer(
+        "📡 <b>مرکز دیتای زنده و همگام‌سازی</b>\nنوع بروزرسانی را انتخاب کنید:",
+        parse_mode="HTML",
+        reply_markup=_sync_hub_markup(),
+    )
+
+
+@router.callback_query(F.data == "nav:show_kb")
+async def on_nav_show_kb(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    await _safe_cb_answer(cb, "کیبورد پایین باز شد.")
+    await cb.message.answer(
+        "⌨️ کیبورد پایین دوباره فعال شد.",
+        reply_markup=_persistent_reply_keyboard(),
+    )
+
+
+@router.callback_query(F.data == "nav:ai_status")
+async def on_nav_ai_status(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    await _safe_cb_answer(cb)
+    from src.xgpedia.editorial.llm_provider import build_free_llm_chain_from_env
+    from src.xgpedia.media.free_media import FreeImageRouter, FreeVideoRouter
+
+    chain = build_free_llm_chain_from_env()
+    top_llm = "\n".join(f"{i}. {html.escape(ep.label)}" for i, ep in enumerate(chain[:8], 1))
+    imgs = " ← ".join(FreeImageRouter().available_providers())
+    vids = " ← ".join(FreeVideoRouter().available_providers()) or "غیرفعال"
+    await cb.message.answer(
+        f"🧠 <b>زنجیرهٔ فعال هوش مصنوعی ({len(chain)} مدل متن):</b>\n{top_llm}\n\n"
+        f"🖼 <b>تصویر:</b> {html.escape(imgs)}\n🎬 <b>ویدیو:</b> {html.escape(vids)}",
+        parse_mode="HTML",
+        reply_markup=_admin_hub_markup(),
     )
 
 
@@ -1281,6 +1499,307 @@ async def _scheduler_loop(bot: Bot, interval_seconds: int = 15) -> None:
         await asyncio.sleep(interval_seconds)
 
 
+
+# ─── پنل و کاستومایزر اسلایدی «در چنین روزی» (On This Day — Showreel V2) ───
+
+_OTD_STATE: dict[int, dict[str, Any]] = {}
+_OTD_EVENT_MAP: dict[str, dict[str, Any]] = {}
+
+
+def _format_otd_list_message(data: dict[str, list[dict[str, Any]]]) -> tuple[str, InlineKeyboardMarkup]:
+    today_evs = data.get("today") or []
+    archive_evs = data.get("archive") or []
+    lines = [
+        "🕰 <b>استودیو «در چنین روزی» (Showreel V2)</b>",
+        "حالت: <b>اسلایدی</b> (۴ پوستر مستقل × ۳ تم × ۳ فرمت + انتخاب ماژول‌های داخلی)",
+        "",
+    ]
+    rows: list[list[InlineKeyboardButton]] = []
+    if today_evs:
+        lines.append(f"🌍 <b>رویدادهای زندهٔ فوتبال امروز ({len(today_evs)} مورد از ویکی‌پدیا/آرشیو):</b>")
+        for ev in today_evs[:6]:
+            ev_id = str(ev["id"])
+            _OTD_EVENT_MAP[ev_id] = ev
+            lbl = f"🌍 {ev.get('year', '')} — {str(ev.get('title') or ev.get('shortLabel', ''))[:34]}"
+            rows.append([InlineKeyboardButton(text=lbl, callback_data=f"otd:open:{ev_id[:44]}")])
+        lines.append("")
+    else:
+        lines.append("ℹ️ امروز رویداد فوتبالی مستقیمی در فید ویکی‌پدیا ثبت نشده یا اتصال برقرار نبود؛ آرشیو ماندگار زیر همیشه آماده است:")
+        lines.append("")
+
+    lines.append(f"🏆 <b>آرشیو مستند شوریل ({len(archive_evs)} لحظه کامل با ۴ پوستر):</b>")
+    for ev in archive_evs:
+        ev_id = str(ev["id"])
+        _OTD_EVENT_MAP[ev_id] = ev
+        home = ev.get("home") or {}
+        away = ev.get("away") or {}
+        score_s = f" ({home.get('score')}-{away.get('score')})" if home and away else ""
+        lbl = f"🏆 {ev.get('shortLabel') or ev.get('title')}{score_s}"
+        rows.append([InlineKeyboardButton(text=lbl[:52], callback_data=f"otd:open:{ev_id[:44]}")])
+
+    rows.append([
+        InlineKeyboardButton(text="🔄 بروزرسانی زنده", callback_data="otd:refresh"),
+        InlineKeyboardButton(text="🏠 منوی اصلی", callback_data="nav:home"),
+    ])
+    return "\n".join(lines), InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def _render_otd_customizer_view(st: dict[str, Any]) -> tuple[str, InlineKeyboardMarkup]:
+    from src.xgpedia.render.card_kit.on_this_day_card import (
+        OTD_BG_MODES,
+        OTD_SLIDES,
+        OTD_THEMES,
+        get_otd_slide_availability,
+    )
+
+    ev = st["event"]
+    slide = st["slide"]
+    theme = st["theme"]
+    fmt = st["fmt"]
+    bg_mode = st["bg_mode"]
+    mods = st["modules"]
+    missing = st.get("missing_modules") or []
+    slide_avail = get_otd_slide_availability(ev)
+
+    slide_lbl = next((lbl for sid, lbl, _ in OTD_SLIDES if sid == slide), slide)
+    theme_lbl = OTD_THEMES.get(theme, OTD_THEMES["core"])["label_fa"]
+    bg_lbl = next((lbl for bid, lbl in OTD_BG_MODES if bid == bg_mode), bg_mode)
+    active_cnt = sum(1 for m in mods if m["enabled"])
+
+    lines = [
+        "🕰 <b>استودیو «در چنین روزی» — تنظیمات اسلاید</b>",
+        f"📌 <b>{html.escape(str(ev.get('title') or ''))}</b> ({ev.get('year', '')})",
+        f"📅 {html.escape(str(ev.get('dateFa') or ''))} | {html.escape(str(ev.get('competition') or ''))}",
+        f"🖼 پوستر: <b>{html.escape(slide_lbl)}</b>",
+        f"🎨 تم: <b>{html.escape(theme_lbl)}</b> | 📐 فرمت: <b>{fmt}</b> | 🌌 پس‌زمینه: <b>{html.escape(bg_lbl)}</b>",
+        f"🧩 ماژول‌های فعال این اسلاید: <b>{active_cnt} از {len(mods)}</b>",
+    ]
+    if missing:
+        lines.append("ℹ️ ماژول‌های بدون دیتا در این رویداد (null≠0): " + html.escape("، ".join(missing)))
+
+    rows: list[list[InlineKeyboardButton]] = []
+    s_row1: list[InlineKeyboardButton] = []
+    s_row2: list[InlineKeyboardButton] = []
+    for idx, (sid, slbl, _stag) in enumerate(OTD_SLIDES):
+        ok = slide_avail.get(sid, True)
+        mark = "✅ " if sid == slide else ("🔒 " if not ok else "")
+        short_name = slbl.split(":", 1)[-1].strip()[:18]
+        btn = InlineKeyboardButton(text=f"{mark}{short_name}", callback_data=f"otdc:sl:{sid}")
+        (s_row1 if idx < 2 else s_row2).append(btn)
+    rows.append(s_row1)
+    rows.append(s_row2)
+
+    rows.append([
+        InlineKeyboardButton(
+            text=("✅ " if tid == theme else "") + tcfg["label_fa"],
+            callback_data=f"otdc:th:{tid}",
+        )
+        for tid, tcfg in OTD_THEMES.items()
+    ])
+    rows.append([
+        InlineKeyboardButton(
+            text=("✅ " if f == fmt else "") + f,
+            callback_data=f"otdc:fmt:{f.replace(':', '_')}",
+        )
+        for f in ("4:5", "9:16", "16:9")
+    ])
+    rows.append([
+        InlineKeyboardButton(
+            text=("✅ " if bid == bg_mode else "") + blbl,
+            callback_data=f"otdc:bg:{bid}",
+        )
+        for bid, blbl in OTD_BG_MODES
+    ])
+    for m in mods:
+        icon = "✅" if m["enabled"] else "⬜"
+        rows.append([
+            InlineKeyboardButton(
+                text=f"{icon} {m['title_fa']}",
+                callback_data=f"otdc:tog:{m['id']}",
+            )
+        ])
+    rows.append([InlineKeyboardButton(text="🎨 ساخت کارت و کپشن نهایی", callback_data="otdc:build")])
+    rows.append([
+        InlineKeyboardButton(text="🕰 لیست رویدادها", callback_data="otd:list"),
+        InlineKeyboardButton(text="🏠 منوی اصلی", callback_data="nav:home"),
+    ])
+    return "\n".join(lines), InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+@router.message(Command("onthisday"))
+async def cmd_onthisday(m: Message) -> None:
+    if not tp.is_admin(m.from_user.id):
+        await m.answer("دسترسی غیرمجاز.")
+        return
+    from src.xgpedia.providers.on_this_day_free import list_on_this_day_events
+    status_msg = await m.answer("⏳ در حال دریافت زندهٔ رویدادهای تاریخی فوتبال امروز (ویکی‌پدیا + آرشیو)...")
+    data = await asyncio.to_thread(list_on_this_day_events, include_live=True)
+    text, kb = _format_otd_list_message(data)
+    await status_msg.edit_text(text, parse_mode="HTML", reply_markup=kb)
+
+
+@router.callback_query(F.data.in_({"otd:list", "otd:refresh"}))
+async def on_otd_list(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    from src.xgpedia.providers.on_this_day_free import list_on_this_day_events
+    force = cb.data == "otd:refresh"
+    await _safe_cb_answer(cb, "در حال دریافت رویدادهای در چنین روزی...")
+    wait_msg = await cb.message.answer("⏳ در حال بارگذاری رویدادهای زندهٔ ویکی‌پدیا و آرشیو شوریل...")
+    data = await asyncio.to_thread(list_on_this_day_events, include_live=True, force_refresh=force)
+    text, kb = _format_otd_list_message(data)
+    await wait_msg.edit_text(text, parse_mode="HTML", reply_markup=kb)
+
+
+@router.callback_query(F.data.startswith("otd:open:"))
+async def on_otd_open(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    from src.xgpedia.providers.on_this_day_free import get_on_this_day_event
+    from src.xgpedia.render.card_kit.on_this_day_card import get_otd_slide_modules
+
+    ev_id = cb.data.split(":", 2)[2]
+    ev = _OTD_EVENT_MAP.get(ev_id) or await asyncio.to_thread(get_on_this_day_event, ev_id)
+    if not ev:
+        await _safe_cb_answer(cb, "رویداد یافت نشد؛ لطفاً لیست را بروزرسانی کنید.", show_alert=True)
+        return
+    await _safe_cb_answer(cb, "استودیو اسلاید باز شد.")
+    mods, missing = get_otd_slide_modules(ev, "cover")
+    st = {
+        "event": ev,
+        "slide": "cover",
+        "theme": "core",
+        "fmt": "4:5",
+        "bg_mode": str(ev.get("defaultBg") or "stadium"),
+        "modules": mods,
+        "missing_modules": missing,
+    }
+    _OTD_STATE[cb.from_user.id] = st
+    text, markup = _render_otd_customizer_view(st)
+    await cb.message.answer(text, parse_mode="HTML", reply_markup=markup)
+
+
+@router.callback_query(F.data == "otd:back")
+async def on_otd_back(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    st = _OTD_STATE.get(cb.from_user.id)
+    if not st:
+        await _safe_cb_answer(cb, "لطفاً دوباره رویداد را از لیست انتخاب کنید.", show_alert=True)
+        return
+    await _safe_cb_answer(cb, "بازگشت به استودیو اسلاید")
+    text, markup = _render_otd_customizer_view(st)
+    await cb.message.answer(text, parse_mode="HTML", reply_markup=markup)
+
+
+@router.callback_query(F.data.startswith("otdc:"))
+async def on_otd_customizer_action(cb: CallbackQuery, bot: Bot) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    st = _OTD_STATE.get(cb.from_user.id)
+    if not st:
+        await _safe_cb_answer(cb, "لطفاً دوباره رویداد را از لیست انتخاب کنید.", show_alert=True)
+        return
+
+    from src.xgpedia.render.card_kit.on_this_day_card import (
+        get_otd_slide_availability,
+        get_otd_slide_modules,
+    )
+
+    parts = cb.data.split(":")
+    action = parts[1]
+
+    if action == "sl":
+        sid = parts[2]
+        avail = get_otd_slide_availability(st["event"])
+        if not avail.get(sid, False):
+            await _safe_cb_answer(
+                cb,
+                "این رویداد دیتای تله‌متری/مختصات زمین ندارد (قانون null≠0). پوسترهای دیگر قابل استفاده‌اند.",
+                show_alert=True,
+            )
+            return
+        st["slide"] = sid
+        mods, missing = get_otd_slide_modules(st["event"], sid)
+        st["modules"] = mods
+        st["missing_modules"] = missing
+        await _safe_cb_answer(cb, f"پوستر روی {sid} تنظیم شد.")
+    elif action == "th":
+        st["theme"] = parts[2]
+        await _safe_cb_answer(cb, f"تم روی {st['theme']} تنظیم شد.")
+    elif action == "fmt":
+        st["fmt"] = parts[2].replace("_", ":")
+        await _safe_cb_answer(cb, f"فرمت روی {st['fmt']} تنظیم شد.")
+    elif action == "bg":
+        st["bg_mode"] = parts[2]
+        await _safe_cb_answer(cb, f"پس‌زمینه روی {st['bg_mode']} تنظیم شد.")
+    elif action == "tog":
+        mid = parts[2]
+        target = next((m for m in st["modules"] if m["id"] == mid), None)
+        if target:
+            active_cnt = sum(1 for m in st["modules"] if m["enabled"])
+            if target["enabled"] and active_cnt <= 1:
+                await _safe_cb_answer(cb, "حداقل یک ماژول در اسلاید باید فعال بماند.", show_alert=True)
+                return
+            target["enabled"] = not target["enabled"]
+            await _safe_cb_answer(cb, f"{target['title_fa']}: {'فعال' if target['enabled'] else 'غیرفعال'}")
+    elif action == "build":
+        await _safe_cb_answer(cb, "در حال ساخت پوستر «در چنین روزی»...")
+        ev = st["event"]
+        wait_msg = await cb.message.answer(
+            f"⏳ در حال ساخت پوستر <b>{html.escape(str(ev.get('title') or ''))}</b> ({st['slide']} | {st['fmt']})...",
+            parse_mode="HTML",
+        )
+
+        async def _progress(msg_text: str) -> None:
+            try:
+                await wait_msg.edit_text(
+                    f"{msg_text}\n🕰 <b>{html.escape(str(ev.get('title') or ''))}</b>",
+                    parse_mode="HTML",
+                )
+            except TelegramBadRequest:
+                pass
+
+        enabled_ids = [m["id"] for m in st["modules"] if m["enabled"]]
+        res = await tw.generate_on_this_day_post_async(
+            ev,
+            slide=st["slide"],
+            theme=st["theme"],
+            fmt=st["fmt"],
+            bg_mode=st["bg_mode"],
+            enabled_modules=enabled_ids,
+            progress_cb=_progress,
+        )
+        if not res.ok:
+            await wait_msg.edit_text(html.escape(res.format_error_fa())[:3800], parse_mode="HTML")
+            return
+        await _send_post_preview(
+            bot,
+            cb.from_user.id,
+            res,
+            wait_msg,
+            note=f"✅ پوستر «در چنین روزی» ساخته شد (پست #{res.post_id} | اسلاید {st['slide']} | تم {st['theme']} | {st['fmt']}).",
+        )
+        return
+
+    text, markup = _render_otd_customizer_view(st)
+    for _attempt in range(3):
+        try:
+            await cb.message.edit_text(text, parse_mode="HTML", reply_markup=markup)
+            break
+        except TelegramBadRequest:
+            break
+        except Exception as e:
+            if _attempt == 2:
+                log.warning("otd customizer edit_text failed: %s", e)
+            else:
+                await asyncio.sleep(1.0)
+
+
 async def main() -> None:
     import os
     from aiogram.client.session.aiohttp import AiohttpSession
@@ -1294,6 +1813,15 @@ async def main() -> None:
     bot = Bot(TELEGRAM_BOT_TOKEN, session=session)
     dp = Dispatcher()
     dp.include_router(router)
+    try:
+        await bot.set_my_commands([
+            BotCommand(command="start", description="🏠 خانه و باز کردن کیبورد پایین"),
+            BotCommand(command="cards", description="🎨 استودیو کارت‌ها (پیش‌بازی، پس‌ازبازی، در چنین روزی)"),
+            BotCommand(command="postmatch", description="🏁 کارت‌های پس‌ازبازی (۲۴ ساعت اخیر)"),
+            BotCommand(command="onthisday", description="🕰 در چنین روزی (وقایع تاریخی فوتبال)"),
+        ])
+    except Exception as _cmd_exc:
+        log.warning("set_my_commands skipped: %s", _cmd_exc)
 
     sched_task = asyncio.create_task(_scheduler_loop(bot))
     log.info("bot polling started - admins: %s", sorted(ADMIN_TELEGRAM_IDS))

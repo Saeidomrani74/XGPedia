@@ -1460,3 +1460,128 @@ def enrich_post_match_fixture(fixture_id: str) -> dict[str, bool]:
         pass
 
     return {"fpl": fpl_ok, "understat": us_ok}
+
+
+async def generate_on_this_day_post_async(
+    event: dict[str, Any],
+    *,
+    slide: str = "cover",
+    theme: str = "core",
+    fmt: str = "4:5",
+    bg_mode: str | None = None,
+    enabled_modules: list[str] | None = None,
+    platform: str = "telegram",
+    out_dir: Path | None = None,
+    progress_cb: Callable[[str], Awaitable[None]] | None = None,
+) -> PostGenerationResult:
+    """تولید ناهمزمان کارت «در چنین روزی» (Showreel V2) با رندر Playwright و ثبت در جدول posts."""
+    import asyncio
+    from src.xgpedia.render.card_kit.on_this_day_card import (
+        build_on_this_day_caption,
+        render_on_this_day_html,
+    )
+    from src.xgpedia.render.render_png import render as render_png_async
+    from src.xgpedia.render.studio_engine import FORMATS
+
+    init_db()
+    ev_id = str(event.get("id") or "otd_custom")
+    fixture_key = f"otd:{ev_id}:{slide}"
+
+    if progress_cb:
+        await progress_cb(f"⏳ (۱/۳) در حال آماده‌سازی کپشن مستند و قالب {slide} ({fmt})...")
+
+    try:
+        caption_text = build_on_this_day_caption(event, slide=slide)
+        title = f"در چنین روزی | {event.get('title') or ev_id} ({event.get('year') or ''})"
+        now_iso = datetime.now(timezone.utc).isoformat()
+        with db() as conn:
+            row = conn.execute(
+                "SELECT COALESCE(MAX(content_version), 0) AS mv FROM posts "
+                "WHERE fixture_id = ? AND post_type = 'on_this_day' AND target_platform = ?",
+                (fixture_key, platform),
+            ).fetchone()
+            ver = int(row["mv"] if row else 0) + 1
+            cur = conn.execute(
+                """INSERT INTO posts
+                   (fixture_id, post_type, target_platform, content_version, status, title, caption, draft_json, fact_json, created_at)
+                   VALUES (?, 'on_this_day', ?, ?, 'draft', ?, ?, ?, ?, ?)""",
+                (
+                    fixture_key,
+                    platform,
+                    ver,
+                    title,
+                    caption_text,
+                    json.dumps(
+                        {
+                            "title": title,
+                            "slide": slide,
+                            "theme": theme,
+                            "fmt": fmt,
+                            "bg_mode": bg_mode,
+                            "enabled_modules": enabled_modules,
+                        },
+                        ensure_ascii=False,
+                    ),
+                    json.dumps(event, ensure_ascii=False),
+                    now_iso,
+                ),
+            )
+            post_id = int(cur.lastrowid)
+    except Exception as e:
+        title_err, detail = _diagnose_exception("editorial", e)
+        return PostGenerationResult(
+            ok=False, fixture_id=fixture_key, failed_stage="editorial",
+            error_title=title_err, error_detail=detail,
+        )
+
+    if progress_cb:
+        await progress_cb(f"⏳ (۲/۳) در حال رندر پوستر «در چنین روزی» ({fmt})...")
+
+    try:
+        target_out = Path(out_dir or (ROOT / "output"))
+        target_out.mkdir(parents=True, exist_ok=True)
+        w, hgt = FORMATS.get(fmt, FORMATS["4:5"])
+        stem = f"post_{post_id}_v{ver}_on_this_day_{slide}"
+        html_path = target_out / f"{stem}_{w}x{hgt}.html"
+        html_str = render_on_this_day_html(
+            event,
+            slide=slide,
+            theme=theme,
+            fmt=fmt,
+            bg_mode=bg_mode,
+            enabled_modules=enabled_modules,
+        )
+        html_path.write_text(html_str, encoding="utf-8")
+
+        img_fmt = "jpeg" if platform == "instagram" else "png"
+        img_path = target_out / f"{stem}_{w}x{hgt}.{img_fmt}"
+        await asyncio.wait_for(
+            render_png_async(str(html_path), str(img_path), w, hgt, img_fmt),
+            timeout=45.0,
+        )
+
+        cap_path = target_out / f"post_{post_id}_v{ver}_caption.txt"
+        cap_path.write_text(caption_text, encoding="utf-8")
+
+        with db() as conn:
+            conn.execute(
+                "UPDATE posts SET status = 'awaiting_approval' WHERE post_id = ?",
+                (post_id,),
+            )
+
+        return PostGenerationResult(
+            ok=True,
+            fixture_id=fixture_key,
+            post_id=post_id,
+            content_version=ver,
+            title=title,
+            image_path=img_path,
+            html_path=html_path,
+            caption_path=cap_path,
+        )
+    except Exception as e:
+        title_err, detail = _diagnose_exception("render", e)
+        return PostGenerationResult(
+            ok=False, fixture_id=fixture_key, post_id=post_id,
+            failed_stage="render", error_title=title_err, error_detail=detail,
+        )
