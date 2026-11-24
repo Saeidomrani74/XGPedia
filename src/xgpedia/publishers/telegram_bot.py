@@ -165,6 +165,10 @@ def _cards_studio_markup() -> InlineKeyboardMarkup:
                 InlineKeyboardButton(text="📰 خبر فوری و رسمی", callback_data="news:list"),
             ],
             [
+                InlineKeyboardButton(text="🎂 تولدهای امروز (اسطوره‌ها)", callback_data="bday:list:1"),
+                InlineKeyboardButton(text="🔍 جستجوی بازیکن (تولد)", callback_data="bday:search"),
+            ],
+            [
                 InlineKeyboardButton(text="📡 رفتن به مرکز دیتای زنده", callback_data="nav:sync"),
                 InlineKeyboardButton(text="🏠 پنل اصلی", callback_data="nav:home"),
             ],
@@ -181,6 +185,7 @@ def _sync_hub_markup() -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text="🏁 بروزرسانی نتایج پایان‌یافته (۲۴س)", callback_data="post:refresh")],
             [InlineKeyboardButton(text="🕰 بروزرسانی زندهٔ ویکی‌پدیا (در چنین روزی)", callback_data="otd:refresh")],
             [InlineKeyboardButton(text="📰 بروزرسانی اخبار زنده (ESPN/BBC)", callback_data="news:refresh")],
+            [InlineKeyboardButton(text="🎂 بروزرسانی تولدهای امروز (Wikidata/Wiki)", callback_data="bday:refresh")],
             [
                 InlineKeyboardButton(text="🎨 استودیو کارت‌ها", callback_data="nav:cards"),
                 InlineKeyboardButton(text="🏠 پنل اصلی", callback_data="nav:home"),
@@ -219,8 +224,12 @@ def _main_panel_markup() -> InlineKeyboardMarkup:
                 InlineKeyboardButton(text="📰 خبر فوری و رسمی", callback_data="news:list"),
             ],
             [
+                InlineKeyboardButton(text="🎂 تولدهای امروز", callback_data="bday:list:1"),
                 InlineKeyboardButton(text="🔄 سینک سریع امروز", callback_data="today:sync"),
+            ],
+            [
                 InlineKeyboardButton(text="⏰ صف زمان‌بندی", callback_data="today:schedules"),
+                InlineKeyboardButton(text="🧠 وضعیت AI", callback_data="nav:ai_status"),
             ],
             [
                 InlineKeyboardButton(text="🎨 همه کارت‌ها", callback_data="nav:cards"),
@@ -231,6 +240,22 @@ def _main_panel_markup() -> InlineKeyboardMarkup:
 
 
 def _preview_keyboard(post_id: int, fixture_id: str, post_type: str = "preview") -> dict[str, Any]:
+    if post_type == "birthday":
+        return {
+            "inline_keyboard": [
+                [
+                    {"text": "✅ انتشار فوری در کانال", "callback_data": f"approve:{post_id}"},
+                    {"text": "⏰ زمان‌بندی امروز (HH:MM)", "callback_data": f"sched:{post_id}"},
+                ],
+                [
+                    {"text": "🎛 تغییر سبک/فرمت/ماژول", "callback_data": "bday:back"},
+                    {"text": "❌ رد", "callback_data": f"reject:{post_id}"},
+                ],
+                [
+                    {"text": "🎂 لیست تولدهای امروز", "callback_data": "bday:list:1"},
+                ],
+            ]
+        }
     if post_type == "breaking_news":
         return {
             "inline_keyboard": [
@@ -777,6 +802,43 @@ async def on_any_text(m: Message, bot: Bot | None = None) -> None:
     if raw_text == "🧠 وضعیت AI":
         text, markup = _render_ai_status_view(page=1)
         await m.answer(text, parse_mode="HTML", reply_markup=markup)
+        return
+
+    # ۰) حالت جستجوی نام فوتبالیست برای کارت تولد
+    if user_id in _AWAITING_BIRTHDAY_SEARCH:
+        _AWAITING_BIRTHDAY_SEARCH.discard(user_id)
+        if raw_text in {"لغو", "انصراف", "/cancel", "cancel"}:
+            await m.answer("❌ جستجوی بازیکن لغو شد.", reply_markup=_main_panel_markup())
+            return
+        from src.xgpedia.providers.birthday_free import search_footballer_by_name
+        wait_s = await m.answer(f"🔍 در حال جستجوی «{html.escape(raw_text)}» در TheSportsDB و ویکی‌پدیا...")
+        found = await asyncio.to_thread(search_footballer_by_name, raw_text)
+        if not found:
+            await wait_s.edit_text(
+                f"❌ بازیکنی با نام «{html.escape(raw_text)}» پیدا نشد. نام انگلیسی یا فارسی دقیق‌تر را امتحان کنید.",
+                parse_mode="HTML",
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                    [InlineKeyboardButton(text="🔍 جستجوی مجدد", callback_data="bday:search")],
+                    [InlineKeyboardButton(text="🎂 لیست تولدهای امروز", callback_data="bday:list:1")],
+                ]),
+            )
+            return
+        rows_s: list[list[InlineKeyboardButton]] = []
+        for pl in found[:8]:
+            pid = str(pl["id"])
+            _BDAY_ITEM_MAP[pid] = pl
+            age_s = f" ({pl['age']}س)" if pl.get("age") else ""
+            club_s = f" — {pl['club']}" if pl.get("club") else ""
+            rows_s.append([InlineKeyboardButton(text=f"🎂 {pl['nameFa']}{age_s}{club_s}"[:54], callback_data=f"bday:open:{pid[:44]}")])
+        rows_s.append([
+            InlineKeyboardButton(text="🔍 جستجوی جدید", callback_data="bday:search"),
+            InlineKeyboardButton(text="🎂 تولدهای امروز", callback_data="bday:list:1"),
+        ])
+        await wait_s.edit_text(
+            f"🔍 <b>نتایج جستجو برای «{html.escape(raw_text)}» ({len(found)} مورد):</b>\nبازیکن مورد نظر را انتخاب کنید تا آمار و عکس واقعی او استخراج شود:",
+            parse_mode="HTML",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=rows_s),
+        )
         return
 
     # ۱) حالت دریافت توضیح ویرایش متن از ادمین
@@ -1908,22 +1970,41 @@ _NEWS_STATE: dict[int, dict[str, Any]] = {}
 _NEWS_ITEM_MAP: dict[str, dict[str, Any]] = {}
 
 
-def _format_news_list_message(data: dict[str, list[dict[str, Any]]]) -> tuple[str, InlineKeyboardMarkup]:
-    live_items = data.get("live") or []
-    presets = data.get("presets") or []
+_NEWS_LAST_DATA: dict[str, list[dict[str, Any]]] = {"live": [], "presets": []}
+
+
+def _format_news_list_message(data: dict[str, list[dict[str, Any]]], *, page: int = 1, page_size: int = 6) -> tuple[str, InlineKeyboardMarkup]:
+    _NEWS_LAST_DATA["live"] = list(data.get("live") or [])
+    _NEWS_LAST_DATA["presets"] = list(data.get("presets") or [])
+    live_items = _NEWS_LAST_DATA["live"]
+    presets = _NEWS_LAST_DATA["presets"]
+    total_live = len(live_items)
+    total_pages = max(1, (total_live + page_size - 1) // page_size)
+    page = max(1, min(page, total_pages))
+    start = (page - 1) * page_size
+    end = min(total_live, start + page_size)
+
     lines = [
-        "📰 <b>استودیو «خبر فوری و رسمی» (PRO WIRE v2)</b>",
+        f"📰 <b>استودیو «خبر فوری و رسمی» (PRO WIRE v2 — صفحه {page} از {total_pages})</b>",
         "حالت: <b>اسلایدی</b> (۴ پوستر مستقل × ۵ مود خبری × ۴ فرمت + انتخاب ماژول‌های داخلی)",
         "",
     ]
     rows: list[list[InlineKeyboardButton]] = []
     if live_items:
-        lines.append(f"🌍 <b>اخبار زندهٔ فوتبال (ESPN + BBC Sport + Guardian — {len(live_items)} خبر):</b>")
-        for it in live_items[:6]:
+        lines.append(f"🌍 <b>اخبار زندهٔ فوتبال (ESPN + BBC Sport + Guardian — {total_live} خبر):</b>")
+        for it in live_items[start:end]:
             iid = str(it["id"])
             _NEWS_ITEM_MAP[iid] = it
             lbl = f"🌍 [{it.get('source', 'Live')[:10]}] {str(it.get('title') or '')[:34]}"
             rows.append([InlineKeyboardButton(text=lbl, callback_data=f"news:open:{iid[:44]}")])
+        if total_pages > 1:
+            nav_r: list[InlineKeyboardButton] = []
+            if page > 1:
+                nav_r.append(InlineKeyboardButton(text="⬅️ اخبار قبل", callback_data=f"news:page:{page - 1}"))
+            nav_r.append(InlineKeyboardButton(text=f"📄 {page}/{total_pages}", callback_data=f"news:page:{page}"))
+            if page < total_pages:
+                nav_r.append(InlineKeyboardButton(text="➡️ اخبار بعد", callback_data=f"news:page:{page + 1}"))
+            rows.append(nav_r)
         lines.append("")
     else:
         lines.append("ℹ️ خبر زنده‌ای دریافت نشد؛ پریست‌های استودیویی زیر همیشه آماده هستند:")
@@ -2207,6 +2288,385 @@ async def on_news_customizer_action(cb: CallbackQuery, bot: Bot) -> None:
                 await asyncio.sleep(1.0)
 
 
+@router.callback_query(F.data.startswith("news:page:"))
+async def on_news_page(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    await _safe_cb_answer(cb)
+    try:
+        page = int(cb.data.split(":")[2])
+    except (IndexError, ValueError):
+        page = 1
+    text, kb = _format_news_list_message(_NEWS_LAST_DATA, page=page)
+    try:
+        await cb.message.edit_text(text, parse_mode="HTML", reply_markup=kb)
+    except TelegramBadRequest:
+        pass
+
+
+# ─── پنل و کاستومایزر اسلایدی «تولدت مبارک اسطوره» (Birthday Studio D47 — صفحه‌بندی کامل) ───
+
+_BDAY_STATE: dict[int, dict[str, Any]] = {}
+_BDAY_ITEM_MAP: dict[str, dict[str, Any]] = {}
+_BDAY_LAST_DATA: dict[str, list[dict[str, Any]]] = {"live": [], "presets": []}
+_AWAITING_BIRTHDAY_SEARCH: set[int] = set()
+
+
+def _format_birthday_list_message(
+    data: dict[str, list[dict[str, Any]]],
+    *,
+    page: int = 1,
+    page_size: int = 8,
+    show_presets: bool = False,
+) -> tuple[str, InlineKeyboardMarkup]:
+    _BDAY_LAST_DATA["live"] = list(data.get("live") or [])
+    _BDAY_LAST_DATA["presets"] = list(data.get("presets") or [])
+    live_items = _BDAY_LAST_DATA["live"]
+    presets = _BDAY_LAST_DATA["presets"]
+    rows: list[list[InlineKeyboardButton]] = []
+
+    if show_presets or not live_items:
+        lines = [
+            "🎂 <b>استودیو کارت تولد XGPedia — پریست‌های آماده اسطوره‌ها</b>",
+            "حالت: <b>اسلایدی</b> (۳ سبک: پوستر اسطوره · شناسنامه آماری · کاور مینی‌مال × ۳ فرمت × ۶ ماژول)",
+            "",
+        ]
+        if not live_items and not show_presets:
+            lines.append("ℹ️ امروز لیست زنده از ویکی‌دیتا/ویکی‌پدیا دریافت نشد؛ می‌توانید از پریست‌ها یا جستجوی دلخواه استفاده کنید:")
+            lines.append("")
+        for it in presets:
+            iid = str(it["id"])
+            _BDAY_ITEM_MAP[iid] = it
+            rows.append([InlineKeyboardButton(
+                text=f"⭐ {it['nameFa']} ({it.get('age', '')} سالگی) — {it.get('club', '')}"[:54],
+                callback_data=f"bday:open:{iid[:44]}",
+            )])
+        nav_top: list[InlineKeyboardButton] = [
+            InlineKeyboardButton(text="🔍 جستجوی بازیکن دلخواه", callback_data="bday:search"),
+        ]
+        if live_items:
+            nav_top.append(InlineKeyboardButton(text=f"🌍 تولدهای امروز ({len(live_items)})", callback_data="bday:list:1"))
+        rows.append(nav_top)
+        rows.append([
+            InlineKeyboardButton(text="🔄 بروزرسانی تولدهای امروز", callback_data="bday:refresh"),
+            InlineKeyboardButton(text="🎨 استودیو کارت‌ها", callback_data="nav:cards"),
+        ])
+        return "\n".join(lines), InlineKeyboardMarkup(inline_keyboard=rows)
+
+    total = len(live_items)
+    total_pages = max(1, (total + page_size - 1) // page_size)
+    page = max(1, min(page, total_pages))
+    start = (page - 1) * page_size
+    end = min(total, start + page_size)
+
+    lines = [
+        f"🎂 <b>تولدهای امروز دنیای فوتبال (صفحه {page} از {total_pages} — مجموع {total} بازیکن)</b>",
+        "منابع زنده: <b>Wikidata SPARQL + Wikimedia (EN/FA) + Wikipedia Infobox + TheSportsDB</b>",
+        "روی هر بازیکن بزنید تا آمار واقعی، باشگاه‌ها، افتخارات و عکس او خودکار استخراج شود:",
+    ]
+    for idx, it in enumerate(live_items[start:end], start + 1):
+        iid = str(it["id"])
+        _BDAY_ITEM_MAP[iid] = it
+        age_s = f" ({it['age']}س)" if it.get("age") else ""
+        nat_s = f" · {it['nat']}" if it.get("nat") else ""
+        lbl = f"{idx}. 🎂 {it.get('nameFa') or it.get('nameEn')}{age_s}{nat_s}"[:54]
+        rows.append([InlineKeyboardButton(text=lbl, callback_data=f"bday:open:{iid[:44]}")])
+
+    if total_pages > 1:
+        nav_p: list[InlineKeyboardButton] = []
+        if page > 1:
+            nav_p.append(InlineKeyboardButton(text="⬅️ صفحه قبل", callback_data=f"bday:list:{page - 1}"))
+        nav_p.append(InlineKeyboardButton(text=f"📄 {page}/{total_pages}", callback_data=f"bday:list:{page}"))
+        if page < total_pages:
+            nav_p.append(InlineKeyboardButton(text="➡️ صفحه بعد", callback_data=f"bday:list:{page + 1}"))
+        rows.append(nav_p)
+
+    rows.append([
+        InlineKeyboardButton(text="🔍 جستجوی بازیکن دلخواه", callback_data="bday:search"),
+        InlineKeyboardButton(text="⭐ پریست‌های آماده (۵)", callback_data="bday:presets"),
+    ])
+    rows.append([
+        InlineKeyboardButton(text="🔄 بروزرسانی زنده", callback_data="bday:refresh"),
+        InlineKeyboardButton(text="🎨 استودیو کارت‌ها", callback_data="nav:cards"),
+    ])
+    return "\n".join(lines), InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def _render_birthday_customizer_view(st: dict[str, Any]) -> tuple[str, InlineKeyboardMarkup]:
+    from src.xgpedia.render.card_kit.birthday_card import BIRTHDAY_FORMATS, BIRTHDAY_MODES
+
+    it = st["item"]
+    mode = st["mode"]
+    fmt = st["fmt"]
+    rim = st.get("rim_light", True)
+    mods = st["modules"]
+    missing = st.get("missing_modules") or []
+
+    m_lbl = next((lbl for mid, lbl, _ in BIRTHDAY_MODES if mid == mode), mode)
+    active_cnt = sum(1 for m in mods if m["enabled"])
+
+    lines = [
+        "🎂 <b>استودیو کارت تولد XGPedia — تنظیمات اسلاید</b>",
+        f"👤 <b>{html.escape(str(it.get('nameFa') or it.get('nameEn') or ''))}</b>"
+        + (f" ({it['age']} سالگی)" if it.get("age") else ""),
+        f"🖼 سبک طراحی: <b>{html.escape(m_lbl)}</b> | 📐 فرمت: <b>{fmt}</b>",
+        f"✨ هاله نور پرتره: <b>{'روشن' if rim else 'خاموش'}</b> | 🧩 ماژول‌های فعال: <b>{active_cnt} از {len(mods)}</b>",
+    ]
+    if missing:
+        lines.append("ℹ️ ماژول‌های بدون دیتای ثبت‌شده (قانون null≠0): " + html.escape("، ".join(missing)))
+
+    rows: list[list[InlineKeyboardButton]] = []
+    # ۱) ۳ سبک طراحی
+    rows.append([
+        InlineKeyboardButton(
+            text=("✅ " if mid == mode else "") + mlbl.split("(")[0].strip(),
+            callback_data=f"bdayc:md:{mid}",
+        )
+        for mid, mlbl, _ in BIRTHDAY_MODES
+    ])
+    # ۲) ۳ فرمت
+    rows.append([
+        InlineKeyboardButton(text=("✅ " if f == fmt else "") + f, callback_data=f"bdayc:fmt:{f.replace(':', '_')}")
+        for f in BIRTHDAY_FORMATS
+    ])
+    # ۳) هاله نور Rim-Light
+    rows.append([
+        InlineKeyboardButton(
+            text=f"✨ هاله نور پرتره (Rim-Light): {'✅ روشن' if rim else '⬜ خاموش'}",
+            callback_data="bdayc:rim",
+        )
+    ])
+    # ۴) ماژول‌های دارای دیتای واقعی
+    if mode != "minimal":
+        for m in mods:
+            icon = "✅" if m["enabled"] else "⬜"
+            rows.append([InlineKeyboardButton(text=f"{icon} {m['title_fa']}", callback_data=f"bdayc:tog:{m['id']}")])
+
+    rows.append([InlineKeyboardButton(text="🎨 ساخت کارت و کپشن نهایی", callback_data="bdayc:build")])
+    rows.append([
+        InlineKeyboardButton(text="🎂 لیست تولدهای امروز", callback_data="bday:list:1"),
+        InlineKeyboardButton(text="🎨 استودیو کارت‌ها", callback_data="nav:cards"),
+    ])
+    return "\n".join(lines), InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+@router.message(Command("birthday"))
+async def cmd_birthday(m: Message) -> None:
+    if not tp.is_admin(m.from_user.id):
+        await m.answer("دسترسی غیرمجاز.")
+        return
+    from src.xgpedia.providers.birthday_free import list_birthday_items
+    status_msg = await m.answer("⏳ در حال دریافت تولدهای امروز فوتبالیست‌ها از Wikidata و Wikimedia...")
+    data = await asyncio.to_thread(list_birthday_items, include_live=True)
+    text, kb = _format_birthday_list_message(data, page=1)
+    await status_msg.edit_text(text, parse_mode="HTML", reply_markup=kb)
+
+
+@router.callback_query(F.data.startswith("bday:list:"))
+async def on_bday_list_page(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    from src.xgpedia.providers.birthday_free import list_birthday_items
+    try:
+        page = int(cb.data.split(":")[2])
+    except (IndexError, ValueError):
+        page = 1
+    if not _BDAY_LAST_DATA.get("live") and not _BDAY_LAST_DATA.get("presets"):
+        await _safe_cb_answer(cb, "در حال دریافت تولدهای امروز...")
+        wait_msg = await cb.message.answer("⏳ در حال دریافت تولدهای امروز فوتبالیست‌ها از Wikidata و Wikimedia...")
+        data = await asyncio.to_thread(list_birthday_items, include_live=True)
+        text, kb = _format_birthday_list_message(data, page=page)
+        await wait_msg.edit_text(text, parse_mode="HTML", reply_markup=kb)
+        return
+    await _safe_cb_answer(cb)
+    text, kb = _format_birthday_list_message(_BDAY_LAST_DATA, page=page)
+    try:
+        await cb.message.edit_text(text, parse_mode="HTML", reply_markup=kb)
+    except TelegramBadRequest:
+        await cb.message.answer(text, parse_mode="HTML", reply_markup=kb)
+
+
+@router.callback_query(F.data == "bday:refresh")
+async def on_bday_refresh(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    from src.xgpedia.providers.birthday_free import list_birthday_items
+    await _safe_cb_answer(cb, "در حال بروزرسانی زنده تولدهای امروز...")
+    wait_msg = await cb.message.answer("⏳ در حال دریافت زندهٔ تولدهای امروز از Wikidata + Wikimedia...")
+    data = await asyncio.to_thread(list_birthday_items, include_live=True, force_refresh=True)
+    text, kb = _format_birthday_list_message(data, page=1)
+    await wait_msg.edit_text(text, parse_mode="HTML", reply_markup=kb)
+
+
+@router.callback_query(F.data == "bday:presets")
+async def on_bday_presets(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    from src.xgpedia.providers.birthday_free import load_birthday_presets
+    await _safe_cb_answer(cb)
+    if not _BDAY_LAST_DATA.get("presets"):
+        _BDAY_LAST_DATA["presets"] = load_birthday_presets()
+    text, kb = _format_birthday_list_message(_BDAY_LAST_DATA, show_presets=True)
+    try:
+        await cb.message.edit_text(text, parse_mode="HTML", reply_markup=kb)
+    except TelegramBadRequest:
+        await cb.message.answer(text, parse_mode="HTML", reply_markup=kb)
+
+
+@router.callback_query(F.data == "bday:search")
+async def on_bday_search(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    _AWAITING_BIRTHDAY_SEARCH.add(cb.from_user.id)
+    await _safe_cb_answer(cb, "نام بازیکن را بفرستید.")
+    await cb.message.answer(
+        "🔍 <b>جستجوی بازیکن برای کارت تولد</b>\n"
+        "نام بازیکن را به انگلیسی یا فارسی بنویسید (مثلاً <code>Sardar Azmoun</code> یا <code>علی دایی</code>) یا برای انصراف <code>لغو</code> بفرستید:",
+        parse_mode="HTML",
+    )
+
+
+@router.callback_query(F.data.startswith("bday:open:"))
+async def on_bday_open(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    from src.xgpedia.providers.birthday_free import _enrich_from_thesportsdb, _enrich_from_wikipedia
+    from src.xgpedia.render.card_kit.birthday_card import BIRTHDAY_DEFAULT_MODE, get_birthday_modules
+
+    iid = cb.data.split(":", 2)[2]
+    it = _BDAY_ITEM_MAP.get(iid)
+    if not it:
+        await _safe_cb_answer(cb, "بازیکن در کش نیست؛ لطفاً لیست را بروزرسانی کنید.", show_alert=True)
+        return
+    await _safe_cb_answer(cb, "در حال استخراج آمار و افتخارات واقعی...")
+    wait_m = await cb.message.answer(
+        f"⏳ در حال بررسی پروفایل <b>{html.escape(str(it.get('nameFa') or it.get('nameEn') or ''))}</b> در ویکی‌پدیا و TheSportsDB...",
+        parse_mode="HTML",
+    )
+    enriched = dict(it)
+    if not str(enriched.get("id") or "").startswith("preset_"):
+        def _quick_enrich() -> dict[str, Any]:
+            _enrich_from_wikipedia(enriched, timeout=6.0)
+            _enrich_from_thesportsdb(enriched, timeout=6.0)
+            return enriched
+        try:
+            enriched = await asyncio.wait_for(asyncio.to_thread(_quick_enrich), timeout=16.0)
+        except Exception:
+            pass
+    # یادداشت تحریریه همیشه در مرحلهٔ ساخت با LLM تولید می‌شود پس quote را به‌عنوان ماژول قابل انتخاب نگه می‌داریم
+    if not enriched.get("quote"):
+        enriched["quote"] = {"title": "یادداشت تحریریه تولد", "body": "(در مرحلهٔ ساخت نهایی با هوش مصنوعی نگارش می‌شود)", "tag": "XGPedia"}
+    mods, missing = get_birthday_modules(enriched, BIRTHDAY_DEFAULT_MODE)
+    # برگرداندن quote به None اگر placeholder بود تا در مرحلهٔ ساخت واقعی با LLM نوشته شود
+    if enriched["quote"]["body"].startswith("(در مرحلهٔ"):
+        enriched["quote"] = None
+
+    st = {
+        "item": enriched,
+        "mode": BIRTHDAY_DEFAULT_MODE,
+        "fmt": "4:5",
+        "rim_light": True,
+        "modules": mods,
+        "missing_modules": missing,
+    }
+    _BDAY_STATE[cb.from_user.id] = st
+    text, markup = _render_birthday_customizer_view(st)
+    await wait_m.edit_text(text, parse_mode="HTML", reply_markup=markup)
+
+
+@router.callback_query(F.data == "bday:back")
+async def on_bday_back(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    st = _BDAY_STATE.get(cb.from_user.id)
+    if not st:
+        await _safe_cb_answer(cb, "لطفاً دوباره بازیکن را انتخاب کنید.", show_alert=True)
+        return
+    await _safe_cb_answer(cb)
+    text, markup = _render_birthday_customizer_view(st)
+    await cb.message.answer(text, parse_mode="HTML", reply_markup=markup)
+
+
+@router.callback_query(F.data.startswith("bdayc:"))
+async def on_bday_customizer_action(cb: CallbackQuery, bot: Bot) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    st = _BDAY_STATE.get(cb.from_user.id)
+    if not st:
+        await _safe_cb_answer(cb, "لطفاً دوباره بازیکن را انتخاب کنید.", show_alert=True)
+        return
+
+    parts = cb.data.split(":")
+    action = parts[1]
+
+    if action == "md":
+        st["mode"] = parts[2] if parts[2] in ("poster", "dossier", "minimal") else "poster"
+        await _safe_cb_answer(cb, f"سبک کارت روی {st['mode']} تنظیم شد.")
+    elif action == "fmt":
+        st["fmt"] = parts[2].replace("_", ":")
+        await _safe_cb_answer(cb, f"فرمت روی {st['fmt']} تنظیم شد.")
+    elif action == "rim":
+        st["rim_light"] = not st.get("rim_light", True)
+        await _safe_cb_answer(cb, "هاله نور: " + ("روشن" if st["rim_light"] else "خاموش"))
+    elif action == "tog":
+        mid = parts[2]
+        target = next((m for m in st["modules"] if m["id"] == mid), None)
+        if target:
+            target["enabled"] = not target["enabled"]
+            await _safe_cb_answer(cb, f"{target['title_fa']}: {'فعال' if target['enabled'] else 'غیرفعال'}")
+    elif action == "build":
+        await _safe_cb_answer(cb, "در حال ساخت کارت تولد...")
+        it = st["item"]
+        wait_msg = await cb.message.answer(
+            f"⏳ در حال ساخت کارت تولد <b>{html.escape(str(it.get('nameFa') or it.get('nameEn') or ''))}</b> ({st['mode']} | {st['fmt']})...",
+            parse_mode="HTML",
+        )
+
+        async def _progress(msg_text: str) -> None:
+            try:
+                await wait_msg.edit_text(
+                    f"{msg_text}\n🎂 <b>{html.escape(str(it.get('nameFa') or it.get('nameEn') or ''))}</b>",
+                    parse_mode="HTML",
+                )
+            except TelegramBadRequest:
+                pass
+
+        enabled_ids = [m["id"] for m in st["modules"] if m["enabled"]]
+        res = await tw.generate_birthday_post_async(
+            it,
+            mode=st["mode"],
+            fmt=st["fmt"],
+            rim_light=st.get("rim_light", True),
+            enabled_modules=enabled_ids,
+            progress_cb=_progress,
+        )
+        if not res.ok:
+            await wait_msg.edit_text(html.escape(res.format_error_fa())[:3800], parse_mode="HTML")
+            return
+        await _send_post_preview(
+            bot,
+            cb.from_user.id,
+            res,
+            wait_msg,
+            note=f"✅ کارت تولد آماده شد (پست #{res.post_id} | سبک {st['mode']} | {st['fmt']}).",
+        )
+        return
+
+    text, markup = _render_birthday_customizer_view(st)
+    try:
+        await cb.message.edit_text(text, parse_mode="HTML", reply_markup=markup)
+    except TelegramBadRequest:
+        pass
+
+
 async def main() -> None:
     import os
     from aiogram.client.session.aiohttp import AiohttpSession
@@ -2227,6 +2687,7 @@ async def main() -> None:
             BotCommand(command="postmatch", description="🏁 کارت‌های پس‌ازبازی (۲۴ ساعت اخیر)"),
             BotCommand(command="onthisday", description="🕰 در چنین روزی (وقایع تاریخی فوتبال)"),
             BotCommand(command="news", description="📰 خبر فوری و رسمی (PRO WIRE v2)"),
+            BotCommand(command="birthday", description="🎂 تولدهای امروز فوتبالیست‌ها (Birthday Studio)"),
         ])
     except Exception as _cmd_exc:
         log.warning("set_my_commands skipped: %s", _cmd_exc)

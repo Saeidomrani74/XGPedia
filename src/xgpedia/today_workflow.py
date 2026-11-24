@@ -1752,3 +1752,142 @@ async def generate_news_post_async(
             ok=False, fixture_id=fixture_key, post_id=post_id,
             failed_stage="render", error_title=title_err, error_detail=detail,
         )
+
+
+async def generate_birthday_post_async(
+    item: dict[str, Any],
+    *,
+    mode: str = "poster",
+    fmt: str = "4:5",
+    rim_light: bool = True,
+    enabled_modules: list[str] | None = None,
+    platform: str = "telegram",
+    out_dir: Path | None = None,
+    progress_cb: Callable[[str], Awaitable[None]] | None = None,
+) -> PostGenerationResult:
+    """تولید ناهمزمان کارت «تولدت مبارک اسطوره» (Birthday Studio D47) با غنی‌سازی چندمنبعی و رندر Playwright."""
+    import asyncio
+    import threading
+    from src.xgpedia.providers.birthday_free import enrich_birthday_player
+    from src.xgpedia.render.card_kit.birthday_card import (
+        BIRTHDAY_DEFAULT_MODE,
+        BIRTHDAY_FORMATS,
+        build_birthday_caption,
+        render_birthday_html,
+    )
+    from src.xgpedia.render.render_png import render as render_png_async
+
+    init_db()
+    eff_mode = mode if mode in ("poster", "dossier", "minimal") else BIRTHDAY_DEFAULT_MODE
+    item_id = str(item.get("id") or "bday_custom")
+    fixture_key = f"birthday:{item_id}:{eff_mode}"
+
+    if progress_cb:
+        await progress_cb(f"⏳ (۱/۳) در حال تکمیل آمار واقعی از ویکی‌پدیا/TheSportsDB و نگارش یادداشت تولد ({fmt})...")
+
+    try:
+        cancel_ev = threading.Event()
+
+        def _prepare() -> dict[str, Any]:
+            return enrich_birthday_player(item, cancel_event=cancel_ev, fetch_network=True)
+
+        try:
+            enriched = await asyncio.wait_for(asyncio.to_thread(_prepare), timeout=110.0)
+        finally:
+            cancel_ev.set()
+
+        caption_text = build_birthday_caption(enriched)
+        nm = str(enriched.get("nameFa") or enriched.get("nameEn") or item_id)
+        ag = enriched.get("age")
+        title = f"تولدت مبارک {nm} ({ag} سالگی)" if ag else f"تولدت مبارک {nm}"
+        now_iso = datetime.now(timezone.utc).isoformat()
+
+        with db() as conn:
+            row = conn.execute(
+                "SELECT COALESCE(MAX(content_version), 0) AS mv FROM posts "
+                "WHERE fixture_id = ? AND post_type = 'birthday' AND target_platform = ?",
+                (fixture_key, platform),
+            ).fetchone()
+            ver = int(row["mv"] if row else 0) + 1
+            cur = conn.execute(
+                """INSERT INTO posts
+                   (fixture_id, post_type, target_platform, content_version, status, title, caption, draft_json, fact_json, created_at)
+                   VALUES (?, 'birthday', ?, ?, 'draft', ?, ?, ?, ?, ?)""",
+                (
+                    fixture_key,
+                    platform,
+                    ver,
+                    title,
+                    caption_text,
+                    json.dumps(
+                        {
+                            "title": title,
+                            "mode": eff_mode,
+                            "fmt": fmt,
+                            "rim_light": rim_light,
+                            "enabled_modules": enabled_modules,
+                        },
+                        ensure_ascii=False,
+                    ),
+                    json.dumps(enriched, ensure_ascii=False),
+                    now_iso,
+                ),
+            )
+            post_id = int(cur.lastrowid)
+    except Exception as e:
+        title_err, detail = _diagnose_exception("editorial", e)
+        return PostGenerationResult(
+            ok=False, fixture_id=fixture_key, failed_stage="editorial",
+            error_title=title_err, error_detail=detail,
+        )
+
+    if progress_cb:
+        await progress_cb(f"⏳ (۲/۳) در حال رندر پوستر تولد ({eff_mode} | {fmt})...")
+
+    try:
+        target_out = Path(out_dir or (ROOT / "output"))
+        target_out.mkdir(parents=True, exist_ok=True)
+        w, hgt = BIRTHDAY_FORMATS.get(fmt, BIRTHDAY_FORMATS["4:5"])
+        stem = f"post_{post_id}_v{ver}_birthday_{eff_mode}"
+        html_path = target_out / f"{stem}_{w}x{hgt}.html"
+        html_str = render_birthday_html(
+            enriched,
+            mode=eff_mode,
+            fmt=fmt,
+            rim_light=rim_light,
+            enabled_modules=enabled_modules,
+        )
+        html_path.write_text(html_str, encoding="utf-8")
+
+        img_fmt = "jpeg" if platform == "instagram" else "png"
+        img_path = target_out / f"{stem}_{w}x{hgt}.{img_fmt}"
+        await asyncio.wait_for(
+            render_png_async(str(html_path), str(img_path), w, hgt, img_fmt),
+            timeout=45.0,
+        )
+
+        cap_path = target_out / f"post_{post_id}_v{ver}_caption.txt"
+        cap_path.write_text(caption_text, encoding="utf-8")
+
+        with db() as conn:
+            conn.execute(
+                "UPDATE posts SET status = 'awaiting_approval' WHERE post_id = ?",
+                (post_id,),
+            )
+
+        return PostGenerationResult(
+            ok=True,
+            fixture_id=fixture_key,
+            post_id=post_id,
+            content_version=ver,
+            title=title,
+            image_path=img_path,
+            html_path=html_path,
+            caption_path=cap_path,
+        )
+    except Exception as e:
+        title_err, detail = _diagnose_exception("render", e)
+        return PostGenerationResult(
+            ok=False, fixture_id=fixture_key, post_id=post_id,
+            failed_stage="render", error_title=title_err, error_detail=detail,
+        )

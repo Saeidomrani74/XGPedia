@@ -1,0 +1,261 @@
+[
+  {
+    "id": "preset_messi",
+    "nameFa": "لیونل مسی",
+    "nameEn": "LIONEL MESSI",
+    "surnameEn": "MESSI",
+    "epithet": "معمار بی‌همتای فوتبال مدرن",
+    "birthYear": 1987,
+    "birthMonth": 6,
+    "birthDay": 24,
+    "jersey": 10,
+    "dateFa": "۳ تیر ۱۳۶۶",
+    "dateEn": "24 JUNE 1987",
+    "club": "اینتر میامی",
+    "nat": "آرژانتین",
+    "pos": "مهاجم / بازی‌ساز",
+    "code": "LM10",
+    "primary": "#38BDF8",
+    "secondary": "#F59E0B",
+    "source": "Opta / Transfermarkt",
+    "source_url": "https://en.wikipedia.org/wiki/Lionel_Messi",
+    "lang": "fa",
+    "kpis": {
+      "apps": "1,102",
+      "goals": "858",
+      "assists": "382",
+      "p90": "1.18"
+    },
+    "radar": [97, 99, 98, 99, 96, 98],
+    "trophies": [
+      {"icon": "ballon", "label": "توپ طلا", "count": "8"},
+      {"icon": "wc", "label": "جام جهانی", "count": "1"},
+      {"icon": "ucl", "label": "لیگ قهرمانان", "count": "4"},
+      {"icon": "cup", "label": "جام رسمی", "count": "46"}
+    ],
+    "timeline": [
+      {"club": "بارسلونا", "years": "2004–21", "color": "#E62E45", "tag": "۶۷۲ گل"},
+      {"club": "پاری‌سن‌ژرمن", "years": "2021–23", "color": "#3B82F6", "tag": "۲ لیگ ۱"},
+      {"club": "اینتر میامی", "years": "2023–26", "color": "#F472B6", "tag": "MVP MLS"},
+      {"club": "آرژانتین", "years": "2005–26", "color": "#38BDF8", "tag": "قهرمان جهان"}
+    ],
+    "quote": {
+      "title": "جادویی که زمان را متوقف کرد",
+      "body": "مسی همچنان هندسهٔ زمین را با یک لمس ساده بازتعریف می‌کند؛ ترکیبی دست‌نیافتنی از دید پیرامونی، دقت جراحانه و افتخاراتی که تاریخ فوتبال را دوباره نوشتند.",
+      "tag": "بیشترین مشارکت مستقیم در گل تاریخ فوتبال — ۱,۲۴۰ گل و پاس گل"
+    },
+    "record": {
+      "val": "8×",
+      "unit": "BALLON D’OR",
+      "title": "رکورد جاودانه تاریخ فوتبال",
+      "desc": "تنها بازیکن تاریخ با ۸ توپ طلا، ۴۶ جام رسمی و رکورد ۹۱ گل در یک سال تقویمی."
+    }
+  },
+  {
+    "id": "preset_ronaldo",
+    "nameFa": "کریستیانو رونالدو",
+    "nameEn": "CRISTIANO RONALDO",
+    "surnameEn": "RONALDO",
+    "epithet": "ماشین بی‌توقف گلزنی و اراده",
+    "birthYear": 1985,
+    "birthMonth": 2,
+    "birthDay": 5,
+    "jersey": 7,
+    "dateFa": "۱۶ بهمن ۱۳۶۳",
+    "dateEn": "5 FEB 1985",
+    "club": "النصر",
+    "nat": "پرتغال",
+    "pos": "مهاجم نوک",
+    "code": "CR7",
+    "primary": "#F59E0B",
+    "secondary": "#E62E45",
+    "source": "Opta / Transfermarkt",
+    "source_url": "https://en.wikipedia.org/wiki/Cristiano_Ronaldo",
+    "lang": "fa",
+    "kpis": {
+      "apps": "1,274",
+      "goals": "936",
+      "assists": "258",
+      "p90": "0.96"
+    },
+    "radar": [99, 85, 86, 97, 90, 99],
+    "trophies": [
+      {"icon": "ballon", "label": "توپ طلا", "count": "5"},
+      {"icon": "ucl", "label": "لیگ قهرمانان", "count": "5"},
+      {"icon": "wc", "label": "یورو و لیگ ملت‌ها", "count": "2"},
+      {"icon": "cup", "label": "جام رسمی", "count": "35"}
+    ],
+    "timeline": [
+      {"club": "منچستر یونایتد", "years": "2003–09", "color": "#E62E45", "tag": "اولین توپ طلا"},
+      {"club": "رئال مادرید", "years": "2009–18", "color": "#F8FAFC", "tag": "۴۵۰ گل در ۴۳۸ بازی"},
+      {"club": "یوونتوس", "years": "2018–21", "color": "#94A3B8", "tag": "۱۰۱ گل"},
+      {"club": "النصر", "years": "2023–26", "color": "#F59E0B", "tag": "آقای گل لیگ"}
+    ],
+    "quote": {
+      "title": "فراتر از مرزهای فیزیولوژی و سن",
+      "body": "رونالدو استاندارد حرفه‌ای‌گری در ورزش جهان را برای همیشه تغییر داد و با اشتیاقی تمام‌نشدنی در محوطه جریمه در آستانهٔ افسانهٔ هزار گل رسمی ایستاده است.",
+      "tag": "برترین گلزن تاریخ فوتبال رسمی و تاریخ لیگ قهرمانان اروپا"
+    },
+    "record": {
+      "val": "936",
+      "unit": "CAREER GOALS",
+      "title": "آقای گل تاریخ فوتبال جهان",
+      "desc": "برترین گلزن تاریخ فوتبال در بازی‌های رسمی، ملی (۱۳۶ گل) و لیگ قهرمانان اروپا (۱۴۰ گل)."
+    }
+  },
+  {
+    "id": "preset_taremi",
+    "nameFa": "مهدی طارمی",
+    "nameEn": "MEHDI TAREMI",
+    "surnameEn": "TAREMI",
+    "epithet": "شاهزادهٔ بوشهر در فوتبال اروپا",
+    "birthYear": 1992,
+    "birthMonth": 7,
+    "birthDay": 18,
+    "jersey": 99,
+    "dateFa": "۲۷ تیر ۱۳۷۱",
+    "dateEn": "18 JULY 1992",
+    "club": "المپیاکوس",
+    "nat": "ایران",
+    "pos": "مهاجم نوک",
+    "code": "MT99",
+    "primary": "#E62E45",
+    "secondary": "#10B981",
+    "source": "Opta / Transfermarkt",
+    "source_url": "https://en.wikipedia.org/wiki/Mehdi_Taremi",
+    "lang": "fa",
+    "kpis": {
+      "apps": "496",
+      "goals": "234",
+      "assists": "108",
+      "p90": "0.78"
+    },
+    "radar": [90, 86, 84, 94, 82, 91],
+    "trophies": [
+      {"icon": "cup", "label": "قهرمانی لیگ پرتغال", "count": "1"},
+      {"icon": "ballon", "label": "آقای گل لیگ پرتغال", "count": "2"},
+      {"icon": "ucl", "label": "فینال اروپا", "count": "1"},
+      {"icon": "wc", "label": "ملی ایران", "count": "95"}
+    ],
+    "timeline": [
+      {"club": "پرسپولیس", "years": "2014–18", "color": "#E62E45", "tag": "۲ آقای گلی"},
+      {"club": "پورتو", "years": "2020–24", "color": "#38BDF8", "tag": "۹۱ گل و ۵۶ پاس"},
+      {"club": "اینتر میلان", "years": "2024–25", "color": "#3B82F6", "tag": "لیگ قهرمانان"},
+      {"club": "المپیاکوس", "years": "2025–26", "color": "#10B981", "tag": "ستاره خط حمله"}
+    ],
+    "quote": {
+      "title": "از زمین‌های خاکی بوشهر تا اوج اروپا",
+      "body": "مهدی طارمی الگوی تمام‌عیار یک مهاجم مدرن ایرانی است؛ با هوش فضایی استثنایی، جای‌گیری‌های مرگبار و توانایی بازی‌سازی بین خطوط که سال‌ها پرچم فوتبال ایران را در اروپا برافراشت.",
+      "tag": "برترین گلزن ایرانی تاریخ رقابت‌های لیگ قهرمانان اروپا"
+    },
+    "record": {
+      "val": "147",
+      "unit": "G+A AT PORTO",
+      "title": "کارنامه درخشان در فوتبال اروپا",
+      "desc": "دو عنوان آقای گلی لیگ پرتغال، نامزدی جایزه پوشکاش و بیش از ۱۴۰ مشارکت گل با پیراهن پورتو."
+    }
+  },
+  {
+    "id": "preset_mbappe",
+    "nameFa": "کیلیان امباپه",
+    "nameEn": "KYLIAN MBAPPÉ",
+    "surnameEn": "MBAPPÉ",
+    "epithet": "صاعقهٔ پاریس در سانتیاگو برنابئو",
+    "birthYear": 1998,
+    "birthMonth": 12,
+    "birthDay": 20,
+    "jersey": 9,
+    "dateFa": "۲۹ آذر ۱۳۷۷",
+    "dateEn": "20 DEC 1998",
+    "club": "رئال مادرید",
+    "nat": "فرانسه",
+    "pos": "مهاجم / وینگر چپ",
+    "code": "KM9",
+    "primary": "#F8FAFC",
+    "secondary": "#F59E0B",
+    "source": "Opta / Transfermarkt",
+    "source_url": "https://en.wikipedia.org/wiki/Kylian_Mbapp%C3%A9",
+    "lang": "fa",
+    "kpis": {
+      "apps": "542",
+      "goals": "389",
+      "assists": "164",
+      "p90": "1.08"
+    },
+    "radar": [95, 86, 96, 94, 80, 96],
+    "trophies": [
+      {"icon": "wc", "label": "جام جهانی", "count": "1"},
+      {"icon": "cup", "label": "کفش طلای جام جهانی", "count": "1"},
+      {"icon": "ballon", "label": "آقای گل لیگ", "count": "7"},
+      {"icon": "ucl", "label": "سوپرجام اروپا", "count": "1"}
+    ],
+    "timeline": [
+      {"club": "موناکو", "years": "2015–17", "color": "#E62E45", "tag": "پدیده اروپا"},
+      {"club": "پاری‌سن‌ژرمن", "years": "2017–24", "color": "#38BDF8", "tag": "۲۵۶ گل و آقای گل"},
+      {"club": "رئال مادرید", "years": "2024–26", "color": "#F59E0B", "tag": "کهکشانی شماره ۹"},
+      {"club": "فرانسه", "years": "2017–26", "color": "#3B82F6", "tag": "۱۲ گل جام جهانی"}
+    ],
+    "quote": {
+      "title": "سرعتی که خطوط دفاعی را می‌شکافد",
+      "body": "امباپه با شتاب انفجاری در فضاهای باز، تمام‌کنندگی خونسردانه در لحظات بزرگ و عطش سیری‌ناپذیر برای فتح بزرگ‌ترین افتخارات قاره با پیراهن سفید رئال مادرید به اوج پختگی تاکتیکی رسیده است.",
+      "tag": "تنها بازیکن قرن ۲۱ با هت‌تریک در فینال جام جهانی"
+    },
+    "record": {
+      "val": "12",
+      "unit": "WORLD CUP GOALS",
+      "title": "سلطان صحنه‌های جام جهانی",
+      "desc": "۱۲ گل در تنها دو دوره جام جهانی و رکورددار بیشترین گل در فینال‌های تاریخ جام جهانی (۴ گل)."
+    }
+  },
+  {
+    "id": "preset_yamal",
+    "nameFa": "لامین یامال",
+    "nameEn": "LAMINE YAMAL",
+    "surnameEn": "YAMAL",
+    "epithet": "نابغهٔ جوان لاماسیا و آیندهٔ فوتبال",
+    "birthYear": 2007,
+    "birthMonth": 7,
+    "birthDay": 13,
+    "jersey": 19,
+    "dateFa": "۲۲ تیر ۱۳۸۶",
+    "dateEn": "13 JULY 2007",
+    "club": "بارسلونا",
+    "nat": "اسپانیا",
+    "pos": "وینگر راست",
+    "code": "LY19",
+    "primary": "#E62E45",
+    "secondary": "#3B82F6",
+    "source": "Opta / Transfermarkt",
+    "source_url": "https://en.wikipedia.org/wiki/Lamine_Yamal",
+    "lang": "fa",
+    "kpis": {
+      "apps": "148",
+      "goals": "38",
+      "assists": "49",
+      "p90": "0.74"
+    },
+    "radar": [85, 95, 97, 92, 84, 93],
+    "trophies": [
+      {"icon": "wc", "label": "قهرمان یورو", "count": "1"},
+      {"icon": "ballon", "label": "جایزه کوپا و گلدن بوی", "count": "2"},
+      {"icon": "cup", "label": "لالیگا اسپانیا", "count": "2"},
+      {"icon": "ucl", "label": "پاس گل یورو", "count": "4"}
+    ],
+    "timeline": [
+      {"club": "لاماسیا", "years": "2014–23", "color": "#F59E0B", "tag": "گوهر آکادمی"},
+      {"club": "بارسلونا", "years": "2023–26", "color": "#E62E45", "tag": "ستاره اول کاتالان"},
+      {"club": "اسپانیا", "years": "2023–26", "color": "#3B82F6", "tag": "بهترین جوان یورو"}
+    ],
+    "quote": {
+      "title": "آینده‌ای که همین امروز آغاز شده است",
+      "body": "با آرامش و خلاقیت یک فوق‌ستارهٔ باسابقه در بزرگ‌ترین ورزشگاه‌های دنیا می‌درخشد. کات‌های پای چپ و دریبل‌های یک‌درمقابل‌یک لامین یامال، امضای نسل جدید فوتبال تماشایی است.",
+      "tag": "جوان‌ترین گلزن و جوان‌ترین قهرمان تاریخ رقابت‌های یورو"
+    },
+    "record": {
+      "val": "16y",
+      "unit": "EURO RECORD",
+      "title": "رکوردشکن نسل جدید فوتبال",
+      "desc": "جوان‌ترین بازیکن، پاسور و گلزن تاریخ یورو؛ فاتح جام ملت‌های اروپا پیش از هجده‌سالگی."
+    }
+  }
+]

@@ -29,11 +29,14 @@ from src.xgpedia.db import db
 
 # وضعیت‌های مجاز برای شروع فلوی انتشار — پست published قبلاً کارش تمام است
 SUBMITTABLE_STATUSES = {"draft", "validated", "awaiting_approval"}
-POST_TYPE_FA = {"preview": "پیش‌بازی", "post_match": "پس از بازی", "number_of_day": "عدد روز"}
+POST_TYPE_FA = {"preview": "پیش‌بازی", "post_match": "پس از بازی", "number_of_day": "عدد روز", "on_this_day": "در چنین روزی", "breaking_news": "خبر فوری", "birthday": "تولد اسطوره"}
 HASHTAG_BY_TYPE = {
     "preview": "#پیش_بازی",
     "post_match": "#پس_از_بازی",
     "number_of_day": "#عدد_روز",
+    "on_this_day": "#در_چنین_روزی",
+    "breaking_news": "#خبر_فوری",
+    "birthday": "#تولدت_مبارک",
 }
 
 
@@ -76,6 +79,9 @@ _SOURCE_LINKS: dict[str, tuple[str, str]] = {
     "bbc sport": ("BBC Sport", "https://www.bbc.com/sport/football"),
     "the guardian": ("The Guardian", "https://www.theguardian.com/football"),
     "wikimedia": ("Wikipedia", "https://en.wikipedia.org"),
+    "wikipedia": ("Wikipedia", "https://en.wikipedia.org"),
+    "wikidata": ("Wikidata / Wikipedia", "https://www.wikidata.org"),
+    "thesportsdb": ("TheSportsDB", "https://www.thesportsdb.com"),
 }
 
 _CLUB_HASHTAGS: list[tuple[tuple[str, ...], str]] = [
@@ -160,6 +166,13 @@ def _build_relevant_hashtags(post: dict, facts: dict, draft: dict) -> str:
     elif ptype == "breaking_news":
         mode_k = str(draft.get("mode") or (facts.get("mode") if isinstance(facts, dict) else "") or "breaking").lower()
         _add(_NEWS_MODE_HASHTAGS.get(mode_k, "#خبر_فوری"))
+    elif ptype == "birthday":
+        _add("#تولد_اسطوره")
+        if isinstance(facts, dict):
+            if facts.get("nameFa"):
+                _add(_slug_fa_hashtag(str(facts["nameFa"])))
+            if facts.get("club"):
+                _add(_slug_fa_hashtag(str(facts["club"])))
 
     # استخراج تیم‌ها از facts ساختاریافته (پیش‌بازی / پس‌ازبازی)
     if isinstance(facts, dict):
@@ -286,7 +299,7 @@ def build_caption(post: dict) -> str:
     title = html.escape(title_raw)
     raw_cap = (post["caption"] or draft.get("caption") or "").strip()
     ptype = post.get("post_type") or ""
-    if ptype in ("on_this_day", "breaking_news"):
+    if ptype in ("on_this_day", "breaking_news", "birthday"):
         import re as _re
         raw_cap = _re.sub(r"</?(?:b|i|code)>", "", raw_cap)
         raw_cap = _clean_caption_stars(raw_cap)
@@ -297,6 +310,9 @@ def build_caption(post: dict) -> str:
     if ptype == "breaking_news":
         t_disp = title if title.startswith("📰") else f"📰 {title}"
         title_block = f"<b>{t_disp}</b>"
+    elif ptype == "birthday":
+        t_disp = title if title.startswith("🎂") else f"🎂 {title}"
+        title_block = f"<b>{t_disp}</b>"
     else:
         title_block = f"<b>{title}</b>"
 
@@ -305,7 +321,7 @@ def build_caption(post: dict) -> str:
 
     # برای خبر فوری، طول بدنه را دقیق طوری تنظیم می‌کنیم که همراه با هدر بازبینی، منبع هایپرلینک و هشتگ‌ها
     # همیشه زیر سقف ۱۰۲۴ تلگرام بماند و هرگز وارد برش خام وسط کلمه نشود
-    if ptype == "breaking_news" and raw_cap:
+    if ptype in ("breaking_news", "birthday") and raw_cap:
         overhead = _utf16_len(title_block) + _utf16_len(src_html) + _utf16_len(tags) + 140  # +140 برای هدر بازبینی و فواصل
         body_budget = max(240, CAPTION_LIMIT - overhead)
         if _utf16_len(html.escape(raw_cap)) > body_budget:
