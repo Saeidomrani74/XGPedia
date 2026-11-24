@@ -2030,3 +2030,107 @@ async def generate_transfer_post_async(
             ok=False, fixture_id=fixture_key, post_id=post_id,
             failed_stage="render", error_title=title_err, error_detail=detail,
         )
+
+
+async def generate_this_or_that_post_async(
+    item: dict[str, Any],
+    *,
+    layout: str = "diagonal",
+    fmt: str = "4:5",
+    pick: str = "none",
+    enabled_modules: list[str] | None = None,
+    platform: str = "telegram",
+    out_dir: Path | None = None,
+    progress_cb: Callable[[str], Awaitable[None]] | None = None,
+) -> PostGenerationResult:
+    """تولید ناهمزمان کارت اسلایدی «این یا اون؟» (This or That Showreel — D49)."""
+    import asyncio
+    from src.xgpedia.render.card_kit.this_or_that_card import (
+        TOT_FORMATS,
+        build_this_or_that_caption,
+        render_this_or_that_html,
+    )
+    from src.xgpedia.render.render_png import render as render_png_async
+
+    init_db()
+    item_id = str(item.get("id") or "tot_custom")
+    fixture_key = f"this_or_that:{item_id}:{layout}"
+
+    if progress_cb:
+        await progress_cb(f"⏳ (۱/۲) در حال آماده‌سازی کپشن جدالی و رندر کارت ({layout} | {fmt})...")
+
+    try:
+        caption_text = build_this_or_that_caption(item)
+        lbl = str(item.get("label") or item.get("question") or item_id).lstrip("🔥✨ ").strip()
+        title = f"این یا اون؟ | {lbl[:85]}"
+        now_iso = datetime.now(timezone.utc).isoformat()
+        with db() as conn:
+            row = conn.execute(
+                "SELECT COALESCE(MAX(content_version), 0) AS mv FROM posts "
+                "WHERE fixture_id = ? AND post_type = 'this_or_that' AND target_platform = ?",
+                (fixture_key, platform),
+            ).fetchone()
+            ver = int(row["mv"] if row else 0) + 1
+            cur = conn.execute(
+                """INSERT INTO posts
+                   (fixture_id, post_type, target_platform, content_version, status, title, caption, draft_json, fact_json, created_at)
+                   VALUES (?, 'this_or_that', ?, ?, 'draft', ?, ?, ?, ?, ?)""",
+                (
+                    fixture_key,
+                    platform,
+                    ver,
+                    title,
+                    caption_text,
+                    json.dumps(
+                        {"title": title, "layout": layout, "fmt": fmt, "pick": pick, "enabled_modules": enabled_modules},
+                        ensure_ascii=False,
+                    ),
+                    json.dumps(item, ensure_ascii=False),
+                    now_iso,
+                ),
+            )
+            post_id = int(cur.lastrowid)
+
+        target_out = Path(out_dir or (ROOT / "output"))
+        target_out.mkdir(parents=True, exist_ok=True)
+        w, hgt = TOT_FORMATS.get(fmt, TOT_FORMATS["4:5"])
+        stem = f"post_{post_id}_v{ver}_tot_{layout}"
+        html_path = target_out / f"{stem}_{w}x{hgt}.html"
+        html_str = render_this_or_that_html(
+            item,
+            layout=layout,
+            fmt=fmt,
+            pick=pick,
+            enabled_modules=enabled_modules,
+        )
+        html_path.write_text(html_str, encoding="utf-8")
+
+        img_fmt = "jpeg" if platform == "instagram" else "png"
+        img_path = target_out / f"{stem}_{w}x{hgt}.{img_fmt}"
+        await asyncio.wait_for(
+            render_png_async(str(html_path), str(img_path), w, hgt, img_fmt),
+            timeout=45.0,
+        )
+
+        cap_path = target_out / f"post_{post_id}_v{ver}_caption.txt"
+        cap_path.write_text(caption_text, encoding="utf-8")
+
+        with db() as conn:
+            conn.execute("UPDATE posts SET status = 'awaiting_approval' WHERE post_id = ?", (post_id,))
+
+        return PostGenerationResult(
+            ok=True,
+            fixture_id=fixture_key,
+            post_id=post_id,
+            content_version=ver,
+            title=title,
+            image_path=img_path,
+            html_path=html_path,
+            caption_path=cap_path,
+        )
+    except Exception as e:
+        title_err, detail = _diagnose_exception("render", e)
+        return PostGenerationResult(
+            ok=False, fixture_id=fixture_key, failed_stage="render",
+            error_title=title_err, error_detail=detail,
+        )

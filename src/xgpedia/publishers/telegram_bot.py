@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import asyncio
 import html
+import json
 import logging
 from typing import Any
 
@@ -173,6 +174,10 @@ def _cards_studio_markup() -> InlineKeyboardMarkup:
                 InlineKeyboardButton(text="⭐ پریست‌های نقل‌وانتقال", callback_data="tr:presets"),
             ],
             [
+                InlineKeyboardButton(text="⚔️ این یا اون؟ (دوئل جدالی)", callback_data="tot:list:1"),
+                InlineKeyboardButton(text="⚡ پیشنهاد جدالی تازه با AI", callback_data="tot:ai_new"),
+            ],
+            [
                 InlineKeyboardButton(text="📡 رفتن به مرکز دیتای زنده", callback_data="nav:sync"),
                 InlineKeyboardButton(text="🏠 پنل اصلی", callback_data="nav:home"),
             ],
@@ -233,8 +238,8 @@ def _main_panel_markup() -> InlineKeyboardMarkup:
                 InlineKeyboardButton(text="📡 رادار نقل‌وانتقالات", callback_data="tr:list:1"),
             ],
             [
+                InlineKeyboardButton(text="⚔️ این یا اون؟ (دوئل)", callback_data="tot:list:1"),
                 InlineKeyboardButton(text="🔄 سینک سریع امروز", callback_data="today:sync"),
-                InlineKeyboardButton(text="🧠 وضعیت AI", callback_data="nav:ai_status"),
             ],
             [
                 InlineKeyboardButton(text="🎨 همه کارت‌ها", callback_data="nav:cards"),
@@ -245,6 +250,22 @@ def _main_panel_markup() -> InlineKeyboardMarkup:
 
 
 def _preview_keyboard(post_id: int, fixture_id: str, post_type: str = "preview") -> dict[str, Any]:
+    if post_type == "this_or_that":
+        return {
+            "inline_keyboard": [
+                [
+                    {"text": "✅ انتشار فوری در کانال", "callback_data": f"approve:{post_id}"},
+                    {"text": "⏰ زمان‌بندی امروز (HH:MM)", "callback_data": f"sched:{post_id}"},
+                ],
+                [
+                    {"text": "🎛 تغییر اسلاید/فرمت/ماژول", "callback_data": "tot:back"},
+                    {"text": "❌ رد", "callback_data": f"reject:{post_id}"},
+                ],
+                [
+                    {"text": "⚔️ لیست پیشنهادهای این یا اون", "callback_data": "tot:list:1"},
+                ],
+            ]
+        }
     if post_type == "transfer_radar":
         return {
             "inline_keyboard": [
@@ -3289,6 +3310,286 @@ async def on_tr_customizer_action(cb: CallbackQuery, bot: Bot) -> None:
         pass
 
 
+# ─── پنل و کاستومایزر اسلایدی «این یا اون؟» (This or That Showreel — D49) ───
+
+_TOT_STATE: dict[int, dict[str, Any]] = {}
+_TOT_ITEM_MAP: dict[str, dict[str, Any]] = {}
+_TOT_LAST_LIST: list[dict[str, Any]] = []
+
+
+def _format_tot_list_message(items: list[dict[str, Any]], *, page: int = 1, page_size: int = 6) -> tuple[str, InlineKeyboardMarkup]:
+    _TOT_LAST_LIST.clear()
+    _TOT_LAST_LIST.extend(items)
+    total = len(items)
+    total_pages = max(1, (total + page_size - 1) // page_size)
+    page = max(1, min(page, total_pages))
+    start = (page - 1) * page_size
+    end = min(total, start + page_size)
+
+    lines = [
+        f"⚔️ <b>استودیو «این یا اون؟» — پیشنهادهای داغ و جدال‌انگیز (صفحه {page} از {total_pages})</b>",
+        "حالت: <b>اسلایدی</b> (۴ سبک: برش مورب · دوئل مجله‌ای · کارت کلکسیونی · چالش ۵تایی × ۳ فرمت)",
+        "یکی از دوئل‌های حساس زیر را انتخاب کن یا با AI پیشنهاد تازه بساز:",
+    ]
+    rows: list[list[InlineKeyboardButton]] = []
+    for idx, it in enumerate(items[start:end], start + 1):
+        iid = str(it["id"])
+        _TOT_ITEM_MAP[iid] = it
+        lbl = f"{idx}. ⚔️ {it.get('label', iid)} — {it.get('sub', '')}"[:56]
+        rows.append([InlineKeyboardButton(text=lbl, callback_data=f"tot:open:{iid[:44]}")])
+
+    if total_pages > 1:
+        nav: list[InlineKeyboardButton] = []
+        if page > 1:
+            nav.append(InlineKeyboardButton(text="⬅️ صفحه قبل", callback_data=f"tot:list:{page - 1}"))
+        nav.append(InlineKeyboardButton(text=f"📄 {page}/{total_pages}", callback_data=f"tot:list:{page}"))
+        if page < total_pages:
+            nav.append(InlineKeyboardButton(text="➡️ صفحه بعد", callback_data=f"tot:list:{page + 1}"))
+        rows.append(nav)
+
+    rows.append([
+        InlineKeyboardButton(text="⚡ پیشنهاد جدالی تازه با AI", callback_data="tot:ai_new"),
+        InlineKeyboardButton(text="🎨 استودیو کارت‌ها", callback_data="nav:cards"),
+    ])
+    return "\n".join(lines), InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def _render_tot_customizer_view(st: dict[str, Any]) -> tuple[str, InlineKeyboardMarkup]:
+    from src.xgpedia.render.card_kit.this_or_that_card import TOT_FORMATS, TOT_LAYOUTS
+
+    it = st["item"]
+    ly = st["layout"]
+    fmt = st["fmt"]
+    pick = st.get("pick", "none")
+    mods = st["modules"]
+    ly_lbl = next((lbl for lid, lbl, _ in TOT_LAYOUTS if lid == ly), ly)
+    active_cnt = sum(1 for m in mods if m["enabled"])
+
+    lines = [
+        "⚔️ <b>استودیو «این یا اون؟» — تنظیمات اسلاید</b>",
+        f"🔥 <b>{html.escape(str(it.get('label') or ''))}</b>",
+        f"❓ {html.escape(str(it.get('question') or '')[:95])}",
+        f"🖼 سبک: <b>{html.escape(ly_lbl)}</b> | 📐 فرمت: <b>{fmt}</b> | 🏅 انتخاب: <b>{pick.upper()}</b>",
+        f"🧩 ماژول‌های فعال: <b>{active_cnt} از {len(mods)}</b>",
+    ]
+    rows: list[list[InlineKeyboardButton]] = []
+    # ۱) ۴ موتور گرافیکی (۲ ردیف)
+    rows.append([
+        InlineKeyboardButton(text=("✅ " if lid == ly else "") + llbl.split("(")[0].strip(), callback_data=f"totc:ly:{lid}")
+        for lid, llbl, _ in TOT_LAYOUTS[:2]
+    ])
+    rows.append([
+        InlineKeyboardButton(text=("✅ " if lid == ly else "") + llbl.split("(")[0].strip(), callback_data=f"totc:ly:{lid}")
+        for lid, llbl, _ in TOT_LAYOUTS[2:]
+    ])
+    # ۲) ۳ فرمت
+    rows.append([
+        InlineKeyboardButton(text=("✅ " if f == fmt else "") + f, callback_data=f"totc:fmt:{f.replace(':', '_')}")
+        for f in TOT_FORMATS
+    ])
+    # ۳) انتخاب برنده + جابجایی A و B
+    rows.append([
+        InlineKeyboardButton(text=("✅ " if pick == "none" else "") + "بدون انتخاب", callback_data="totc:pk:none"),
+        InlineKeyboardButton(text=("✅ " if pick == "a" else "") + "برنده A", callback_data="totc:pk:a"),
+        InlineKeyboardButton(text=("✅ " if pick == "b" else "") + "برنده B", callback_data="totc:pk:b"),
+        InlineKeyboardButton(text="⇄ جابجایی", callback_data="totc:swap"),
+    ])
+    # ۴) ماژول‌های داخلی
+    for i in range(0, len(mods), 2):
+        r_m = []
+        for m in mods[i : i + 2]:
+            icon = "✅" if m["enabled"] else "⬜"
+            r_m.append(InlineKeyboardButton(text=f"{icon} {m['title_fa'].split('(')[0].strip()[:22]}", callback_data=f"totc:tog:{m['id']}"))
+        rows.append(r_m)
+
+    rows.append([InlineKeyboardButton(text="🎨 ساخت کارت و کپشن نهایی", callback_data="totc:build")])
+    rows.append([
+        InlineKeyboardButton(text="⚔️ لیست پیشنهادها", callback_data="tot:list:1"),
+        InlineKeyboardButton(text="🎨 استودیو کارت‌ها", callback_data="nav:cards"),
+    ])
+    return "\n".join(lines), InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+@router.message(Command("thisorthat"))
+async def cmd_thisorthat(m: Message) -> None:
+    if not tp.is_admin(m.from_user.id):
+        await m.answer("دسترسی غیرمجاز.")
+        return
+    from src.xgpedia.providers.this_or_that_free import list_this_or_that_suggestions
+    items = await asyncio.to_thread(list_this_or_that_suggestions, include_live_matches=True)
+    text, kb = _format_tot_list_message(items, page=1)
+    await m.answer(text, parse_mode="HTML", reply_markup=kb)
+
+
+@router.callback_query(F.data.startswith("tot:list:"))
+async def on_tot_list_page(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    from src.xgpedia.providers.this_or_that_free import list_this_or_that_suggestions
+    try:
+        page = int(cb.data.split(":")[2])
+    except (IndexError, ValueError):
+        page = 1
+    await _safe_cb_answer(cb)
+    items = _TOT_LAST_LIST if _TOT_LAST_LIST else await asyncio.to_thread(list_this_or_that_suggestions, include_live_matches=True)
+    text, kb = _format_tot_list_message(list(items), page=page)
+    try:
+        await cb.message.edit_text(text, parse_mode="HTML", reply_markup=kb)
+    except TelegramBadRequest:
+        await cb.message.answer(text, parse_mode="HTML", reply_markup=kb)
+
+
+@router.callback_query(F.data == "tot:ai_new")
+async def on_tot_ai_new(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    import threading
+    from src.xgpedia.providers.this_or_that_free import generate_ai_debate_proposal
+    from src.xgpedia.render.card_kit.this_or_that_card import TOT_DEFAULT_LAYOUT, get_tot_modules
+
+    await _safe_cb_answer(cb, "در حال طراحی دوئل جدالی جدید با AI...")
+    wait_m = await cb.message.answer("⏳ در حال خلق یک پیشنهاد جدال‌انگیز و جذاب «این یا اون؟» با هوش مصنوعی...")
+    ev = threading.Event()
+    try:
+        item = await asyncio.wait_for(asyncio.to_thread(generate_ai_debate_proposal, cancel_event=ev), timeout=90.0)
+    except Exception as e:
+        ev.set()
+        await wait_m.edit_text(f"❌ خطا در تولید پیشنهاد AI:\n{html.escape(type(e).__name__)}: {html.escape(str(e)[:250])}", parse_mode="HTML")
+        return
+    finally:
+        ev.set()
+
+    _TOT_ITEM_MAP[item["id"]] = item
+    st = {
+        "item": item,
+        "layout": str(item.get("layout") or TOT_DEFAULT_LAYOUT),
+        "fmt": "4:5",
+        "pick": "none",
+        "modules": get_tot_modules(item),
+    }
+    _TOT_STATE[cb.from_user.id] = st
+    text, markup = _render_tot_customizer_view(st)
+    await wait_m.edit_text(text, parse_mode="HTML", reply_markup=markup)
+
+
+@router.callback_query(F.data.startswith("tot:open:"))
+async def on_tot_open(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    from src.xgpedia.render.card_kit.this_or_that_card import TOT_DEFAULT_LAYOUT, get_tot_modules
+
+    iid = cb.data.split(":", 2)[2]
+    it = _TOT_ITEM_MAP.get(iid)
+    if not it:
+        await _safe_cb_answer(cb, "پیشنهاد یافت نشد؛ لطفاً لیست را دوباره باز کنید.", show_alert=True)
+        return
+    await _safe_cb_answer(cb)
+    st = {
+        "item": json.loads(json.dumps(it, ensure_ascii=False)),
+        "layout": str(it.get("layout") or TOT_DEFAULT_LAYOUT),
+        "fmt": "4:5",
+        "pick": "none",
+        "modules": get_tot_modules(it),
+    }
+    _TOT_STATE[cb.from_user.id] = st
+    text, markup = _render_tot_customizer_view(st)
+    await cb.message.answer(text, parse_mode="HTML", reply_markup=markup)
+
+
+@router.callback_query(F.data == "tot:back")
+async def on_tot_back(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    st = _TOT_STATE.get(cb.from_user.id)
+    if not st:
+        await _safe_cb_answer(cb, "لطفاً دوباره یک دوئل انتخاب کنید.", show_alert=True)
+        return
+    await _safe_cb_answer(cb)
+    text, markup = _render_tot_customizer_view(st)
+    await cb.message.answer(text, parse_mode="HTML", reply_markup=markup)
+
+
+@router.callback_query(F.data.startswith("totc:"))
+async def on_tot_customizer_action(cb: CallbackQuery, bot: Bot) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    st = _TOT_STATE.get(cb.from_user.id)
+    if not st:
+        await _safe_cb_answer(cb, "لطفاً دوباره یک دوئل انتخاب کنید.", show_alert=True)
+        return
+    parts = cb.data.split(":")
+    action = parts[1]
+
+    if action == "ly":
+        st["layout"] = parts[2] if parts[2] in ("diagonal", "split", "cards", "rapid") else "diagonal"
+        await _safe_cb_answer(cb, f"سبک روی {st['layout']} تنظیم شد.")
+    elif action == "fmt":
+        st["fmt"] = parts[2].replace("_", ":")
+        await _safe_cb_answer(cb, f"فرمت روی {st['fmt']} تنظیم شد.")
+    elif action == "pk":
+        st["pick"] = parts[2] if parts[2] in ("none", "a", "b") else "none"
+        await _safe_cb_answer(cb, f"انتخاب: {st['pick'].upper()}")
+    elif action == "swap":
+        it = st["item"]
+        it["a"], it["b"] = it.get("b"), it.get("a")
+        it["pollA"] = 100 - int(it.get("pollA") or 50)
+        for r in it.get("stats") or []:
+            r["a"], r["b"] = r.get("b"), r.get("a")
+        st["pick"] = "b" if st["pick"] == "a" else ("a" if st["pick"] == "b" else "none")
+        await _safe_cb_answer(cb, "⇄ طرف A و B جابجا شدند.")
+    elif action == "tog":
+        mid = parts[2]
+        target = next((m for m in st["modules"] if m["id"] == mid), None)
+        if target:
+            target["enabled"] = not target["enabled"]
+            await _safe_cb_answer(cb, f"{target['title_fa']}: {'فعال' if target['enabled'] else 'غیرفعال'}")
+    elif action == "build":
+        await _safe_cb_answer(cb, "در حال ساخت کارت این یا اون...")
+        it = st["item"]
+        wait_msg = await cb.message.answer(
+            f"⏳ در حال ساخت کارت <b>{html.escape(str(it.get('label') or ''))}</b> ({st['layout']} | {st['fmt']})...",
+            parse_mode="HTML",
+        )
+
+        async def _progress(msg_text: str) -> None:
+            try:
+                await wait_msg.edit_text(f"{msg_text}\n⚔️ <b>{html.escape(str(it.get('label') or ''))}</b>", parse_mode="HTML")
+            except TelegramBadRequest:
+                pass
+
+        enabled_ids = [m["id"] for m in st["modules"] if m["enabled"]]
+        res = await tw.generate_this_or_that_post_async(
+            it,
+            layout=st["layout"],
+            fmt=st["fmt"],
+            pick=st.get("pick", "none"),
+            enabled_modules=enabled_ids,
+            progress_cb=_progress,
+        )
+        if not res.ok:
+            await wait_msg.edit_text(html.escape(res.format_error_fa())[:3800], parse_mode="HTML")
+            return
+        await _send_post_preview(
+            bot,
+            cb.from_user.id,
+            res,
+            wait_msg,
+            note=f"✅ کارت «این یا اون؟» آماده شد (پست #{res.post_id} | {st['layout']} | {st['fmt']}).",
+        )
+        return
+
+    text, markup = _render_tot_customizer_view(st)
+    try:
+        await cb.message.edit_text(text, parse_mode="HTML", reply_markup=markup)
+    except TelegramBadRequest:
+        pass
+
+
 async def main() -> None:
     import os
     from aiogram.client.session.aiohttp import AiohttpSession
@@ -3311,6 +3612,7 @@ async def main() -> None:
             BotCommand(command="news", description="📰 خبر فوری و رسمی (PRO WIRE v2)"),
             BotCommand(command="birthday", description="🎂 تولدهای امروز فوتبالیست‌ها (Birthday Studio)"),
             BotCommand(command="transfers", description="📡 رادار نقل‌وانتقالات (شایعات داغ ماژولار)"),
+            BotCommand(command="thisorthat", description="⚔️ این یا اون؟ (دوئل‌های جدالی و نظرسنجی)"),
         ])
     except Exception as _cmd_exc:
         log.warning("set_my_commands skipped: %s", _cmd_exc)

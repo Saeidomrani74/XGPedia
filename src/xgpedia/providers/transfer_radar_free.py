@@ -254,6 +254,107 @@ def list_transfer_items(*, include_live: bool = True, force_refresh: bool = Fals
     return {"live": live, "presets": presets}
 
 
+
+_CLUB_CODE_MAP: dict[str, str] = {
+    "آرسنال": "ARS", "arsenal": "ARS",
+    "چلسی": "CHE", "chelsea": "CHE",
+    "لیورپول": "LIV", "liverpool": "LIV",
+    "منچسترسیتی": "MCI", "منچستر سیتی": "MCI", "manchester city": "MCI", "man city": "MCI",
+    "منچستریونایتد": "MUN", "منچستر یونایتد": "MUN", "manchester united": "MUN", "man utd": "MUN",
+    "تاتنهام": "TOT", "tottenham": "TOT", "spurs": "TOT",
+    "نیوکاسل": "NEW", "newcastle": "NEW",
+    "استون ویلا": "AVL", "aston villa": "AVL",
+    "اورتون": "EVE", "everton": "EVE",
+    "وستهام": "WHU", "west ham": "WHU",
+    "برایتون": "BHA", "brighton": "BHA",
+    "کریستال پالاس": "CRY", "crystal palace": "CRY",
+    "برنتفورد": "BRE", "brentford": "BRE",
+    "فولام": "FUL", "fulham": "FUL",
+    "ولورهمپتون": "WOL", "wolves": "WOL",
+    "ناتینگهام": "NFO", "nottingham": "NFO",
+    "بورنموث": "BOU", "bournemouth": "BOU",
+    "رئال مادرید": "RMA", "real madrid": "RMA",
+    "بارسلونا": "BAR", "barcelona": "BAR",
+    "اتلتیکو": "ATM", "atletico": "ATM",
+    "سویا": "SEV", "sevilla": "SEV",
+    "ویارئال": "VIL", "villarreal": "VIL",
+    "بتیس": "BET", "betis": "BET",
+    "بیلبائو": "ATH", "athletic": "ATH",
+    "سوسیداد": "RSO", "sociedad": "RSO",
+    "بایرن": "BAY", "bayern": "BAY",
+    "دورتموند": "BVB", "dortmund": "BVB",
+    "لایپزیگ": "RBL", "leipzig": "RBL",
+    "لورکوزن": "LEV", "leverkusen": "LEV",
+    "فرانکفورت": "SGE", "frankfurt": "SGE",
+    "اشتوتگارت": "VFB", "stuttgart": "VFB",
+    "پاری‌سن ژرمن": "PSG", "پاری سن ژرمن": "PSG", "پاری‌سن‌ژرمن": "PSG", "psg": "PSG", "paris": "PSG",
+    "مارسی": "OM", "marseille": "OM",
+    "موناکو": "ASM", "monaco": "ASM",
+    "لیون": "OL", "lyon": "OL",
+    "لیل": "LOS", "lille": "LOS",
+    "اینتر": "INT", "inter": "INT",
+    "میلان": "MIL", "milan": "MIL",
+    "یوونتوس": "JUV", "juventus": "JUV",
+    "ناپولی": "NAP", "napoli": "NAP",
+    "آتالانتا": "ATA", "atalanta": "ATA",
+    "رم": "ROM", "roma": "ROM",
+    "لاتزیو": "LAZ", "lazio": "LAZ",
+    "فیورنتینا": "FIO", "fiorentina": "FIO",
+    "اسپورتینگ": "SCP", "sporting": "SCP",
+    "بنفیکا": "SLB", "benfica": "SLB",
+    "پورتو": "FCP", "porto": "FCP",
+    "آژاکس": "AJX", "ajax": "AJX",
+    "آیندهوون": "PSV", "psv": "PSV",
+    "فاینورد": "FEY", "feyenoord": "FEY",
+    "گالاتاسرای": "GAL", "galatasaray": "GAL",
+    "فنرباغچه": "FEN", "fenerbahce": "FEN",
+    "بشیکتاش": "BJK", "besiktas": "BJK",
+    "سلتیک": "CEL", "celtic": "CEL",
+    "رنجرز": "RAN", "rangers": "RAN",
+    "پرسپولیس": "PRS", "persepolis": "PRS",
+    "استقلال": "EST", "esteghlal": "EST",
+    "سپاهان": "SEP", "sepahan": "SEP",
+    "تراکتور": "TRA", "tractor": "TRA",
+    "فولاد": "FOO", "foolad": "FOO",
+    "گل‌گهر": "GOL", "gol gohar": "GOL",
+    "الهلال": "HIL", "al hilal": "HIL",
+    "النصر": "NSR", "al nassr": "NSR",
+    "الاتحاد": "ITT", "al ittihad": "ITT",
+    "الاهلی": "AHL", "al ahli": "AHL",
+    "اینتر میامی": "MIA", "inter miami": "MIA",
+}
+
+
+def _club_code(name: str, fallback: str = "CLB") -> str:
+    """تولید کد سه‌حرفی لاتین تمیز برای سپر باشگاه (بدون برش‌های ناقص فارسی)."""
+    raw = str(name or "").strip()
+    if not raw:
+        return fallback
+    primary = re.split(r"[/،,|]", raw)[0].strip()
+    low = primary.lower()
+    for k, code in _CLUB_CODE_MAP.items():
+        if k in low:
+            return code
+    # اگر حروف لاتین در نام وجود داشت، ۳ حرف اول لاتین
+    latin = re.sub(r"[^A-Za-z]", "", primary).upper()
+    if len(latin) >= 3:
+        return latin[:3]
+    if len(latin) >= 2:
+        return latin
+    return fallback
+
+
+_FOREIGN_SCRIPT_RE = re.compile(r"[Ѐ-ԯ一-鿿぀-ヿ가-힯]+")
+
+
+def _clean_fa_llm_text(s: str) -> str:
+    """پاک‌سازی ستاره‌های مارک‌داون و هرگونه نشت الفبای روسی (سیریلیک) یا شرق‌آسیایی از خروجی LLM."""
+    t = re.sub(r"\*([^*]+)\*", r"", str(s or "")).replace("*", "")
+    t = _FOREIGN_SCRIPT_RE.sub("", t)
+    t = re.sub(r"\s{2,}", " ", t)
+    return t.strip()
+
+
 def enrich_transfer_rumor(
     item: dict[str, Any],
     *,
@@ -296,7 +397,8 @@ def enrich_transfer_rumor(
             "  خط ۳: یک نکتهٔ کلیدی کوتاه (حداکثر ۸۵ کاراکتر) دربارهٔ وضعیت مذاکره یا شرط اصلی انتقال.\n"
             "- `source_note`: نام منبع اصلی خبر.\n"
             "- `uncertainties`: آرایهٔ خالی `[]`.\n"
-            "2) هرگز مبلغ یا آماری که در متن نیست اختراع نکن؛ اگر مبلغی در متن نیست جای مبلغ بنویس `null`."
+            "2) هرگز مبلغ یا آماری که در متن نیست اختراع نکن؛ اگر مبلغی در متن نیست جای مبلغ بنویس `null`.\n"
+            "3) هرگز از حروف روسی (سیریلیک)، چینی یا ژاپنی استفاده نکن؛ متن باید ۱۰۰٪ فارسی استاندارد باشد."
         )
         draft = llm_provider.generate(
             sys_prompt,
@@ -307,7 +409,7 @@ def enrich_transfer_rumor(
                 "source": out.get("source") or "",
             },
         )
-        clean = lambda s: re.sub(r"\*([^*]+)\*", r"\1", str(s or "")).replace("*", "").strip()
+        clean = _clean_fa_llm_text
         v_title = clean(getattr(draft, "title", ""))
         v_body = clean(getattr(draft, "caption", ""))
         buls = [clean(b) for b in (getattr(draft, "bullets", None) or []) if clean(b)]
@@ -326,10 +428,10 @@ def enrich_transfer_rumor(
                 parts = [x.strip() for x in b.split(":", 1)[1].split("|")]
                 if len(parts) >= 1 and parts[0]:
                     out["from"]["name"] = parts[0]
-                    out["from"]["code"] = parts[0][:3].upper()
+                    out["from"]["code"] = _club_code(parts[0], "CLB")
                 if len(parts) >= 2 and parts[1]:
                     out["to"]["name"] = parts[1]
-                    out["to"]["code"] = parts[1][:3].upper()
+                    out["to"]["code"] = _club_code(parts[1], "DST")
                 if len(parts) >= 3 and parts[2].lower() != "null":
                     m_num = re.search(r"\d+(?:\.\d+)?", parts[2])
                     if m_num:
