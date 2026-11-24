@@ -161,7 +161,8 @@ def _cards_studio_markup() -> InlineKeyboardMarkup:
                 InlineKeyboardButton(text="🏁 پس‌ازبازی (۲۴س)", callback_data="post:list"),
             ],
             [
-                InlineKeyboardButton(text="🕰 در چنین روزی (وقایع تاریخی)", callback_data="otd:list"),
+                InlineKeyboardButton(text="🕰 در چنین روزی", callback_data="otd:list"),
+                InlineKeyboardButton(text="📰 خبر فوری و رسمی", callback_data="news:list"),
             ],
             [
                 InlineKeyboardButton(text="📡 رفتن به مرکز دیتای زنده", callback_data="nav:sync"),
@@ -179,6 +180,7 @@ def _sync_hub_markup() -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text="⚡ همگام‌سازی اجباری از APIها", callback_data="today:force_sync")],
             [InlineKeyboardButton(text="🏁 بروزرسانی نتایج پایان‌یافته (۲۴س)", callback_data="post:refresh")],
             [InlineKeyboardButton(text="🕰 بروزرسانی زندهٔ ویکی‌پدیا (در چنین روزی)", callback_data="otd:refresh")],
+            [InlineKeyboardButton(text="📰 بروزرسانی اخبار زنده (ESPN/BBC)", callback_data="news:refresh")],
             [
                 InlineKeyboardButton(text="🎨 استودیو کارت‌ها", callback_data="nav:cards"),
                 InlineKeyboardButton(text="🏠 پنل اصلی", callback_data="nav:home"),
@@ -213,7 +215,8 @@ def _main_panel_markup() -> InlineKeyboardMarkup:
                 InlineKeyboardButton(text="🏁 پس‌ازبازی (۲۴س)", callback_data="post:list"),
             ],
             [
-                InlineKeyboardButton(text="🕰 در چنین روزی (وقایع تاریخی)", callback_data="otd:list"),
+                InlineKeyboardButton(text="🕰 در چنین روزی", callback_data="otd:list"),
+                InlineKeyboardButton(text="📰 خبر فوری و رسمی", callback_data="news:list"),
             ],
             [
                 InlineKeyboardButton(text="🔄 سینک سریع امروز", callback_data="today:sync"),
@@ -228,6 +231,22 @@ def _main_panel_markup() -> InlineKeyboardMarkup:
 
 
 def _preview_keyboard(post_id: int, fixture_id: str, post_type: str = "preview") -> dict[str, Any]:
+    if post_type == "breaking_news":
+        return {
+            "inline_keyboard": [
+                [
+                    {"text": "✅ انتشار فوری در کانال", "callback_data": f"approve:{post_id}"},
+                    {"text": "⏰ زمان‌بندی امروز (HH:MM)", "callback_data": f"sched:{post_id}"},
+                ],
+                [
+                    {"text": "🎛 تغییر اسلاید/مود/ماژول", "callback_data": "news:back"},
+                    {"text": "❌ رد", "callback_data": f"reject:{post_id}"},
+                ],
+                [
+                    {"text": "📰 لیست اخبار فوری و رسمی", "callback_data": "news:list"},
+                ],
+            ]
+        }
     if post_type == "on_this_day":
         return {
             "inline_keyboard": [
@@ -756,19 +775,8 @@ async def on_any_text(m: Message, bot: Bot | None = None) -> None:
         await m.answer("\n".join(lines), parse_mode="HTML", reply_markup=InlineKeyboardMarkup(inline_keyboard=rows))
         return
     if raw_text == "🧠 وضعیت AI":
-        from src.xgpedia.editorial.llm_provider import build_free_llm_chain_from_env
-        from src.xgpedia.media.free_media import FreeImageRouter, FreeVideoRouter
-
-        chain = build_free_llm_chain_from_env()
-        top_llm = "\n".join(f"{i}. {html.escape(ep.label)}" for i, ep in enumerate(chain[:8], 1))
-        imgs = " ← ".join(FreeImageRouter().available_providers())
-        vids = " ← ".join(FreeVideoRouter().available_providers()) or "غیرفعال"
-        await m.answer(
-            f"🧠 <b>زنجیرهٔ فعال هوش مصنوعی ({len(chain)} مدل متن):</b>\n{top_llm}\n\n"
-            f"🖼 <b>تصویر:</b> {html.escape(imgs)}\n🎬 <b>ویدیو:</b> {html.escape(vids)}",
-            parse_mode="HTML",
-            reply_markup=_main_panel_markup(),
-        )
+        text, markup = _render_ai_status_view(page=1)
+        await m.answer(text, parse_mode="HTML", reply_markup=markup)
         return
 
     # ۱) حالت دریافت توضیح ویرایش متن از ادمین
@@ -929,56 +937,130 @@ async def on_nav_show_kb(cb: CallbackQuery) -> None:
     )
 
 
+def _render_ai_status_view(page: int = 1, page_size: int = 12) -> tuple[str, InlineKeyboardMarkup]:
+    from src.xgpedia.editorial.llm_provider import (
+        build_free_llm_chain_from_env,
+        get_endpoint_cooldown_remaining,
+        get_llm_start_index,
+    )
+    from src.xgpedia.media.free_media import FreeImageRouter, FreeVideoRouter
+
+    chain = build_free_llm_chain_from_env()
+    cur = get_llm_start_index()
+    total = len(chain)
+    total_pages = max(1, (total + page_size - 1) // page_size)
+    page = max(1, min(page, total_pages))
+    start = (page - 1) * page_size
+    end = min(total, start + page_size)
+
+    model_lines: list[str] = []
+    for i, ep in enumerate(chain[start:end], start + 1):
+        star = "⭐ " if i == cur else ""
+        cd_sec = get_endpoint_cooldown_remaining(ep)
+        cd_badge = f" ⏳({cd_sec // 60 + 1}د)" if cd_sec > 0 else ""
+        model_lines.append(f"{i}. {star}{html.escape(ep.label)}{cd_badge}")
+
+    imgs = " ← ".join(FreeImageRouter().available_providers())
+    vids = " ← ".join(FreeVideoRouter().available_providers()) or "غیرفعال"
+
+    text = (
+        f"🧠 <b>زنجیرهٔ فعال هوش مصنوعی ({total} مدل متن — صفحه {page} از {total_pages}):</b>\n"
+        f"نقطهٔ شروع فعلی: <b>#{cur}</b>\n\n"
+        + "\n".join(model_lines)
+        + f"\n\n🖼 <b>تصویر:</b> {html.escape(imgs)}\n🎬 <b>ویدیو:</b> {html.escape(vids)}"
+    )
+
+    rows: list[list[InlineKeyboardButton]] = []
+    if total_pages > 1:
+        nav_row: list[InlineKeyboardButton] = []
+        if page > 1:
+            nav_row.append(InlineKeyboardButton(text="⬅️ صفحه قبل", callback_data=f"nav:ai_status:{page - 1}"))
+        nav_row.append(InlineKeyboardButton(text=f"📄 {page}/{total_pages}", callback_data=f"nav:ai_status:{page}"))
+        if page < total_pages:
+            nav_row.append(InlineKeyboardButton(text="➡️ صفحه بعد", callback_data=f"nav:ai_status:{page + 1}"))
+        rows.append(nav_row)
+    rows.append([
+        InlineKeyboardButton(text="⚙️ انتخاب مدل شروع", callback_data="llm:menu"),
+        InlineKeyboardButton(text="🔄 پاک‌سازی کول‌داون", callback_data="llm:reset_cd"),
+    ])
+    rows.append([
+        InlineKeyboardButton(text="🏠 منوی اصلی", callback_data="nav:home"),
+    ])
+    return text, InlineKeyboardMarkup(inline_keyboard=rows)
+
+
 @router.callback_query(F.data == "nav:ai_status")
 async def on_nav_ai_status(cb: CallbackQuery) -> None:
     if not tp.is_admin(cb.from_user.id):
         await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
         return
     await _safe_cb_answer(cb)
-    from src.xgpedia.editorial.llm_provider import build_free_llm_chain_from_env
-    from src.xgpedia.media.free_media import FreeImageRouter, FreeVideoRouter
-
-    chain = build_free_llm_chain_from_env()
-    top_llm = "\n".join(f"{i}. {html.escape(ep.label)}" for i, ep in enumerate(chain[:8], 1))
-    imgs = " ← ".join(FreeImageRouter().available_providers())
-    vids = " ← ".join(FreeVideoRouter().available_providers()) or "غیرفعال"
-    await cb.message.answer(
-        f"🧠 <b>زنجیرهٔ فعال هوش مصنوعی ({len(chain)} مدل متن):</b>\n{top_llm}\n\n"
-        f"🖼 <b>تصویر:</b> {html.escape(imgs)}\n🎬 <b>ویدیو:</b> {html.escape(vids)}",
-        parse_mode="HTML",
-        reply_markup=_admin_hub_markup(),
-    )
+    text, markup = _render_ai_status_view(page=1)
+    await cb.message.answer(text, parse_mode="HTML", reply_markup=markup)
 
 
+@router.callback_query(F.data.startswith("nav:ai_status:"))
+async def on_nav_ai_status_page(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    await _safe_cb_answer(cb)
+    try:
+        page = int(cb.data.split(":")[2])
+    except (IndexError, ValueError):
+        page = 1
+    text, markup = _render_ai_status_view(page=page)
+    try:
+        await cb.message.edit_text(text, parse_mode="HTML", reply_markup=markup)
+    except TelegramBadRequest:
+        pass
 
 
-def _render_llm_settings_view() -> tuple[str, InlineKeyboardMarkup]:
+def _render_llm_settings_view(page: int = 1, page_size: int = 10) -> tuple[str, InlineKeyboardMarkup]:
     from src.xgpedia.editorial.llm_provider import (
         build_free_llm_chain_from_env,
+        get_endpoint_cooldown_remaining,
         get_llm_start_index,
     )
 
     chain = build_free_llm_chain_from_env()
     cur = get_llm_start_index()
+    total = len(chain)
+    total_pages = max(1, (total + page_size - 1) // page_size)
+    page = max(1, min(page, total_pages))
+    start = (page - 1) * page_size
+    end = min(total, start + page_size)
+
     lines = [
-        "⚙️ <b>تنظیم مدل شروع هوش مصنوعی (LLM)</b>",
-        f"نقطهٔ شروع فعلی: <b>#{cur}</b>",
+        f"⚙️ <b>تنظیم مدل شروع هوش مصنوعی (LLM) — صفحه {page} از {total_pages}</b>",
+        f"نقطهٔ شروع فعلی: <b>#{cur}</b> | مجموع مدل‌ها و کلیدهای فعال: <b>{total}</b>",
         "",
         "اگر مدل‌های ابتدایی مدام 429/503 یا Timeout می‌دهند، روی مدل سالم بزنید تا تولید متن از همان‌جا شروع شود (مدل‌های قبلی فقط در صورت خطای همهٔ مدل‌ها به‌عنوان پشتیبان آخر امتحان می‌شوند):",
     ]
     rows: list[list[InlineKeyboardButton]] = []
-    for i, ep in enumerate(chain[:12], 1):
+    for i, ep in enumerate(chain[start:end], start + 1):
         prefix = "✅ " if i == cur else ""
+        cd_sec = get_endpoint_cooldown_remaining(ep)
+        suffix = " ⏳" if cd_sec > 0 else ""
         rows.append([
             InlineKeyboardButton(
-                text=f"{prefix}شروع از #{i}: {ep.label}",
-                callback_data=f"llm:set:{i}",
+                text=f"{prefix}#{i}: {ep.label}{suffix}",
+                callback_data=f"llm:set:{i}:{page}",
             )
         ])
+    if total_pages > 1:
+        nav_row: list[InlineKeyboardButton] = []
+        if page > 1:
+            nav_row.append(InlineKeyboardButton(text="⬅️ صفحه قبل", callback_data=f"llm:page:{page - 1}"))
+        nav_row.append(InlineKeyboardButton(text=f"📄 {page}/{total_pages}", callback_data=f"llm:page:{page}"))
+        if page < total_pages:
+            nav_row.append(InlineKeyboardButton(text="➡️ صفحه بعد", callback_data=f"llm:page:{page + 1}"))
+        rows.append(nav_row)
     rows.append([
         InlineKeyboardButton(text="🔄 پاک‌سازی کول‌داون خطاهای موقت", callback_data="llm:reset_cd"),
     ])
     rows.append([
+        InlineKeyboardButton(text="🧠 وضعیت کامل AI", callback_data="nav:ai_status"),
         InlineKeyboardButton(text="🏠 منوی اصلی", callback_data="nav:home"),
     ])
     return "\n".join(lines), InlineKeyboardMarkup(inline_keyboard=rows)
@@ -990,8 +1072,25 @@ async def on_llm_menu(cb: CallbackQuery) -> None:
         await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
         return
     await _safe_cb_answer(cb)
-    text, markup = _render_llm_settings_view()
+    text, markup = _render_llm_settings_view(page=1)
     await cb.message.answer(text, parse_mode="HTML", reply_markup=markup)
+
+
+@router.callback_query(F.data.startswith("llm:page:"))
+async def on_llm_page(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    await _safe_cb_answer(cb)
+    try:
+        page = int(cb.data.split(":")[2])
+    except (IndexError, ValueError):
+        page = 1
+    text, markup = _render_llm_settings_view(page=page)
+    try:
+        await cb.message.edit_text(text, parse_mode="HTML", reply_markup=markup)
+    except TelegramBadRequest:
+        pass
 
 
 @router.callback_query(F.data.startswith("llm:set:"))
@@ -1001,11 +1100,13 @@ async def on_llm_set_start(cb: CallbackQuery) -> None:
         return
     from src.xgpedia.editorial.llm_provider import clear_llm_cooldowns, set_llm_start_index
 
-    idx = int(cb.data.split(":")[2])
+    parts = cb.data.split(":")
+    idx = int(parts[2])
+    page = int(parts[3]) if len(parts) > 3 and parts[3].isdigit() else max(1, (idx - 1) // 10 + 1)
     set_llm_start_index(idx)
     clear_llm_cooldowns()
     await _safe_cb_answer(cb, f"✅ مدل شروع روی #{idx} تنظیم و ذخیره شد.")
-    text, markup = _render_llm_settings_view()
+    text, markup = _render_llm_settings_view(page=page)
     try:
         await cb.message.edit_text(text, parse_mode="HTML", reply_markup=markup)
     except TelegramBadRequest:
@@ -1800,6 +1901,312 @@ async def on_otd_customizer_action(cb: CallbackQuery, bot: Bot) -> None:
                 await asyncio.sleep(1.0)
 
 
+
+# ─── پنل و کاستومایزر اسلایدی «خبر فوری و رسمی» (PRO WIRE v2) ───
+
+_NEWS_STATE: dict[int, dict[str, Any]] = {}
+_NEWS_ITEM_MAP: dict[str, dict[str, Any]] = {}
+
+
+def _format_news_list_message(data: dict[str, list[dict[str, Any]]]) -> tuple[str, InlineKeyboardMarkup]:
+    live_items = data.get("live") or []
+    presets = data.get("presets") or []
+    lines = [
+        "📰 <b>استودیو «خبر فوری و رسمی» (PRO WIRE v2)</b>",
+        "حالت: <b>اسلایدی</b> (۴ پوستر مستقل × ۵ مود خبری × ۴ فرمت + انتخاب ماژول‌های داخلی)",
+        "",
+    ]
+    rows: list[list[InlineKeyboardButton]] = []
+    if live_items:
+        lines.append(f"🌍 <b>اخبار زندهٔ فوتبال (ESPN + BBC Sport + Guardian — {len(live_items)} خبر):</b>")
+        for it in live_items[:6]:
+            iid = str(it["id"])
+            _NEWS_ITEM_MAP[iid] = it
+            lbl = f"🌍 [{it.get('source', 'Live')[:10]}] {str(it.get('title') or '')[:34]}"
+            rows.append([InlineKeyboardButton(text=lbl, callback_data=f"news:open:{iid[:44]}")])
+        lines.append("")
+    else:
+        lines.append("ℹ️ خبر زنده‌ای دریافت نشد؛ پریست‌های استودیویی زیر همیشه آماده هستند:")
+        lines.append("")
+
+    lines.append(f"⚡ <b>پریست‌های آماده استودیو ({len(presets)} قالب کامل):</b>")
+    for it in presets:
+        iid = str(it["id"])
+        _NEWS_ITEM_MAP[iid] = it
+        lbl = f"⚡ {str(it.get('title') or iid)[:48]}"
+        rows.append([InlineKeyboardButton(text=lbl, callback_data=f"news:open:{iid[:44]}")])
+
+    rows.append([
+        InlineKeyboardButton(text="🔄 بروزرسانی اخبار زنده", callback_data="news:refresh"),
+        InlineKeyboardButton(text="🎨 استودیو کارت‌ها", callback_data="nav:cards"),
+    ])
+    return "\n".join(lines), InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def _render_news_customizer_view(st: dict[str, Any]) -> tuple[str, InlineKeyboardMarkup]:
+    from src.xgpedia.render.card_kit.news_card import (
+        NEWS_FORMATS,
+        NEWS_LAYOUTS,
+        NEWS_DEFAULT_TINT,
+        NEWS_MODES,
+        NEWS_MOODS,
+        NEWS_TINT_MODES,
+        get_news_layout_availability,
+    )
+
+    it = st["item"]
+    layout = st["layout"]
+    mode = st["mode"]
+    fmt = st["fmt"]
+    mood = st["mood"]
+    tint = st.get("tint", NEWS_DEFAULT_TINT)
+    mods = st["modules"]
+    missing = st.get("missing_modules") or []
+    avail = get_news_layout_availability(it)
+
+    ly_lbl = next((lbl for lid, lbl, _ in NEWS_LAYOUTS if lid == layout), layout)
+    m_lbl = NEWS_MODES.get(mode, NEWS_MODES["breaking"])["fa"]
+    md_lbl = next((lbl for mid, lbl in NEWS_MOODS if mid == mood), mood)
+    tint_lbl = next((lbl for tid, lbl in NEWS_TINT_MODES if tid == tint), tint)
+    active_cnt = sum(1 for m in mods if m["enabled"])
+
+    lines = [
+        "📰 <b>استودیو «خبر فوری و رسمی» — تنظیمات اسلاید</b>",
+        f"📌 <b>{html.escape(str(it.get('title') or it.get('headline', ''))[:85])}</b>",
+        f"🖼 پوستر: <b>{html.escape(ly_lbl)}</b>",
+        f"🚨 مود: <b>{html.escape(m_lbl)}</b> | 📐 فرمت: <b>{fmt}</b>",
+        f"🎞 رنگ‌پردازی: <b>{html.escape(md_lbl)}</b> | 🎨 فیلتر تصویر: <b>{html.escape(tint_lbl)}</b>",
+        f"🧩 ماژول‌های فعال: <b>{active_cnt} از {len(mods)}</b>",
+    ]
+    if missing:
+        lines.append("ℹ️ ماژول‌های بدون دیتا (null≠0): " + html.escape("، ".join(missing)))
+
+    rows: list[list[InlineKeyboardButton]] = []
+    # ۱) ۴ پوستر مستقل
+    r1, r2 = [], []
+    for idx, (lid, llbl, _en) in enumerate(NEWS_LAYOUTS):
+        ok = avail.get(lid, True)
+        mark = "✅ " if lid == layout else ("🔒 " if not ok else "")
+        short_n = llbl.split(":", 1)[-1].strip()[:18]
+        (r1 if idx < 2 else r2).append(InlineKeyboardButton(text=f"{mark}{short_n}", callback_data=f"newsc:ly:{lid}"))
+    rows.extend([r1, r2])
+
+    # ۲) ۵ مود خبری (۲ ردیف)
+    m_items = list(NEWS_MODES.items())
+    rows.append([
+        InlineKeyboardButton(text=("✅ " if mid == mode else "") + mcfg["fa"], callback_data=f"newsc:md:{mid}")
+        for mid, mcfg in m_items[:3]
+    ])
+    rows.append([
+        InlineKeyboardButton(text=("✅ " if mid == mode else "") + mcfg["fa"], callback_data=f"newsc:md:{mid}")
+        for mid, mcfg in m_items[3:]
+    ])
+
+    # ۳) ۴ فرمت
+    rows.append([
+        InlineKeyboardButton(text=("✅ " if f == fmt else "") + f, callback_data=f"newsc:fmt:{f.replace(':', '_')}")
+        for f in NEWS_FORMATS
+    ])
+
+    # ۴) شدت فیلتر رنگ روی تصویر (پیش‌فرض: شفاف / کم) + رنگ‌پردازی عکس
+    rows.append([
+        InlineKeyboardButton(text=("✅ " if tid == tint else "") + f"🎨 {tlbl}", callback_data=f"newsc:tint:{tid}")
+        for tid, tlbl in NEWS_TINT_MODES
+    ])
+    rows.append([
+        InlineKeyboardButton(text=("✅ " if mid == mood else "") + mlbl, callback_data=f"newsc:mood:{mid}")
+        for mid, mlbl in NEWS_MOODS[:4]
+    ])
+
+    # ۵) ماژول‌های داخلی قابل انتخاب
+    for m in mods:
+        icon = "✅" if m["enabled"] else "⬜"
+        rows.append([InlineKeyboardButton(text=f"{icon} {m['title_fa']}", callback_data=f"newsc:tog:{m['id']}")])
+
+    rows.append([InlineKeyboardButton(text="🎨 ساخت کارت و کپشن نهایی", callback_data="newsc:build")])
+    rows.append([
+        InlineKeyboardButton(text="📰 لیست اخبار", callback_data="news:list"),
+        InlineKeyboardButton(text="🎨 استودیو کارت‌ها", callback_data="nav:cards"),
+    ])
+    return "\n".join(lines), InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+@router.message(Command("news"))
+async def cmd_news(m: Message) -> None:
+    if not tp.is_admin(m.from_user.id):
+        await m.answer("دسترسی غیرمجاز.")
+        return
+    from src.xgpedia.providers.breaking_news_free import list_breaking_news_items
+    status_msg = await m.answer("⏳ در حال دریافت زندهٔ اخبار فوری فوتبال (ESPN + BBC Sport + Guardian)...")
+    data = await asyncio.to_thread(list_breaking_news_items, include_live=True)
+    text, kb = _format_news_list_message(data)
+    await status_msg.edit_text(text, parse_mode="HTML", reply_markup=kb)
+
+
+@router.callback_query(F.data.in_({"news:list", "news:refresh"}))
+async def on_news_list(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    from src.xgpedia.providers.breaking_news_free import list_breaking_news_items
+    force = cb.data == "news:refresh"
+    await _safe_cb_answer(cb, "در حال دریافت اخبار فوری و رسمی...")
+    wait_msg = await cb.message.answer("⏳ در حال دریافت زندهٔ اخبار فوری فوتبال (ESPN + BBC Sport + Guardian)...")
+    data = await asyncio.to_thread(list_breaking_news_items, include_live=True, force_refresh=force)
+    text, kb = _format_news_list_message(data)
+    await wait_msg.edit_text(text, parse_mode="HTML", reply_markup=kb)
+
+
+@router.callback_query(F.data.startswith("news:open:"))
+async def on_news_open(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    from src.xgpedia.providers.breaking_news_free import get_breaking_news_item
+    from src.xgpedia.render.card_kit.news_card import NEWS_DEFAULT_LAYOUT, get_news_slide_modules
+
+    iid = cb.data.split(":", 2)[2]
+    it = _NEWS_ITEM_MAP.get(iid) or await asyncio.to_thread(get_breaking_news_item, iid)
+    if not it:
+        await _safe_cb_answer(cb, "خبر یافت نشد؛ لطفاً لیست را بروزرسانی کنید.", show_alert=True)
+        return
+    await _safe_cb_answer(cb, "استودیو خبر باز شد.")
+    def_ly = str(it.get("layout") or NEWS_DEFAULT_LAYOUT)
+    mods, missing = get_news_slide_modules(it, def_ly)
+    st = {
+        "item": it,
+        "layout": def_ly,
+        "mode": str(it.get("mode") or "breaking"),
+        "fmt": "4:5",
+        "mood": str(it.get("mood") or "cinema"),
+        "tint": str(it.get("tint_mode") or "light"),
+        "photo_id": str(it.get("photoId") or "tunnel"),
+        "modules": mods,
+        "missing_modules": missing,
+    }
+    _NEWS_STATE[cb.from_user.id] = st
+    text, markup = _render_news_customizer_view(st)
+    await cb.message.answer(text, parse_mode="HTML", reply_markup=markup)
+
+
+@router.callback_query(F.data == "news:back")
+async def on_news_back(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    st = _NEWS_STATE.get(cb.from_user.id)
+    if not st:
+        await _safe_cb_answer(cb, "لطفاً دوباره خبر را از لیست انتخاب کنید.", show_alert=True)
+        return
+    await _safe_cb_answer(cb, "بازگشت به استودیو خبر")
+    text, markup = _render_news_customizer_view(st)
+    await cb.message.answer(text, parse_mode="HTML", reply_markup=markup)
+
+
+@router.callback_query(F.data.startswith("newsc:"))
+async def on_news_customizer_action(cb: CallbackQuery, bot: Bot) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    st = _NEWS_STATE.get(cb.from_user.id)
+    if not st:
+        await _safe_cb_answer(cb, "لطفاً دوباره خبر را از لیست انتخاب کنید.", show_alert=True)
+        return
+
+    from src.xgpedia.render.card_kit.news_card import get_news_layout_availability
+
+    parts = cb.data.split(":")
+    action = parts[1]
+
+    if action == "ly":
+        lid = parts[2]
+        if not get_news_layout_availability(st["item"]).get(lid, True):
+            await _safe_cb_answer(
+                cb,
+                "این خبر دیتای ساختاریافتهٔ انتقال ندارد (قانون null≠0). پوسترهای دیگر قابل استفاده‌اند.",
+                show_alert=True,
+            )
+            return
+        st["layout"] = lid
+        await _safe_cb_answer(cb, f"پوستر روی {lid} تنظیم شد.")
+    elif action == "md":
+        st["mode"] = parts[2]
+        await _safe_cb_answer(cb, f"مود خبر روی {st['mode']} تنظیم شد.")
+    elif action == "fmt":
+        st["fmt"] = parts[2].replace("_", ":")
+        await _safe_cb_answer(cb, f"فرمت روی {st['fmt']} تنظیم شد.")
+    elif action == "mood":
+        st["mood"] = parts[2]
+        await _safe_cb_answer(cb, f"رنگ‌پردازی تصویر روی {st['mood']} تنظیم شد.")
+    elif action == "tint":
+        st["tint"] = parts[2] if parts[2] in ("light", "strong") else "light"
+        await _safe_cb_answer(cb, "فیلتر تصویر: " + ("شفاف (کم)" if st["tint"] == "light" else "دراماتیک (زیاد)"))
+    elif action == "tog":
+        mid = parts[2]
+        target = next((m for m in st["modules"] if m["id"] == mid), None)
+        if target:
+            # فقط یک داک پایین هم‌زمان روشن باشد
+            if mid.startswith("dock_") and not target["enabled"]:
+                for other in st["modules"]:
+                    if other["id"].startswith("dock_") and other["id"] != mid:
+                        other["enabled"] = False
+            target["enabled"] = not target["enabled"]
+            await _safe_cb_answer(cb, f"{target['title_fa']}: {'فعال' if target['enabled'] else 'غیرفعال'}")
+    elif action == "build":
+        await _safe_cb_answer(cb, "در حال ساخت پوستر خبر فوری...")
+        it = st["item"]
+        wait_msg = await cb.message.answer(
+            f"⏳ در حال ساخت پوستر خبری <b>{html.escape(str(it.get('title') or ''))[:70]}</b> ({st['layout']} | {st['fmt']})...",
+            parse_mode="HTML",
+        )
+
+        async def _progress(msg_text: str) -> None:
+            try:
+                await wait_msg.edit_text(
+                    f"{msg_text}\n📰 <b>{html.escape(str(it.get('title') or ''))[:70]}</b>",
+                    parse_mode="HTML",
+                )
+            except TelegramBadRequest:
+                pass
+
+        enabled_ids = [m["id"] for m in st["modules"] if m["enabled"]]
+        res = await tw.generate_news_post_async(
+            it,
+            layout=st["layout"],
+            mode=st["mode"],
+            fmt=st["fmt"],
+            mood=st["mood"],
+            photo_id=st["photo_id"],
+            tint_mode=st.get("tint", "light"),
+            enabled_modules=enabled_ids,
+            progress_cb=_progress,
+        )
+        if not res.ok:
+            await wait_msg.edit_text(html.escape(res.format_error_fa())[:3800], parse_mode="HTML")
+            return
+        await _send_post_preview(
+            bot,
+            cb.from_user.id,
+            res,
+            wait_msg,
+            note=f"✅ پوستر خبر آماده شد (پست #{res.post_id} | اسلاید {st['layout']} | مود {st['mode']} | {st['fmt']}).",
+        )
+        return
+
+    text, markup = _render_news_customizer_view(st)
+    for _attempt in range(3):
+        try:
+            await cb.message.edit_text(text, parse_mode="HTML", reply_markup=markup)
+            break
+        except TelegramBadRequest:
+            break
+        except Exception as e:
+            if _attempt == 2:
+                log.warning("news customizer edit_text failed: %s", e)
+            else:
+                await asyncio.sleep(1.0)
+
+
 async def main() -> None:
     import os
     from aiogram.client.session.aiohttp import AiohttpSession
@@ -1819,6 +2226,7 @@ async def main() -> None:
             BotCommand(command="cards", description="🎨 استودیو کارت‌ها (پیش‌بازی، پس‌ازبازی، در چنین روزی)"),
             BotCommand(command="postmatch", description="🏁 کارت‌های پس‌ازبازی (۲۴ ساعت اخیر)"),
             BotCommand(command="onthisday", description="🕰 در چنین روزی (وقایع تاریخی فوتبال)"),
+            BotCommand(command="news", description="📰 خبر فوری و رسمی (PRO WIRE v2)"),
         ])
     except Exception as _cmd_exc:
         log.warning("set_my_commands skipped: %s", _cmd_exc)

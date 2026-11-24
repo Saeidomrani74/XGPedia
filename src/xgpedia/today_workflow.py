@@ -1037,6 +1037,10 @@ async def generate_match_post_async(
     if progress_cb:
         await progress_cb("⏳ (۱/۳) در حال استخراج داده‌ها و نگارش متن تحریریه (LLM)...")
 
+    import threading
+
+    cancel_ev = threading.Event()
+
     def _step1_facts_and_draft() -> tuple[int, dict, dict, str]:
         facts = build_match_facts(fixture_id, post_match=(post_type == "post_match"))
         _refresh_live_coaches_on_facts(facts)
@@ -1046,6 +1050,8 @@ async def generate_match_post_async(
             from src.xgpedia.editorial.llm_provider import build_default_llm
 
             prov = build_default_llm()
+        if hasattr(prov, "cancel_event"):
+            prov.cancel_event = cancel_ev
         draft_obj, _, _ = generate_draft(
             prov, facts, post_type=post_type, target_platform=platform
         )
@@ -1068,11 +1074,14 @@ async def generate_match_post_async(
             asyncio.to_thread(_step1_facts_and_draft), timeout=120.0
         )
     except Exception as e:
+        cancel_ev.set()
         title_err, detail = _diagnose_exception("editorial", e)
         return PostGenerationResult(
             ok=False, fixture_id=fixture_id, failed_stage="editorial",
             error_title=title_err, error_detail=detail,
         )
+    finally:
+        cancel_ev.set()
 
     if progress_cb:
         await progress_cb(f"⏳ (۲/۳) متن تحریریه آماده شد! در حال رندر کارت {fmt}...")
@@ -1549,6 +1558,164 @@ async def generate_on_this_day_post_async(
             theme=theme,
             fmt=fmt,
             bg_mode=bg_mode,
+            enabled_modules=enabled_modules,
+        )
+        html_path.write_text(html_str, encoding="utf-8")
+
+        img_fmt = "jpeg" if platform == "instagram" else "png"
+        img_path = target_out / f"{stem}_{w}x{hgt}.{img_fmt}"
+        await asyncio.wait_for(
+            render_png_async(str(html_path), str(img_path), w, hgt, img_fmt),
+            timeout=45.0,
+        )
+
+        cap_path = target_out / f"post_{post_id}_v{ver}_caption.txt"
+        cap_path.write_text(caption_text, encoding="utf-8")
+
+        with db() as conn:
+            conn.execute(
+                "UPDATE posts SET status = 'awaiting_approval' WHERE post_id = ?",
+                (post_id,),
+            )
+
+        return PostGenerationResult(
+            ok=True,
+            fixture_id=fixture_key,
+            post_id=post_id,
+            content_version=ver,
+            title=title,
+            image_path=img_path,
+            html_path=html_path,
+            caption_path=cap_path,
+        )
+    except Exception as e:
+        title_err, detail = _diagnose_exception("render", e)
+        return PostGenerationResult(
+            ok=False, fixture_id=fixture_key, post_id=post_id,
+            failed_stage="render", error_title=title_err, error_detail=detail,
+        )
+
+
+async def generate_news_post_async(
+    item: dict[str, Any],
+    *,
+    layout: str = "cinematic",
+    mode: str | None = None,
+    fmt: str = "4:5",
+    mood: str | None = None,
+    photo_id: str | None = None,
+    tint_mode: str = "light",
+    enabled_modules: list[str] | None = None,
+    platform: str = "telegram",
+    out_dir: Path | None = None,
+    progress_cb: Callable[[str], Awaitable[None]] | None = None,
+) -> PostGenerationResult:
+    """تولید ناهمزمان کارت «خبر فوری و رسمی» (PRO WIRE v2) با رندر Playwright و ثبت در جدول posts."""
+    import asyncio
+    from src.xgpedia.render.card_kit.news_card import (
+        NEWS_FORMATS,
+        NEWS_MODES,
+        build_news_caption,
+        render_news_html,
+    )
+    from src.xgpedia.render.render_png import render as render_png_async
+
+    init_db()
+    item_id = str(item.get("id") or "news_custom")
+    eff_mode = mode if mode in NEWS_MODES else str(item.get("mode") or "breaking")
+    fixture_key = f"news:{item_id}:{layout}"
+
+    if progress_cb:
+        await progress_cb(f"⏳ (۱/۳) در حال ترجمهٔ ژورنالیستی خبر به فارسی و دریافت تصویر واقعی خبر ({fmt})...")
+
+    try:
+        from src.xgpedia.providers.breaking_news_free import (
+            fetch_image_data_uri,
+            translate_news_item_to_persian,
+        )
+
+        import threading
+
+        cancel_ev = threading.Event()
+
+        def _prepare_item() -> dict[str, Any]:
+            enriched = translate_news_item_to_persian(item, cancel_event=cancel_ev)
+            if cancel_ev.is_set():
+                raise TimeoutError("زمان آماده‌سازی خبر به پایان رسید.")
+            if not enriched.get("photoDataUri") and (enriched.get("photoUrl") or enriched.get("source_url")):
+                data_uri = fetch_image_data_uri(enriched.get("photoUrl"), source_url=enriched.get("source_url"))
+                if data_uri:
+                    enriched["photoDataUri"] = data_uri
+            return enriched
+
+        try:
+            item = await asyncio.wait_for(asyncio.to_thread(_prepare_item), timeout=110.0)
+        finally:
+            cancel_ev.set()
+        caption_text = build_news_caption(item, mode=eff_mode)
+        m_fa = NEWS_MODES.get(eff_mode, NEWS_MODES["breaking"])["fa"]
+        clean_hl = str(item.get("headline") or item.get("title") or item_id).replace("*", "")
+        title = f"{m_fa} | {clean_hl[:90]}"
+        now_iso = datetime.now(timezone.utc).isoformat()
+        with db() as conn:
+            row = conn.execute(
+                "SELECT COALESCE(MAX(content_version), 0) AS mv FROM posts "
+                "WHERE fixture_id = ? AND post_type = 'breaking_news' AND target_platform = ?",
+                (fixture_key, platform),
+            ).fetchone()
+            ver = int(row["mv"] if row else 0) + 1
+            cur = conn.execute(
+                """INSERT INTO posts
+                   (fixture_id, post_type, target_platform, content_version, status, title, caption, draft_json, fact_json, created_at)
+                   VALUES (?, 'breaking_news', ?, ?, 'draft', ?, ?, ?, ?, ?)""",
+                (
+                    fixture_key,
+                    platform,
+                    ver,
+                    title,
+                    caption_text,
+                    json.dumps(
+                        {
+                            "title": title,
+                            "layout": layout,
+                            "mode": eff_mode,
+                            "fmt": fmt,
+                            "mood": mood,
+                            "photo_id": photo_id,
+                            "tint_mode": tint_mode,
+                            "enabled_modules": enabled_modules,
+                        },
+                        ensure_ascii=False,
+                    ),
+                    json.dumps(item, ensure_ascii=False),
+                    now_iso,
+                ),
+            )
+            post_id = int(cur.lastrowid)
+    except Exception as e:
+        title_err, detail = _diagnose_exception("editorial", e)
+        return PostGenerationResult(
+            ok=False, fixture_id=fixture_key, failed_stage="editorial",
+            error_title=title_err, error_detail=detail,
+        )
+
+    if progress_cb:
+        await progress_cb(f"⏳ (۲/۳) در حال رندر پوستر خبری ({fmt})...")
+
+    try:
+        target_out = Path(out_dir or (ROOT / "output"))
+        target_out.mkdir(parents=True, exist_ok=True)
+        w, hgt = NEWS_FORMATS.get(fmt, NEWS_FORMATS["4:5"])
+        stem = f"post_{post_id}_v{ver}_news_{layout}"
+        html_path = target_out / f"{stem}_{w}x{hgt}.html"
+        html_str = render_news_html(
+            item,
+            layout=layout,
+            mode=eff_mode,
+            fmt=fmt,
+            mood=mood,
+            photo_id=photo_id,
+            tint_mode=tint_mode,
             enabled_modules=enabled_modules,
         )
         html_path.write_text(html_str, encoding="utf-8")

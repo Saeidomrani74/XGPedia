@@ -15,8 +15,11 @@
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
+import re
+import threading
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -112,7 +115,7 @@ def _build_messages(
     edit_instruction: str = "",
     current_draft_json: str = "",
 ) -> list[dict]:
-    payload = facts.model_dump(mode="json")
+    payload = facts if isinstance(facts, dict) else facts.model_dump(mode="json")
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
@@ -249,192 +252,241 @@ class LLMEndpoint:
     extra_headers: dict[str, str] = field(default_factory=dict)
 
 
+def _key_hash(api_key: str) -> str:
+    """هش کوتاه کلید برای تفکیک کول‌داون و جلوگیری از تکرار بدون افشای کلید در لاگ."""
+    k = (api_key or "").strip()
+    if not k:
+        return "anon"
+    return hashlib.sha1(k.encode("utf-8")).hexdigest()[:10]
+
+
+def _env_keys(var_name: str, extra_single: str = "") -> list[str]:
+    """استخراج چند کلید API برای یک ارائه‌دهنده از .env.
+
+    هر دو روش زیر پشتیبانی می‌شوند (و قابل ترکیب هستند):
+      1) جداشده با کاما یا سمی‌کالن:  GEMINI_API_KEY=key1,key2,key3
+      2) متغیرهای شماره‌دار:         GEMINI_API_KEY_2=key2  ...  GEMINI_API_KEY_20=key20
+    """
+    raw_items: list[str] = []
+    primary = (os.environ.get(var_name) or "").strip()
+    if primary:
+        raw_items.extend(re.split(r"[,;\n]+", primary))
+    for i in range(1, 21):
+        val = (os.environ.get(f"{var_name}_{i}") or "").strip()
+        if val:
+            raw_items.extend(re.split(r"[,;\n]+", val))
+    if extra_single and extra_single.strip():
+        raw_items.extend(re.split(r"[,;\n]+", extra_single.strip()))
+
+    seen_k: set[str] = set()
+    out: list[str] = []
+    for item in raw_items:
+        tok = item.strip()
+        if tok and tok not in seen_k:
+            seen_k.add(tok)
+            out.append(tok)
+    return out
+
+
+def _env_cloudflare_pairs() -> list[tuple[str, str]]:
+    """استخراج یک یا چند جفت (CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN) با پشتیبانی از _2.._20 و کاما."""
+    accs = _env_keys("CLOUDFLARE_ACCOUNT_ID")
+    toks = _env_keys("CLOUDFLARE_API_TOKEN")
+    if not accs or not toks:
+        return []
+    pairs: list[tuple[str, str]] = []
+    seen_p: set[tuple[str, str]] = set()
+    n = max(len(accs), len(toks))
+    for i in range(n):
+        acc = accs[i] if i < len(accs) else accs[0]
+        tok = toks[i] if i < len(toks) else toks[0]
+        if (acc, tok) not in seen_p:
+            seen_p.add((acc, tok))
+            pairs.append((acc, tok))
+    return pairs
+
+
+def _key_tag(k_idx: int, total: int) -> str:
+    return f" [K{k_idx}]" if total > 1 else ""
+
+
 def build_free_llm_chain_from_env() -> list[LLMEndpoint]:
-    """ساخت لیست اولویت‌بندی‌شدهٔ مدل‌ها و ارائه‌دهندگان رایگان از روی .env.
+    """ساخت لیست اولویت‌بندی‌شدهٔ مدل‌ها و ارائه‌دهندگان رایگان از روی .env (با پشتیبانی چند کلید / چند اکانت).
 
     ترتیب اولویت:
       1) زنجیرهٔ Gemini (ابتدا gemini-4-hydrogen، سپس gemini-4-neon، سپس gemini-3.8-flash و پشتیبان‌های Flash)
       2) ارائه‌دهندهٔ اصلی دلخواه کاربر در LLM_BASE_URL (اگر غیر از Gemini باشد)
-      3) پشتیبان‌های رایگان باکیفیت برای فارسی (در صورت تنظیم کلید در .env):
-         Groq → OpenRouter → Cohere → Mistral → NVIDIA NIM → Cloudflare → Z.ai
+      3) پشتیبان‌های رایگان باکیفیت برای فارسی (در صورت تنظیم کلید یا چند کلید در .env):
+         Pollinations → GitHub Models → AxForge → Cerebras → SambaNova → Groq → OpenRouter
+         → Cohere → Mistral → NVIDIA NIM → Cloudflare → Z.ai
       4) پشتیبان‌های اضطراری بدون نیاز به کلید (OVHcloud Qwen3.5-397B، Kilo Code، LLM7.io)
     """
     chain: list[LLMEndpoint] = []
-    seen: set[tuple[str, str]] = set()
+    seen: set[tuple[str, str, str]] = set()
 
     def _add(ep: LLMEndpoint) -> None:
-        key = (ep.base_url.rstrip("/"), ep.model)
+        key = (ep.base_url.rstrip("/"), ep.model, _key_hash(ep.api_key))
         if key not in seen:
             seen.add(key)
             chain.append(ep)
+
+    def _add_provider_models(
+        provider_name: str,
+        base_url: str,
+        models: tuple[str, ...] | list[str],
+        keys: list[str],
+        *,
+        supports_json_mode: bool = True,
+        extra_headers: dict[str, str] | None = None,
+    ) -> None:
+        total_k = len(keys)
+        if total_k == 0:
+            return
+        for m in models:
+            for k_idx, k_val in enumerate(keys, 1):
+                _add(LLMEndpoint(
+                    label=f"{provider_name}{_key_tag(k_idx, total_k)} ({m})",
+                    base_url=base_url,
+                    model=m,
+                    api_key=k_val,
+                    supports_json_mode=supports_json_mode,
+                    extra_headers=dict(extra_headers or {}),
+                ))
 
     llm_base = (os.environ.get("LLM_BASE_URL") or "").strip().rstrip("/")
     llm_key = (os.environ.get("LLM_API_KEY") or "").strip()
     llm_model = (os.environ.get("LLM_MODEL") or "").strip()
 
-    # ۱) کلید Gemini (یا از GEMINI_API_KEY یا از LLM_API_KEY وقتی base_url مربوط به Google باشد)
-    gemini_key = (os.environ.get("GEMINI_API_KEY") or "").strip()
-    if not gemini_key and llm_key and "generativelanguage.googleapis.com" in llm_base:
-        gemini_key = llm_key
+    # ۱) کلید(های) Gemini (یا از GEMINI_API_KEY / GEMINI_API_KEY_2..20 یا از LLM_API_KEY وقتی base_url گوگل باشد)
+    extra_gem = llm_key if (llm_key and "generativelanguage.googleapis.com" in llm_base) else ""
+    gemini_keys = _env_keys("GEMINI_API_KEY", extra_single=extra_gem)
 
-    if gemini_key:
+    if gemini_keys:
         raw_models = (os.environ.get("GEMINI_MODEL_CHAIN") or "").strip()
         if raw_models:
             g_models = [m.strip() for m in raw_models.split(",") if m.strip()]
         else:
             g_models = list(DEFAULT_GEMINI_CHAIN)
-        # اگر کاربر در LLM_MODEL مدل دیگری روی Gemini گذاشته، پس از اولویت اصلی اضافه شود
         if llm_model and "generativelanguage.googleapis.com" in llm_base and llm_model not in g_models:
             g_models.append(llm_model)
-        g_base = GEMINI_OPENAI_BASE
-        for gm in g_models:
-            _add(LLMEndpoint(label=f"Google Gemini ({gm})", base_url=g_base, model=gm, api_key=gemini_key))
+        _add_provider_models("Google Gemini", GEMINI_OPENAI_BASE, g_models, gemini_keys)
 
     # ۲) اگر کاربر یک LLM_BASE_URL غیر از Gemini تنظیم کرده (مثلاً DeepSeek/OpenAI/Ollama)
     if llm_base and llm_model and "generativelanguage.googleapis.com" not in llm_base:
-        _add(LLMEndpoint(
-            label=f"Primary ({llm_model})",
-            base_url=llm_base,
-            model=llm_model,
-            api_key=llm_key,
-            require_auth=bool(llm_key),
-        ))
-
-    # ۳) پشتیبان‌های رایگان با کلید API (به‌ترتیب کیفیت فارسی + سقف رایگان بالا)
-    polli_key = (os.environ.get("POLLINATIONS_API_KEY") or "").strip()
-    if polli_key:
-        for pm in ("openai", "mistral", "gemini-3-flash"):
+        prim_keys = _env_keys("LLM_API_KEY") or [""]
+        total_p = len(prim_keys)
+        for k_idx, pk in enumerate(prim_keys, 1):
             _add(LLMEndpoint(
-                label=f"Pollinations ({pm})",
-                base_url="https://gen.pollinations.ai/v1",
-                model=pm,
-                api_key=polli_key,
-                supports_json_mode=False,
+                label=f"Primary{_key_tag(k_idx, total_p)} ({llm_model})",
+                base_url=llm_base,
+                model=llm_model,
+                api_key=pk,
+                require_auth=bool(pk),
             ))
 
-    gh_tok = (os.environ.get("GITHUB_MODELS_TOKEN") or "").strip()
-    if gh_tok:
-        for ghm in ("meta/Llama-3.3-70B-Instruct", "cohere/cohere-command-a", "deepseek/DeepSeek-V3-0324"):
-            _add(LLMEndpoint(
-                label=f"GitHub Models ({ghm})",
-                base_url="https://models.github.ai/inference",
-                model=ghm,
-                api_key=gh_tok,
-                supports_json_mode=False,
-            ))
+    # ۳) پشتیبان‌های رایگان با کلید API (به‌ترتیب کیفیت فارسی + سقف رایگان بالا؛ با پشتیبانی چند کلید برای هر سرویس)
+    _add_provider_models(
+        "Pollinations",
+        "https://gen.pollinations.ai/v1",
+        ("openai", "mistral", "gemini-3-flash"),
+        _env_keys("POLLINATIONS_API_KEY"),
+        supports_json_mode=False,
+    )
 
-    ax_key = (os.environ.get("AXFORGE_API_KEY") or "").strip()
-    if ax_key:
-        for axm in ("qwen3.8-27b", "glm-5.3-flash"):
-            _add(LLMEndpoint(
-                label=f"AxForge EU ({axm})",
-                base_url="https://api.axforge.ai/v1",
-                model=axm,
-                api_key=ax_key,
-            ))
+    _add_provider_models(
+        "GitHub Models",
+        "https://models.github.ai/inference",
+        ("meta/Llama-3.3-70B-Instruct", "cohere/cohere-command-a", "deepseek/DeepSeek-V3-0324"),
+        _env_keys("GITHUB_MODELS_TOKEN"),
+        supports_json_mode=False,
+    )
 
-    cer_key = (os.environ.get("CEREBRAS_API_KEY") or "").strip()
-    if cer_key:
-        for cm in ("qwen-3-32b", "llama-3.3-70b"):
-            _add(LLMEndpoint(
-                label=f"Cerebras ({cm})",
-                base_url="https://api.cerebras.ai/v1",
-                model=cm,
-                api_key=cer_key,
-            ))
+    _add_provider_models(
+        "AxForge EU",
+        "https://api.axforge.ai/v1",
+        ("qwen3.8-27b", "glm-5.3-flash"),
+        _env_keys("AXFORGE_API_KEY"),
+    )
 
-    samba_key = (os.environ.get("SAMBANOVA_API_KEY") or "").strip()
-    if samba_key:
-        for sm in ("Meta-Llama-3.3-70B-Instruct", "Qwen2.5-72B-Instruct"):
-            _add(LLMEndpoint(
-                label=f"SambaNova ({sm})",
-                base_url="https://api.sambanova.ai/v1",
-                model=sm,
-                api_key=samba_key,
-            ))
+    _add_provider_models(
+        "Cerebras",
+        "https://api.cerebras.ai/v1",
+        ("qwen-3-32b", "llama-3.3-70b"),
+        _env_keys("CEREBRAS_API_KEY"),
+    )
 
-    groq_key = (os.environ.get("GROQ_API_KEY") or "").strip()
-    if groq_key:
-        for gm in ("qwen/qwen3.8-27b", "openai/gpt-oss-120b", "llama-3.3-70b-versatile"):
-            _add(LLMEndpoint(
-                label=f"Groq ({gm})",
-                base_url="https://api.groq.com/openai/v1",
-                model=gm,
-                api_key=groq_key,
-            ))
+    _add_provider_models(
+        "SambaNova",
+        "https://api.sambanova.ai/v1",
+        ("Meta-Llama-3.3-70B-Instruct", "Qwen2.5-72B-Instruct"),
+        _env_keys("SAMBANOVA_API_KEY"),
+    )
 
-    or_key = (os.environ.get("OPENROUTER_API_KEY") or "").strip()
-    if or_key:
-        or_headers = {"HTTP-Referer": "https://xgpedia.local", "X-Title": "XGPedia"}
-        for om in (
+    _add_provider_models(
+        "Groq",
+        "https://api.groq.com/openai/v1",
+        ("qwen/qwen3.8-27b", "openai/gpt-oss-120b", "llama-3.3-70b-versatile"),
+        _env_keys("GROQ_API_KEY"),
+    )
+
+    _add_provider_models(
+        "OpenRouter",
+        "https://openrouter.ai/api/v1",
+        (
             "google/gemma-4-31b-it:free",
             "google/gemma-4-26b-a4b-it:free",
             "nvidia/nemotron-3-ultra-550b-a55b:free",
             "openrouter/free",
-        ):
-            _add(LLMEndpoint(
-                label=f"OpenRouter ({om})",
-                base_url="https://openrouter.ai/api/v1",
-                model=om,
-                api_key=or_key,
-                extra_headers=or_headers,
-                supports_json_mode=False,
-            ))
+        ),
+        _env_keys("OPENROUTER_API_KEY"),
+        supports_json_mode=False,
+        extra_headers={"HTTP-Referer": "https://xgpedia.local", "X-Title": "XGPedia"},
+    )
 
-    cohere_key = (os.environ.get("COHERE_API_KEY") or "").strip()
-    if cohere_key:
-        for cm in ("command-a-03-2025", "c4ai-aya-expanse-32b"):
-            _add(LLMEndpoint(
-                label=f"Cohere ({cm})",
-                base_url="https://api.cohere.ai/compatibility/v1",
-                model=cm,
-                api_key=cohere_key,
-                supports_json_mode=False,
-            ))
+    _add_provider_models(
+        "Cohere",
+        "https://api.cohere.ai/compatibility/v1",
+        ("command-a-03-2025", "c4ai-aya-expanse-32b"),
+        _env_keys("COHERE_API_KEY"),
+        supports_json_mode=False,
+    )
 
-    mistral_key = (os.environ.get("MISTRAL_API_KEY") or "").strip()
-    if mistral_key:
-        for mm in ("mistral-medium-3-5-128b", "mistral-small-latest"):
-            _add(LLMEndpoint(
-                label=f"Mistral ({mm})",
-                base_url="https://api.mistral.ai/v1",
-                model=mm,
-                api_key=mistral_key,
-            ))
+    _add_provider_models(
+        "Mistral",
+        "https://api.mistral.ai/v1",
+        ("mistral-medium-3-5-128b", "mistral-small-latest"),
+        _env_keys("MISTRAL_API_KEY"),
+    )
 
-    nvidia_key = (os.environ.get("NVIDIA_API_KEY") or "").strip()
-    if nvidia_key:
-        for nm in ("z-ai/glm-5.3-flash", "nvidia/nemotron-3-ultra-550b-a55b"):
-            _add(LLMEndpoint(
-                label=f"NVIDIA NIM ({nm})",
-                base_url="https://integrate.api.nvidia.com/v1",
-                model=nm,
-                api_key=nvidia_key,
-                supports_json_mode=False,
-            ))
+    _add_provider_models(
+        "NVIDIA NIM",
+        "https://integrate.api.nvidia.com/v1",
+        ("z-ai/glm-5.3-flash", "nvidia/nemotron-3-ultra-550b-a55b"),
+        _env_keys("NVIDIA_API_KEY"),
+        supports_json_mode=False,
+    )
 
-    cf_acc = (os.environ.get("CLOUDFLARE_ACCOUNT_ID") or "").strip()
-    cf_tok = (os.environ.get("CLOUDFLARE_API_TOKEN") or "").strip()
-    if cf_acc and cf_tok:
-        cf_base = f"https://api.cloudflare.com/client/v4/accounts/{cf_acc}/ai/v1"
+    cf_pairs = _env_cloudflare_pairs()
+    if cf_pairs:
+        total_cf = len(cf_pairs)
         for cfm in ("@cf/google/gemma-4-26b-a4b-it", "@cf/meta/llama-3.3-70b-instruct-fp8-fast"):
-            _add(LLMEndpoint(
-                label=f"Cloudflare AI ({cfm})",
-                base_url=cf_base,
-                model=cfm,
-                api_key=cf_tok,
-                supports_json_mode=False,
-            ))
+            for k_idx, (cf_acc, cf_tok) in enumerate(cf_pairs, 1):
+                cf_base = f"https://api.cloudflare.com/client/v4/accounts/{cf_acc}/ai/v1"
+                _add(LLMEndpoint(
+                    label=f"Cloudflare AI{_key_tag(k_idx, total_cf)} ({cfm})",
+                    base_url=cf_base,
+                    model=cfm,
+                    api_key=cf_tok,
+                    supports_json_mode=False,
+                ))
 
-    zai_key = (os.environ.get("ZAI_API_KEY") or "").strip()
-    if zai_key:
-        _add(LLMEndpoint(
-            label="Z.ai (glm-4.7-flash)",
-            base_url="https://api.z.ai/api/paas/v4",
-            model="glm-4.7-flash",
-            api_key=zai_key,
-            supports_json_mode=False,
-        ))
+    _add_provider_models(
+        "Z.ai",
+        "https://api.z.ai/api/paas/v4",
+        ("glm-4.7-flash",),
+        _env_keys("ZAI_API_KEY"),
+        supports_json_mode=False,
+    )
 
     # ۴) پشتیبان‌های اضطراری بدون نیاز به کلید/ثبت‌نام (قابل غیرفعال‌سازی با LLM_ENABLE_ANONYMOUS_FALLBACK=0)
     anon_flag = (os.environ.get("LLM_ENABLE_ANONYMOUS_FALLBACK", "1") or "1").strip().lower()
@@ -463,15 +515,17 @@ def build_free_llm_chain_from_env() -> list[LLMEndpoint]:
             require_auth=False,
             supports_json_mode=False,
         ))
-        llm7_tok = (os.environ.get("LLM7_API_KEY") or "").strip()
-        _add(LLMEndpoint(
-            label="LLM7.io Free (gpt-oss:20b)",
-            base_url="https://api.llm7.io/v1",
-            model="gpt-oss:20b",
-            api_key=llm7_tok,
-            require_auth=False,
-            supports_json_mode=False,
-        ))
+        llm7_keys = _env_keys("LLM7_API_KEY") or [""]
+        total_l7 = len(llm7_keys)
+        for k_idx, l7k in enumerate(llm7_keys, 1):
+            _add(LLMEndpoint(
+                label=f"LLM7.io Free{_key_tag(k_idx, total_l7)} (gpt-oss:20b)",
+                base_url="https://api.llm7.io/v1",
+                model="gpt-oss:20b",
+                api_key=l7k,
+                require_auth=False,
+                supports_json_mode=False,
+            ))
 
     skip_raw = (os.environ.get("LLM_SKIP_MODELS") or "").strip()
     if skip_raw:
@@ -483,9 +537,23 @@ def build_free_llm_chain_from_env() -> list[LLMEndpoint]:
     return chain
 
 
-# کش موقت حافظه‌ای برای عبور فوری از مدل‌هایی که اخیراً 429/503/Timeout داده‌اند (پیش‌فرض ۱۵ دقیقه)
-_ENDPOINT_COOLDOWN_UNTIL: dict[tuple[str, str], float] = {}
+# کش موقت حافظه‌ای برای عبور فوری از کلیدها/مدل‌هایی که اخیراً 429/503/404/Timeout داده‌اند
+# کلید تاپل: (base_url, model, key_hash) برای خطای مخصوص هر کلید، و (base_url, model, "*") برای خطای 404 سراسری مدل
+_ENDPOINT_COOLDOWN_UNTIL: dict[tuple[str, str, str], float] = {}
 _LLM_START_CACHE_KEY = "setting:llm_start_index"
+
+
+def get_endpoint_cooldown_remaining(ep: LLMEndpoint) -> int:
+    """زمان باقی‌ماندهٔ کول‌داون یک endpoint به ثانیه (۰ یعنی آماده و سالم)."""
+    now = time.monotonic()
+    b = ep.base_url.rstrip("/")
+    k_spec = (b, ep.model, _key_hash(ep.api_key))
+    k_wide = (b, ep.model, "*")
+    rem = max(
+        _ENDPOINT_COOLDOWN_UNTIL.get(k_spec, 0.0) - now,
+        _ENDPOINT_COOLDOWN_UNTIL.get(k_wide, 0.0) - now,
+    )
+    return int(rem) if rem > 0 else 0
 
 
 def get_llm_start_index() -> int:
@@ -534,12 +602,12 @@ def set_llm_start_index(index_1based: int) -> int:
 
 
 def clear_llm_cooldowns() -> None:
-    """پاک‌سازی کش موقت خطاهای 429/503 مدل‌ها."""
+    """پاک‌سازی کش موقت خطاهای 429/503/404 مدل‌ها و کلیدها."""
     _ENDPOINT_COOLDOWN_UNTIL.clear()
 
 
 class MultiProviderLLM:
-    """روتر هوشمند چندمدلی/چندارائه‌دهنده با سوییچ سریع روی 429/503/timeout/403."""
+    """روتر هوشمند چندمدلی/چندکلیدی با سوییچ سریع روی 429/503/timeout/403 و توقف آنی در صورت لغو."""
 
     name = "multi_provider_router"
 
@@ -553,6 +621,7 @@ class MultiProviderLLM:
         start_index: int | None = None,
         cooldown_seconds: float | None = None,
         sleep: Callable[[float], None] | None = None,
+        cancel_event: threading.Event | None = None,
     ) -> None:
         self.endpoints = list(endpoints) if endpoints is not None else build_free_llm_chain_from_env()
         if not self.endpoints:
@@ -569,10 +638,11 @@ class MultiProviderLLM:
             else _env_number("LLM_COOLDOWN_SECONDS", 900.0)
         )
         self._sleep = sleep or time.sleep
+        self.cancel_event: threading.Event | None = cancel_event
         self.last_used_label: str = ""
 
     def _ordered_endpoints(self) -> list[tuple[int, LLMEndpoint]]:
-        """ترتیب اجرای مدل‌ها از روی start_index (مدل‌های قبل از start_index فقط در انتها به‌عنوان پشتیبان اضطراری می‌آیند)."""
+        """ترتیب اجرای مدل‌ها از روی start_index (کلیدها/مدل‌های در کول‌داون به انتها می‌روند)."""
         start_1 = self.start_index if self.start_index is not None else get_llm_start_index()
         n = len(self.endpoints)
         s_idx = min(max(1, start_1), n) - 1
@@ -583,8 +653,10 @@ class MultiProviderLLM:
         healthy: list[tuple[int, LLMEndpoint]] = []
         cooling: list[tuple[int, LLMEndpoint]] = []
         for idx, ep in primary_slice:
-            key = (ep.base_url.rstrip("/"), ep.model)
-            if _ENDPOINT_COOLDOWN_UNTIL.get(key, 0.0) > now:
+            b = ep.base_url.rstrip("/")
+            k_spec = (b, ep.model, _key_hash(ep.api_key))
+            k_wide = (b, ep.model, "*")
+            if _ENDPOINT_COOLDOWN_UNTIL.get(k_spec, 0.0) > now or _ENDPOINT_COOLDOWN_UNTIL.get(k_wide, 0.0) > now:
                 cooling.append((idx, ep))
             else:
                 healthy.append((idx, ep))
@@ -598,9 +670,21 @@ class MultiProviderLLM:
         previous_raw: str = "",
         edit_instruction: str = "",
         current_draft_json: str = "",
+        cancel_event: threading.Event | None = None,
     ) -> DraftOutput:
+        ev = cancel_event if cancel_event is not None else self.cancel_event
         errors: list[str] = []
+        dead_models_this_run: set[tuple[str, str]] = set()
+
         for idx, ep in self._ordered_endpoints():
+            if ev is not None and ev.is_set():
+                print("[llm-router] cancelled by timeout/caller - stopping model switch loop")
+                raise TimeoutError("درخواست تولید متن به دلیل اتمام زمان مجاز متوقف شد.")
+
+            b = ep.base_url.rstrip("/")
+            if (b, ep.model) in dead_models_this_run:
+                continue
+
             client = OpenAICompatibleLLM(
                 max_attempts=self.per_endpoint_attempts,
                 backoff_seconds=self.backoff_seconds,
@@ -613,7 +697,8 @@ class MultiProviderLLM:
                 supports_json_mode=ep.supports_json_mode,
                 timeout=self.timeout,
             )
-            key = (ep.base_url.rstrip("/"), ep.model)
+            k_spec = (b, ep.model, _key_hash(ep.api_key))
+            k_wide = (b, ep.model, "*")
             try:
                 out = client.generate(
                     system_prompt,
@@ -623,16 +708,36 @@ class MultiProviderLLM:
                     edit_instruction=edit_instruction,
                     current_draft_json=current_draft_json,
                 )
-                _ENDPOINT_COOLDOWN_UNTIL.pop(key, None)
+                if ev is not None and ev.is_set():
+                    print("[llm-router] cancelled right after response - discarding late output")
+                    raise TimeoutError("درخواست تولید متن به دلیل اتمام زمان مجاز متوقف شد.")
+                _ENDPOINT_COOLDOWN_UNTIL.pop(k_spec, None)
+                _ENDPOINT_COOLDOWN_UNTIL.pop(k_wide, None)
                 self.last_used_label = ep.label
                 print(f"[llm-router] success via #{idx} {ep.label}")
                 return out
+            except TimeoutError:
+                if ev is not None and ev.is_set():
+                    raise
+                short_err = "TimeoutError: request timed out"
+                if self.cooldown_seconds > 0:
+                    _ENDPOINT_COOLDOWN_UNTIL[k_spec] = time.monotonic() + self.cooldown_seconds
+                errors.append(f"{ep.label} -> {short_err}")
+                print(f"[llm-router] #{idx} {ep.label} failed ({short_err}) - switching to next")
+                continue
             except Exception as e:
+                if ev is not None and ev.is_set():
+                    print("[llm-router] cancelled during failover - stopping immediately")
+                    raise TimeoutError("درخواست تولید متن به دلیل اتمام زمان مجاز متوقف شد.") from e
                 short_err = f"{type(e).__name__}: {str(e)[:120]}"
-                if self.cooldown_seconds > 0 and any(
-                    tok in short_err for tok in ("429", "503", "Timeout", "502", "504")
-                ):
-                    _ENDPOINT_COOLDOWN_UNTIL[key] = time.monotonic() + self.cooldown_seconds
+                if self.cooldown_seconds > 0:
+                    if "404" in short_err:
+                        # مدل روی این سرور وجود ندارد — همهٔ کلیدهای این مدل برای ۳۰ دقیقه رد شوند
+                        _ENDPOINT_COOLDOWN_UNTIL[k_wide] = time.monotonic() + max(self.cooldown_seconds, 1800.0)
+                        dead_models_this_run.add((b, ep.model))
+                    elif any(tok in short_err for tok in ("429", "503", "Timeout", "502", "504", "402", "401", "403")):
+                        # خطای مخصوص همین کلید/اکانت — بلافاصله کلید بعدی همین سرویس امتحان می‌شود
+                        _ENDPOINT_COOLDOWN_UNTIL[k_spec] = time.monotonic() + self.cooldown_seconds
                 errors.append(f"{ep.label} -> {short_err}")
                 print(f"[llm-router] #{idx} {ep.label} failed ({short_err}) - switching to next")
                 continue

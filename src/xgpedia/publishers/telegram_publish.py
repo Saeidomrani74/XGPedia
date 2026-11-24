@@ -71,48 +71,251 @@ _SOURCE_LINKS: dict[str, tuple[str, str]] = {
     "football-data.co.uk": ("Football-Data.co.uk", "https://www.football-data.co.uk"),
     "understat": ("Understat", "https://understat.com"),
     "api-football": ("API-Football", "https://www.api-football.com"),
+    "espn soccer": ("ESPN Soccer", "https://www.espn.com/soccer/"),
+    "espn": ("ESPN Soccer", "https://www.espn.com/soccer/"),
+    "bbc sport": ("BBC Sport", "https://www.bbc.com/sport/football"),
+    "the guardian": ("The Guardian", "https://www.theguardian.com/football"),
+    "wikimedia": ("Wikipedia", "https://en.wikipedia.org"),
+}
+
+_CLUB_HASHTAGS: list[tuple[tuple[str, ...], str]] = [
+    (("منچستر یونایتد", "منچستریونایتد", "manchester united", "man utd"), "#منچستریونایتد"),
+    (("منچستر سیتی", "منچسترسیتی", "manchester city", "man city"), "#منچسترسیتی"),
+    (("لیورپول", "liverpool"), "#لیورپول"),
+    (("آرسنال", "arsenal"), "#آرسنال"),
+    (("چلسی", "chelsea"), "#چلسی"),
+    (("تاتنهام", "tottenham", "spurs"), "#تاتنهام"),
+    (("نیوکاسل", "newcastle"), "#نیوکاسل"),
+    (("استون ویلا", "aston villa"), "#استون_ویلا"),
+    (("رئال مادرید", "real madrid"), "#رئال_مادرید"),
+    (("بارسلونا", "بارسا", "barcelona"), "#بارسلونا"),
+    (("اتلتیکو مادرید", "اتلتیکو", "atletico"), "#اتلتیکو_مادرید"),
+    (("بایرن مونیخ", "بایرن", "bayern"), "#بایرن_مونیخ"),
+    (("دورتموند", "dortmund"), "#دورتموند"),
+    (("پاری سن ژرمن", "پی‌اس‌جی", "psg", "paris saint-germain"), "#پاری_سن_ژرمن"),
+    (("اینتر", "inter milan"), "#اینتر"),
+    (("آث میلان", "میلان", "ac milan"), "#آث_میلان"),
+    (("یوونتوس", "juventus"), "#یوونتوس"),
+    (("ناپولی", "napoli"), "#ناپولی"),
+    (("آژاکس", "ajax"), "#آژاکس"),
+    (("ایران", "تیم ملی ایران", "iran"), "#تیم_ملی_ایران"),
+    (("آرژانتین", "argentina"), "#آرژانتین"),
+    (("برزیل", "brazil"), "#برزیل"),
+    (("اسپانیا", "spain"), "#اسپانیا"),
+    (("فرانسه", "france"), "#فرانسه"),
+    (("انگلیس", "england"), "#انگلیس"),
+    (("آلمان", "germany"), "#آلمان"),
+    (("پرتغال", "portugal"), "#پرتغال"),
+]
+
+_COMP_HASHTAGS: list[tuple[tuple[str, ...], str]] = [
+    (("لیگ برتر انگلیس", "لیگ برتر", "premier league", "eng.1", "pl"), "#لیگ_برتر_انگلیس"),
+    (("لیگ قهرمانان", "champions league", "ucl", "uefa.champions", "cl"), "#لیگ_قهرمانان_اروپا"),
+    (("لالیگا", "la liga", "esp.1", "pd"), "#لالیگا"),
+    (("سری آ", "serie a", "ita.1", "sa"), "#سری_آ"),
+    (("بوندسلیگا", "bundesliga", "ger.1", "bl1"), "#بوندسلیگا"),
+    (("لیگ یک فرانسه", "ligue 1", "fra.1", "fl1"), "#لیگ_یک_فرانسه"),
+    (("جام جهانی", "world cup"), "#جام_جهانی"),
+    (("یورو", "euro 20", "uefa euro"), "#یورو"),
+    (("لیگ اروپا", "europa league"), "#لیگ_اروپا"),
+]
+
+_NEWS_MODE_HASHTAGS: dict[str, str] = {
+    "breaking": "#خبر_فوری",
+    "official": "#اعلام_رسمی",
+    "transfer": "#نقل_و_انتقالات",
+    "exclusive": "#اختصاصی",
+    "alert": "#گزارش_پزشکی",
 }
 
 
+def _slug_fa_hashtag(name: str) -> str:
+    import re as _re
+    s = _re.sub(r"[^\w\u0600-\u06ff\s]", "", str(name or "").strip())
+    s = _re.sub(r"\s+", "_", s).strip("_")
+    return f"#{s}" if len(s) >= 2 else ""
+
+
+def _build_relevant_hashtags(post: dict, facts: dict, draft: dict) -> str:
+    """ساخت خودکار هشتگ‌های متناسب با نوع کارت، لیگ و تیم‌های مرتبط (قانون دائمی برای همهٔ کارت‌ها)."""
+    tags: list[str] = []
+
+    def _add(t: str) -> None:
+        t = (t or "").strip()
+        if t and t.startswith("#") and t not in tags:
+            tags.append(t)
+
+    _add("#XGPedia")
+    _add("#فوتبال")
+
+    ptype = str(post.get("post_type") or "").strip()
+    base_tag = HASHTAG_BY_TYPE.get(ptype, "")
+    if base_tag:
+        _add(base_tag)
+    if ptype == "post_match":
+        _add("#تحلیل_آماری")
+    elif ptype == "on_this_day":
+        _add("#در_چنین_روزی")
+        _add("#تاریخ_فوتبال")
+    elif ptype == "breaking_news":
+        mode_k = str(draft.get("mode") or (facts.get("mode") if isinstance(facts, dict) else "") or "breaking").lower()
+        _add(_NEWS_MODE_HASHTAGS.get(mode_k, "#خبر_فوری"))
+
+    # استخراج تیم‌ها از facts ساختاریافته (پیش‌بازی / پس‌ازبازی)
+    if isinstance(facts, dict):
+        for side in ("home", "away"):
+            so = facts.get(side)
+            if isinstance(so, dict) and so.get("name_fa"):
+                _add(_slug_fa_hashtag(str(so["name_fa"])))
+
+    # جستجوی لیگ و باشگاه‌ها در متن عنوان، کپشن و متادیتا
+    blob = " ".join([
+        str(post.get("title") or ""),
+        str(post.get("caption") or ""),
+        str(facts.get("comp") or "") if isinstance(facts, dict) else "",
+        str((facts.get("competition") or {}).get("name_fa") or "") if isinstance(facts, dict) and isinstance(facts.get("competition"), dict) else "",
+        str((facts.get("competition") or {}).get("code") or "") if isinstance(facts, dict) and isinstance(facts.get("competition"), dict) else "",
+    ]).lower()
+
+    for kws, htag in _COMP_HASHTAGS:
+        if any(kw in blob for kw in kws):
+            _add(htag)
+            break
+
+    for kws, htag in _CLUB_HASHTAGS:
+        if any(kw in blob for kw in kws):
+            _add(htag)
+        if len(tags) >= 7:
+            break
+
+    return " ".join(tags[:7])
+
+
 def _format_source_html(raw_source: str, facts: dict) -> str:
-    """تبدیل نام منبع به هایپرلینک تمیز تلگرام بدون تاریخ جمع‌آوری و بدون hash."""
+    """تبدیل نام منبع به هایپرلینک تمیز تلگرام (با اولویت source_url دقیق خبر/سند)."""
     src_obj = facts.get("source") if isinstance(facts, dict) else None
+    src_url = ""
+    if isinstance(facts, dict):
+        for uk in ("source_url", "url", "article_url"):
+            cand = str(facts.get(uk) or "").strip()
+            if cand.startswith(("http://", "https://")):
+                src_url = cand
+                break
     if isinstance(src_obj, dict):
-        prov = str(src_obj.get("provider") or "").strip().lower()
+        prov = str(src_obj.get("provider") or "").strip()
+        if not src_url:
+            cand = str(src_obj.get("url") or "").strip()
+            if cand.startswith(("http://", "https://")):
+                src_url = cand
     elif isinstance(src_obj, str):
         prov = src_obj.strip()
     else:
         prov = ""
+
+    prov_low = prov.lower()
     raw_low = (raw_source or "").lower()
-    for key, (label, url) in _SOURCE_LINKS.items():
-        if key == prov or key in raw_low:
-            return f'<i>منبع: <a href="{url}">{label}</a></i>'
-    if prov:
-        return f"<i>منبع: {html.escape(prov)}</i>"
-    # حذف بخش‌های «جمع‌آوری ...» و «hash ...» در صورت نبود provider
     cleaned = (raw_source or "").split("·")[0].replace("منبع داده:", "").strip()
-    return f"<i>منبع: {html.escape(cleaned)}</i>" if cleaned else ""
+    label = prov or cleaned
+
+    if src_url and label:
+        safe_u = html.escape(src_url, quote=True)
+        return f'<i>منبع: <a href="{safe_u}">{html.escape(label)}</a></i>'
+
+    for key, (known_lbl, known_url) in _SOURCE_LINKS.items():
+        if key == prov_low or key in raw_low or key in prov_low:
+            return f'<i>منبع: <a href="{known_url}">{known_lbl}</a></i>'
+
+    if label:
+        return f"<i>منبع: {html.escape(label)}</i>"
+    return ""
+
+
+def _strip_duplicate_headline(raw_cap: str, title_raw: str) -> str:
+    """حذف خط اول تکراری کپشن اگر دقیقاً همان تیتر پست باشد."""
+    lines = raw_cap.splitlines()
+    if not lines:
+        return raw_cap
+    first = lines[0].strip().lstrip("📰🚨⚡✅🎙️ ").strip()
+    t_norm = title_raw.strip().lstrip("📰🚨⚡✅🎙️ ").strip()
+    if t_norm and (first == t_norm or first.startswith(t_norm[:35]) or t_norm.startswith(first[:35])):
+        rest = "\n".join(lines[1:]).lstrip()
+        return rest
+    return raw_cap
+
+
+def _clean_caption_stars(text: str) -> str:
+    """حذف ستاره‌های مارک‌داون (*واژه*) از متن کپشن تلگرام تا خروجی تمیز و خوانا باشد."""
+    import re as _re
+    return _re.sub(r"\*([^*\n]+)\*", r"\1", text or "").replace("*", "")
+
+
+def _trim_at_sentence(text: str, max_chars: int) -> str:
+    """برش تمیز متن روی پایان پاراگراف یا جملهٔ کامل — هرگز وسط کلمه یا جمله نصف نمی‌شود."""
+    txt = (text or "").strip()
+    if max_chars <= 0:
+        return ""
+    if len(txt) <= max_chars:
+        return txt
+    cand = txt[:max_chars]
+    # اولویت ۱: پایان یک پاراگراف کامل
+    p_idx = cand.rfind("\n\n")
+    if p_idx >= int(max_chars * 0.45):
+        return cand[:p_idx].rstrip()
+    # اولویت ۲: پایان یک جملهٔ کامل (. ؟ !)
+    best_s = -1
+    for sep in (".", "؟", "!", "؛"):
+        idx = cand.rfind(sep)
+        if idx > best_s:
+            best_s = idx
+    if best_s >= int(max_chars * 0.45):
+        return cand[: best_s + 1].rstrip()
+    # اولویت ۳: پایان خط یا آخرین کلمهٔ کامل + «…»
+    nl_idx = cand.rfind("\n")
+    if nl_idx >= int(max_chars * 0.55):
+        return cand[:nl_idx].rstrip()
+    return cand.rsplit(" ", 1)[0].rstrip(" ،؛,:") + "…"
 
 
 def build_caption(post: dict) -> str:
     """کپشن HTML تلگرام از پست آرشیوشده — همهٔ متن LLM با escape ایمن می‌شود.
 
-    ساختار: تیتر بولد + کپشن + منبع + هشتگ نوع پست (همان caption.txt رندر).
+    ساختار: تیتر بولد (یک‌بار) + کپشن کامل بدون برش وسط جمله + منبع هایپرلینک + هشتگ‌های متناسب.
     """
     draft = json.loads(post["draft_json"] or "{}")
-    title = html.escape((post["title"] or draft.get("title") or "").strip())
+    title_raw = _clean_caption_stars((post["title"] or draft.get("title") or "").strip())
+    title = html.escape(title_raw)
     raw_cap = (post["caption"] or draft.get("caption") or "").strip()
-    if post.get("post_type") == "on_this_day":
+    ptype = post.get("post_type") or ""
+    if ptype in ("on_this_day", "breaking_news"):
         import re as _re
         raw_cap = _re.sub(r"</?(?:b|i|code)>", "", raw_cap)
+        raw_cap = _clean_caption_stars(raw_cap)
+    if ptype == "breaking_news":
+        raw_cap = _strip_duplicate_headline(raw_cap, title_raw)
+    facts = json.loads(post.get("fact_json") or "{}") if isinstance(post, dict) else {}
+
+    if ptype == "breaking_news":
+        t_disp = title if title.startswith("📰") else f"📰 {title}"
+        title_block = f"<b>{t_disp}</b>"
+    else:
+        title_block = f"<b>{title}</b>"
+
+    src_html = _format_source_html(draft.get("source_note") or "", facts)
+    tags = _build_relevant_hashtags(post, facts, draft)
+
+    # برای خبر فوری، طول بدنه را دقیق طوری تنظیم می‌کنیم که همراه با هدر بازبینی، منبع هایپرلینک و هشتگ‌ها
+    # همیشه زیر سقف ۱۰۲۴ تلگرام بماند و هرگز وارد برش خام وسط کلمه نشود
+    if ptype == "breaking_news" and raw_cap:
+        overhead = _utf16_len(title_block) + _utf16_len(src_html) + _utf16_len(tags) + 140  # +140 برای هدر بازبینی و فواصل
+        body_budget = max(240, CAPTION_LIMIT - overhead)
+        if _utf16_len(html.escape(raw_cap)) > body_budget:
+            raw_cap = _trim_at_sentence(raw_cap, body_budget)
+
     caption = html.escape(raw_cap)
-    source = html.escape((draft.get("source_note") or "").strip())
-    tag = HASHTAG_BY_TYPE.get(post["post_type"], "")
-    parts = [f"<b>{title}</b>"]
+    parts = [title_block]
     if caption:
         parts.append(caption)
-    facts = json.loads(post.get("fact_json") or "{}") if isinstance(post, dict) else {}
-    if post["post_type"] in ("preview", "pre_match"):
+    if ptype in ("preview", "pre_match"):
         w_lines = []
         hf, af = facts.get("home") or {}, facts.get("away") or {}
         if hf.get("watchout"):
@@ -121,15 +324,14 @@ def build_caption(post: dict) -> str:
             w_lines.append(f"• {html.escape(str(af.get('name_fa', 'میهمان')))}: {html.escape(str(af['watchout']))}")
         if w_lines:
             parts.append("⚠️ <b>باید حواسشون بهش باشه:</b>\n" + "\n".join(w_lines))
-    elif post["post_type"] == "post_match":
+    elif ptype == "post_match":
         bullets = [html.escape(str(b).strip()) for b in (draft.get("bullets") or []) if str(b).strip()]
         if bullets:
             parts.append("🎯 <b>روایت آماری و گره تاکتیکی بازی:</b>\n" + "\n".join(f"• {b}" for b in bullets))
-    src_html = _format_source_html(draft.get("source_note") or "", facts)
     if src_html:
         parts.append(src_html)
-    if tag:
-        parts.append(tag)
+    if tags:
+        parts.append(tags)
     return "\n\n".join(parts)
 
 
