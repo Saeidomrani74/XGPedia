@@ -44,7 +44,7 @@ _CACHE_TTL_SEC = 1800.0  # ۳۰ دقیقه
 # کلیدواژه‌های منحصراً فوتبال (Association Football / Soccer) — هرگز football player خالی نباشد
 _SOCCER_POSITIVE_RE = re.compile(
     r"\b(association football|footballer|soccer player|soccer coach|soccer manager|"
-    r"goalkeeper|midfielder|striker|winger|centre-back|center-back|full-back|left-back|right-back)\b|"
+    r"goalkeeper|midfielder|striker|winger|centre-back|center-back|full-back|left-back|right-back|fußballspieler|futbolista)\b|"
     r"(فوتبالیست|بازیکن فوتبال|مربی فوتبال|دروازه‌بان)",
     re.IGNORECASE,
 )
@@ -371,47 +371,42 @@ def fetch_today_footballer_birthdays(
                         cur[fld] = it[fld]
                 cur["sitelinks"] = max(int(cur.get("sitelinks") or 0), int(it.get("sitelinks") or 0))
 
-    # ۱) Wikidata SPARQL — دقیق‌ترین منبع برای شهرت جهانی فوتبالیست‌های زندهٔ متولد امروز
-    sparql = f"""
-    SELECT ?item ?nameEn ?nameFa ?dob ?image ?natEn ?natFa ?posEn ?posFa ?enwiki ?sitelinks WHERE {{
-      ?item wdt:P106 wd:Q937857 ;
-            wdt:P569 ?dob ;
-            wikibase:sitelinks ?sitelinks .
-      FILTER(MONTH(?dob) = {mm} && DAY(?dob) = {dd} && YEAR(?dob) >= 1945 && YEAR(?dob) <= {ref.year - 16})
-      FILTER NOT EXISTS {{ ?item wdt:P570 ?dod }}
-      FILTER NOT EXISTS {{ ?item wdt:P106 wd:Q19204627 }}
-      FILTER NOT EXISTS {{ ?item wdt:P106 wd:Q13414980 }}
-      FILTER NOT EXISTS {{ ?item wdt:P106 wd:Q14089670 }}
-      FILTER(?sitelinks >= 18)
-      OPTIONAL {{ ?item wdt:P18 ?image . }}
-      OPTIONAL {{ ?item wdt:P27 ?nat . ?nat rdfs:label ?natEn FILTER(LANG(?natEn) = "en") }}
-      OPTIONAL {{ ?item wdt:P27 ?nat2 . ?nat2 rdfs:label ?natFa FILTER(LANG(?natFa) = "fa") }}
-      OPTIONAL {{ ?item wdt:P413 ?pos . ?pos rdfs:label ?posEn FILTER(LANG(?posEn) = "en") }}
-      OPTIONAL {{ ?item wdt:P413 ?pos2 . ?pos2 rdfs:label ?posFa FILTER(LANG(?posFa) = "fa") }}
-      OPTIONAL {{ ?enwiki schema:about ?item ; schema:isPartOf <https://en.wikipedia.org/> . }}
-      ?item rdfs:label ?nameEn FILTER(LANG(?nameEn) = "en") .
-      OPTIONAL {{ ?item rdfs:label ?nameFa FILTER(LANG(?nameFa) = "fa") }}
-    }}
-    ORDER BY DESC(?sitelinks)
-    LIMIT 24
-    """
-    try:
-        wd_url = "https://query.wikidata.org/sparql?format=json&query=" + urllib.parse.quote(sparql)
-        wd_json = _http_get_json(wd_url, timeout=timeout)
-        if wd_json:
-            _merge(parse_wikidata_sparql_json(wd_json, month=mm, day=dd, now=ref))
-    except Exception as e:
-        log.warning("wikidata birthday sparql failed: %s", e)
-
-    # ۲) Wikimedia REST API (EN + FA) — سریع و مستقل در صورت شلوغی Wikidata
-    for lang in ("en", "fa"):
+    # ۱) Wikimedia REST API (EN + DE + ES — پشتیبانی‌شده، فوق‌سریع زیر ۴۰۰ms و بدون خطای ۴۰۴)
+    # نکته: نسخهٔ fa در سرویس Wikifeeds onthisday وجود ندارد و ۴۰۴ می‌دهد؛ نام فارسی بعداً از langlinks استخراج می‌شود.
+    for lang in ("en", "de", "es"):
         try:
             wm_url = f"https://api.wikimedia.org/feed/v1/wikipedia/{lang}/onthisday/births/{mm:02d}/{dd:02d}"
-            wm_json = _http_get_json(wm_url, timeout=timeout)
+            wm_json = _http_get_json(wm_url, timeout=min(timeout, 6.0))
             if wm_json:
                 _merge(parse_wikimedia_births_json(wm_json, month=mm, day=dd, lang=lang, now=ref))
         except Exception as e:
-            log.warning("wikimedia births (%s) failed: %s", lang, e)
+            log.info("wikimedia births (%s) skipped: %s", lang, e)
+
+    # ۲) Wikidata SPARQL تکمیلی با سقف زمان کوتاه (۴.۵ ثانیه) فقط اگر لیست هنوز زیر ۱۲ بازیکن بود
+    if len(merged) < 12:
+        sparql = f"""
+        SELECT ?item ?nameEn ?nameFa ?dob ?image ?enwiki ?sitelinks WHERE {{
+          ?item wdt:P106 wd:Q937857 ;
+                wdt:P569 ?dob ;
+                wikibase:sitelinks ?sitelinks .
+          FILTER(?sitelinks >= 35 && MONTH(?dob) = {mm} && DAY(?dob) = {dd} && YEAR(?dob) >= 1955)
+          FILTER NOT EXISTS {{ ?item wdt:P570 ?dod }}
+          FILTER NOT EXISTS {{ ?item wdt:P106 wd:Q19204627 }}
+          OPTIONAL {{ ?item wdt:P18 ?image . }}
+          OPTIONAL {{ ?enwiki schema:about ?item ; schema:isPartOf <https://en.wikipedia.org/> . }}
+          ?item rdfs:label ?nameEn FILTER(LANG(?nameEn) = "en") .
+          OPTIONAL {{ ?item rdfs:label ?nameFa FILTER(LANG(?nameFa) = "fa") }}
+        }}
+        ORDER BY DESC(?sitelinks)
+        LIMIT 16
+        """
+        try:
+            wd_url = "https://query.wikidata.org/sparql?format=json&query=" + urllib.parse.quote(sparql)
+            wd_json = _http_get_json(wd_url, timeout=4.5)
+            if wd_json:
+                _merge(parse_wikidata_sparql_json(wd_json, month=mm, day=dd, now=ref))
+        except Exception as e:
+            log.info("wikidata birthday sparql skipped (fast timeout): %s", e)
 
     ranked = sorted(merged.values(), key=lambda x: int(x.get("sitelinks") or 0), reverse=True)
     _BIRTHDAY_CACHE["key"] = cache_key

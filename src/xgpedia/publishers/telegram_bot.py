@@ -169,6 +169,10 @@ def _cards_studio_markup() -> InlineKeyboardMarkup:
                 InlineKeyboardButton(text="🔍 جستجوی بازیکن (تولد)", callback_data="bday:search"),
             ],
             [
+                InlineKeyboardButton(text="📡 رادار نقل‌وانتقالات (شایعات داغ)", callback_data="tr:list:1"),
+                InlineKeyboardButton(text="⭐ پریست‌های نقل‌وانتقال", callback_data="tr:presets"),
+            ],
+            [
                 InlineKeyboardButton(text="📡 رفتن به مرکز دیتای زنده", callback_data="nav:sync"),
                 InlineKeyboardButton(text="🏠 پنل اصلی", callback_data="nav:home"),
             ],
@@ -186,6 +190,7 @@ def _sync_hub_markup() -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text="🕰 بروزرسانی زندهٔ ویکی‌پدیا (در چنین روزی)", callback_data="otd:refresh")],
             [InlineKeyboardButton(text="📰 بروزرسانی اخبار زنده (ESPN/BBC)", callback_data="news:refresh")],
             [InlineKeyboardButton(text="🎂 بروزرسانی تولدهای امروز (Wikidata/Wiki)", callback_data="bday:refresh")],
+            [InlineKeyboardButton(text="📡 بروزرسانی شایعات نقل‌وانتقالات (۵ منبع)", callback_data="tr:refresh")],
             [
                 InlineKeyboardButton(text="🎨 استودیو کارت‌ها", callback_data="nav:cards"),
                 InlineKeyboardButton(text="🏠 پنل اصلی", callback_data="nav:home"),
@@ -225,10 +230,10 @@ def _main_panel_markup() -> InlineKeyboardMarkup:
             ],
             [
                 InlineKeyboardButton(text="🎂 تولدهای امروز", callback_data="bday:list:1"),
-                InlineKeyboardButton(text="🔄 سینک سریع امروز", callback_data="today:sync"),
+                InlineKeyboardButton(text="📡 رادار نقل‌وانتقالات", callback_data="tr:list:1"),
             ],
             [
-                InlineKeyboardButton(text="⏰ صف زمان‌بندی", callback_data="today:schedules"),
+                InlineKeyboardButton(text="🔄 سینک سریع امروز", callback_data="today:sync"),
                 InlineKeyboardButton(text="🧠 وضعیت AI", callback_data="nav:ai_status"),
             ],
             [
@@ -240,6 +245,22 @@ def _main_panel_markup() -> InlineKeyboardMarkup:
 
 
 def _preview_keyboard(post_id: int, fixture_id: str, post_type: str = "preview") -> dict[str, Any]:
+    if post_type == "transfer_radar":
+        return {
+            "inline_keyboard": [
+                [
+                    {"text": "✅ انتشار فوری در کانال", "callback_data": f"approve:{post_id}"},
+                    {"text": "⏰ زمان‌بندی امروز (HH:MM)", "callback_data": f"sched:{post_id}"},
+                ],
+                [
+                    {"text": "🎛 تغییر اسلاید/هدر/ماژول", "callback_data": "tr:back"},
+                    {"text": "❌ رد", "callback_data": f"reject:{post_id}"},
+                ],
+                [
+                    {"text": "📡 لیست شایعات داغ نقل‌وانتقال", "callback_data": "tr:list:1"},
+                ],
+            ]
+        }
     if post_type == "birthday":
         return {
             "inline_keyboard": [
@@ -531,6 +552,13 @@ def _render_customizer_view(st: dict[str, Any]) -> tuple[str, InlineKeyboardMark
         )
         kb_rows.append(ctrl_row)
 
+    from src.xgpedia.layout_templates import MAX_SAVED_TEMPLATES, list_layout_templates
+    tpl_kind = "post_match" if is_post else "pre_match"
+    tpl_cnt = len(list_layout_templates(tpl_kind))
+    kb_rows.append([
+        InlineKeyboardButton(text=f"💾 ذخیره قالب ({tpl_cnt}/{MAX_SAVED_TEMPLATES})", callback_data="cz:tpl_save"),
+        InlineKeyboardButton(text=f"📂 قالب‌های من ({tpl_cnt}/{MAX_SAVED_TEMPLATES})", callback_data="cz:tpl_list"),
+    ])
     build_lbl = "⚠️ رفع جای خالی نیم‌عرض برای ساخت" if layout_errors else "🎨 ساخت کارت و کپشن نهایی"
     kb_rows.append([
         InlineKeyboardButton(text=build_lbl, callback_data="cz:build"),
@@ -803,6 +831,56 @@ async def on_any_text(m: Message, bot: Bot | None = None) -> None:
         text, markup = _render_ai_status_view(page=1)
         await m.answer(text, parse_mode="HTML", reply_markup=markup)
         return
+
+    # ۰-الف) حالت ذخیرهٔ نام قالب سفارشی (تا ۵ قالب برای هر کارت ماژولار)
+    if user_id in _AWAITING_TEMPLATE_NAME:
+        card_kind = _AWAITING_TEMPLATE_NAME.pop(user_id)
+        if raw_text in {"لغو", "انصراف", "/cancel", "cancel"}:
+            await m.answer("❌ ذخیرهٔ قالب لغو شد.", reply_markup=_main_panel_markup())
+            return
+        from src.xgpedia.layout_templates import save_layout_template
+        try:
+            if card_kind == "transfer_radar":
+                st_tr = _TR_STATE.get(user_id)
+                if not st_tr:
+                    await m.answer("❌ وضعیت کاستومایزر منقضی شده است؛ دوباره شایعه را باز کنید.")
+                    return
+                saved = save_layout_template(
+                    "transfer_radar",
+                    raw_text,
+                    fmt=st_tr["fmt"],
+                    header_mode=st_tr["header_mode"],
+                    modules=st_tr["modules"],
+                )
+                text, markup = _render_transfer_customizer_view(st_tr)
+                await m.answer(
+                    f"✅ قالب <b>«{html.escape(saved['name'])}»</b> با موفقیت ذخیره شد!\n\n{text}",
+                    parse_mode="HTML",
+                    reply_markup=markup,
+                )
+                return
+            else:
+                st_cz = _CUSTOMIZER_STATE.get(user_id)
+                if not st_cz:
+                    await m.answer("❌ وضعیت کاستومایزر منقضی شده است؛ دوباره بازی را باز کنید.")
+                    return
+                saved = save_layout_template(
+                    card_kind,
+                    raw_text,
+                    fmt=st_cz["fmt"],
+                    header_mode=st_cz["header_mode"],
+                    modules=st_cz["modules"],
+                )
+                text, markup = _render_customizer_view(st_cz)
+                await m.answer(
+                    f"✅ قالب <b>«{html.escape(saved['name'])}»</b> با موفقیت ذخیره شد!\n\n{text}",
+                    parse_mode="HTML",
+                    reply_markup=markup,
+                )
+                return
+        except Exception as e:
+            await m.answer(f"⚠️ ذخیرهٔ قالب انجام نشد:\n{html.escape(str(e))}", parse_mode="HTML")
+            return
 
     # ۰) حالت جستجوی نام فوتبالیست برای کارت تولد
     if user_id in _AWAITING_BIRTHDAY_SEARCH:
@@ -1382,6 +1460,58 @@ async def on_customizer_action(cb: CallbackQuery, bot: Bot) -> None:
     elif action == "bc":
         st["broadcast_idx"] = (st["broadcast_idx"] + 1) % len(BROADCAST_CYCLE)
         await _safe_cb_answer(cb, f"پخش: {BROADCAST_CYCLE[st['broadcast_idx']][1]}")
+    elif action == "tpl_save":
+        tpl_kind = "post_match" if st.get("post_type") == "post_match" else "pre_match"
+        _AWAITING_TEMPLATE_NAME[cb.from_user.id] = tpl_kind
+        await _safe_cb_answer(cb, "نام قالب را بفرستید.")
+        await cb.message.answer(
+            "💾 <b>ذخیرهٔ چینش فعلی به‌عنوان قالب آماده</b>\n"
+            "یک نام کوتاه برای این قالب بنویسید (مثلاً <code>چینش تاکتیکی من</code>) یا برای انصراف <code>لغو</code> بفرستید:",
+            parse_mode="HTML",
+        )
+        return
+    elif action == "tpl_list":
+        from src.xgpedia.layout_templates import MAX_SAVED_TEMPLATES, list_layout_templates
+        tpl_kind = "post_match" if st.get("post_type") == "post_match" else "pre_match"
+        tpls = list_layout_templates(tpl_kind)
+        await _safe_cb_answer(cb)
+        if not tpls:
+            await cb.message.answer("📂 هنوز قالبی ذخیره نکرده‌اید. روی «💾 ذخیره قالب» بزنید تا چینش فعلی ذخیره شود.")
+            return
+        t_rows = []
+        for idx, tp_it in enumerate(tpls):
+            t_rows.append([
+                InlineKeyboardButton(text=f"📌 {tp_it['name']} ({tp_it.get('fmt', '4:5')})", callback_data=f"cz:tpl_use:{idx}"),
+                InlineKeyboardButton(text="🗑", callback_data=f"cz:tpl_del:{idx}"),
+            ])
+        t_rows.append([InlineKeyboardButton(text="↩️ بازگشت به کاستومایزر", callback_data="cz:tpl_back")])
+        await cb.message.edit_text(
+            f"📂 <b>قالب‌های ذخیره‌شده ({len(tpls)} از {MAX_SAVED_TEMPLATES})</b>\nروی نام قالب بزنید تا فوری اعمال شود:",
+            parse_mode="HTML",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=t_rows),
+        )
+        return
+    elif action == "tpl_use":
+        from src.xgpedia.layout_templates import apply_template_to_modules, list_layout_templates
+        tpl_kind = "post_match" if st.get("post_type") == "post_match" else "pre_match"
+        tpls = list_layout_templates(tpl_kind)
+        idx = int(parts[2]) if len(parts) > 2 and parts[2].isdigit() else -1
+        if 0 <= idx < len(tpls):
+            tpl = tpls[idx]
+            st["fmt"] = tpl.get("fmt", st["fmt"])
+            st["header_mode"] = tpl.get("header_mode", st["header_mode"])
+            st["modules"] = apply_template_to_modules(st["modules"], tpl)
+            await _safe_cb_answer(cb, f"✅ قالب «{tpl['name']}» اعمال شد!")
+        else:
+            await _safe_cb_answer(cb, "قالب یافت نشد.", show_alert=True)
+    elif action == "tpl_del":
+        from src.xgpedia.layout_templates import delete_layout_template
+        tpl_kind = "post_match" if st.get("post_type") == "post_match" else "pre_match"
+        idx = int(parts[2]) if len(parts) > 2 and parts[2].isdigit() else -1
+        delete_layout_template(tpl_kind, idx)
+        await _safe_cb_answer(cb, "🗑 قالب حذف شد.")
+    elif action == "tpl_back":
+        await _safe_cb_answer(cb)
     elif action == "tog":
         mod_id = parts[2]
         target = next((m for m in st["modules"] if m["id"] == mod_id), None)
@@ -2616,12 +2746,91 @@ async def on_bday_customizer_action(cb: CallbackQuery, bot: Bot) -> None:
     elif action == "rim":
         st["rim_light"] = not st.get("rim_light", True)
         await _safe_cb_answer(cb, "هاله نور: " + ("روشن" if st["rim_light"] else "خاموش"))
+    elif action == "noop":
+        await _safe_cb_answer(cb)
+        return
+    elif action == "mp":
+        st["mod_page"] = int(parts[2]) if len(parts) > 2 and parts[2].isdigit() else 1
+        await _safe_cb_answer(cb)
     elif action == "tog":
         mid = parts[2]
         target = next((m for m in st["modules"] if m["id"] == mid), None)
         if target:
             target["enabled"] = not target["enabled"]
+            st["slide"] = "custom"
             await _safe_cb_answer(cb, f"{target['title_fa']}: {'فعال' if target['enabled'] else 'غیرفعال'}")
+    elif action == "sp":
+        mid = parts[2]
+        target = next((m for m in st["modules"] if m["id"] == mid), None)
+        if target and target.get("can_half", False):
+            target["span"] = "full" if target.get("span") == "half" else "half"
+            target["half"] = target["span"] == "half"
+            st["slide"] = "custom"
+            await _safe_cb_answer(cb, "عرض: " + ("نیم‌عرض ½" if target["span"] == "half" else "تمام‌عرض ۱"))
+    elif action in ("up", "dn"):
+        mid = parts[2]
+        mods_l = st["modules"]
+        idx = next((i for i, m in enumerate(mods_l) if m["id"] == mid), -1)
+        if action == "up" and idx > 0:
+            mods_l[idx - 1], mods_l[idx] = mods_l[idx], mods_l[idx - 1]
+            st["slide"] = "custom"
+            await _safe_cb_answer(cb, "⬆️ یک ردیف بالا رفت.")
+        elif action == "dn" and 0 <= idx < len(mods_l) - 1:
+            mods_l[idx + 1], mods_l[idx] = mods_l[idx], mods_l[idx + 1]
+            st["slide"] = "custom"
+            await _safe_cb_answer(cb, "⬇️ یک ردیف پایین رفت.")
+        else:
+            await _safe_cb_answer(cb)
+            return
+    elif action == "tpl_save":
+        _AWAITING_TEMPLATE_NAME[cb.from_user.id] = "transfer_radar"
+        await _safe_cb_answer(cb, "نام قالب را بفرستید.")
+        await cb.message.answer(
+            "💾 <b>ذخیرهٔ چینش فعلی رادار نقل‌وانتقالات</b>\n"
+            "یک نام کوتاه برای این قالب بنویسید (مثلاً <code>شایعه سریع</code> یا <code>تحلیل تاکتیکی</code>) یا برای انصراف <code>لغو</code> بفرستید:",
+            parse_mode="HTML",
+        )
+        return
+    elif action == "tpl_list":
+        from src.xgpedia.layout_templates import MAX_SAVED_TEMPLATES, list_layout_templates
+        tpls = list_layout_templates("transfer_radar")
+        await _safe_cb_answer(cb)
+        if not tpls:
+            await cb.message.answer("📂 هنوز قالبی ذخیره نکرده‌اید. ابتدا روی «💾 ذخیره قالب» بزنید.")
+            return
+        t_rows = []
+        for idx, tp_it in enumerate(tpls):
+            t_rows.append([
+                InlineKeyboardButton(text=f"📌 {tp_it['name']} ({tp_it.get('fmt', '4:5')})", callback_data=f"trc:tpl_use:{idx}"),
+                InlineKeyboardButton(text="🗑", callback_data=f"trc:tpl_del:{idx}"),
+            ])
+        t_rows.append([InlineKeyboardButton(text="↩️ بازگشت به کاستومایزر", callback_data="trc:tpl_back")])
+        await cb.message.edit_text(
+            f"📂 <b>قالب‌های ذخیره‌شده رادار نقل‌وانتقالات ({len(tpls)} از {MAX_SAVED_TEMPLATES})</b>\nروی نام قالب بزنید تا فوری اعمال شود:",
+            parse_mode="HTML",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=t_rows),
+        )
+        return
+    elif action == "tpl_use":
+        from src.xgpedia.layout_templates import apply_template_to_modules, list_layout_templates
+        tpls = list_layout_templates("transfer_radar")
+        idx = int(parts[2]) if len(parts) > 2 and parts[2].isdigit() else -1
+        if 0 <= idx < len(tpls):
+            tpl = tpls[idx]
+            st["fmt"] = tpl.get("fmt", st["fmt"])
+            st["header_mode"] = tpl.get("header_mode", st["header_mode"])
+            st["modules"] = apply_template_to_modules(st["modules"], tpl)
+            st["slide"] = "custom"
+            await _safe_cb_answer(cb, f"✅ قالب «{tpl['name']}» اعمال شد!")
+        else:
+            await _safe_cb_answer(cb, "قالب یافت نشد.", show_alert=True)
+    elif action == "tpl_del":
+        from src.xgpedia.layout_templates import delete_layout_template
+        idx = int(parts[2]) if len(parts) > 2 and parts[2].isdigit() else -1
+        delete_layout_template("transfer_radar", idx)
+        await _safe_cb_answer(cb, "🗑 قالب حذف شد.")
+    elif action == "tpl_back":
+        await _safe_cb_answer(cb)
     elif action == "build":
         await _safe_cb_answer(cb, "در حال ساخت کارت تولد...")
         it = st["item"]
@@ -2667,6 +2876,419 @@ async def on_bday_customizer_action(cb: CallbackQuery, bot: Bot) -> None:
         pass
 
 
+# ─── پنل و کاستومایزر ماژولار «رادار نقل‌وانتقالات» (Transfer Radar D48 — صفحه‌بندی کامل) ───
+
+_TR_STATE: dict[int, dict[str, Any]] = {}
+_TR_ITEM_MAP: dict[str, dict[str, Any]] = {}
+_TR_LAST_DATA: dict[str, list[dict[str, Any]]] = {"live": [], "presets": []}
+_AWAITING_TEMPLATE_NAME: dict[int, str] = {}
+
+
+def _format_transfer_list_message(
+    data: dict[str, list[dict[str, Any]]],
+    *,
+    page: int = 1,
+    page_size: int = 6,
+    show_presets: bool = False,
+) -> tuple[str, InlineKeyboardMarkup]:
+    _TR_LAST_DATA["live"] = list(data.get("live") or [])
+    _TR_LAST_DATA["presets"] = list(data.get("presets") or [])
+    live_items = _TR_LAST_DATA["live"]
+    presets = _TR_LAST_DATA["presets"]
+    rows: list[list[InlineKeyboardButton]] = []
+
+    if show_presets or not live_items:
+        lines = [
+            "📡 <b>رادار نقل‌وانتقالات XGPedia — پریست‌های آماده (حالت ماژولار)</b>",
+            "۵ اسلاید آماده + ۲ سبک هدر (کامل/فشرده) + ۱۰ ماژول تحلیلی مستقل",
+            "",
+        ]
+        if not live_items and not show_presets:
+            lines.append("ℹ️ شایعهٔ زنده‌ای دریافت نشد؛ پریست‌های آماده در دسترس‌اند:")
+            lines.append("")
+        for it in presets:
+            iid = str(it["id"])
+            _TR_ITEM_MAP[iid] = it
+            pl = (it.get("player") or {}).get("name", iid)
+            to_n = (it.get("to") or {}).get("name", "")
+            rows.append([InlineKeyboardButton(
+                text=f"⭐ {pl} ← {to_n} ({it.get('prob', 70)}٪)"[:54],
+                callback_data=f"tr:open:{iid[:44]}",
+            )])
+        if live_items:
+            rows.append([InlineKeyboardButton(text=f"🔥 شایعات زنده امروز ({len(live_items)})", callback_data="tr:list:1")])
+        rows.append([
+            InlineKeyboardButton(text="🔄 بروزرسانی شایعات زنده", callback_data="tr:refresh"),
+            InlineKeyboardButton(text="🎨 استودیو کارت‌ها", callback_data="nav:cards"),
+        ])
+        return "\n".join(lines), InlineKeyboardMarkup(inline_keyboard=rows)
+
+    total = len(live_items)
+    total_pages = max(1, (total + page_size - 1) // page_size)
+    page = max(1, min(page, total_pages))
+    start = (page - 1) * page_size
+    end = min(total, start + page_size)
+
+    lines = [
+        f"📡 <b>رادار نقل‌وانتقالات — شایعات داغ امروز (صفحه {page} از {total_pages} | مجموع {total} شایعه)</b>",
+        "منابع رایگان (Soccer): <b>Guardian + BBC Sport + Sky Sports + CaughtOffside + 90min</b>",
+        "شایعه را انتخاب کنید تا اطلاعات کامل، عکس بازیکن و تحلیل فارسی استخراج شود:",
+    ]
+    for idx, it in enumerate(live_items[start:end], start + 1):
+        iid = str(it["id"])
+        _TR_ITEM_MAP[iid] = it
+        hot = int(it.get("hotness") or 60)
+        fire = "🔥" if hot >= 75 else "📡"
+        src_s = str(it.get("source") or "Live")[:10]
+        ttl = str(it.get("headline_en") or it.get("title") or "")[:32]
+        rows.append([InlineKeyboardButton(text=f"{idx}. {fire}{hot} [{src_s}] {ttl}"[:56], callback_data=f"tr:open:{iid[:44]}")])
+
+    if total_pages > 1:
+        nav_p: list[InlineKeyboardButton] = []
+        if page > 1:
+            nav_p.append(InlineKeyboardButton(text="⬅️ صفحه قبل", callback_data=f"tr:list:{page - 1}"))
+        nav_p.append(InlineKeyboardButton(text=f"📄 {page}/{total_pages}", callback_data=f"tr:list:{page}"))
+        if page < total_pages:
+            nav_p.append(InlineKeyboardButton(text="➡️ صفحه بعد", callback_data=f"tr:list:{page + 1}"))
+        rows.append(nav_p)
+
+    rows.append([
+        InlineKeyboardButton(text="⭐ پریست‌های آماده (۴)", callback_data="tr:presets"),
+        InlineKeyboardButton(text="🔄 بروزرسانی زنده", callback_data="tr:refresh"),
+    ])
+    rows.append([InlineKeyboardButton(text="🎨 استودیو کارت‌ها", callback_data="nav:cards")])
+    return "\n".join(lines), InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def _build_transfer_schematic(mods: list[dict[str, Any]]) -> str:
+    """پیش‌نمایش متنی ترتیب و عرض ماژول‌های فعال رادار نقل‌وانتقالات."""
+    active = [m for m in mods if m.get("enabled")]
+    if not active:
+        return "[ هیچ ماژولی فعال نیست ]"
+    rows: list[str] = []
+    i = 0
+    while i < len(active):
+        m = active[i]
+        short = m["title_fa"].split("(")[0].strip()[:18]
+        if m.get("span") == "half":
+            if i + 1 < len(active) and active[i + 1].get("span") == "half":
+                s2 = active[i + 1]["title_fa"].split("(")[0].strip()[:18]
+                rows.append(f"[ ½ {short} ] [ ½ {s2} ]")
+                i += 2
+                continue
+            rows.append(f"[ ½ {short} (خودکار تمام‌عرض) ]")
+        else:
+            rows.append(f"[  ۱  {short}  ]")
+        i += 1
+    return "\n".join(rows)
+
+
+def _render_transfer_customizer_view(st: dict[str, Any]) -> tuple[str, InlineKeyboardMarkup]:
+    from src.xgpedia.layout_templates import MAX_SAVED_TEMPLATES, list_layout_templates
+    from src.xgpedia.render.card_kit.transfer_radar_card import (
+        TRANSFER_FORMATS,
+        TRANSFER_SLIDES,
+        TRANSFER_STATUSES,
+    )
+
+    it = st["item"]
+    slide = st["slide"]
+    hm = st["header_mode"]
+    fmt = st["fmt"]
+    mods = st["modules"]
+    missing = st.get("missing_modules") or []
+    mpage = max(1, int(st.get("mod_page", 1)))
+    page_size = 5
+    total_mods = len(mods)
+    total_mpages = max(1, (total_mods + page_size - 1) // page_size)
+    mpage = min(mpage, total_mpages)
+    st["mod_page"] = mpage
+    m_start = (mpage - 1) * page_size
+    m_end = min(total_mods, m_start + page_size)
+
+    st_meta = TRANSFER_STATUSES.get(str(it.get("status") or "radar").lower(), TRANSFER_STATUSES["radar"])
+    pl_name = str((it.get("player") or {}).get("name") or it.get("title") or "")
+    to_name = str((it.get("to") or {}).get("name") or "")
+    active_cnt = sum(1 for m in mods if m["enabled"])
+    schematic = _build_transfer_schematic(mods)
+    tpl_cnt = len(list_layout_templates("transfer_radar"))
+
+    lines = [
+        "📡 <b>رادار نقل‌وانتقالات — استودیو ماژولار</b>",
+        f"👤 <b>{html.escape(pl_name)}</b>" + (f" ← <b>{html.escape(to_name)}</b>" if to_name else ""),
+        f"🚨 وضعیت: <b>{html.escape(st_meta['fa'])} ({it.get('prob', 50)}٪)</b> | 📐 فرمت: <b>{fmt}</b>",
+        f"🧩 هدر: <b>{'کامل (رادار+مدالیون)' if hm == 'full' else 'فشرده'}</b> | ماژول فعال: <b>{active_cnt} از {total_mods}</b>",
+        "",
+        "🗺 <b>چیدمان و ترتیب فعلی کارت:</b>",
+        f"<pre>{html.escape(schematic)}</pre>",
+    ]
+    if missing:
+        lines.append("ℹ️ بدون دیتای ثبت‌شده (null≠0): " + html.escape("، ".join(missing[:5])))
+    lines.append("نام = روشن/خاموش | ½ یا ۱ = عرض | ⬆️⬇️ = ترتیب:")
+
+    rows: list[list[InlineKeyboardButton]] = []
+    # ۱) ۵ پریست اسلاید (۲ ردیف)
+    rows.append([
+        InlineKeyboardButton(text=("✅ " if sid == slide else "") + f"اسلاید {i}", callback_data=f"trc:sl:{sid}")
+        for i, (sid, _, _, _) in enumerate(TRANSFER_SLIDES[:3], 1)
+    ])
+    rows.append([
+        InlineKeyboardButton(text=("✅ " if sid == slide else "") + f"اسلاید {i}", callback_data=f"trc:sl:{sid}")
+        for i, (sid, _, _, _) in enumerate(TRANSFER_SLIDES[3:], 4)
+    ])
+    # ۲) سبک هدر + ۳ فرمت
+    rows.append([
+        InlineKeyboardButton(text=("✅ " if hm == "full" else "") + "هدر کامل", callback_data="trc:hm:full"),
+        InlineKeyboardButton(text=("✅ " if hm == "compact" else "") + "هدر فشرده", callback_data="trc:hm:compact"),
+    ])
+    rows.append([
+        InlineKeyboardButton(text=("✅ " if f == fmt else "") + f, callback_data=f"trc:fmt:{f.replace(':', '_')}")
+        for f in TRANSFER_FORMATS
+    ])
+    # ۳) کنترل‌های دقیق ماژولار (مشابه Pre-Match: روشن/خاموش + عرض ½/۱ + ترتیب ⬆️⬇️، صفحه‌بندی ۵تایی)
+    for g_idx in range(m_start, m_end):
+        m = mods[g_idx]
+        mark = "✅" if m["enabled"] else "⬜"
+        sp_badge = "½" if m.get("span") == "half" else "۱"
+        rows.append([
+            InlineKeyboardButton(
+                text=f"{mark} {m['title_fa']}  [{sp_badge}]",
+                callback_data=f"trc:tog:{m['id']}",
+            )
+        ])
+        ctrl: list[InlineKeyboardButton] = []
+        if m.get("can_half", False):
+            w_lbl = "عرض: نیم‌عرض ½ 🔁" if m.get("span") == "half" else "عرض: تمام‌عرض ۱ 🔁"
+            ctrl.append(InlineKeyboardButton(text=w_lbl, callback_data=f"trc:sp:{m['id']}"))
+        else:
+            ctrl.append(InlineKeyboardButton(text="🔒 تمام‌عرض", callback_data="trc:noop"))
+        ctrl.append(InlineKeyboardButton(
+            text="⬆️ بالا" if g_idx > 0 else "·",
+            callback_data=f"trc:up:{m['id']}" if g_idx > 0 else "trc:noop",
+        ))
+        ctrl.append(InlineKeyboardButton(
+            text="⬇️ پایین" if g_idx < total_mods - 1 else "·",
+            callback_data=f"trc:dn:{m['id']}" if g_idx < total_mods - 1 else "trc:noop",
+        ))
+        rows.append(ctrl)
+
+    if total_mpages > 1:
+        p_nav: list[InlineKeyboardButton] = []
+        if mpage > 1:
+            p_nav.append(InlineKeyboardButton(text="⬅️ ماژول‌های قبل", callback_data=f"trc:mp:{mpage - 1}"))
+        p_nav.append(InlineKeyboardButton(text=f"🧩 صفحه {mpage}/{total_mpages}", callback_data="trc:noop"))
+        if mpage < total_mpages:
+            p_nav.append(InlineKeyboardButton(text="➡️ ماژول‌های بعد", callback_data=f"trc:mp:{mpage + 1}"))
+        rows.append(p_nav)
+
+    # ۴) ذخیره و بازیابی تا ۵ قالب نام‌گذاری‌شده
+    rows.append([
+        InlineKeyboardButton(text=f"💾 ذخیره قالب ({tpl_cnt}/{MAX_SAVED_TEMPLATES})", callback_data="trc:tpl_save"),
+        InlineKeyboardButton(text=f"📂 قالب‌های من ({tpl_cnt}/{MAX_SAVED_TEMPLATES})", callback_data="trc:tpl_list"),
+    ])
+    rows.append([InlineKeyboardButton(text="🎨 ساخت کارت و کپشن نهایی", callback_data="trc:build")])
+    rows.append([
+        InlineKeyboardButton(text="📡 لیست شایعات", callback_data="tr:list:1"),
+        InlineKeyboardButton(text="🎨 استودیو کارت‌ها", callback_data="nav:cards"),
+    ])
+    return "\n".join(lines), InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+@router.message(Command("transfers"))
+async def cmd_transfers(m: Message) -> None:
+    if not tp.is_admin(m.from_user.id):
+        await m.answer("دسترسی غیرمجاز.")
+        return
+    from src.xgpedia.providers.transfer_radar_free import list_transfer_items
+    status_msg = await m.answer("⏳ در حال رصد داغ‌ترین شایعات نقل‌وانتقالات فوتبال (۵ منبع رایگان)...")
+    data = await asyncio.to_thread(list_transfer_items, include_live=True)
+    text, kb = _format_transfer_list_message(data, page=1)
+    await status_msg.edit_text(text, parse_mode="HTML", reply_markup=kb)
+
+
+@router.callback_query(F.data.startswith("tr:list:"))
+async def on_tr_list_page(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    from src.xgpedia.providers.transfer_radar_free import list_transfer_items
+    try:
+        page = int(cb.data.split(":")[2])
+    except (IndexError, ValueError):
+        page = 1
+    if not _TR_LAST_DATA.get("live") and not _TR_LAST_DATA.get("presets"):
+        await _safe_cb_answer(cb, "در حال دریافت شایعات زنده...")
+        wait_msg = await cb.message.answer("⏳ در حال رصد داغ‌ترین شایعات نقل‌وانتقالات فوتبال (۵ منبع رایگان)...")
+        data = await asyncio.to_thread(list_transfer_items, include_live=True)
+        text, kb = _format_transfer_list_message(data, page=page)
+        await wait_msg.edit_text(text, parse_mode="HTML", reply_markup=kb)
+        return
+    await _safe_cb_answer(cb)
+    text, kb = _format_transfer_list_message(_TR_LAST_DATA, page=page)
+    try:
+        await cb.message.edit_text(text, parse_mode="HTML", reply_markup=kb)
+    except TelegramBadRequest:
+        await cb.message.answer(text, parse_mode="HTML", reply_markup=kb)
+
+
+@router.callback_query(F.data == "tr:refresh")
+async def on_tr_refresh(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    from src.xgpedia.providers.transfer_radar_free import list_transfer_items
+    await _safe_cb_answer(cb, "در حال بروزرسانی شایعات زنده...")
+    wait_msg = await cb.message.answer("⏳ در حال دریافت زندهٔ شایعات نقل‌وانتقالات از ۵ فید فوتبال...")
+    data = await asyncio.to_thread(list_transfer_items, include_live=True, force_refresh=True)
+    text, kb = _format_transfer_list_message(data, page=1)
+    await wait_msg.edit_text(text, parse_mode="HTML", reply_markup=kb)
+
+
+@router.callback_query(F.data == "tr:presets")
+async def on_tr_presets(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    from src.xgpedia.providers.transfer_radar_free import load_transfer_presets
+    await _safe_cb_answer(cb)
+    if not _TR_LAST_DATA.get("presets"):
+        _TR_LAST_DATA["presets"] = load_transfer_presets()
+    text, kb = _format_transfer_list_message(_TR_LAST_DATA, show_presets=True)
+    try:
+        await cb.message.edit_text(text, parse_mode="HTML", reply_markup=kb)
+    except TelegramBadRequest:
+        await cb.message.answer(text, parse_mode="HTML", reply_markup=kb)
+
+
+@router.callback_query(F.data.startswith("tr:open:"))
+async def on_tr_open(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    from src.xgpedia.render.card_kit.transfer_radar_card import (
+        TRANSFER_DEFAULT_HEADER,
+        TRANSFER_DEFAULT_SLIDE,
+        get_transfer_modules,
+    )
+    iid = cb.data.split(":", 2)[2]
+    it = _TR_ITEM_MAP.get(iid)
+    if not it:
+        await _safe_cb_answer(cb, "شایعه در کش نیست؛ لطفاً لیست را بروزرسانی کنید.", show_alert=True)
+        return
+    await _safe_cb_answer(cb, "کاستومایزر ماژولار باز شد.")
+    # اگر شایعه زنده است، verdict در مرحله ساخت با LLM تکمیل می‌شود پس آن را قابل انتخاب نشان می‌دهیم
+    preview_it = dict(it)
+    if not preview_it.get("verdict"):
+        preview_it["verdict"] = {"title": "تحلیل تحریریه", "body": "(در مرحله ساخت نهایی تکمیل می‌شود)", "tag": "XGPedia"}
+    mods, missing = get_transfer_modules(preview_it, TRANSFER_DEFAULT_SLIDE)
+    st = {
+        "item": it,
+        "slide": TRANSFER_DEFAULT_SLIDE,
+        "header_mode": TRANSFER_DEFAULT_HEADER,
+        "fmt": "4:5",
+        "modules": mods,
+        "missing_modules": missing,
+    }
+    _TR_STATE[cb.from_user.id] = st
+    text, markup = _render_transfer_customizer_view(st)
+    await cb.message.answer(text, parse_mode="HTML", reply_markup=markup)
+
+
+@router.callback_query(F.data == "tr:back")
+async def on_tr_back(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    st = _TR_STATE.get(cb.from_user.id)
+    if not st:
+        await _safe_cb_answer(cb, "لطفاً دوباره شایعه را انتخاب کنید.", show_alert=True)
+        return
+    await _safe_cb_answer(cb)
+    text, markup = _render_transfer_customizer_view(st)
+    await cb.message.answer(text, parse_mode="HTML", reply_markup=markup)
+
+
+@router.callback_query(F.data.startswith("trc:"))
+async def on_tr_customizer_action(cb: CallbackQuery, bot: Bot) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    st = _TR_STATE.get(cb.from_user.id)
+    if not st:
+        await _safe_cb_answer(cb, "لطفاً دوباره شایعه را انتخاب کنید.", show_alert=True)
+        return
+    from src.xgpedia.render.card_kit.transfer_radar_card import TRANSFER_SLIDES, get_transfer_modules
+
+    parts = cb.data.split(":")
+    action = parts[1]
+
+    if action == "sl":
+        sid = parts[2]
+        st["slide"] = sid
+        sl_info = next((x for x in TRANSFER_SLIDES if x[0] == sid), None)
+        if sl_info:
+            st["header_mode"] = sl_info[2]
+            preview_it = dict(st["item"])
+            if not preview_it.get("verdict"):
+                preview_it["verdict"] = {"title": "تحلیل", "body": "x", "tag": "x"}
+            st["modules"], st["missing_modules"] = get_transfer_modules(preview_it, sid)
+        await _safe_cb_answer(cb, f"اسلاید روی {sid} تنظیم شد.")
+    elif action == "hm":
+        st["header_mode"] = parts[2] if parts[2] in ("full", "compact") else "full"
+        await _safe_cb_answer(cb, "سبک هدر تغییر کرد.")
+    elif action == "fmt":
+        st["fmt"] = parts[2].replace("_", ":")
+        await _safe_cb_answer(cb, f"فرمت روی {st['fmt']} تنظیم شد.")
+    elif action == "tog":
+        mid = parts[2]
+        target = next((m for m in st["modules"] if m["id"] == mid), None)
+        if target:
+            target["enabled"] = not target["enabled"]
+            await _safe_cb_answer(cb, f"{target['title_fa']}: {'فعال' if target['enabled'] else 'غیرفعال'}")
+    elif action == "build":
+        await _safe_cb_answer(cb, "در حال ساخت کارت رادار نقل‌وانتقالات...")
+        it = st["item"]
+        lbl = str((it.get("player") or {}).get("name") or it.get("title") or "")[:65]
+        wait_msg = await cb.message.answer(
+            f"⏳ در حال ساخت کارت رادار نقل‌وانتقالات <b>{html.escape(lbl)}</b> ({st['slide']} | {st['fmt']})...",
+            parse_mode="HTML",
+        )
+
+        async def _progress(msg_text: str) -> None:
+            try:
+                await wait_msg.edit_text(f"{msg_text}\n📡 <b>{html.escape(lbl)}</b>", parse_mode="HTML")
+            except TelegramBadRequest:
+                pass
+
+        enabled_ids = [m["id"] for m in st["modules"] if m["enabled"]]
+        res = await tw.generate_transfer_post_async(
+            it,
+            slide=st["slide"],
+            header_mode=st["header_mode"],
+            fmt=st["fmt"],
+            enabled_modules=enabled_ids,
+            custom_modules=st["modules"],
+            progress_cb=_progress,
+        )
+        if not res.ok:
+            await wait_msg.edit_text(html.escape(res.format_error_fa())[:3800], parse_mode="HTML")
+            return
+        await _send_post_preview(
+            bot,
+            cb.from_user.id,
+            res,
+            wait_msg,
+            note=f"✅ کارت رادار نقل‌وانتقالات آماده شد (پست #{res.post_id} | {st['slide']} | {st['fmt']}).",
+        )
+        return
+
+    text, markup = _render_transfer_customizer_view(st)
+    try:
+        await cb.message.edit_text(text, parse_mode="HTML", reply_markup=markup)
+    except TelegramBadRequest:
+        pass
+
+
 async def main() -> None:
     import os
     from aiogram.client.session.aiohttp import AiohttpSession
@@ -2688,6 +3310,7 @@ async def main() -> None:
             BotCommand(command="onthisday", description="🕰 در چنین روزی (وقایع تاریخی فوتبال)"),
             BotCommand(command="news", description="📰 خبر فوری و رسمی (PRO WIRE v2)"),
             BotCommand(command="birthday", description="🎂 تولدهای امروز فوتبالیست‌ها (Birthday Studio)"),
+            BotCommand(command="transfers", description="📡 رادار نقل‌وانتقالات (شایعات داغ ماژولار)"),
         ])
     except Exception as _cmd_exc:
         log.warning("set_my_commands skipped: %s", _cmd_exc)
