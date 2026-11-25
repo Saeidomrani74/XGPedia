@@ -49,6 +49,8 @@ MODULAR_STATES: dict[str, dict[int, dict[str, Any]]] = {
     "number_of_day": {},
     "matchweek_wrapup": {},
     "shotmap_xg": {},
+    "value_radar": {},
+    "lineup_injuries": {},
 }
 MODULAR_ITEMS_MAP: dict[str, dict[str, dict[str, Any]]] = {
     "players_rating": {},
@@ -65,6 +67,8 @@ MODULAR_ITEMS_MAP: dict[str, dict[str, dict[str, Any]]] = {
     "number_of_day": {},
     "matchweek_wrapup": {},
     "shotmap_xg": {},
+    "value_radar": {},
+    "lineup_injuries": {},
 }
 MODULAR_PICKER_STATE: dict[tuple[str, int], dict[str, Any]] = {}
 
@@ -83,6 +87,8 @@ MODULAR_LAST_DATA: dict[str, dict[str, list[dict[str, Any]]]] = {
     "number_of_day": {"live": [], "presets": []},
     "matchweek_wrapup": {"live": [], "presets": []},
     "shotmap_xg": {"live": [], "presets": []},
+    "value_radar": {"live": [], "presets": []},
+    "lineup_injuries": {"live": [], "presets": []},
 }
 
 # نقشهٔ مشخصات ۴ کارت
@@ -227,6 +233,26 @@ CARD_SPECS: dict[str, dict[str, Any]] = {
         "default_hm": "full",
         "hm_labels": ("اسکوربورد کامل", "هدر فشرده"),
     },
+    "value_radar": {
+        "prefix": "vr",
+        "cprefix": "vrc",
+        "icon": "💎",
+        "title": "رادار ارزش بازار و شکار (+EV)",
+        "cmd": "value",
+        "list_hint": "برش مورد نظر را برای رندر کارت ۵اسلایدی رادار ارزش بازار انتخاب کنید:",
+        "default_hm": "full",
+        "hm_labels": ("هدر کامل", "هدر فشرده"),
+    },
+    "lineup_injuries": {
+        "prefix": "li",
+        "cprefix": "lic",
+        "icon": "📋",
+        "title": "ترکیب احتمالی و غایبان",
+        "cmd": "lineup",
+        "list_hint": "مسابقهٔ پیش‌رو را برای رندر کارت ۵اسلایدی ترکیب احتمالی و غایبان انتخاب کنید:",
+        "default_hm": "full",
+        "hm_labels": ("هدر کامل", "هدر فشرده"),
+    },
 }
 
 
@@ -308,6 +334,11 @@ def _item_label(card_kind: str, it: dict[str, Any]) -> str:
     if card_kind == "shotmap_xg":
         h, a = it.get("home") or {}, it.get("away") or {}
         return f"{h.get('name', '')} {h.get('score', 0)}-{a.get('score', 0)} {a.get('name', '')} ({it.get('competition', '')})"
+    if card_kind == "value_radar":
+        return f"{it.get('title', 'رادار ارزش بازار')} ({it.get('competition', '')})"
+    if card_kind == "lineup_injuries":
+        h, a = it.get("home") or {}, it.get("away") or {}
+        return f"{h.get('name', '')} × {a.get('name', '')} ({it.get('round', 'پیش‌رو')})"
     return f"{it.get('name', '')} ({it.get('club', '')}) • XG {it.get('ovr', '')}"
 
 
@@ -444,6 +475,14 @@ def _get_slides_and_modules(card_kind: str, item: dict[str, Any], slide: str) ->
         from src.xgpedia.render.card_kit.shotmap_xg_card import SHOTMAP_SLIDES, get_shotmap_xg_modules
         mods, miss = get_shotmap_xg_modules(preview_it, slide)
         return [(sid, lbl, "full") for sid, lbl, _, _ in SHOTMAP_SLIDES], mods, miss
+    if card_kind == "value_radar":
+        from src.xgpedia.render.card_kit.value_radar_card import VALUE_RADAR_SLIDES, get_value_radar_modules
+        mods, miss = get_value_radar_modules(preview_it, slide)
+        return VALUE_RADAR_SLIDES, mods, miss
+    if card_kind == "lineup_injuries":
+        from src.xgpedia.render.card_kit.lineup_injuries_card import LINEUP_SLIDES, get_lineup_injuries_modules
+        mods, miss = get_lineup_injuries_modules(preview_it, slide)
+        return LINEUP_SLIDES, mods, miss
     from src.xgpedia.render.card_kit.player_card import PLAYER_SLIDES, get_player_modules
     if not preview_it.get("scout"):
         preview_it["scout"] = {"title": "گزارش دیده‌بان", "body": "(در مرحله ساخت تکمیل می‌شود)", "strengths": [], "watchout": "", "tag": "XGPedia"}
@@ -499,7 +538,7 @@ def render_modular_customizer_view(card_kind: str, st: dict[str, Any]) -> tuple[
         extra_info = f"🎨 اتمسفر بصری: <b>{st.get('theme', 'classic')}</b>"
     elif card_kind == "number_of_day":
         extra_info = f"🔠 فونت عدد: <b>{st.get('theme', 'lalezar')}</b>"
-    elif card_kind in {"matchweek_wrapup", "shotmap_xg"}:
+    elif card_kind in {"matchweek_wrapup", "shotmap_xg", "value_radar", "lineup_injuries"}:
         extra_info = f"🎨 تم بصری: <b>{st.get('theme', 'classic')}</b>"
 
     lines = [
@@ -617,6 +656,18 @@ def render_modular_customizer_view(card_kind: str, st: dict[str, Any]) -> tuple[
             InlineKeyboardButton(text=("✅ " if th == k else "") + lbl, callback_data=f"{cpref}:opt:th:{k}")
             for k, lbl in (("classic", "کلاسیک XG"), ("pitch", "شب استادیوم"), ("gold", "طلایی ویژه"))
         ])
+    elif card_kind == "value_radar":
+        th = st.get("theme", "classic")
+        rows.append([
+            InlineKeyboardButton(text=("✅ " if th == k else "") + lbl, callback_data=f"{cpref}:opt:th:{k}")
+            for k, lbl in (("classic", "کلاسیک XG"), ("emerald", "زمردی +EV"), ("gold", "طلایی شکار"), ("scout", "آبی اسکات"))
+        ])
+    elif card_kind == "lineup_injuries":
+        th = st.get("theme", "classic")
+        rows.append([
+            InlineKeyboardButton(text=("✅ " if th == k else "") + lbl, callback_data=f"{cpref}:opt:th:{k}")
+            for k, lbl in (("classic", "کلاسیک XG"), ("pitch", "زمین تاکتیکی"), ("gold", "طلایی ویژه"))
+        ])
     elif card_kind == "number_of_day":
         th = st.get("theme", "lalezar")
         rows.append([
@@ -702,6 +753,12 @@ def _fetch_provider_data(card_kind: str, *, include_live: bool = True, force_ref
     if card_kind == "shotmap_xg":
         from src.xgpedia.providers.shotmap_xg_free import fetch_live_shotmap_xg_items, load_shotmap_xg_presets
         return {"live": fetch_live_shotmap_xg_items(force_refresh=force_refresh) if include_live else [], "presets": load_shotmap_xg_presets()}
+    if card_kind == "value_radar":
+        from src.xgpedia.providers.value_radar_free import fetch_live_value_radar_items, load_value_radar_presets
+        return {"live": fetch_live_value_radar_items(force_refresh=force_refresh) if include_live else [], "presets": load_value_radar_presets()}
+    if card_kind == "lineup_injuries":
+        from src.xgpedia.providers.lineup_injuries_free import fetch_live_lineup_injuries_items, load_lineup_injuries_presets
+        return {"live": fetch_live_lineup_injuries_items(force_refresh=force_refresh) if include_live else [], "presets": load_lineup_injuries_presets()}
     from src.xgpedia.providers.player_profile_free import list_player_profile_items
     return list_player_profile_items(include_live=include_live, force_refresh=force_refresh)
 
@@ -1063,7 +1120,7 @@ def _register_card_handlers(card_kind: str) -> None:
             st["theme"] = "classic"
         elif card_kind == "number_of_day":
             st["theme"] = "lalezar"
-        elif card_kind in {"matchweek_wrapup", "shotmap_xg"}:
+        elif card_kind in {"matchweek_wrapup", "shotmap_xg", "value_radar", "lineup_injuries"}:
             st["theme"] = "classic"
         MODULAR_STATES[card_kind][cb.from_user.id] = st
         text, kb = render_modular_customizer_view(card_kind, st)
@@ -1289,6 +1346,16 @@ def _register_card_handlers(card_kind: str) -> None:
                     )
                 elif card_kind == "shotmap_xg":
                     res = await tw.generate_shotmap_xg_post_async(
+                        st["item"], slide=st["slide"], header_mode=st["header_mode"], fmt=st["fmt"],
+                        theme=st.get("theme", "classic"), custom_modules=st["modules"], progress_cb=_progress,
+                    )
+                elif card_kind == "value_radar":
+                    res = await tw.generate_value_radar_post_async(
+                        st["item"], slide=st["slide"], header_mode=st["header_mode"], fmt=st["fmt"],
+                        theme=st.get("theme", "classic"), custom_modules=st["modules"], progress_cb=_progress,
+                    )
+                elif card_kind == "lineup_injuries":
+                    res = await tw.generate_lineup_injuries_post_async(
                         st["item"], slide=st["slide"], header_mode=st["header_mode"], fmt=st["fmt"],
                         theme=st.get("theme", "classic"), custom_modules=st["modules"], progress_cb=_progress,
                     )

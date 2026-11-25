@@ -2773,3 +2773,42 @@ async def generate_shotmap_xg_post_async(
         fmt=fmt, theme=theme, custom_modules=custom_modules,
         platform=platform, out_dir=out_dir, progress_cb=progress_cb,
     )
+
+
+async def generate_value_radar_post_async(
+    item: dict[str, Any], *, slide: str = "slide1", header_mode: str = "full", fmt: str = "4:5",
+    theme: str = "classic", custom_modules: list[dict[str, Any]] | None = None,
+    platform: str = "telegram", out_dir: Path | None = None, progress_cb: Callable[[str], Awaitable[None]] | None = None,
+) -> PostGenerationResult:
+    from src.xgpedia.providers.value_radar_free import hydrate_value_radar_item
+    from src.xgpedia.render.card_kit.value_radar_card import VALUE_RADAR_FORMATS, render_value_radar_html
+    ttl = str(item.get("title") or "رادار ارزش بازار (+EV)")
+    verdict = str(item.get("editorial_verdict") or "")
+    title = f"رادار ارزش بازار | {ttl}"
+    cap = f"💎 {ttl}\n{verdict}\n📊 منبع: {item.get('source', 'Opta FPL / XGPedia')}\n@XGPedia"
+    return await _generate_v32_modular_post_async(
+        post_type="value_radar", item=item, hydrate_fn=hydrate_value_radar_item, render_fn=render_value_radar_html,
+        formats_map=VALUE_RADAR_FORMATS, title=title, caption_text=cap, slide=slide, header_mode=header_mode,
+        fmt=fmt, theme=theme, custom_modules=custom_modules,
+        platform=platform, out_dir=out_dir, progress_cb=progress_cb,
+    )
+
+
+async def generate_lineup_injuries_post_async(
+    item: dict[str, Any], *, slide: str = "slide1", header_mode: str = "full", fmt: str = "4:5",
+    theme: str = "classic", custom_modules: list[dict[str, Any]] | None = None,
+    platform: str = "telegram", out_dir: Path | None = None, progress_cb: Callable[[str], Awaitable[None]] | None = None,
+) -> PostGenerationResult:
+    from src.xgpedia.providers.lineup_injuries_free import hydrate_lineup_injuries_item
+    from src.xgpedia.render.card_kit.lineup_injuries_card import LINEUP_FORMATS, render_lineup_injuries_html
+    h_nm = str((item.get("home") or {}).get("name") or "")
+    a_nm = str((item.get("away") or {}).get("name") or "")
+    verdict = str(item.get("editorial_verdict") or "")
+    title = f"ترکیب احتمالی و غایبان | {h_nm} × {a_nm}"
+    cap = f"📋 ترکیب احتمالی و غایبان | {h_nm} × {a_nm}\n{verdict}\n📊 منبع: {item.get('source', 'Opta FPL / XGPedia')}\n@XGPedia"
+    return await _generate_v32_modular_post_async(
+        post_type="lineup_injuries", item=item, hydrate_fn=hydrate_lineup_injuries_item, render_fn=render_lineup_injuries_html,
+        formats_map=LINEUP_FORMATS, title=title, caption_text=cap, slide=slide, header_mode=header_mode,
+        fmt=fmt, theme=theme, custom_modules=custom_modules,
+        platform=platform, out_dir=out_dir, progress_cb=progress_cb,
+    )

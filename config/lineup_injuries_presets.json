@@ -1,0 +1,128 @@
+[
+  {
+    "id": "preset_li_ars_liv",
+    "is_live": false,
+    "competition": "لیگ برتر انگلیس",
+    "round": "هفته پیش‌رو",
+    "kickoff_fa": "یکشنبه ۲۰:۰۰",
+    "source": "Opta FPL / XGPedia Tactical",
+    "editorial_verdict": "آرسنال با آمادگی ۹۱ درصدی و بازگشت اودگارد دست بالا را در میانه میدان دارد؛ غیبت احتمالی دو مدافع میانی لیورپول می‌تواند چالش اصلی خط دفاعی میهمان باشد.",
+    "home": {
+      "name": "آرسنال",
+      "code": "ARS",
+      "color": "#EF0107",
+      "formation": "4-3-3",
+      "availability_pct": 91,
+      "lineup": [
+        {"name": "رایا", "pos": "GKP", "x": 50, "y": 8, "chance": 100, "minutes": 1260},
+        {"name": "وایت", "pos": "DEF", "x": 82, "y": 22, "chance": 75, "minutes": 980},
+        {"name": "سالیبا", "pos": "DEF", "x": 60, "y": 20, "chance": 100, "minutes": 1240},
+        {"name": "گابریل", "pos": "DEF", "x": 40, "y": 20, "chance": 100, "minutes": 1260},
+        {"name": "تیمبر", "pos": "DEF", "x": 18, "y": 22, "chance": 100, "minutes": 1040},
+        {"name": "رایس", "pos": "MID", "x": 50, "y": 34, "chance": 100, "minutes": 1210},
+        {"name": "اودگارد", "pos": "MID", "x": 72, "y": 37, "chance": 100, "minutes": 1080},
+        {"name": "مرینو", "pos": "MID", "x": 28, "y": 37, "chance": 100, "minutes": 920},
+        {"name": "ساکا", "pos": "FWD", "x": 80, "y": 46, "chance": 100, "minutes": 1190},
+        {"name": "هاورتز", "pos": "FWD", "x": 50, "y": 48, "chance": 100, "minutes": 1160},
+        {"name": "مارتینلی", "pos": "FWD", "x": 20, "y": 46, "chance": 100, "minutes": 1020}
+      ],
+      "absentees": [
+        {"name": "کالافیوری", "pos_fa": "مدافع", "status_fa": "مصدوم", "chance": 0, "minutes": 640},
+        {"name": "تومیاسو", "pos_fa": "مدافع", "status_fa": "مصدوم", "chance": 0, "minutes": 120},
+        {"name": "بن وایت", "pos_fa": "مدافع", "status_fa": "مشکوک ۷۵٪", "chance": 75, "minutes": 980}
+      ]
+    },
+    "away": {
+      "name": "لیورپول",
+      "code": "LIV",
+      "color": "#C8102E",
+      "formation": "4-2-3-1",
+      "availability_pct": 84,
+      "lineup": [
+        {"name": "آلیسون", "pos": "GKP", "x": 50, "y": 92, "chance": 100, "minutes": 1100},
+        {"name": "بردلی", "pos": "DEF", "x": 18, "y": 78, "chance": 100, "minutes": 890},
+        {"name": "فن دایک", "pos": "DEF", "x": 40, "y": 80, "chance": 100, "minutes": 1260},
+        {"name": "کوناته", "pos": "DEF", "x": 60, "y": 80, "chance": 75, "minutes": 1120},
+        {"name": "رابرتسون", "pos": "DEF", "x": 82, "y": 78, "chance": 100, "minutes": 1090},
+        {"name": "گراونبرخ", "pos": "MID", "x": 36, "y": 66, "chance": 100, "minutes": 1250},
+        {"name": "مک‌آلیستر", "pos": "MID", "x": 64, "y": 66, "chance": 100, "minutes": 1180},
+        {"name": "صلاح", "pos": "MID", "x": 20, "y": 56, "chance": 100, "minutes": 1260},
+        {"name": "سوبوسلای", "pos": "MID", "x": 50, "y": 57, "chance": 100, "minutes": 1040},
+        {"name": "دیاز", "pos": "MID", "x": 80, "y": 56, "chance": 100, "minutes": 1110},
+        {"name": "نونیِز", "pos": "FWD", "x": 50, "y": 51, "chance": 100, "minutes": 860}
+      ],
+      "absentees": [
+        {"name": "ژوتا", "pos_fa": "مهاجم", "status_fa": "مصدوم", "chance": 0, "minutes": 720},
+        {"name": "الیوت", "pos_fa": "هافبک", "status_fa": "مصدوم", "chance": 25, "minutes": 260},
+        {"name": "کوناته", "pos_fa": "مدافع", "status_fa": "مشکوک ۷۵٪", "chance": 75, "minutes": 1120}
+      ]
+    },
+    "key_duels": [
+      {"title": "جنگ کناره راست", "home_p": "بوکایو ساکا", "away_p": "اندی رابرتسون"},
+      {"title": "کنترل میانه میدان", "home_p": "دکلان رایس", "away_p": "الکسیس مک‌آلیستر"},
+      {"title": "تقابل ستاره و دیوار", "home_p": "گابریل", "away_p": "محمد صلاح"}
+    ]
+  },
+  {
+    "id": "preset_li_mci_che",
+    "is_live": false,
+    "competition": "لیگ برتر انگلیس",
+    "round": "هفته پیش‌رو",
+    "kickoff_fa": "شنبه ۲۱:۰۰",
+    "source": "Opta FPL / XGPedia Tactical",
+    "editorial_verdict": "منچسترسیتی با خط میانی تغییریافته وارد زمین می‌شود و چلسی با آمادگی بالای پالمر و جکسون روی ضدحمله‌های سریع حساب باز کرده است.",
+    "home": {
+      "name": "منچسترسیتی",
+      "code": "MCI",
+      "color": "#6CABDD",
+      "formation": "4-3-3",
+      "availability_pct": 86,
+      "lineup": [
+        {"name": "ادرسون", "pos": "GKP", "x": 50, "y": 8, "chance": 100, "minutes": 1200},
+        {"name": "لوئیس", "pos": "DEF", "x": 82, "y": 22, "chance": 100, "minutes": 980},
+        {"name": "دیاس", "pos": "DEF", "x": 60, "y": 20, "chance": 100, "minutes": 1150},
+        {"name": "آکانجی", "pos": "DEF", "x": 40, "y": 20, "chance": 100, "minutes": 1100},
+        {"name": "گواردیول", "pos": "DEF", "x": 18, "y": 22, "chance": 100, "minutes": 1240},
+        {"name": "کواچیچ", "pos": "MID", "x": 50, "y": 34, "chance": 75, "minutes": 1010},
+        {"name": "سیلوا", "pos": "MID", "x": 72, "y": 37, "chance": 100, "minutes": 1180},
+        {"name": "فودن", "pos": "MID", "x": 28, "y": 37, "chance": 100, "minutes": 990},
+        {"name": "ساوینیو", "pos": "FWD", "x": 80, "y": 46, "chance": 100, "minutes": 910},
+        {"name": "هالند", "pos": "FWD", "x": 50, "y": 48, "chance": 100, "minutes": 1260},
+        {"name": "دوکو", "pos": "FWD", "x": 20, "y": 46, "chance": 75, "minutes": 820}
+      ],
+      "absentees": [
+        {"name": "رودری", "pos_fa": "هافبک", "status_fa": "مصدوم", "chance": 0, "minutes": 180},
+        {"name": "استونز", "pos_fa": "مدافع", "status_fa": "مصدوم", "chance": 25, "minutes": 490}
+      ]
+    },
+    "away": {
+      "name": "چلسی",
+      "code": "CHE",
+      "color": "#38BDF8",
+      "formation": "4-2-3-1",
+      "availability_pct": 93,
+      "lineup": [
+        {"name": "سانچز", "pos": "GKP", "x": 50, "y": 92, "chance": 100, "minutes": 1260},
+        {"name": "گوستو", "pos": "DEF", "x": 18, "y": 78, "chance": 100, "minutes": 1040},
+        {"name": "فوفانا", "pos": "DEF", "x": 40, "y": 80, "chance": 100, "minutes": 1110},
+        {"name": "کولویل", "pos": "DEF", "x": 60, "y": 80, "chance": 100, "minutes": 1220},
+        {"name": "کوکوریا", "pos": "DEF", "x": 82, "y": 78, "chance": 100, "minutes": 1140},
+        {"name": "کایسدو", "pos": "MID", "x": 36, "y": 66, "chance": 100, "minutes": 1260},
+        {"name": "انزو", "pos": "MID", "x": 64, "y": 66, "chance": 100, "minutes": 1080},
+        {"name": "مادوئکه", "pos": "MID", "x": 20, "y": 56, "chance": 100, "minutes": 960},
+        {"name": "پالمر", "pos": "MID", "x": 50, "y": 57, "chance": 100, "minutes": 1260},
+        {"name": "نتو", "pos": "MID", "x": 80, "y": 56, "chance": 100, "minutes": 890},
+        {"name": "جکسون", "pos": "FWD", "x": 50, "y": 51, "chance": 100, "minutes": 1160}
+      ],
+      "absentees": [
+        {"name": "ریس جیمز", "pos_fa": "مدافع", "status_fa": "مصدوم", "chance": 0, "minutes": 290},
+        {"name": "لاویا", "pos_fa": "هافبک", "status_fa": "مشکوک ۵۰٪", "chance": 50, "minutes": 520}
+      ]
+    },
+    "key_duels": [
+      {"title": "دوئل گلزن و مدافع", "home_p": "ارلینگ هالند", "away_p": "لوی کولویل"},
+      {"title": "خلاقیت در فضای میانی", "home_p": "فیل فودن", "away_p": "مویسس کایسدو"},
+      {"title": "موتور ضدحمله", "home_p": "یوشکو گواردیول", "away_p": "کول پالمر"}
+    ]
+  }
+]

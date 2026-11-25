@@ -29,13 +29,15 @@ from src.xgpedia.db import db
 
 # وضعیت‌های مجاز برای شروع فلوی انتشار — پست published قبلاً کارش تمام است
 SUBMITTABLE_STATUSES = {"draft", "validated", "awaiting_approval"}
-POST_TYPE_FA = {"preview": "پیش‌بازی", "post_match": "پس از بازی", "number_of_day": "عدد روز", "on_this_day": "در چنین روزی", "breaking_news": "خبر فوری", "birthday": "تولد اسطوره", "transfer_radar": "رادار نقل‌وانتقالات", "this_or_that": "این یا اون", "players_rating": "نمرات بازیکنان", "standings": "جدول رده‌بندی", "injury_lab": "گزارش مصدومیت", "player_profile": "پروفایل بازیکن", "h2h_teams": "تقابل مستقیم تیم‌ها", "player_fc27": "کارت بازیکن FC27", "h2h_players": "مقایسه دو بازیکن", "top_scorers": "جدول گلزنان", "matchday_results": "نتایج بازی‌های روز", "quote": "نقل‌قول روز", "debate": "مناظره روز", "matchweek_wrapup": "خلاصه هفته و فرم", "shotmap_xg": "نقشه شوت و امید گل"}
+POST_TYPE_FA = {"preview": "پیش‌بازی", "post_match": "پس از بازی", "number_of_day": "عدد روز", "on_this_day": "در چنین روزی", "breaking_news": "خبر فوری", "birthday": "تولد اسطوره", "transfer_radar": "رادار نقل‌وانتقالات", "this_or_that": "این یا اون", "players_rating": "نمرات بازیکنان", "standings": "جدول رده‌بندی", "injury_lab": "گزارش مصدومیت", "player_profile": "پروفایل بازیکن", "h2h_teams": "تقابل مستقیم تیم‌ها", "player_fc27": "کارت بازیکن FC27", "h2h_players": "مقایسه دو بازیکن", "top_scorers": "جدول گلزنان", "matchday_results": "نتایج بازی‌های روز", "quote": "نقل‌قول روز", "debate": "مناظره روز", "matchweek_wrapup": "خلاصه هفته و فرم", "shotmap_xg": "نقشه شوت و امید گل", "value_radar": "رادار ارزش بازار", "lineup_injuries": "ترکیب احتمالی و غایبان"}
 HASHTAG_BY_TYPE = {
     "preview": "#پیش_بازی",
     "post_match": "#پس_از_بازی",
     "number_of_day": "#عدد_روز",
     "matchweek_wrapup": "#خلاصه_هفته",
     "shotmap_xg": "#نقشه_شوت",
+    "value_radar": "#رادار_ارزش_بازار",
+    "lineup_injuries": "#ترکیب_احتمالی",
     "on_this_day": "#در_چنین_روزی",
     "breaking_news": "#خبر_فوری",
     "birthday": "#تولدت_مبارک",
@@ -290,6 +292,12 @@ def _build_relevant_hashtags(post: dict, facts: dict, draft: dict) -> str:
     elif ptype == "shotmap_xg":
         _add("#مومنتوم_امید_گل")
         _add("#امید_گل")
+    elif ptype == "value_radar":
+        _add("#شکار_نقل_و_انتقالات")
+        _add("#امید_گل")
+    elif ptype == "lineup_injuries":
+        _add("#غایبان_مسابقه")
+        _add("#لیگ_برتر_انگلیس")
 
     # استخراج تیم‌ها از facts ساختاریافته (پیش‌بازی / پس‌ازبازی)
     if isinstance(facts, dict):
