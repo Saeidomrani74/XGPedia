@@ -476,7 +476,10 @@ def cmd_bot(_args: argparse.Namespace) -> None:
     import asyncio
     from src.xgpedia.publishers.telegram_bot import main as bot_main
 
-    asyncio.run(bot_main())
+    try:
+        asyncio.run(bot_main())
+    except KeyboardInterrupt:
+        print("[bot] stopped cleanly by user (Ctrl+C)")
 
 
 def cmd_today(args: argparse.Namespace) -> None:

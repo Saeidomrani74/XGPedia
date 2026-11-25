@@ -113,7 +113,7 @@ def test_happy_path_validated_first_attempt():
     assert attempts == 1
     assert draft.status == "ok"
     assert "football-data-co-uk" in draft.source_note  # source_note از کد
-    assert llm.calls[0]["prompt"] == SYSTEM_PROMPT       # system prompt واقعی
+    assert llm.calls[0]["prompt"].startswith(SYSTEM_PROMPT.strip())  # system prompt واقعی (+ لحن/زوایای روایی فاز ۳)
 
 
 # ─── مسیر retry ───

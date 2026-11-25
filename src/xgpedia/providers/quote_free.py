@@ -613,11 +613,25 @@ def fetch_live_quote_items(*, force_refresh: bool = False, max_items: int = 10) 
     if not force_refresh and _QUOTE_CACHE["items"] and (now - _QUOTE_CACHE["ts"]) < _CACHE_TTL_SEC:
         return [dict(x) for x in _QUOTE_CACHE["items"]]
 
+    from src.xgpedia.core import api_health
+
     raw_items: list[dict[str, Any]] = []
-    for src_name, url, ticker in RSS_QUOTE_FEEDS:
-        raw_items.extend(_fetch_rss_quotes(src_name, url, ticker))
-    for slug, comp_fa, ticker in ESPN_QUOTE_FEEDS:
-        raw_items.extend(_fetch_espn_quotes(slug, comp_fa, ticker))
+    for src_name, url, ticker in api_health.rank_items(list(RSS_QUOTE_FEEDS), lambda x: f"quote_rss:{x[0]}", skip_cooling=True):
+        _t0 = time.perf_counter()
+        got = _fetch_rss_quotes(src_name, url, ticker)
+        if got:
+            api_health.record_success(f"quote_rss:{src_name}", (time.perf_counter() - _t0) * 1000.0)
+            raw_items.extend(got)
+        else:
+            api_health.record_failure(f"quote_rss:{src_name}", "empty_or_failed", base_cooldown=120.0)
+    for slug, comp_fa, ticker in api_health.rank_items(list(ESPN_QUOTE_FEEDS), lambda x: f"quote_espn:{x[0]}", skip_cooling=True):
+        _t0 = time.perf_counter()
+        got = _fetch_espn_quotes(slug, comp_fa, ticker)
+        if got:
+            api_health.record_success(f"quote_espn:{slug}", (time.perf_counter() - _t0) * 1000.0)
+            raw_items.extend(got)
+        else:
+            api_health.record_failure(f"quote_espn:{slug}", "empty_or_failed", base_cooldown=120.0)
 
     # حذف موارد تکراری بر اساس متن نقل‌قول
     seen: set[str] = set()

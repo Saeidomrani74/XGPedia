@@ -636,9 +636,43 @@ async def submit_for_approval(
     return sent
 
 
+def build_auto_poll(post: dict) -> dict | None:
+    """ساخت خودکار نظرسنجی تعاملی (Poll) زیر پست‌های پیش‌بازی، مناظره، این یا اون و ترکیب احتمالی."""
+    ptype = str(post.get("post_type") or "").strip()
+    try:
+        facts = json.loads(post.get("fact_json") or "{}")
+    except Exception:
+        facts = {}
+    if not isinstance(facts, dict):
+        facts = {}
+
+    if ptype in {"preview", "lineup_injuries"}:
+        h = (facts.get("home") or {}).get("name_fa") or (facts.get("home") or {}).get("name") or ""
+        a = (facts.get("away") or {}).get("name_fa") or (facts.get("away") or {}).get("name") or ""
+        if h and a:
+            q = f"📊 پیش‌بینی شما از تقابل {h} × {a} چیست؟"
+            return {"question": q[:280], "options": [f"برد {h}"[:95], "تساوی", f"برد {a}"[:95]]}
+    elif ptype == "debate":
+        sa = (facts.get("sideA") or {}).get("name") or ""
+        sb = (facts.get("sideB") or {}).get("name") or ""
+        ttl = str(facts.get("title") or post.get("title") or "مناظره روز XGPedia").strip()
+        if sa and sb:
+            q = f"🔥 {ttl} — رأی شما با کدام طرف است؟"
+            return {"question": q[:280], "options": [str(sa)[:95], str(sb)[:95], "هر دو / بستگی دارد"]}
+    elif ptype == "this_or_that":
+        sa = (facts.get("a") or {}).get("name") or ""
+        sb = (facts.get("b") or {}).get("name") or ""
+        if sa and sb:
+            q = f"⚡ انتخاب شما در دوئل {sa} یا {sb} کدام است؟"
+            return {"question": q[:280], "options": [str(sa)[:95], str(sb)[:95]]}
+    return None
+
+
 async def approve_and_publish(
     post_id: int, admin_user_id: int, transport: TelegramTransport,
     channel_id: str | int = "",
+    *,
+    send_poll: bool = True,
 ) -> dict:
     """تأیید ادمین → ارسال کارت به کانال → published + ثبت دو لاگ.
 
@@ -669,7 +703,16 @@ async def approve_and_publish(
         )
     _set_status(post_id, "published")
     _log_moderation(post_id, admin_user_id, "approve")
-    return {"chat_id": msg.chat_id, "message_id": msg.message_id}
+    poll_sent = False
+    if send_poll and hasattr(transport, "send_poll"):
+        poll_spec = build_auto_poll(post)
+        if poll_spec:
+            try:
+                await transport.send_poll(chat_target, poll_spec["question"], poll_spec["options"])
+                poll_sent = True
+            except Exception:
+                poll_sent = False
+    return {"chat_id": msg.chat_id, "message_id": msg.message_id, "poll_sent": poll_sent}
 
 
 async def reject_post(post_id: int, admin_user_id: int, reason: str = "") -> None:

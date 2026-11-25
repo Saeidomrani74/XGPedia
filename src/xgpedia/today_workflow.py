@@ -736,6 +736,7 @@ def generate_match_post(
     header_mode: str = "full",
     custom_modules: list[dict[str, Any]] | None = None,
     broadcast_override: str | None = None,
+    tone: str = "analytical",
     out_dir: Path | None = None,
     llm_provider: Any = None,
     render_fn: Callable[..., tuple[Path, Path, Path]] | None = None,
@@ -1053,7 +1054,7 @@ async def generate_match_post_async(
         if hasattr(prov, "cancel_event"):
             prov.cancel_event = cancel_ev
         draft_obj, _, _ = generate_draft(
-            prov, facts, post_type=post_type, target_platform=platform
+            prov, facts, post_type=post_type, target_platform=platform, tone=tone
         )
         pid = save_draft(
             draft_obj,

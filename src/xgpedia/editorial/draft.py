@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 
 from src.xgpedia.db import db
 from src.xgpedia.editorial.llm_provider import DraftOutput, LLMProvider
+from src.xgpedia.editorial.narrative import build_system_prompt, extract_narrative_hooks, normalize_tone
 from src.xgpedia.editorial.prompt import SYSTEM_PROMPT, derived_numbers
 from src.xgpedia.editorial.validate import ValidationReport, validate
 from src.xgpedia.normalization.models import MatchFacts
@@ -52,6 +53,7 @@ def generate_draft(
     target_platform: str = "telegram",
     edit_instruction: str = "",
     current_draft_json: str = "",
+    tone: str = "analytical",
 ) -> tuple[DraftOutput, ValidationReport, int]:
     """تولید پیش‌نویس + اعتبارسنجی + retry (حداکثر ۲ تلاش).
 
@@ -61,6 +63,8 @@ def generate_draft(
     from dataclasses import replace
 
     match = MatchFacts.model_validate(facts)
+    hooks = extract_narrative_hooks(match)
+    sys_prompt = build_system_prompt(normalize_tone(tone), hooks)
     attempts: list[str] = []
     feedback = ""
     previous_raw = ""
@@ -70,18 +74,18 @@ def generate_draft(
             if edit_instruction:
                 try:
                     draft = provider.generate(
-                        SYSTEM_PROMPT, match,
+                        sys_prompt, match,
                         edit_instruction=edit_instruction,
                         current_draft_json=current_draft_json,
                     )
                 except TypeError:
-                    draft = provider.generate(SYSTEM_PROMPT, match)
+                    draft = provider.generate(sys_prompt, match)
             else:
-                draft = provider.generate(SYSTEM_PROMPT, match)
+                draft = provider.generate(sys_prompt, match)
         else:
             try:
                 draft = provider.generate(
-                    SYSTEM_PROMPT, match,
+                    sys_prompt, match,
                     repair_feedback=feedback,
                     previous_raw=previous_raw,
                     edit_instruction=edit_instruction,
@@ -89,7 +93,7 @@ def generate_draft(
                 )
             except TypeError:
                 # providerهای ساده (مثل FakeLLM تست) آرگومان اصلاحی نمی‌گیرند
-                draft = provider.generate(SYSTEM_PROMPT, match)
+                draft = provider.generate(sys_prompt, match)
         rep = _validate_draft(draft, match)
         if rep.passed:
             # source_note را همیشه از کد بازنویسی می‌کنیم — عدد/نام/زمان از کد است

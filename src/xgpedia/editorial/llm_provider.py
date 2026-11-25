@@ -652,14 +652,25 @@ class MultiProviderLLM:
         now = time.monotonic()
         healthy: list[tuple[int, LLMEndpoint]] = []
         cooling: list[tuple[int, LLMEndpoint]] = []
+        from src.xgpedia.core import api_health
+
         for idx, ep in primary_slice:
             b = ep.base_url.rstrip("/")
             k_spec = (b, ep.model, _key_hash(ep.api_key))
             k_wide = (b, ep.model, "*")
-            if _ENDPOINT_COOLDOWN_UNTIL.get(k_spec, 0.0) > now or _ENDPOINT_COOLDOWN_UNTIL.get(k_wide, 0.0) > now:
+            hk = f"llm:{ep.label}"
+            in_cool = (
+                _ENDPOINT_COOLDOWN_UNTIL.get(k_spec, 0.0) > now
+                or _ENDPOINT_COOLDOWN_UNTIL.get(k_wide, 0.0) > now
+                or (self.cooldown_seconds > 0 and api_health.is_cooling(hk))
+            )
+            if in_cool:
                 cooling.append((idx, ep))
             else:
                 healthy.append((idx, ep))
+        # مرتب‌سازی هوشمند مدل‌های سالم بر اساس امتیاز یادگرفته‌شده (سریع‌ترین و موفق‌ترین اول؛ در تساوی همان ترتیب اصلی)
+        if self.cooldown_seconds > 0 and len(healthy) > 1:
+            healthy.sort(key=lambda pair: (-api_health.health_score(f"llm:{pair[1].label}"), pair[0]))
         return healthy + cooling + earlier_slice
 
     def generate(
@@ -699,6 +710,8 @@ class MultiProviderLLM:
             )
             k_spec = (b, ep.model, _key_hash(ep.api_key))
             k_wide = (b, ep.model, "*")
+            hk = f"llm:{ep.label}"
+            _t0 = time.perf_counter()
             try:
                 out = client.generate(
                     system_prompt,
@@ -713,6 +726,9 @@ class MultiProviderLLM:
                     raise TimeoutError("درخواست تولید متن به دلیل اتمام زمان مجاز متوقف شد.")
                 _ENDPOINT_COOLDOWN_UNTIL.pop(k_spec, None)
                 _ENDPOINT_COOLDOWN_UNTIL.pop(k_wide, None)
+                if self.cooldown_seconds > 0:
+                    from src.xgpedia.core import api_health
+                    api_health.record_success(hk, (time.perf_counter() - _t0) * 1000.0)
                 self.last_used_label = ep.label
                 print(f"[llm-router] success via #{idx} {ep.label}")
                 return out
@@ -721,7 +737,9 @@ class MultiProviderLLM:
                     raise
                 short_err = "TimeoutError: request timed out"
                 if self.cooldown_seconds > 0:
+                    from src.xgpedia.core import api_health
                     _ENDPOINT_COOLDOWN_UNTIL[k_spec] = time.monotonic() + self.cooldown_seconds
+                    api_health.record_failure(hk, short_err, base_cooldown=min(self.cooldown_seconds, 180.0))
                 errors.append(f"{ep.label} -> {short_err}")
                 print(f"[llm-router] #{idx} {ep.label} failed ({short_err}) - switching to next")
                 continue
@@ -738,6 +756,8 @@ class MultiProviderLLM:
                     elif any(tok in short_err for tok in ("429", "503", "Timeout", "502", "504", "402", "401", "403")):
                         # خطای مخصوص همین کلید/اکانت — بلافاصله کلید بعدی همین سرویس امتحان می‌شود
                         _ENDPOINT_COOLDOWN_UNTIL[k_spec] = time.monotonic() + self.cooldown_seconds
+                    from src.xgpedia.core import api_health
+                    api_health.record_failure(hk, short_err, base_cooldown=min(self.cooldown_seconds, 180.0))
                 errors.append(f"{ep.label} -> {short_err}")
                 print(f"[llm-router] #{idx} {ep.label} failed ({short_err}) - switching to next")
                 continue

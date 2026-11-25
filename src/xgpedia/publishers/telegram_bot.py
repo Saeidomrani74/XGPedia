@@ -117,6 +117,15 @@ class AiogramTransport:
         )
         return tp.SentMessage(chat_id=msg.chat.id, message_id=msg.message_id)
 
+    async def send_poll(self, chat_id: int | str, question: str, options: list[str]) -> tp.SentMessage:
+        msg: Message = await self._bot.send_poll(
+            chat_id,
+            question=str(question)[:300],
+            options=[str(o)[:100] for o in options[:10]],
+            is_anonymous=True,
+        )
+        return tp.SentMessage(chat_id=msg.chat.id, message_id=msg.message_id)
+
     async def edit_text(self, chat_id: int, message_id: int, text: str) -> None:
         try:
             await self._bot.edit_message_caption(
@@ -144,7 +153,6 @@ def _persistent_reply_keyboard() -> ReplyKeyboardMarkup:
         keyboard=[
             [KeyboardButton(text="🎨 استودیو کارت‌ها"), KeyboardButton(text="📡 دیتای زنده")],
             [KeyboardButton(text="⚙️ صف و هوش مصنوعی"), KeyboardButton(text="🚀 /start")],
-            [KeyboardButton(text="🔽 جمع کردن کیبورد")],
         ],
         resize_keyboard=True,
         is_persistent=False,
@@ -204,6 +212,8 @@ def _cards_studio_markup() -> InlineKeyboardMarkup:
             [
                 InlineKeyboardButton(text="📈 خلاصه هفته و فرم", callback_data="mw:list:1"),
                 InlineKeyboardButton(text="🎯 نقشه شوت و xG", callback_data="sm:list:1"),
+            ],
+            [
                 InlineKeyboardButton(text="💎 رادار ارزش بازار", callback_data="vr:list:1"),
                 InlineKeyboardButton(text="📋 ترکیب و غایبان", callback_data="li:list:1"),
             ],
@@ -254,7 +264,10 @@ def _admin_hub_markup() -> InlineKeyboardMarkup:
                 InlineKeyboardButton(text="🧠 وضعیت زنجیره AI", callback_data="nav:ai_status"),
             ],
             [
-                InlineKeyboardButton(text="⌨️ باز کردن کیبورد پایین", callback_data="nav:show_kb"),
+                InlineKeyboardButton(text="🩺 سلامت و یادگیری APIها", callback_data="api:health"),
+                InlineKeyboardButton(text="🔄 ریست حافظه سلامت", callback_data="api:health_reset"),
+            ],
+            [
                 InlineKeyboardButton(text="🏠 پنل اصلی", callback_data="nav:home"),
             ],
         ]
@@ -614,6 +627,12 @@ def _render_customizer_view(st: dict[str, Any]) -> tuple[str, InlineKeyboardMark
             InlineKeyboardButton(text=f"{'✅ ' if fmt == '9:16' else ''}استوری 9:16", callback_data="cz:fmt:9:16"),
             InlineKeyboardButton(text=f"{'✅ ' if fmt == '16:9' else ''}بنر 16:9", callback_data="cz:fmt:16:9"),
         ],
+        [
+            InlineKeyboardButton(text=f"{'✅ ' if st.get('tone', 'analytical') == 'analytical' else ''}📊 تحلیلی", callback_data="cz:tone:analytical"),
+            InlineKeyboardButton(text=f"{'✅ ' if st.get('tone') == 'fan_light' else ''}⚡ لایت", callback_data="cz:tone:fan_light"),
+            InlineKeyboardButton(text=f"{'✅ ' if st.get('tone') == 'x_thread' else ''}🧵 توییت X", callback_data="cz:tone:x_thread"),
+            InlineKeyboardButton(text=f"{'✅ ' if st.get('tone') == 'reels_script' else ''}🎬 ریلز", callback_data="cz:tone:reels_script"),
+        ],
         (
             [InlineKeyboardButton(text=f"هدر: {'کامل' if hm == 'full' else 'فشرده'} 🔁", callback_data="cz:hm")]
             if is_post
@@ -772,7 +791,7 @@ async def _send_home_dashboard(m: Message, *, with_keyboard: bool = True) -> Non
             try:
                 await m.answer(
                     "🎛 <b>داشبورد XGPedia فعال شد</b>\n"
-                    "از کیبورد جمع‌شوندهٔ پایین برای جابه‌جایی بین بخش‌ها (یا <code>🔽 جمع کردن کیبورد</code>) استفاده کنید.",
+                    "از کیبورد پایین برای جابه‌جایی سریع بین بخش‌ها استفاده کنید.",
                     parse_mode="HTML",
                     reply_markup=_persistent_reply_keyboard(),
                 )
@@ -827,22 +846,6 @@ async def on_any_text(m: Message, bot: Bot | None = None) -> None:
     # ۰) دکمه‌های کیبورد جمع‌شوندهٔ پایین صفحه (همیشه در اولویت، حتی در حالت انتظار متن)
     if raw_text in {"🚀 /start", "/start", "🏠 منوی اصلی"}:
         await _send_home_dashboard(m, with_keyboard=True)
-        return
-    if raw_text == "🔽 جمع کردن کیبورد":
-        await m.answer(
-            "✅ کیبورد پایین جمع شد.\nهر زمان خواستید دوباره باز شود روی دکمهٔ زیر بزنید یا <code>/start</code> بفرستید.",
-            parse_mode="HTML",
-            reply_markup=ReplyKeyboardRemove(),
-        )
-        await m.answer(
-            "📌 پنل اینلاین همیشه در دسترس است:",
-            reply_markup=InlineKeyboardMarkup(
-                inline_keyboard=[
-                    [InlineKeyboardButton(text="⌨️ باز کردن مجدد کیبورد پایین", callback_data="nav:show_kb")],
-                    [InlineKeyboardButton(text="🎨 استودیو کارت‌ها", callback_data="nav:cards")],
-                ]
-            ),
-        )
         return
     if raw_text == "🎨 استودیو کارت‌ها":
         _AWAITING_SCHEDULE_TIME.pop(user_id, None)
@@ -1590,6 +1593,11 @@ async def on_customizer_action(cb: CallbackQuery, bot: Bot) -> None:
     if action == "fmt":
         st["fmt"] = f"{parts[2]}:{parts[3]}"
         await _safe_cb_answer(cb, f"فرمت روی {st['fmt']} تنظیم شد.")
+    elif action == "tone" and len(parts) >= 3:
+        from src.xgpedia.editorial.narrative import EDITORIAL_TONES, normalize_tone
+        tk = normalize_tone(parts[2])
+        st["tone"] = tk
+        await _safe_cb_answer(cb, f"لحن متن: {EDITORIAL_TONES[tk]['label_fa']}")
     elif action == "hm":
         st["header_mode"] = "compact" if st["header_mode"] == "full" else "full"
         await _safe_cb_answer(cb, f"هدر: {'کامل' if st['header_mode'] == 'full' else 'فشرده'}")
@@ -1716,6 +1724,7 @@ async def on_customizer_action(cb: CallbackQuery, bot: Bot) -> None:
                 header_mode=st["header_mode"],
                 custom_modules=selected,
                 broadcast_override=bc_val,
+                tone=st.get("tone", "analytical"),
                 progress_cb=_progress,
             )
         except Exception as e:
@@ -3705,6 +3714,42 @@ async def on_tot_customizer_action(cb: CallbackQuery, bot: Bot) -> None:
         pass
 
 
+@router.message(Command("health"))
+async def cmd_api_health(m: Message) -> None:
+    if not m.from_user or not tp.is_admin(m.from_user.id):
+        return
+    from src.xgpedia.core.api_health import format_health_report_fa
+    kb = InlineKeyboardMarkup(inline_keyboard=[[
+        InlineKeyboardButton(text="🔄 ریست حافظه سلامت", callback_data="api:health_reset"),
+        InlineKeyboardButton(text="🏠 پنل اصلی", callback_data="nav:home"),
+    ]])
+    await m.answer(format_health_report_fa(), parse_mode="HTML", reply_markup=kb)
+
+
+@router.callback_query(F.data == "api:health")
+async def on_api_health(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    from src.xgpedia.core.api_health import format_health_report_fa
+    await _safe_cb_answer(cb)
+    kb = InlineKeyboardMarkup(inline_keyboard=[[
+        InlineKeyboardButton(text="🔄 ریست حافظه سلامت", callback_data="api:health_reset"),
+        InlineKeyboardButton(text="🏠 پنل اصلی", callback_data="nav:home"),
+    ]])
+    await cb.message.answer(format_health_report_fa(), parse_mode="HTML", reply_markup=kb)
+
+
+@router.callback_query(F.data == "api:health_reset")
+async def on_api_health_reset(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    from src.xgpedia.core.api_health import reset_health
+    n = reset_health()
+    await _safe_cb_answer(cb, f"حافظه سلامت پاک شد ({n} مورد).", show_alert=True)
+
+
 async def main() -> None:
     import os
     from aiogram.client.session.aiohttp import AiohttpSession
@@ -3739,16 +3784,39 @@ async def main() -> None:
             BotCommand(command="h2hplayers", description="🆚 مقایسه دو بازیکن (H2H)"),
             BotCommand(command="scorers", description="👟 جدول گلزنان / کفش طلا"),
             BotCommand(command="results", description="📊 نتایج بازی‌های روز"),
+            BotCommand(command="wrapup", description="📈 خلاصهٔ هفته + فرم در برابر جدول"),
+            BotCommand(command="shotmap", description="🎯 نقشهٔ شوت و مومنتوم امید گل"),
+            BotCommand(command="value", description="💎 رادار ارزش بازار و شکار (+EV)"),
+            BotCommand(command="lineup", description="📋 ترکیب احتمالی و غایبان"),
+            BotCommand(command="health", description="🩺 گزارش سلامت و یادگیری هوشمند APIها"),
         ])
     except Exception as _cmd_exc:
         log.warning("set_my_commands skipped: %s", _cmd_exc)
 
+    async def _notify_admins(msg_text: str) -> None:
+        for aid in sorted(ADMIN_TELEGRAM_IDS):
+            try:
+                await asyncio.wait_for(bot.send_message(aid, msg_text), timeout=4.0)
+            except Exception:
+                pass
+
     sched_task = asyncio.create_task(_scheduler_loop(bot))
     log.info("bot polling started - admins: %s", sorted(ADMIN_TELEGRAM_IDS))
+    await _notify_admins("🟢 ربات XGPedia آنلاین شد و آمادهٔ دریافت دستور است.")
     try:
         await dp.start_polling(bot)
+    except (KeyboardInterrupt, asyncio.CancelledError):
+        log.info("bot polling interrupted by user (Ctrl+C)")
     finally:
         sched_task.cancel()
+        try:
+            await _notify_admins("🔴 ربات XGPedia متوقف شد (آفلاین). برای فعال‌سازی مجدد، python run.py bot را اجرا کنید.")
+        except Exception:
+            pass
+        try:
+            await bot.session.close()
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":
