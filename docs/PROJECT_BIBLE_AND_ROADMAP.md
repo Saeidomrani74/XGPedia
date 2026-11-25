@@ -1,6 +1,6 @@
-# XGPedia — سند جامع معماری، وضعیت فعلی (v0.30.3) و نقشهٔ راه آینده
+# XGPedia — سند جامع معماری، وضعیت فعلی (v0.31.0) و نقشهٔ راه آینده
 
-> **هدف این سند:** این فایل به‌همراه کل سورس‌کد موجود در `XGPedia_Master_Handoff_v0.30.3_Audited.zip`، مرجع کامل، مستقل و خودبسنده برای شروع چت جدید است. هیچ فایل یا پیش‌زمینهٔ دیگری خارج از این بسته نیاز نیست.
+> **هدف این سند:** این فایل به‌همراه کل سورس‌کد موجود در `XGPedia_Master_Handoff_v0.31.0_Audited.zip`، مرجع کامل، مستقل و خودبسنده برای شروع چت جدید است. هیچ فایل یا پیش‌زمینهٔ دیگری خارج از این بسته نیاز نیست.
 
 ---
 
@@ -43,7 +43,7 @@
 
 ---
 
-## ۳. وضعیت فنی فعلی (v0.30.3 — ۷ خانوادهٔ کارت + سیستم قالب و LLM چندکلیدی)
+## ۳. وضعیت فنی فعلی (v0.31.0 — ۱۱ خانوادهٔ کارت + سیستم قالب و LLM چندکلیدی)
 
 ### الف) معماری یکپارچهٔ کارت‌ها (`src/xgpedia/render/card_kit/`)
 
@@ -56,6 +56,10 @@
 | ۵ | **استودیو تولد (Birthday Studio)** | D47 | **اسلایدی** | `birthday_card.py` / `studio_templates/birthday.html` | `poster` پیش‌فرض، ۳ مود × ۳ فرمت × ۶ ماژول، منحصراً Soccer |
 | ۶ | **رادار نقل‌وانتقالات (Transfer Radar)** | D48 | **ماژولار** | `transfer_radar_card.py` / `studio_templates/transfer_radar.html` | `slide1`/`full` پیش‌فرض، **کادر بالایی شفاف ۱:۱**، ۸ ماژول مستقل، عرض `½`/`۱`، ترتیب دلخواه، ۵ قالب نام‌گذاری‌شده |
 | ۷ | **این یا اون؟ (This or That)** | D49 | **اسلایدی** | `this_or_that_card.py` / `studio_templates/this_or_that.html` | `diagonal` پیش‌فرض، ۴ چیدمان (`diagonal`/`split`/`cards`/`rapid`)، تطابق ۱:۱ با واترمارک و خط مورب نقطه‌چین |
+| ۸ | **نمرات بازیکنان (Players Rating)** | D51 | **ماژولار** | `players_rating_card.py` / `studio_templates/players_rating.html` | ۴ ماژول مستقل (`pitch`/`subs`/`ranking`/`verdict`)، زمین وکتور + MOTM + ۵ قالب، `/ratings` |
+| ۹ | **جدول رده‌بندی (Standings Studio)** | D52 | **ماژولار** | `standings_card.py` / `studio_templates/standings.html` | ۵ ماژول مستقل (`table`/`justice`/`quadrant`/`title_race`/`relegation`)، ۳ لنز + مونت‌کارلو + ۵ قالب، `/standings` |
+| ۱۰ | **آزمایشگاه مصدومیت (Injury Lab)** | D53 | **ماژولار** | `injury_card.py` / `studio_templates/injury_lab.html` | ۷ ماژول مستقل (`anatomical`/`missed`/`timeline`/`impact`/`replacements`/`history`/`verdict`) + ۵ قالب، `/injury` |
+| ۱۱ | **پروفایل فنی بازیکن (Player Studio)** | D54 | **ماژولار** | `player_card.py` / `studio_templates/player_profile.html` | ۹ ماژول مستقل (`kpi`/`percentiles`/`scout`/`radar`/`pitchmap`/`form`/`xgchain`/`duels`/`similar`) + ۳ تم + ۵ قالب، `/player` |
 
 ### ب) منابع دادهٔ رایگان و زنده (`src/xgpedia/providers/`)
 - **مسابقات و آمار:** Football-Data.org، Understat، FPL API، FotMob/ESPN Soccer + تشخیص خودکار پخش زنده از `tv3.ir` و `varzeshtv.ir`.
@@ -98,3 +102,11 @@
 - ساخت کانال‌های فرعی تک‌تیم یا تک‌لیگ با پروفایل برند و فیلتر اختصاصی.
 - خروجی ریلز/شورتس کوتاه و انتشار خودکار در اینستاگرام، ایکس (توییتر) و یوتیوب شورتس.
 - انتقال ربات و زمان‌بندها به سرور کلود ۲۴/۷ با بکاپ خودکار SQLite.
+
+## به‌روزرسانی نسخه v0.32.0 (D55–D59 — ۱۶ خانواده کارت فعال)
+۵ کارت ماژولار جدید با فریم چهارگوشه قرمز یکپارچه، دیتای واقعی رایگان (بدون `requests`، منحصراً Soccer، `null ≠ 0`)، پشتیبانی کامل نیم‌عرض (`½`)/تمام‌عرض (`۱`)، تغییر ترتیب و ذخیره تا ۵ قالب نام‌گذاری‌شده اضافه شدند:
+12. تقابل مستقیم تیم‌ها (H2H Teams — D55, `/h2hteams`)
+13. کارت بازیکن FC27 (FC27 Chrono — D56, `/fc27`)
+14. مقایسه دو بازیکن (H2H Players — D57, `/h2hplayers`)
+15. جدول گلزنان / کفش طلا (Top Scorers — D58, `/scorers`)
+16. نتایج ۲۴ ساعت اخیر (Matchday Results — D59, `/results` — فیلتر دقیق ۱ ثانیه تا ۲۴ ساعت گذشته)

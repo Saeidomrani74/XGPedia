@@ -596,7 +596,10 @@ def render_unified_card_html(payload: dict[str, Any]) -> str:
 <head>
 <meta charset="UTF-8">
 <title>XGPedia Card</title>
-<style id="xgpedia-fonts">{font_css}</style>
+<style id="xgpedia-fonts">{font_css}
+footer, footer .fbw, footer .cf-row, footer .fi, footer .cf-left, footer .cf-right, .xg-footer, .foot-row, .card-footer{{flex-wrap:nowrap!important;white-space:nowrap!important;min-width:0!important;}}
+footer span, footer div, .pl-foot-tag, .pl-foot-s, .in-foot-tag, .pr-foot-tag, .st-foot-tag, .cf-tag{{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;min-width:0!important;}}
+</style>
 <style id="xgpedia-unified">{css}</style>
 </head>
 <body>

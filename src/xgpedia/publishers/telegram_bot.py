@@ -171,11 +171,35 @@ def _cards_studio_markup() -> InlineKeyboardMarkup:
             ],
             [
                 InlineKeyboardButton(text="📡 رادار نقل‌وانتقالات (شایعات داغ)", callback_data="tr:list:1"),
-                InlineKeyboardButton(text="⭐ پریست‌های نقل‌وانتقال", callback_data="tr:presets"),
+                
             ],
             [
                 InlineKeyboardButton(text="⚔️ این یا اون؟ (دوئل جدالی)", callback_data="tot:list:1"),
                 InlineKeyboardButton(text="⚡ پیشنهاد جدالی تازه با AI", callback_data="tot:ai_new"),
+            ],
+            [
+                InlineKeyboardButton(text="⭐️ نمرات بازیکنان", callback_data="pr:list:1"),
+                InlineKeyboardButton(text="🏆 جدول رده‌بندی", callback_data="st:list:1"),
+            ],
+            [
+                InlineKeyboardButton(text="🏥 آزمایشگاه مصدومیت", callback_data="inj:list:1"),
+                InlineKeyboardButton(text="🧬 پروفایل فنی بازیکن", callback_data="pl:list:1"),
+            ],
+            [
+                InlineKeyboardButton(text="⚔️ تقابل تیم‌ها (H2H)", callback_data="h2t:list:1"),
+                InlineKeyboardButton(text="🃏 کارت FC27", callback_data="fc:list:1"),
+            ],
+            [
+                InlineKeyboardButton(text="🆚 مقایسه بازیکنان", callback_data="h2p:list:1"),
+                InlineKeyboardButton(text="👟 جدول گلزنان (کفش طلا)", callback_data="ts:list:1"),
+            ],
+            [
+                InlineKeyboardButton(text="📊 نتایج بازی‌های روز", callback_data="mr:list:1"),
+                InlineKeyboardButton(text="💬 نقل‌قول روز", callback_data="qt:list:1"),
+            ],
+            [
+                InlineKeyboardButton(text="🔥 مناظره روز", callback_data="db:list:1"),
+                InlineKeyboardButton(text="🔢 عدد روز", callback_data="nd:list:1"),
             ],
             [
                 InlineKeyboardButton(text="📡 رفتن به مرکز دیتای زنده", callback_data="nav:sync"),
@@ -196,6 +220,16 @@ def _sync_hub_markup() -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text="📰 بروزرسانی اخبار زنده (ESPN/BBC)", callback_data="news:refresh")],
             [InlineKeyboardButton(text="🎂 بروزرسانی تولدهای امروز (Wikidata/Wiki)", callback_data="bday:refresh")],
             [InlineKeyboardButton(text="📡 بروزرسانی شایعات نقل‌وانتقالات (۵ منبع)", callback_data="tr:refresh")],
+            [InlineKeyboardButton(text="⭐️ بروزرسانی نمرات مسابقات (ESPN)", callback_data="pr:refresh")],
+            [InlineKeyboardButton(text="🏆 بروزرسانی جداول زنده (ESPN/Understat)", callback_data="st:refresh")],
+            [InlineKeyboardButton(text="🏥 بروزرسانی مصدومیت‌ها (FPL/RSS)", callback_data="inj:refresh")],
+            [InlineKeyboardButton(text="🧬 بروزرسانی پروفایل بازیکنان (FPL)", callback_data="pl:refresh")],
+            [InlineKeyboardButton(text="📊 بروزرسانی نتایج ۲۴ ساعت اخیر (ESPN)", callback_data="mr:refresh")],
+            [InlineKeyboardButton(text="👟 بروزرسانی جدول گلزنان زنده (FPL)", callback_data="ts:refresh")],
+            [InlineKeyboardButton(text="⚔️ بروزرسانی تقابل مستقیم تیم‌ها (ESPN)", callback_data="h2t:refresh")],
+            [InlineKeyboardButton(text="💬 جستجوی نقل‌قول‌های زنده (BBC/Guardian/ESPN)", callback_data="qt:refresh")],
+            [InlineKeyboardButton(text="🔥 جستجوی مناظره‌های زنده (FPL/BBC/ESPN)", callback_data="db:refresh")],
+            [InlineKeyboardButton(text="🔢 کشف اعداد روز زنده (FPL/BBC/Guardian)", callback_data="nd:refresh")],
             [
                 InlineKeyboardButton(text="🎨 استودیو کارت‌ها", callback_data="nav:cards"),
                 InlineKeyboardButton(text="🏠 پنل اصلی", callback_data="nav:home"),
@@ -239,6 +273,14 @@ def _main_panel_markup() -> InlineKeyboardMarkup:
             ],
             [
                 InlineKeyboardButton(text="⚔️ این یا اون؟ (دوئل)", callback_data="tot:list:1"),
+                InlineKeyboardButton(text="⭐️ نمرات بازیکنان", callback_data="pr:list:1"),
+            ],
+            [
+                InlineKeyboardButton(text="🏆 جدول رده‌بندی", callback_data="st:list:1"),
+                InlineKeyboardButton(text="🏥 مصدومیت‌ها", callback_data="inj:list:1"),
+            ],
+            [
+                InlineKeyboardButton(text="🧬 پروفایل بازیکن", callback_data="pl:list:1"),
                 InlineKeyboardButton(text="🔄 سینک سریع امروز", callback_data="today:sync"),
             ],
             [
@@ -250,6 +292,37 @@ def _main_panel_markup() -> InlineKeyboardMarkup:
 
 
 def _preview_keyboard(post_id: int, fixture_id: str, post_type: str = "preview") -> dict[str, Any]:
+    _MODULAR_PK = {
+        "players_rating": ("pr", "⭐️ لیست مسابقات نمرات"),
+        "standings": ("st", "🏆 لیست جداول لیگ‌ها"),
+        "injury_lab": ("inj", "🏥 لیست پرونده‌های مصدومیت"),
+        "player_profile": ("pl", "🧬 لیست پروفایل بازیکنان"),
+        "h2h_teams": ("h2t", "⚔️ لیست تقابل تیم‌ها"),
+        "player_fc27": ("fc", "🃏 لیست کارت‌های FC27"),
+        "h2h_players": ("h2p", "🆚 لیست مقایسه بازیکنان"),
+        "top_scorers": ("ts", "👟 لیست جدول گلزنان"),
+        "matchday_results": ("mr", "📊 لیست نتایج ۲۴ ساعت اخیر"),
+        "quote": ("qt", "💬 لیست نقل‌قول‌های روز"),
+        "debate": ("db", "🔥 لیست مناظره‌های روز"),
+        "number_of_day": ("nd", "🔢 لیست اعداد روز"),
+    }
+    if post_type in _MODULAR_PK:
+        _pf, _lbl = _MODULAR_PK[post_type]
+        return {
+            "inline_keyboard": [
+                [
+                    {"text": "✅ انتشار فوری در کانال", "callback_data": f"approve:{post_id}"},
+                    {"text": "⏰ زمان‌بندی امروز (HH:MM)", "callback_data": f"sched:{post_id}"},
+                ],
+                [
+                    {"text": "🎛 تغییر اسلاید/هدر/ماژول", "callback_data": f"{_pf}:back"},
+                    {"text": "❌ رد", "callback_data": f"reject:{post_id}"},
+                ],
+                [
+                    {"text": _lbl, "callback_data": f"{_pf}:list:1"},
+                ],
+            ]
+        }
     if post_type == "this_or_that":
         return {
             "inline_keyboard": [
@@ -685,12 +758,21 @@ async def _send_home_dashboard(m: Message, *, with_keyboard: bool = True) -> Non
     _AWAITING_SCHEDULE_TIME.pop(m.from_user.id, None)
     _AWAITING_EDIT_INSTRUCTION.pop(m.from_user.id, None)
     if with_keyboard:
-        await m.answer(
-            "🎛 <b>داشبورد XGPedia فعال شد</b>\n"
-            "از کیبورد جمع‌شوندهٔ پایین برای جابه‌جایی بین بخش‌ها (یا <code>🔽 جمع کردن کیبورد</code>) استفاده کنید.",
-            parse_mode="HTML",
-            reply_markup=_persistent_reply_keyboard(),
-        )
+        for _attempt in range(2):
+            try:
+                await m.answer(
+                    "🎛 <b>داشبورد XGPedia فعال شد</b>\n"
+                    "از کیبورد جمع‌شوندهٔ پایین برای جابه‌جایی بین بخش‌ها (یا <code>🔽 جمع کردن کیبورد</code>) استفاده کنید.",
+                    parse_mode="HTML",
+                    reply_markup=_persistent_reply_keyboard(),
+                )
+                break
+            except Exception as _net_err:
+                if _attempt == 0 and ('Network' in type(_net_err).__name__ or 'Connection' in str(_net_err)):
+                    await asyncio.sleep(1.5)
+                    continue
+                logger.warning('telegram home send failed: %s', _net_err)
+                break
     await m.answer(
         "⚡ <b>دسترسی مستقیم کارت‌ها و عملیات سریع:</b>\n"
         "• ⚽ مسابقات: پیش‌ازبازی و پس‌ازبازی (۲۴س)\n"
@@ -861,7 +943,30 @@ async def on_any_text(m: Message, bot: Bot | None = None) -> None:
             return
         from src.xgpedia.layout_templates import save_layout_template
         try:
-            if card_kind == "transfer_radar":
+            if card_kind in {"players_rating", "standings", "injury_lab", "player_profile", "h2h_teams", "player_fc27", "h2h_players", "top_scorers", "matchday_results", "quote", "debate", "number_of_day"}:
+                from src.xgpedia.publishers.modular_cards_bot import (
+                    MODULAR_STATES,
+                    render_modular_customizer_view,
+                )
+                st_m = MODULAR_STATES.get(card_kind, {}).get(user_id)
+                if not st_m:
+                    await m.answer("❌ وضعیت کاستومایزر منقضی شده است؛ دوباره از لیست باز کنید.")
+                    return
+                saved = save_layout_template(
+                    card_kind,
+                    raw_text,
+                    fmt=st_m["fmt"],
+                    header_mode=st_m["header_mode"],
+                    modules=st_m["modules"],
+                )
+                text, markup = render_modular_customizer_view(card_kind, st_m)
+                await m.answer(
+                    f"✅ قالب <b>«{html.escape(saved['name'])}»</b> با موفقیت ذخیره شد!\n\n{text}",
+                    parse_mode="HTML",
+                    reply_markup=markup,
+                )
+                return
+            elif card_kind == "transfer_radar":
                 st_tr = _TR_STATE.get(user_id)
                 if not st_tr:
                     await m.answer("❌ وضعیت کاستومایزر منقضی شده است؛ دوباره شایعه را باز کنید.")
@@ -3602,6 +3707,8 @@ async def main() -> None:
         log.info("using TELEGRAM_PROXY_URL=%s", proxy_url)
     bot = Bot(TELEGRAM_BOT_TOKEN, session=session)
     dp = Dispatcher()
+    from src.xgpedia.publishers.modular_cards_bot import modular_router
+    dp.include_router(modular_router)
     dp.include_router(router)
     try:
         await bot.set_my_commands([
@@ -3611,8 +3718,17 @@ async def main() -> None:
             BotCommand(command="onthisday", description="🕰 در چنین روزی (وقایع تاریخی فوتبال)"),
             BotCommand(command="news", description="📰 خبر فوری و رسمی (PRO WIRE v2)"),
             BotCommand(command="birthday", description="🎂 تولدهای امروز فوتبالیست‌ها (Birthday Studio)"),
-            BotCommand(command="transfers", description="📡 رادار نقل‌وانتقالات (شایعات داغ ماژولار)"),
+            BotCommand(command="transfers", description="📡 رادار نقل‌وانتقالات (شایعات داغ)"),
             BotCommand(command="thisorthat", description="⚔️ این یا اون؟ (دوئل‌های جدالی و نظرسنجی)"),
+            BotCommand(command="ratings", description="⭐️ نمرات بازیکنان (Players Rating)"),
+            BotCommand(command="standings", description="🏆 جدول رده‌بندی (Standings)"),
+            BotCommand(command="injury", description="🏥 آزمایشگاه مصدومیت (Injury Lab)"),
+            BotCommand(command="player", description="🧬 پروفایل فنی بازیکن (Player Studio)"),
+            BotCommand(command="h2hteams", description="⚔️ تقابل مستقیم تیم‌ها (H2H)"),
+            BotCommand(command="fc27", description="🃏 کارت بازیکن FC27"),
+            BotCommand(command="h2hplayers", description="🆚 مقایسه دو بازیکن (H2H)"),
+            BotCommand(command="scorers", description="👟 جدول گلزنان / کفش طلا"),
+            BotCommand(command="results", description="📊 نتایج بازی‌های روز"),
         ])
     except Exception as _cmd_exc:
         log.warning("set_my_commands skipped: %s", _cmd_exc)

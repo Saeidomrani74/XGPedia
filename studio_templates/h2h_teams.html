@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>XGPedia H2H Studio — Master Edition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Space+Grotesk:wght@600;700;800&family=Vazirmatn:wght@400..900&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js" defer></script>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{font-family:Vazirmatn,system-ui,-apple-system,sans-serif;background:#030711;color:#F8FAFC;overflow:hidden;font-feature-settings:"tnum";font-variant-numeric:tabular-nums}
+.fm{font-family:'JetBrains Mono','Space Grotesk',monospace}
+.fd{font-family:'Space Grotesk',sans-serif}
+.fi{display:flex;align-items:center}
+.fc{display:flex;align-items:center;justify-content:center}
+.fbw{display:flex;align-items:center;justify-content:space-between}
+.fcol{display:flex;flex-direction:column}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:#050914b3}
+::-webkit-scrollbar-thumb{background:#94a3b847;border-radius:99px}
+::-webkit-scrollbar-thumb:hover{background:#e62e45bf}
+._bg{background:#02050D radial-gradient(circle at 50% 24%,#e62e451a,transparent 56%)}
+#vp{-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y}
+#vp.cp{cursor:grab}
+#vp.cp:active{cursor:grabbing}
+#aw{position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 40px 110px -14px #000000f5,0 0 0 1px #ffffff26;border-radius:20px;overflow:hidden;transition:width .16s ease-out,height .16s ease-out}
+._sl{background:repeating-linear-gradient(to bottom,#ffffff04 0 1px,#0000 1px 4px)}
+.xm,.xe{position:relative;border-radius:24px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;box-shadow:0 18px 42px -12px #000000a6,inset 0 1px 0 #ffffff24;padding:16px 24px 18px}
+.xm{background:linear-gradient(160deg,#101d3be6,#070d1df5);border:1.5px solid #f8fafc24}
+.xe{background:linear-gradient(155deg,#142244eb,#080e1ff7);border:1.5px solid #7fa6e842}
+.xm::before,.xe::before{content:"";position:absolute;top:0;right:0;width:190px;height:110px;background:radial-gradient(ellipse at top right,#ffffff0f,transparent 70%);pointer-events:none}
+#ea.atm-cinematic #beams{opacity:1}
+#ea.atm-cinematic #fs{opacity:.95}
+#ea.atm-cinematic #hud-tel{opacity:.65}
+#ea.atm-editorial{background:#091124}
+#ea.atm-editorial #beams{opacity:.38}
+#ea.atm-editorial #fs{opacity:.48}
+#ea.atm-editorial #hud-tel{opacity:.45}
+#ea.atm-editorial .xm,#ea.atm-editorial .xe{background:linear-gradient(165deg,#0f1930f5,#070c1afa);border-color:#ffffff2e;box-shadow:0 12px 30px -10px #000000b8,inset 0 1px 0 #ffffff2b}
+#ea.atm-tactical{background:#071224}
+#ea.atm-tactical #beams{opacity:.65}
+#ea.atm-tactical #fs,#ea.atm-tactical #hud-tel{opacity:1}
+#ea.atm-tactical .xm,#ea.atm-tactical .xe{border-color:#38bdf83d;box-shadow:0 14px 36px -10px #000000b8,inset 0 1px 0 #38bdf833}
+.pc{width:100%;height:48px;border-radius:999px;overflow:hidden;display:flex;background:#070e1feb;border:2px solid #ffffff2e;box-shadow:inset 0 2px 10px #0000008c,0 10px 28px -8px #000000a0}
+.pcc{height:34px;border-width:1.5px}
+.pcc .ps{font-size:18px}
+.ps{height:100%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:23px;transition:width .3s ease;white-space:nowrap;position:relative;overflow:hidden}
+.ps::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#ffffff30 0%,transparent 48%,#00000024 100%);pointer-events:none}
+.ps-sep{width:2px;height:100%;background:#030711bf;flex-shrink:0;z-index:2}
+.ct{height:15px;background:#ffffff14;overflow:hidden;display:flex;align-items:center;position:relative;box-shadow:inset 0 1px 4px #00000073}
+.ct.hs,.ch{border-radius:0 99px 99px 0}
+.ct.as,.ca{border-radius:99px 0 0 99px}
+.ct.hs{justify-content:flex-end}
+.ct.as{justify-content:flex-start}
+.ch,.ca{height:100%;transition:width .3s ease;position:relative}
+.ch::after,.ca::after{content:"";position:absolute;top:0;bottom:0;width:6px;background:#fff;opacity:.88;box-shadow:0 0 10px #fff;border-radius:99px}
+.ch::after{left:0}
+.ca::after{right:0}
+#ea{position:absolute;top:0;left:0;transform-origin:0 0;background:#0D1730;color:#F8FAFC;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;user-select:none;transition:transform .16s ease-out}
+#ea.f9{padding:135px 0 165px}
+#ea.f4{padding:14px 0 10px}
+#ea.f16{padding:14px 0 8px}
+#ea.f16 .xm,#ea.f16 .xe{padding:14px 18px;border-radius:20px}
+#ea.f16 .pc{height:40px}
+#ea.f16 .ps{font-size:19px}
+#ea.f16 .mt{font-size:22px}
+#ea.dc .xm,#ea.dc .xe{padding:12px 16px;border-radius:18px}
+#ea.dc .mh{padding-bottom:7px;margin-bottom:7px}
+#ea.dc .mt{font-size:21px}
+#ea.dc .ct{height:11px}
+#mg .w-full,#mg .mf:last-child:nth-child(odd){grid-column:1/-1}
+#mg .mf{grid-column:span 1;min-width:0}
+#mg .mf.xm,#mg .mf.xe{padding:13px 15px;border-radius:18px}
+#mg .mf .mt{font-size:20px}
+#mg .mf .mh{padding-bottom:6px;margin-bottom:7px}
+#mg .mf .mh-sub{font-size:13px}
+#ea.dv #cm{padding-inline:28px;padding-bottom:4px}
+#ea.dv #cm .c-pill{font-size:16px;padding:3px 12px}
+#ea.dv #cm .c-meta,#ea.dv #cf .ft-txt,#ea.dv .fort-title,#ea.dv .dna-ed-t{font-size:14px}
+#ea.dv #bl svg{width:40px;height:40px}
+#ea.dv #bl .brand-txt{font-size:24px}
+#ea.dv #cmb{padding-inline:26px;gap:8px}
+#ea.dv #cf{padding-inline:28px;padding-top:6px;padding-bottom:8px}
+#ea.dv .xm,#ea.dv .xe{padding:9px 13px;border-radius:15px}
+#ea.dv .mh{padding-bottom:4px;margin-bottom:5px}
+#ea.dv .mt,#ea.dv .sc-name,#ea.dv .ps{font-size:16px}
+#ea.dv .mh-sub,#ea.dv .bal-big,#ea.dv .fort-sub,#ea.dv .sc-sub,#ea.dv .tm-lbl{font-size:11px}
+#ea.dv .ct{height:8px}
+#ea.dv .tl-card{padding:6px 5px;border-radius:11px;gap:4px}
+#ea.dv .tl-score{font-size:18px;padding:2px 8px}
+#ea.dv .tl-meta,#ea.dv .dna-lbl{font-size:10.5px}
+#ea.dv .tl-xg{font-size:10px}
+#ea.dv .bal-val,#ea.dv .hero-strip-val{font-size:18px}
+#ea.dv .bal-lbl{font-size:12.5px}
+#ea.dv .bal-big{padding:5px 8px}
+#ea.dv .mom-svg{max-height:124px}
+#ea.dv .fort-card{padding:8px 10px;border-radius:13px;gap:6px}
+#ea.dv .sc-card{padding:8px 10px;border-radius:13px;gap:5px}
+#ea.dv .sc-goals,#ea.dv .hero-win-num{font-size:22px}
+#ea.dv .dna-tile{padding:5px 6px;border-radius:11px}
+#ea.dv .dna-val{font-size:15px}
+#ea.dv .dna-ring{width:44px;height:44px}
+#ea.dv .dna-ed{padding:6px 10px;border-radius:11px}
+#ea.dv .dna-ed-b{font-size:12px;line-height:1.35}
+#ea.dv .tm-bar-wrap{height:74px}
+#ea.dv .tm-val,#ea.dv .hero-strip-lbl{font-size:12px}
+#ea.dv .hero-gauge-svg{max-width:210px}
+#ea.dv .hero-name{font-size:29px}
+#ea.dv .hero-sub{font-size:13px}
+#ea.dv .hero-win-box{padding:4px 10px;margin-top:4px}
+#ea.dv .pc{height:34px}
+#ea.dv .hero-strip{padding:5px 12px}
+.spb{padding-bottom:env(safe-area-inset-bottom,0)}
+.ns{-ms-overflow-style:none;scrollbar-width:none}
+.ns::-webkit-scrollbar{display:none}
+.fb{min-height:36px;border-radius:8px;font-size:12px;font-weight:700;color:#94a3b8;transition:all .15s}
+.fb:hover{color:#fff}
+.zb{min-height:36px;padding-inline:10px;border-radius:12px;background:#ffffff0d;color:#e2e8f0;font-size:12px;font-weight:700;transition:all .15s}
+.zb:hover,.zpm:hover{background:#ffffff26}
+.zpm{min-width:36px;min-height:36px;border-radius:12px;background:#ffffff0d;color:#fff;font-weight:900;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.zpm:active{transform:scale(.95)}
+.hb,.ab{min-height:42px;padding:7px 10px;border-radius:12px;border:1px solid #ffffff1a;background:#ffffff0d;color:#cbd5e1;font-size:11.5px;font-weight:700;transition:all .15s}
+.hb:hover,.ab:hover{background:#ffffff1a}
+.hb.on,.ab.on{border-color:#E62E45;background:#e62e452e;color:#fff;font-weight:800}
+.mnb{min-height:56px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#94a3b8;transition:all .15s}
+.mnb:hover,.stab:hover{color:#e2e8f0}
+.mnb.on{color:#FF556B;background:#e62e4526}
+.stab{flex:1;padding:10px 8px;font-size:12px;font-weight:800;color:#94a3b8;border-bottom:2px solid transparent;transition:all .15s}
+.stab.on{color:#fff;border-bottom-color:#E62E45;background:#e62e4512}
+.inp{width:100%;background:#091124;border:1px solid #ffffff1a;border-radius:10px;padding:7px 10px;color:#F8FAFC;font-size:12px;font-weight:600;outline:none;transition:border-color .15s}
+.inp:focus{border-color:#E62E45}
+.lbl{display:block;font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:4px}
+@media(min-width:1024px){.fb{min-height:32px;padding-inline:12px}.zb{min-height:32px}.zpm{min-width:32px;min-height:32px}}
+.fb.on,.qb.on,.zb.on{background:#E62E45;color:#fff;font-weight:800;border-color:#E62E45}
+.zb.on{padding-inline:12px}
+.sb.on{border-color:#E62E45;background:#e62e4526;color:#fff}
+#ts.on{background:#f59e0b40;border-color:#fbbf24b3;color:#fde68a;font-weight:800}
+#db.warn{border-color:#f59e0b66;background:#f59e0b1f;color:#fde68a}
+#dd.warn{background:#fbbf24}
+#sdp.warn{background:#f59e0b26;border-color:#f59e0b66;color:#fcd34d}
+</style>
+</head>
+<body class="h-[100dvh] fcol bg-[#030711] text-[#F8FAFC]">
+<div class="flex-1 fcol lg:flex-row min-h-0 overflow-hidden relative">
+<aside id="sp" class="hidden lg:flex w-full lg:w-[430px] bg-[#070D1D] lg:border-l border-white/10 flex-col shrink-0 h-full min-h-0 overflow-hidden">
+<div class="lg:hidden sticky top-0 z-20 bg-[#040814]/95 backdrop-blur-md border-b border-white/10 px-3.5 py-2.5 fbw gap-2 shrink-0">
+<div class="min-w-0"><div id="mt" class="text-sm font-black text-white truncate"></div><div id="mm" class="text-xs font-bold text-slate-400 mt-0.5"></div></div>
+<button id="jp" class="min-h-[40px] px-3.5 py-2 rounded-xl bg-[#E62E45]/20 hover:bg-[#E62E45]/30 active:scale-95 border border-[#E62E45]/50 text-[#FF5E72] text-xs font-extrabold fi gap-1.5 shrink-0 transition"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg><span>پیش‌نمایش</span></button>
+</div>
+<div class="bg-[#040814] border-b border-white/10 shrink-0">
+<div class="hidden lg:flex items-center justify-between px-4 py-2.5 border-b border-white/5"><div class="fi gap-2"><span class="w-2.5 h-2.5 rounded-full bg-[#E62E45] shadow-[0_0_10px_#E62E45]"></span><span class="text-xs font-black text-white">XGPedia H2H Studio</span></div><span class="text-[10px] fm font-extrabold text-[#FF6B7F] px-2 py-0.5 rounded bg-[#E62E45]/15 border border-[#E62E45]/40">MASTER EDITION</span></div>
+<div class="flex"><button data-tab="slides" class="stab on">چیدمان و اسلایدها</button><button data-tab="edit" class="stab">ویرایش زنده داده‌ها</button></div>
+</div>
+<div id="es" class="flex-1 overflow-y-auto p-4 pb-24 lg:pb-4">
+<div id="tab-slides" class="space-y-4">
+<div id="db" class="rounded-2xl px-3.5 py-2.5 border border-emerald-500/35 bg-emerald-500/12 text-emerald-200 fbw gap-2 text-xs font-extrabold"><div class="fi gap-2"><span id="dd" class="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0"></span><span id="dt"></span></div><span id="dc" class="fm text-[11px] opacity-85 shrink-0"></span></div>
+<div><label class="block text-sm lg:text-xs font-extrabold text-slate-200 mb-2">اسلایدهای آماده کاروسل و شو‌ریل</label><div class="space-y-2" id="slb"></div></div>
+<div class="bg-[#040814] border border-white/10 rounded-2xl p-3.5 space-y-2.5"><span class="block text-sm lg:text-xs font-extrabold text-white">سبک هدر تقابل (Clash Chronograph)</span><div class="grid grid-cols-2 gap-2"><button data-h="full" class="hb">هدر کامل (کرونوگراف)</button><button data-h="compact" class="hb">هدر فشرده (اسلاید بعدی)</button></div></div>
+<div class="bg-[#040814] border border-white/10 rounded-2xl p-3.5 space-y-2.5"><span class="block text-sm lg:text-xs font-extrabold text-white">اتمسفر نوری و فینیش بصری</span><div class="grid grid-cols-3 gap-1.5"><button data-a="cinematic" class="ab on">استادیوم سینمایی</button><button data-a="editorial" class="ab">تحریریه لوکس</button><button data-a="tactical" class="ab">تاکتیکال نئون</button></div></div>
+<div><label class="block text-sm lg:text-xs font-extrabold text-slate-200 mb-2">۵ تقابل کلاسیک آماده (پریست‌ها)</label><div class="grid grid-cols-2 gap-2" id="prb"></div></div>
+<div class="bg-[#040814] border border-white/10 rounded-2xl p-3.5 space-y-2.5"><div class="fbw gap-2"><span class="text-sm lg:text-xs font-extrabold text-white">ماژول‌های فعال (۷ ماژول تخصصی)</span><span class="text-xs lg:text-[10px] text-slate-400">نیم‌عرض ½ یا تمام‌عرض ۱</span></div><div id="mcl" class="space-y-2"></div></div>
+</div>
+<div id="tab-edit" class="hidden space-y-4"></div>
+</div>
+<div class="hidden lg:flex p-3 bg-[#040814] border-t border-white/10 items-center justify-between gap-2 shrink-0"><button id="cj" class="flex-1 py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-slate-300 transition">کپی دیتای JSON</button><span id="adb" class="px-3 py-2.5 rounded-xl bg-black/50 border border-white/10 text-[11px] fm text-slate-400"></span></div>
+</aside>
+<main id="sc" class="flex-1 fcol _bg min-h-0 overflow-hidden relative">
+<div class="fcol lg:flex-row lg:items-center lg:justify-between gap-2 px-3 py-2 bg-[#070D1D]/92 backdrop-blur-md border-b border-white/10 shrink-0 z-10">
+<div class="fbw gap-2 shrink-0"><div class="flex-1 lg:flex-none grid grid-cols-3 lg:flex bg-[#030711] p-1 rounded-xl border border-white/10 gap-1"><button data-f="4:5" class="fb on">پست 4:5</button><button data-f="9:16" class="fb">استوری 9:16</button><button data-f="16:9" class="fb">بنر 16:9</button></div><span id="mdb" class="lg:hidden px-2 py-2 rounded-xl bg-[#030711] border border-white/10 text-[10px] fm text-slate-300 shrink-0"></span></div>
+<div class="fbw gap-2 min-w-0 lg:flex-1"><div id="qsb" class="fi gap-1.5 overflow-x-auto ns py-0.5"></div><div class="fi gap-2 shrink-0"><span id="sdp" class="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/35 text-emerald-300 text-[11px] font-extrabold"></span><button id="exp-png" class="min-h-[34px] px-3.5 py-1.5 rounded-xl bg-[#E62E45] hover:bg-[#ff3b54] active:scale-[0.97] text-white text-xs font-black fi gap-1.5 shadow-lg shadow-[#E62E45]/35 transition whitespace-nowrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>دانلود PNG باکیفیت</span></button></div></div>
+</div>
+<div id="vp" class="flex-1 w-full h-full overflow-auto flex p-3 sm:p-6 pb-32 lg:pb-16"><div class="m-auto fc"><div id="aw"><div id="ea" class="f4 atm-cinematic" dir="rtl">
+<div id="beams" class="absolute inset-0 pointer-events-none z-0 transition-opacity duration-200"></div>
+<svg id="fs" class="absolute inset-0 w-full h-full pointer-events-none z-0 transition-opacity duration-200" viewBox="0 0 1080 1350" preserveAspectRatio="xMidYMid slice" fill="none"><defs><pattern id="tg" width="54" height="54" patternUnits="userSpaceOnUse"><path d="M54 0H0v54" stroke="#F8FAFC" stroke-opacity=".055"/></pattern><radialGradient id="rf" cx="50%" cy="24%" r="42%"><stop offset="0" stop-color="#E62E45" stop-opacity=".26"/><stop offset=".55" stop-color="#E62E45" stop-opacity=".07"/><stop offset="1" stop-color="#E62E45" stop-opacity="0"/></radialGradient><filter id="grainF"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch"/></filter></defs><rect width="100%" height="100%" fill="url(#tg)"/><rect id="pr" x="14" y="14" width="1052" height="1322" rx="18" stroke="#F8FAFC" stroke-opacity=".12" stroke-width="1.5"/><g stroke="#F8FAFC" stroke-opacity=".09" stroke-width="1.5"><line id="hl" x1="540" y1="14" x2="540" y2="1336" stroke-dasharray="8 8"/><circle id="cc1" cx="540" cy="300" r="145"/></g><g stroke="#F8FAFC" stroke-opacity=".075" stroke-width="1.5"><rect x="14" y="140" width="132" height="340"/><path d="M146 238A92 92 0 0 1 146 382"/><rect id="rb" x="934" y="140" width="132" height="340"/><path id="ra" d="M934 238A92 92 0 0 0 934 382"/></g><circle id="cc2" cx="540" cy="300" r="245" fill="url(#rf)"/><circle id="cc3" cx="540" cy="300" r="208" stroke="#E62E45" stroke-opacity=".22" stroke-width="1.3" stroke-dasharray="4 6"/><circle id="cc4" cx="540" cy="300" r="292" stroke="#F8FAFC" stroke-opacity=".07"/><circle id="cc5" cx="540" cy="300" r="380" stroke="#F8FAFC" stroke-opacity=".04"/><path id="crh" d="M26 48V26H48M1054 48V26H1032M26 1302V1324H48M1054 1302V1324H1032" stroke="#E62E45" stroke-opacity=".75" stroke-width="2.4"/><g id="hud-tel" font-family="JetBrains Mono,monospace" font-size="11" font-weight="700" fill="#94A3B8" letter-spacing="1.6"><text x="56" y="34">XGPEDIA • H2H ENGINE v2.0</text><text id="hud-tr" x="1024" y="34" text-anchor="end">SYS.OPTICS // ACTIVE</text></g><rect width="100%" height="100%" filter="url(#grainF)" opacity="0.032"/></svg>
+<div class="absolute inset-0 _sl pointer-events-none z-0"></div>
+<div id="sz" class="hidden absolute inset-0 pointer-events-none z-30 fcol justify-between">
+<div class="w-full h-[135px] bg-[#E62E45]/18 border-b-2 border-dashed border-[#FF6B7F]/80 flex items-end justify-center pb-3"><span class="px-4 py-1 rounded-full bg-[#070D1D]/90 border border-[#FF6B7F]/60 text-[#FF8A9A] text-[20px] font-extrabold">ناحیه امن بالای استوری (پروفایل اینستاگرام • ۱۳۵px)</span></div>
+<div class="w-full h-[165px] bg-[#E62E45]/18 border-t-2 border-dashed border-[#FF6B7F]/80 flex items-start justify-center pt-3"><span class="px-4 py-1 rounded-full bg-[#070D1D]/90 border border-[#FF6B7F]/60 text-[#FF8A9A] text-[20px] font-extrabold">ناحیه امن پایین استوری (نوار ارسال پیام • ۱۶۵px)</span></div>
+</div>
+<header id="cm" class="relative z-10 px-[42px] pt-6 pb-2 fbw gap-4 shrink-0">
+<div class="fcol items-start gap-2 min-w-0">
+<div class="fi flex-wrap gap-2.5"><div class="c-pill px-4 py-1.5 rounded-full text-[22px] font-black fi gap-2.5 border text-[#F8FAFC] shadow-lg" style="background:#152347eb;border-color:#ffffff30"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E62E45" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8m-4-4v4m-5-17h10v5a5 5 0 01-10 0V4zM5 6H3v2a3 3 0 003 3h1m12-5h2v2a3 3 0 01-3 3h-1"/></svg><span id="cc"></span></div><span id="cr" class="c-pill px-4 py-1.5 rounded-full text-[20px] font-extrabold tracking-tight border" style="background:#e62e452e;border-color:#e62e458c;color:#FF7084"></span></div>
+<div class="c-meta fi flex-wrap gap-3 text-[19px] font-bold text-slate-200"><span id="cd"></span><span class="text-slate-500">•</span><span class="inline-flex items-center gap-1.5 text-white"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#E62E45" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="8" rx="9" ry="3.5"/><path d="M3 8v6c0 1.93 4.03 3.5 9 3.5s9-1.57 9-3.5V8M7 11.2v5.8M12 11.5v6M17 11.2v5.8"/></svg><span id="cs"></span></span><span id="cb" class="px-3 py-0.5 rounded-full bg-[#38BDF8]/18 border border-[#38BDF8]/45 text-[#7DD3FC] text-[17px] font-extrabold"></span></div>
+</div>
+<div id="bl" class="fi gap-3 shrink-0" dir="ltr"><svg width="56" height="56" viewBox="0 0 48 48" fill="none" style="filter:drop-shadow(0 6px 14px rgba(230,46,69,.35))"><path d="M24 2.5L42 10.2V23.4C42 34.6 34.3 43 24 45.6C13.7 43 6 34.6 6 23.4V10.2Z" fill="#152347" stroke="#E62E45" stroke-width="2.6"/><circle cx="24" cy="24" r="9.5" stroke="#f8fafc47" stroke-width="1.5"/><line x1="24" y1="9" x2="24" y2="39" stroke="#f8fafc47" stroke-width="1.2" stroke-dasharray="2.5 2.5"/><path d="M16.5 16.5L31.5 31.5M31.5 16.5L16.5 31.5" stroke="#E62E45" stroke-width="3.2" stroke-linecap="round"/><circle cx="24" cy="24" r="3" fill="#F8FAFC"/></svg><div class="brand-txt fd font-extrabold text-[34px] leading-none tracking-tight"><span style="color:#E62E45">XG</span><span style="color:#F8FAFC">Pedia</span></div></div>
+</header>
+<div id="cmb" class="relative z-10 flex-1 px-[38px] py-1.5 fcol justify-between gap-4 overflow-hidden"><section id="hs" class="shrink-0"></section><section id="mg" class="flex-1 min-h-0"></section></div>
+<footer id="cf" class="relative z-10 px-[42px] pt-2.5 pb-4 shrink-0"><div class="border-t border-white/14 mb-2.5"></div><div class="fbw gap-4"><div class="fi gap-2.5 min-w-0"><span class="w-3 h-3 rounded-full bg-[#E62E45] shrink-0 shadow-[0_0_12px_#E62E45]"></span><span id="ct" dir="ltr" class="ft-txt fm text-[18px] font-extrabold tracking-[0.14em] uppercase text-slate-100 truncate"></span></div><div class="fi gap-3 fm shrink-0" dir="ltr"><span class="ft-txt text-[20px] font-extrabold text-white">@XGPedia</span><span class="text-slate-500 text-[18px]">|</span><span id="so" class="ft-txt text-[17px] font-semibold text-slate-300"></span></div></div></footer>
+</div></div></div></div>
+<div class="fixed lg:absolute bottom-[78px] lg:bottom-4 left-1/2 -translate-x-1/2 z-20 fi gap-1.5 p-1.5 rounded-2xl bg-[#070D1D]/92 backdrop-blur-xl border border-white/15 shadow-2xl max-w-[96vw]">
+<button id="zo" title="کوچک‌نمایی" class="zpm">−</button><button data-z="1" class="zb">تناسب</button><button data-z="1.5" class="zb fm">1.5×</button><button data-z="2" class="zb fm">2×</button><button id="zi" title="بزرگ‌نمایی" class="zpm">+</button>
+<button id="ts" class="hidden min-h-[36px] lg:min-h-[32px] px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-slate-300 text-xs font-bold items-center gap-1.5 whitespace-nowrap transition mr-1"><span>راهنمای امن استوری</span></button>
+</div>
+</main>
+</div>
+<nav aria-label="ناوبری موبایل" class="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[#070D1D]/95 backdrop-blur-xl border-t border-white/12 spb"><div class="grid grid-cols-2 px-1.5 py-1.5 gap-1">
+<button data-n="preview" class="mnb"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span class="text-[11px] font-extrabold">پیش‌نمایش</span></button>
+<button data-n="slides" class="mnb"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg><span class="text-[11px] font-bold">تنظیمات و اسلایدها</span></button>
+</div></nav>
+<div id="to" role="status" aria-live="polite" class="fixed bottom-24 lg:bottom-5 left-1/2 -translate-x-1/2 lg:left-5 lg:translate-x-0 z-50 px-4 py-2.5 rounded-xl bg-[#0F172A]/95 backdrop-blur-md border border-[#E62E45]/60 text-white text-xs font-bold shadow-2xl whitespace-nowrap opacity-0 pointer-events-none transition-opacity duration-200"></div>
+<script>
+(()=>{
+'use strict';
+
+// 5 curated football rivalry presets
+const PRESETS={
+ars_liv:{competition:'لیگ برتر انگلیس',round:'آمار تاریخ تقابل‌ها • از ۱۸۹۳',leagueEn:'PREMIER LEAGUE',eraNote:'نبرد کلاسیک فوتبال انگلیس',stadiumScope:'امارات / آنفیلد',scopeBadge:'تمامی رقابت‌ها',source:'Opta / XGPedia Archive',draws:66,
+home:{name:'آرسنال',sub:'میکل آرتتا • توپچی‌های لندن',code:'ARS',color:'#EF0107',secondary:'#FFFFFF',logoUrl:'',wins:82,goals:312,xgPerMatch:1.56,cleanSheets:58,last10WinPct:40,streak:'۵ تقابل بدون شکست در لیگ',biggestWin:'۵ - ۰ (لیگ ۱۹۳۷)',venueName:'ورزشگاه امارات / هایبری',venueStats:{w:54,d:34,l:33,gf:1.74,ga:1.18},king:{name:'تیری آنری',era:'اسطوره خط حمله',goals:9,assists:5,mpg:142,num:'14'}},
+away:{name:'لیورپول',sub:'آرنه اسلوت • قرمزهای مرسی‌ساید',code:'LIV',color:'#38BDF8',secondary:'#F6EB61',logoUrl:'',wins:94,goals:364,xgPerMatch:1.69,cleanSheets:67,last10WinPct:30,streak:'برتری تاریخی در مجموع بردها',biggestWin:'۵ - ۱ (لیگ ۲۰۱۸)',venueName:'ورزشگاه آنفیلد',venueStats:{w:61,d:32,l:28,gf:1.92,ga:1.09},king:{name:'محمد صلاح',era:'وینگر راست • فعال',goals:11,assists:4,mpg:128,num:'11'}},
+recent5:[{date:'آبان ۱۴۰۴',comp:'لیگ برتر',venue:'امارات',hg:2,ag:2,hxg:1.48,axg:1.32},{date:'بهمن ۱۴۰۳',comp:'لیگ برتر',venue:'امارات',hg:3,ag:1,hxg:2.84,axg:.62},{date:'دی ۱۴۰۳',comp:'جام حذفی',venue:'امارات',hg:0,ag:2,hxg:1.95,axg:1.18},{date:'دی ۱۴۰۳',comp:'لیگ برتر',venue:'آنفیلد',hg:1,ag:1,hxg:.94,axg:1.26},{date:'فروردین ۱۴۰۳',comp:'لیگ برتر',venue:'آنفیلد',hg:2,ag:2,hxg:1.55,axg:2.78}],
+momentum8:[{label:'۱۴۰۱',hg:0,ag:2},{label:'۱۴۰۱',hg:3,ag:2},{label:'۱۴۰۲',hg:2,ag:2},{label:'۱۴۰۲',hg:1,ag:1},{label:'۱۴۰۳',hg:0,ag:2},{label:'۱۴۰۳',hg:3,ag:1},{label:'۱۴۰۴',hg:2,ag:2},{label:'اخیر',hg:2,ag:1}],
+timing:{home:[14,18,22,19,25,29],away:[16,21,19,24,22,26]},
+dna:{avgGoals:2.84,btts:65,over25:59,cards:4.3,headline:'تغییر موازنه به سود آرسنالِ آرتتا در دوئل‌های پرگل',body:'با وجود برتری تاریخی لیورپول در کل ادوار، آرسنال در ۵ تقابل اخیر لیگ برتر شکست نخورده و میانگین امید گل تولیدی دو تیم در این دوئل به ۳.۲۵ در هر مسابقه رسیده است.'}},
+
+prs_est:{competition:'لیگ برتر خلیج فارس',round:'شهرآورد ۱۰۵ پایتخت • از ۱۳۴۷',leagueEn:'TEHRAN DERBY',eraNote:'بزرگ‌ترین دربی غرب آسیا',stadiumScope:'ورزشگاه آزادی',scopeBadge:'تمامی رقابت‌ها',source:'Metrica / XGPedia Archive',draws:49,
+home:{name:'پرسپولیس',sub:'سرخپوشان پایتخت • آزادی',code:'PRS',color:'#E62E45',secondary:'#FFFFFF',logoUrl:'',wins:30,goals:104,xgPerMatch:1.31,cleanSheets:40,last10WinPct:50,streak:'۷ دربی بدون شکست در جریان بازی',biggestWin:'۶ - ۰ (شهریور ۱۳۵۲)',venueName:'میزبانی پرسپولیس',venueStats:{w:17,d:24,l:12,gf:1.14,ga:.92},king:{name:'صفر ایرانپاک',era:'رکورددار تاریخ دربی',goals:7,assists:2,mpg:158,num:'9'}},
+away:{name:'استقلال',sub:'آبی‌پوشان پایتخت • آزادی',code:'EST',color:'#3B82F6',secondary:'#F8FAFC',logoUrl:'',wins:26,goals:94,xgPerMatch:1.15,cleanSheets:36,last10WinPct:20,streak:'برترین کلین‌شیت‌های نیمه اول',biggestWin:'۳ - ۰ (دو بار در تاریخ)',venueName:'میزبانی استقلال',venueStats:{w:14,d:25,l:13,gf:1.04,ga:.98},king:{name:'غلامحسین مظلومی',era:'اسطوره آبی‌های پایتخت',goals:5,assists:3,mpg:166,num:'10'}},
+recent5:[{date:'مهر ۱۴۰۴',comp:'لیگ برتر',venue:'اراک',hg:1,ag:0,hxg:1.38,axg:.71},{date:'اسفند ۱۴۰۳',comp:'لیگ برتر',venue:'آزادی',hg:0,ag:0,hxg:.88,axg:.64},{date:'آذر ۱۴۰۳',comp:'لیگ برتر',venue:'آزادی',hg:1,ag:1,hxg:1.45,axg:1.12},{date:'خرداد ۱۴۰۳',comp:'فینال حذفی',venue:'آزادی',hg:2,ag:1,hxg:1.72,axg:.95},{date:'اردیبهشت ۱۴۰۳',comp:'لیگ برتر',venue:'آزادی',hg:1,ag:0,hxg:1.24,axg:.81}],
+momentum8:[{label:'دربی ۹۸',hg:1,ag:1},{label:'دربی ۹۹',hg:2,ag:2},{label:'دربی ۱۰۰',hg:1,ag:0},{label:'دربی ۱۰۱',hg:2,ag:1},{label:'دربی ۱۰۲',hg:1,ag:1},{label:'دربی ۱۰۳',hg:0,ag:0},{label:'دربی ۱۰۴',hg:1,ag:0},{label:'دربی ۱۰۵',hg:2,ag:1}],
+timing:{home:[9,14,19,17,21,24],away:[11,13,16,15,18,21]},
+dna:{avgGoals:1.89,btts:44,over25:32,cards:5.8,headline:'شهرآورد احتیاط و جزئیات؛ گل اول کلید قطعی پیروزی',body:'در ۴۷٪ از کل تاریخ دربی تهران بازی با تساوی تمام شده، اما در ۱۰ تقابل اخیر تیمی که گل نخست را به ثمر رسانده در ۸۰٪ موارد بازنده زمین را ترک نکرده است.'}},
+
+rma_bar:{competition:'لالیگا اسپانیا',round:'ال‌کلاسیکو • ۲۵۸ تقابل رسمی',leagueEn:'EL CLÁSICO',eraNote:'آرشیو رسمی از ۱۹۰۲ تا ۲۰۲۶',stadiumScope:'برنابئو / نوکمپ',scopeBadge:'تمامی رقابت‌ها',source:'Opta / LaLiga Archive',draws:52,
+home:{name:'رئال مادرید',sub:'سانتیاگو برنابئو • کهکشانی‌ها',code:'RMA',color:'#F59E0B',secondary:'#FFFFFF',logoUrl:'',wins:105,goals:433,xgPerMatch:1.79,cleanSheets:54,last10WinPct:60,streak:'برتری ۴ بردی در تاریخ رسمی',biggestWin:'۱۱ - ۱ (کوپا ۱۹۴۳)',venueName:'سانتیاگو برنابئو',venueStats:{w:66,d:25,l:38,gf:1.98,ga:1.32},king:{name:'کریستیانو رونالدو',era:'برترین گلزن رئال',goals:18,assists:1,mpg:141,num:'7'}},
+away:{name:'بارسلونا',sub:'اسپاتیفای نوکمپ • بلوگرانا',code:'BAR',color:'#E62E45',secondary:'#38BDF8',logoUrl:'',wins:101,goals:423,xgPerMatch:1.83,cleanSheets:51,last10WinPct:40,streak:'پیروزی ۴ گله در آخرین ال‌کلاسیکو',biggestWin:'۵ - ۰ (لالیگا ۲۰۱۰)',venueName:'ورزشگاه نوکمپ',venueStats:{w:63,d:27,l:39,gf:1.94,ga:1.36},king:{name:'لیونل مسی',era:'رکورددار مطلق تاریخ',goals:26,assists:14,mpg:149,num:'10'}},
+recent5:[{date:'آبان ۱۴۰۴',comp:'لالیگا',venue:'برنابئو',hg:0,ag:4,hxg:1.28,axg:2.65},{date:'اردیبهشت ۱۴۰۳',comp:'لالیگا',venue:'برنابئو',hg:3,ag:2,hxg:2.34,axg:1.56},{date:'دی ۱۴۰۳',comp:'سوپرکاپ',venue:'ریاض',hg:4,ag:1,hxg:2.91,axg:1.24},{date:'آبان ۱۴۰۳',comp:'لالیگا',venue:'مونتجوئیک',hg:2,ag:1,hxg:1.18,axg:1.52},{date:'فروردین ۱۴۰۲',comp:'کوپا دل ری',venue:'نوکمپ',hg:4,ag:0,hxg:2.62,axg:1.15}],
+momentum8:[{label:'۲۰۲۳',hg:3,ag:1},{label:'۲۰۲۳',hg:1,ag:3},{label:'۲۰۲۳',hg:1,ag:2},{label:'۲۰۲۳',hg:4,ag:0},{label:'۲۰۲۴',hg:2,ag:1},{label:'۲۰۲۴',hg:4,ag:1},{label:'۲۰۲۴',hg:3,ag:2},{label:'اخیر',hg:0,ag:4}],
+timing:{home:[22,26,31,29,34,38],away:[20,24,28,33,31,35]},
+dna:{avgGoals:3.32,btts:71,over25:76,cards:5.1,headline:'تضمین تماشا و گل؛ ۹ ال‌کلاسیکوی پیاپی بدون تساوی',body:'در ۹ تقابل رسمی اخیر هیچ مساوی ثبت نشده و میانگین گل‌ها به ۳.۸۸ گل در هر مسابقه رسیده است. نوسان شدید نتیجه، امضای اصلی نسل جدید ال‌کلاسیکو است.'}},
+
+bay_bvb:{competition:'بوندس‌لیگا آلمان',round:'در کلاسیکر • ۱۳۶ تقابل رسمی',leagueEn:'DER KLASSIKER',eraNote:'آرشیو رسمی از ۱۹۶۵ تا ۲۰۲۶',stadiumScope:'آلیانتس / ایدونا پارک',scopeBadge:'تمامی رقابت‌ها',source:'Opta / Bundesliga Archive',draws:36,
+home:{name:'بایرن مونیخ',sub:'آلیانتس آرنا • غول باواریا',code:'BAY',color:'#DC2626',secondary:'#FFFFFF',logoUrl:'',wins:67,goals:268,xgPerMatch:2.15,cleanSheets:34,last10WinPct:70,streak:'برتری قاطع در آمار گل‌های زده',biggestWin:'۱۱ - ۱ (بوندس‌لیگا ۱۹۷۱)',venueName:'آلیانتس آرنا',venueStats:{w:42,d:15,l:12,gf:2.48,ga:1.05},king:{name:'روبرت لواندوفسکی',era:'رکورددار در کلاسیکر',goals:32,assists:4,mpg:89,num:'9'}},
+away:{name:'دورتموند',sub:'سیگنال ایدونا پارک • زنبورها',code:'BVB',color:'#FACC15',secondary:'#111827',logoUrl:'',wins:33,goals:169,xgPerMatch:1.38,cleanSheets:22,last10WinPct:10,streak:'شکستن طلسم ۱۰ ساله مونیخ',biggestWin:'۵ - ۲ (فینال حذفی ۲۰۱۲)',venueName:'سیگنال ایدونا پارک',venueStats:{w:21,d:21,l:25,gf:1.54,ga:1.62},king:{name:'مارکو رویس',era:'کاپیتان افسانه‌ای',goals:12,assists:10,mpg:162,num:'11'}},
+recent5:[{date:'آذر ۱۴۰۴',comp:'بوندس‌لیگا',venue:'دورتموند',hg:1,ag:1,hxg:1.76,axg:.92},{date:'فروردین ۱۴۰۳',comp:'بوندس‌لیگا',venue:'مونیخ',hg:0,ag:2,hxg:1.65,axg:1.38},{date:'آبان ۱۴۰۳',comp:'بوندس‌لیگا',venue:'دورتموند',hg:4,ag:0,hxg:3.12,axg:.84},{date:'فروردین ۱۴۰۲',comp:'بوندس‌لیگا',venue:'مونیخ',hg:4,ag:2,hxg:2.88,axg:1.21},{date:'مهر ۱۴۰۱',comp:'بوندس‌لیگا',venue:'دورتموند',hg:2,ag:2,hxg:1.64,axg:1.59}],
+momentum8:[{label:'۲۰۲۱',hg:3,ag:1},{label:'۲۰۲۱',hg:3,ag:2},{label:'۲۰۲۲',hg:3,ag:1},{label:'۲۰۲۲',hg:2,ag:2},{label:'۲۰۲۳',hg:4,ag:2},{label:'۲۰۲۳',hg:4,ag:0},{label:'۲۰۲۴',hg:0,ag:2},{label:'اخیر',hg:1,ag:1}],
+timing:{home:[19,25,28,31,27,35],away:[14,16,19,22,18,26]},
+dna:{avgGoals:3.21,btts:68,over25:74,cards:3.9,headline:'ماشین گلزنی باواریا در برابر انفجار دیوار زرد',body:'در کلاسیکر با میانگین ۳.۲۱ گل در هر مسابقه یکی از هجومی‌ترین دوئل‌های اروپاست؛ بایرن در آلیانتس آرنا به طور میانگین ۲.۴۸ گل در هر بازی به دورتموند زده است.'}},
+
+mil_int:{competition:'سری آ ایتالیا',round:'دربی دلا مدونینا • ۲۴۰ تقابل رسمی',leagueEn:'DERBY DELLA MADONNINA',eraNote:'آرشیو رسمی از ۱۹۰۹ تا ۲۰۲۶',stadiumScope:'سن سیرو (جوزپه مئاتزا)',scopeBadge:'تمامی رقابت‌ها',source:'Opta / Serie A Archive',draws:69,
+home:{name:'آث میلان',sub:'روسونری • سن سیرو',code:'MIL',color:'#E11D48',secondary:'#111827',logoUrl:'',wins:80,goals:315,xgPerMatch:1.34,cleanSheets:56,last10WinPct:30,streak:'پایان طلسم ۶ شکست پیاپی در دربی',biggestWin:'۶ - ۰ (سری آ ۲۰۰۱)',venueName:'میزبانی میلان (سن سیرو)',venueStats:{w:42,d:35,l:43,gf:1.38,ga:1.35},king:{name:'آندری شوچنکو',era:'آقای‌گل تاریخ دربی',goals:14,assists:3,mpg:112,num:'7'}},
+away:{name:'اینتر میلان',sub:'نراتزوری • جوزپه مئاتزا',code:'INT',color:'#2563EB',secondary:'#0F172A',logoUrl:'',wins:91,goals:338,xgPerMatch:1.58,cleanSheets:63,last10WinPct:60,streak:'برتری ۱۱ بردی در تاریخ رسمی',biggestWin:'۵ - ۱ (سری آ ۲۰۲۳)',venueName:'میزبانی اینتر (مئاتزا)',venueStats:{w:48,d:34,l:38,gf:1.52,ga:1.24},king:{name:'جوزپه مئاتزا',era:'اسطوره نراتزوری',goals:13,assists:5,mpg:125,num:'10'}},
+recent5:[{date:'مهر ۱۴۰۴',comp:'سری آ',venue:'سن سیرو',hg:2,ag:1,hxg:1.62,axg:1.18},{date:'اردیبهشت ۱۴۰۳',comp:'سری آ',venue:'سن سیرو',hg:1,ag:2,hxg:1.12,axg:1.84},{date:'شهریور ۱۴۰۲',comp:'سری آ',venue:'مئاتزا',hg:1,ag:5,hxg:.98,axg:2.74},{date:'اردیبهشت ۱۴۰۲',comp:'لیگ قهرمانان',venue:'مئاتزا',hg:0,ag:1,hxg:.65,axg:1.48},{date:'اردیبهشت ۱۴۰۲',comp:'لیگ قهرمانان',venue:'سن سیرو',hg:0,ag:2,hxg:.82,axg:2.15}],
+momentum8:[{label:'۲۰۲۲',hg:3,ag:2},{label:'۲۰۲۳',hg:0,ag:3},{label:'۲۰۲۳',hg:0,ag:1},{label:'۲۰۲۳',hg:0,ag:2},{label:'۲۰۲۳',hg:0,ag:1},{label:'۲۰۲۳',hg:1,ag:5},{label:'۲۰۲۴',hg:1,ag:2},{label:'اخیر',hg:2,ag:1}],
+timing:{home:[15,19,23,21,24,28],away:[18,22,20,26,29,32]},
+dna:{avgGoals:2.72,btts:61,over25:57,cards:5.4,headline:'حکمرانی تاکتیکی اینتر در نیمه دوم و بازگشت غرور روسونری',body:'اینتر با تکیه بر ساختار ۳-۵-۲ در ۶۰٪ از ۱۰ دربی اخیر پیروز شده، اما گل‌های پایانی پس از دقیقه ۷۵ بیشترین سهم را در تعیین سرنوشت دربی میلان داشته‌اند.'}}
+};
+
+const F={'4:5':[1080,1350,'پست 4:5'],'9:16':[1080,1920,'استوری 9:16'],'16:9':[1920,1080,'بنر 16:9']};
+const MD=[['chronicle','نوار سینمایی ۵ تقابل اخیر (Chronicle)',0],['balance','ترازوی نبرد و بزرگ‌ترین بردها (Balance)',1],['momentum','موج نوسان برتری (Momentum Wave)',0],['fortress','دژ خانگی و تفکیک میزبانی (Fortress)',1],['kings','پادشاهان و آقای‌گل‌های تقابل (Kings)',1],['dna','امضای آماری و DNA تقابل (Fixture DNA)',1],['timing','نقشه دقیقه انفجار گل‌ها (Goal Timing)',1]];
+const SU=[['slide1','اسلاید ۱: نمای کلی و تاریخچه (پیشنهادی)','SLIDE 1','اسلاید ۱ • اصلی'],['slide2','اسلاید ۲: موج برتری و دژ خانگی','SLIDE 2','اسلاید ۲ • موج و دژ'],['slide3','اسلاید ۳: اسطوره‌ها و دقیقه انفجار','SLIDE 3','اسلاید ۳ • اسطوره و زمان'],['slide4','اسلاید ۴: DNA تقابل و تاریخچه','SLIDE 4','اسلاید ۴ • DNA و حکم'],['slide5','اسلاید ۵: پوستر جامع کامل (Showreel)','SHOWREEL','اسلاید ۵ • جامع'],['custom','حالت کاستوم (دلخواه)','CUSTOM']];
+
+const $=i=>document.getElementById(i),$$=s=>document.querySelectorAll(s),on=(s,f)=>$$(s).forEach(e=>e.onclick=()=>f(e));
+const f1=v=>(+v).toFixed(1),f2=v=>(+v).toFixed(2),fa=v=>String(v).replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d]);
+const S={fmt:'4:5',sp:'slide1',hm:'full',atm:'cinematic',sz:true,mv:'preview',zm:1,tab:'slides',mods:MD.map(([id])=>({id,e:id==='chronicle'||id==='balance',s:'full'})),m:structuredClone(PRESETS.ars_liv)};
+
+// Luminance, contrast, toast & smooth spline helpers
+const lum=h=>{const c=(h||'#E62E45').replace('#',''),n=parseInt(c.length===3?c.replace(/./g,x=>x+x):c,16)||0,a=[n>>16&255,n>>8&255,n&255].map(v=>(v/=255)<=.03928?v/12.92:((v+.055)/1.055)**2.4);return a[0]*.2126+a[1]*.7152+a[2]*.0722};
+const ctr=h=>lum(h)>.52?'#070D1D':'#fff';
+const T=msg=>{const e=$('to');if(!e)return;e.textContent=msg;e.classList.replace('opacity-0','opacity-100');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.replace('opacity-100','opacity-0'),2500)};
+const spL=(P,t=.24)=>P.length<2?P[0]?`M${P[0].x} ${P[0].y}`:'':P.reduce((d,p,i)=>{if(!i)return`M${f1(p.x)} ${f1(p.y)}`;const a=P[i-2]||P[0],b=P[i-1],c=P[i+1]||p;return`${d} C${f1(b.x+(p.x-a.x)*t)} ${f1(b.y+(p.y-a.y)*t)},${f1(p.x-(c.x-b.x)*t)} ${f1(p.y-(c.y-b.y)*t)},${f1(p.x)} ${f1(p.y)}`},'');
+
+// Sculpted SVG crest + optional custom logo URL
+const cr=(t,sd,sz,ret=1)=>{
+const p=t.color||'#EF0107',s=t.secondary||'#fff',cd=(t.code||'FC').slice(0,3).toUpperCase(),u=`${sd}_${sz}`,d='M90 16L150 40V88C150 128 124.5 156.5 90 166C55.5 156.5 30 128 30 88V40Z';
+const fb=`<svg width="${sz}" height="${sz}" viewBox="0 0 180 180" fill="none" style="filter:drop-shadow(0 14px 28px ${p}52) drop-shadow(0 8px 16px #000000a6)"><defs><linearGradient id="g${u}" x1="20" y1="15" x2="160" y2="165" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="${s}" stop-opacity=".98"/><stop offset=".48" stop-color="${p}" stop-opacity=".95"/><stop offset="1" stop-color="${s}" stop-opacity=".75"/></linearGradient><clipPath id="c${u}"><path d="${d}"/></clipPath></defs>${ret?`<circle cx="90" cy="92" r="85" stroke="${p}" stroke-opacity=".35" stroke-width="1.5" stroke-dasharray="10 6 3 6"/><circle cx="90" cy="92" r="76" stroke="#F8FAFC" stroke-opacity=".14"/><path d="M90 3V11M90 173V181M3 92H11M169 92H177" stroke="${p}" stroke-opacity=".65" stroke-width="2" stroke-linecap="round"/>`:''}<path d="M90 10L156 37V88C156 132 128 162 90 172C52 162 24 132 24 88V37Z" fill="${p}" fill-opacity=".24"/><g clip-path="url(#c${u})"><rect x="25" y="12" width="130" height="158" fill="${p}"/><path d="M25 114L155 54V84L25 144Z" fill="${s}" fill-opacity=".28"/><path d="M90 16L150 40V58L90 34L30 58V40Z" fill="${s}" fill-opacity=".92"/><ellipse cx="90" cy="26" rx="68" ry="28" fill="#fff" fill-opacity=".22"/></g><path d="${d}" stroke="url(#g${u})" stroke-width="5"/><rect x="42" y="68" width="96" height="48" rx="14" fill="${lum(p)>.62?'#0D1730':'#060c1bc4'}" stroke="${s}" stroke-opacity=".6" stroke-width="2"/><text x="90" y="102" text-anchor="middle" fill="#fff" font-family="Space Grotesk,JetBrains Mono,sans-serif" font-weight="800" font-size="31" letter-spacing="2">${cd}</text><circle cx="90" cy="136" r="5" fill="${ctr(p)}" fill-opacity=".92"/></svg>`;
+if(t.logoUrl&&t.logoUrl.trim())return`<div class="relative fc" style="width:${sz}px;height:${sz}px">${ret?`<svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 180 180" fill="none"><circle cx="90" cy="90" r="85" stroke="${p}" stroke-opacity=".42" stroke-width="1.6" stroke-dasharray="10 6 3 6"/><circle cx="90" cy="90" r="76" stroke="#F8FAFC" stroke-opacity=".16"/></svg>`:''}<img src="${t.logoUrl.trim()}" alt="${t.name}" crossorigin="anonymous" style="width:${Math.round(sz*.78)}px;height:${Math.round(sz*.78)}px;object-fit:contain;filter:drop-shadow(0 12px 24px ${p}55) drop-shadow(0 6px 12px #0009)" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div style="display:none">${fb}</div></div>`;
+return fb;
+};
+
+const mh=(t,r,b='bg-[#E62E45]',mb='mb-3 pb-2.5')=>`<div class="mh fbw ${mb} border-b border-white/12"><div class="fi gap-3 min-w-0"><span class="w-2 h-7 rounded-full ${b} shrink-0 shadow-[0_0_12px_currentColor]"></span><h3 class="mt text-[26px] font-black text-white truncate">${t}</h3></div><div class="mh-sub shrink-0">${r}</div></div>`;
+const pillBar=(pH,pD,pA,hc,ac,cp)=>{const mn=cp?12:10;return`<div class="pc${cp?' pcc':''}"><div class="ps" style="width:${f1(pH)}%;background:${hc};color:${ctr(hc)}">${pH>=mn?fa(Math.round(pH))+'٪':''}</div><div class="ps-sep"></div><div class="ps" style="width:${f1(pD)}%;background:#475569;color:#F8FAFC">${pD>=mn?fa(Math.round(pD))+'٪':''}</div><div class="ps-sep"></div><div class="ps" style="width:${f1(pA)}%;background:${ac};color:${ctr(ac)}">${pA>=mn?fa(Math.round(pA))+'٪':''}</div></div>`};
+
+// 240-deg orbital dominance chronograph SVG
+function chronoSVG(hw,dr,aw,hc,ac){
+const tot=Math.max(1,hw+dr+aw),cx=160,cy=148,R=108,Rt=126,s0=-30,e0=210,sp=240,g=5.5,u=sp-g*2,aH=hw/tot*u,aD=dr/tot*u;
+const arc=(s,e,r)=>{if(e-s<=.6)return'';const rad=d=>d*Math.PI/180;return`M ${f1(cx+r*Math.cos(rad(s)))} ${f1(cy-r*Math.sin(rad(s)))} A ${r} ${r} 0 ${e-s>180?1:0} 0 ${f1(cx+r*Math.cos(rad(e)))} ${f1(cy-r*Math.sin(rad(e)))}`};
+const s1=s0,e1=s1+aH,s2=e1+g,e2=s2+aD,s3=e2+g;
+let tk='';for(let i=0;i<=48;i++){const rad=(s0+i/48*sp)*Math.PI/180,mj=i%6===0,r1=Rt+(mj?0:3.5),r2=Rt+(mj?12:8);tk+=`<line x1="${f1(cx+r1*Math.cos(rad))}" y1="${f1(cy-r1*Math.sin(rad))}" x2="${f1(cx+r2*Math.cos(rad))}" y2="${f1(cy-r2*Math.sin(rad))}" stroke="#F8FAFC" stroke-opacity="${mj?.52:.18}" stroke-width="${mj?2.2:1.2}" stroke-linecap="round"/>`}
+return`<svg viewBox="0 0 320 248" class="hero-gauge-svg w-full max-w-[300px] h-auto overflow-visible" fill="none"><defs><filter id="cgGlow" x="-25%" y="-25%" width="150%" height="150%"><feGaussianBlur stdDeviation="4.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><circle cx="${cx}" cy="${cy}" r="88" fill="#060D1E" fill-opacity=".75" stroke="#ffffff14" stroke-width="1.5"/><circle cx="${cx}" cy="${cy}" r="78" stroke="#E62E45" stroke-opacity=".22" stroke-dasharray="3 5"/>${tk}<path d="${arc(s0,e0,R)}" stroke="#ffffff14" stroke-width="18" stroke-linecap="round"/><path d="${arc(s1,e1,R)}" stroke="${hc}" stroke-width="18" stroke-linecap="round" filter="url(#cgGlow)"/><path d="${arc(s2,e2,R)}" stroke="#94A3B8" stroke-width="15" stroke-linecap="round"/><path d="${arc(s3,e0,R)}" stroke="${ac}" stroke-width="18" stroke-linecap="round" filter="url(#cgGlow)"/><text x="${cx}" y="${cy+6}" text-anchor="middle" fill="#fff" font-family="Vazirmatn" font-weight="900" font-size="54">${fa(tot)}</text><text x="${cx}" y="${cy+34}" text-anchor="middle" fill="#CBD5E1" font-family="Vazirmatn" font-weight="800" font-size="17">مجموع تقابل‌ها</text><g transform="translate(${cx},216)"><line x1="-68" y1="0" x2="-34" y2="0" stroke="#E62E45" stroke-opacity=".55" stroke-width="1.8"/><line x1="34" y1="0" x2="68" y2="0" stroke="#E62E45" stroke-opacity=".55" stroke-width="1.8"/><rect x="-26" y="-26" width="52" height="52" rx="12" transform="rotate(45)" fill="#E62E45" stroke="#ffffff55" stroke-width="2" filter="url(#cgGlow)"/><text x="0" y="7" text-anchor="middle" fill="#fff" font-family="Space Grotesk" font-weight="800" font-size="21" letter-spacing="1">H2H</text></g></svg>`;
+}
+
+// Hero renderer (full & compact)
+function heroH(){
+const m=S.m,hc=m.home.color,ac=m.away.color,hw=+m.home.wins||0,dr=+m.draws||0,aw=+m.away.wins||0,tot=Math.max(1,hw+dr+aw),pH=hw/tot*100,pD=dr/tot*100,pA=aw/tot*100,avg=((+m.home.goals||0)+(+m.away.goals||0))/tot;
+if(S.hm==='compact'){
+const tb=(t,sd,k,w,rv)=>{const a=`<div class="shrink-0">${cr(t,sd,74,0)}</div>`,b=`<div class="min-w-0"><div class="text-[30px] font-black text-white leading-tight truncate">${t.name}</div><div class="text-[17px] font-extrabold truncate" style="color:${k}">${fa(w)} برد • ${fa(t.goals)} گل زده</div></div>`;return`<div class="col-span-4 fi ${rv?'justify-end text-left':''} gap-3.5 min-w-0">${rv?b+a:a+b}</div>`};
+return`<div class="rounded-[24px] bg-[#0B162F]/92 border border-white/16 px-6 py-3.5 fcol gap-3 shadow-2xl"><div class="grid grid-cols-11 items-center gap-3">${tb(m.home,'h',hc,hw,0)}<div class="col-span-3 fcol items-center justify-center"><div class="px-4 py-1 rounded-full bg-[#E62E45] text-white fd font-extrabold text-[16px] leading-none tracking-wider shadow-lg shadow-[#E62E45]/40 mb-1.5">H2H • ${fa(tot)}</div><div class="fc gap-3 px-4 py-1 rounded-2xl bg-[#050B1A] border border-white/15 shadow-inner"><span class="text-[29px] font-black leading-none" style="color:${hc}">${fa(hw)}</span><span class="text-[22px] font-black text-slate-400 leading-none">${fa(dr)}</span><span class="text-[29px] font-black leading-none" style="color:${ac}">${fa(aw)}</span></div></div>${tb(m.away,'a',ac,aw,1)}</div>${pillBar(pH,pD,pA,hc,ac,1)}</div>`;
+}
+const b16=S.fmt==='16:9',dt=S.sp==='slide5',cS=dt?112:b16?128:150,nS=dt?'text-[30px]':b16?'text-[38px]':'text-[46px]';
+const mn=(t,sd,k,w)=>`<div class="col-span-4 fcol items-center text-center min-w-0"><div class="fc mb-1.5">${cr(t,sd,cS,1)}</div><h2 class="hero-name ${nS} font-black text-white leading-[1.06] tracking-tight truncate max-w-full">${t.name}</h2><p class="hero-sub text-[18px] font-bold text-slate-300 mt-1 line-clamp-1 max-w-[300px]">${t.sub||''}</p><div class="hero-win-box mt-2.5 px-4 py-1.5 rounded-2xl bg-[#071024]/90 border flex items-baseline justify-center gap-2 shadow-lg" style="border-color:${k}66;box-shadow:0 8px 24px -8px ${k}55,inset 0 1px 0 #ffffff1a"><span class="hero-win-num text-[32px] font-black leading-none" style="color:${k}">${fa(w)}</span><span class="text-[17px] font-extrabold text-slate-200">پیروزی</span></div><div class="mt-2 px-3 py-0.5 rounded-full text-[14px] font-extrabold truncate max-w-full border" style="background:${k}1c;border-color:${k}52;color:${lum(k)>.62?'#FEF08A':'#F8FAFC'}">${t.streak||'رقیب سنتی'}</div></div>`;
+return`<div class="fcol justify-between gap-3"><div class="grid grid-cols-11 items-center gap-2">${mn(m.home,'h',hc,hw)}<div class="col-span-3 fcol items-center justify-center">${chronoSVG(hw,dr,aw,hc,ac)}</div>${mn(m.away,'a',ac,aw)}</div><div class="space-y-2">${pillBar(pH,pD,pA,hc,ac,0)}<div class="hero-strip grid grid-cols-3 items-center px-5 py-2 rounded-2xl bg-[#071024]/92 border border-white/14 shadow-inner"><div class="fi gap-3 justify-start"><span class="hero-strip-val text-[24px] font-black leading-none" style="color:${hc}">${fa(m.home.goals)}</span><span class="hero-strip-lbl text-[16px] font-bold text-slate-300">گل زده</span><span class="text-slate-600">•</span><span class="hero-strip-val text-[21px] font-extrabold text-white">${fa(m.home.cleanSheets)}</span><span class="hero-strip-lbl text-[15px] font-bold text-slate-400">کلین‌شیت</span></div><div class="fc gap-2"><span class="px-3 py-0.5 rounded-full bg-white/8 border border-white/14 text-[16px] font-extrabold text-slate-200">میانگین گل: <strong class="text-amber-300">${fa(f2(avg))}</strong></span></div><div class="fi gap-3 justify-end"><span class="hero-strip-lbl text-[15px] font-bold text-slate-400">کلین‌شیت</span><span class="hero-strip-val text-[21px] font-extrabold text-white">${fa(m.away.cleanSheets)}</span><span class="text-slate-600">•</span><span class="hero-strip-lbl text-[16px] font-bold text-slate-300">گل زده</span><span class="hero-strip-val text-[24px] font-black leading-none" style="color:${ac}">${fa(m.away.goals)}</span></div></div></div></div>`;
+}
+
+// 7 H2H data modules
+function modH(mod,b2){
+const m=S.m,hc=m.home.color,ac=m.away.color,id=mod.id;
+const sc=b2?(['chronicle','momentum','dna'].includes(id)?'col-span-2':'col-span-1'):mod.s==='half'?'mf':'w-full';
+
+if(id==='chronicle'){
+const cards=(m.recent5||[]).map((g,i)=>{
+const wc=g.hg>g.ag?hc:g.ag>g.hg?ac:'#94A3B8',lt=!i,tx=Math.max(.1,(+g.hxg||0)+(+g.axg||0)),hp=(+g.hxg||0)/tx*100;
+return`<div class="tl-card relative z-10 flex-1 min-w-0 rounded-2xl bg-[#091226]/95 p-3 fcol items-center justify-between gap-2 text-center shadow-lg" style="border:${lt?'2px solid #E62E45':'1.5px solid #ffffff1c'};${lt?'box-shadow:0 0 24px -6px rgba(230,46,69,.55)':`border-top:3.5px solid ${wc}`}">${lt?'<span class="px-2.5 py-0.5 rounded-full bg-[#E62E45] text-white text-[11px] font-black tracking-tight shadow">آخرین تقابل</span>':`<span class="tl-meta text-[12px] font-bold text-slate-400 truncate w-full">${g.date}</span>`}<div class="w-full fc gap-1.5 text-[12px] tl-meta font-bold text-slate-300"><span class="px-1.5 py-0.5 rounded bg-white/8 text-slate-200 truncate">${g.comp}</span></div><div dir="ltr" class="tl-score px-3.5 py-1.5 rounded-xl font-black text-[28px] leading-none tracking-wide border shadow-md" style="background:${wc}26;border-color:${wc}88;color:#fff">${fa(g.hg)} - ${fa(g.ag)}</div><div class="w-full space-y-1.5"><div class="h-1.5 w-full rounded-full overflow-hidden flex bg-white/10" dir="ltr"><div style="width:${f1(hp)}%;background:${hc}"></div><div style="width:${f1(100-hp)}%;background:${ac}"></div></div><div class="tl-xg text-[13px] font-extrabold text-slate-200 fm" dir="ltr">xG ${fa(f1(g.hxg))} - ${fa(f1(g.axg))}</div><div class="fi justify-center gap-1.5 text-[12px] tl-meta font-bold text-slate-400"><span class="w-2 h-2 rounded-full shrink-0" style="background:${wc}"></span><span class="truncate">${g.venue}</span></div></div></div>`;
+}).join('');
+return`<div class="xm flex-1 ${sc}">${mh('نوار سینمایی ۵ تقابل اخیر','<span class="text-[17px] fm font-extrabold text-slate-300">RECENT 5 CHRONICLE</span>','bg-[#E62E45]','pb-2 mb-2.5')}<div class="relative flex-1 fc"><div class="absolute inset-x-6 top-1/2 -translate-y-1/2 h-[3px] rounded-full opacity-45 pointer-events-none" style="background:linear-gradient(90deg,${ac},#E62E45,${hc})"></div><div class="grid grid-cols-5 gap-3 w-full items-stretch">${cards}</div></div></div>`;
+}
+
+if(id==='balance'){
+const rw=[['مجموع گل‌های زده',+m.home.goals||0,+m.away.goals||0,0,''],['میانگین xG در تقابل',+m.home.xgPerMatch||1.4,+m.away.xgPerMatch||1.3,2,''],['کلین‌شیت (بسته نگه داشتن دروازه)',+m.home.cleanSheets||0,+m.away.cleanSheets||0,0,''],['درصد برد در ۱۰ بازی اخیر',+m.home.last10WinPct||40,+m.away.last10WinPct||30,0,'٪']];
+return`<div class="xm flex-1 ${sc}">${mh('ترازوی نبرد و تفاضل قدرت','<span class="text-[17px] fm font-extrabold text-slate-300">POWER BALANCE</span>','bg-[#E62E45]','pb-2 mb-2')}<div class="flex-1 min-h-0 fcol justify-center gap-2.5">${rw.map(([l,h,a,d,u])=>{const mx=Math.max(h,a,.01);return`<div class="space-y-1"><div class="grid grid-cols-3 items-center"><span class="bal-val text-right text-[27px] font-black leading-none" style="color:${hc}">${fa(d?h.toFixed(d):Math.round(h))}${u}</span><span class="bal-lbl text-center text-[19px] font-extrabold text-slate-100 leading-tight">${l}</span><span class="bal-val text-left text-[27px] font-black leading-none" style="color:${ac}">${fa(d?a.toFixed(d):Math.round(a))}${u}</span></div><div class="grid grid-cols-2 gap-2"><div class="ct hs"><div class="ch" style="width:${f1(h/mx*100)}%;background:${hc}"></div></div><div class="ct as"><div class="ca" style="width:${f1(a/mx*100)}%;background:${ac}"></div></div></div></div>`}).join('')}</div><div class="mt-2.5 pt-2.5 border-t border-white/12 grid grid-cols-2 gap-3"><div class="bal-big px-3.5 py-2 rounded-xl border fbw gap-2" style="background:${hc}18;border-color:${hc}4a;border-right:4.5px solid ${hc}"><span class="text-[14px] font-bold text-slate-300">بزرگ‌ترین برد ${m.home.name}</span><span class="text-[16px] font-black text-white">${fa(m.home.biggestWin)}</span></div><div class="bal-big px-3.5 py-2 rounded-xl border fbw gap-2" style="background:${ac}18;border-color:${ac}4a;border-left:4.5px solid ${ac}"><span class="text-[16px] font-black text-white">${fa(m.away.biggestWin)}</span><span class="text-[14px] font-bold text-slate-300">بزرگ‌ترین برد ${m.away.name}</span></div></div></div>`;
+}
+
+if(id==='momentum'){
+const arr=m.momentum8||[],df=arr.map(g=>g.hg-g.ag),mx=Math.max(3,...df.map(Math.abs)),W=900,H=225,px=54,py=38,my=H/2,pW=W-px*2,hh=my-py;
+const pts=df.map((d,i)=>({x:px+(arr.length>1?i/(arr.length-1)*pW:pW/2),y:my-d/mx*hh,d,g:arr[i]}));
+const cv=spL(pts,.22),ap=`${cv} L ${f1(pts[pts.length-1].x)} ${my} L ${f1(pts[0].x)} ${my} Z`;
+const lg=`<div class="fi gap-4 text-[17px] font-extrabold"><span class="inline-flex items-center gap-2"><span class="w-3 h-3 rounded-full" style="background:${hc}"></span>برتری ${m.home.name}</span><span class="inline-flex items-center gap-2"><span class="w-3 h-3 rounded-full" style="background:${ac}"></span>برتری ${m.away.name}</span></div>`;
+return`<div class="xm flex-1 ${sc}">${mh('موج نوسان برتری در ۸ تقابل اخیر',lg,'bg-[#E62E45]','pb-2 mb-1.5')}<div class="flex-1 fc min-h-0" dir="ltr"><svg class="mom-svg w-full h-auto max-h-[260px]" viewBox="0 0 ${W} ${H+38}" fill="none"><defs><linearGradient id="mUp" x1="0" y1="${py}" x2="0" y2="${my}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="${hc}" stop-opacity=".68"/><stop offset="1" stop-color="${hc}" stop-opacity=".06"/></linearGradient><linearGradient id="mDn" x1="0" y1="${my}" x2="0" y2="${H-py}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="${ac}" stop-opacity=".06"/><stop offset="1" stop-color="${ac}" stop-opacity=".68"/></linearGradient><clipPath id="cpUp"><rect x="0" y="0" width="${W}" height="${my}"/></clipPath><clipPath id="cpDn"><rect x="0" y="${my}" width="${W}" height="${H-my}"/></clipPath></defs><line x1="${px}" y1="${py}" x2="${W-px}" y2="${py}" stroke="#ffffff14" stroke-dasharray="5 5"/><line x1="${px}" y1="${H-py}" x2="${W-px}" y2="${H-py}" stroke="#ffffff14" stroke-dasharray="5 5"/><line x1="${px-16}" y1="${my}" x2="${W-px+16}" y2="${my}" stroke="#E2E8F0" stroke-opacity=".55" stroke-width="2" stroke-dasharray="6 4"/><text x="${px-24}" y="${my+5}" text-anchor="end" fill="#94A3B8" font-family="Space Grotesk" font-weight="800" font-size="16">0</text><path d="${ap}" fill="url(#mUp)" clip-path="url(#cpUp)"/><path d="${ap}" fill="url(#mDn)" clip-path="url(#cpDn)"/><path d="${cv}" stroke="${hc}" stroke-width="4.5" fill="none" stroke-linecap="round" clip-path="url(#cpUp)"/><path d="${cv}" stroke="${ac}" stroke-width="4.5" fill="none" stroke-linecap="round" clip-path="url(#cpDn)"/>${pts.map(p=>{const c=p.d>0?hc:p.d<0?ac:'#FBBF24',ly=p.d>=0?p.y-24:p.y+26;return`<g><line x1="${f1(p.x)}" y1="${my}" x2="${f1(p.x)}" y2="${f1(p.y)}" stroke="${c}" stroke-opacity=".35" stroke-width="1.5"/><circle cx="${f1(p.x)}" cy="${f1(p.y)}" r="7" fill="${c}" stroke="#fff" stroke-width="2.4"/><rect x="${f1(p.x-24)}" y="${f1(ly-15)}" width="48" height="22" rx="7" fill="#070E20" stroke="${c}" stroke-opacity=".7" stroke-width="1.4"/><text x="${f1(p.x)}" y="${f1(ly+1)}" text-anchor="middle" fill="#fff" font-family="Vazirmatn" font-weight="900" font-size="15">${fa(p.g.hg)}-${fa(p.g.ag)}</text><text x="${f1(p.x)}" y="${H+24}" text-anchor="middle" fill="#CBD5E1" font-family="Vazirmatn" font-weight="700" font-size="17">${p.g.label}</text></g>`}).join('')}</svg></div></div>`;
+}
+
+if(id==='fortress'){
+const vc=(tm,op,c,oc)=>{
+const v=tm.venueStats||{w:10,d:5,l:5,gf:1.5,ga:1},tot=Math.max(1,v.w+v.d+v.l),pw=v.w/tot*100,pd=v.d/tot*100,pl=v.l/tot*100,ci=2*Math.PI*24;
+return`<div class="fort-card relative overflow-hidden rounded-2xl bg-[#091226]/92 border border-white/14 p-4 fcol justify-between gap-3" style="border-top:4px solid ${c}"><div class="fbw gap-2 relative z-10"><div class="min-w-0"><div class="fort-title text-[21px] font-black text-white truncate">${tm.venueName}</div><div class="fort-sub text-[15px] font-bold text-slate-400">میزبانی ${tm.name} • ${fa(tot)} بازی</div></div><div class="relative fc w-[60px] h-[60px] shrink-0"><svg viewBox="0 0 60 60" class="w-full h-full -rotate-90"><circle cx="30" cy="30" r="24" stroke="#ffffff1a" stroke-width="5" fill="none"/><circle cx="30" cy="30" r="24" stroke="${c}" stroke-width="5" stroke-linecap="round" fill="none" stroke-dasharray="${f1(ci*Math.min(1,pw/100))} ${f1(ci)}"/></svg><span class="absolute text-[16px] font-black text-white">${fa(Math.round(pw))}٪</span></div></div><div class="space-y-1.5 relative z-10"><div class="h-3.5 rounded-full overflow-hidden flex bg-white/10 border border-white/15"><div style="width:${f1(pw)}%;background:${c}"></div><div style="width:${f1(pd)}%;background:#64748B"></div><div style="width:${f1(pl)}%;background:${oc}"></div></div><div class="fbw text-[14px] fort-sub font-extrabold"><span style="color:${c}">${fa(v.w)} برد ${tm.code}</span><span class="text-slate-400">${fa(v.d)} تساوی</span><span style="color:${oc}">${fa(v.l)} برد ${op.code}</span></div></div><div class="pt-2 border-t border-white/10 fbw text-[15px] fort-sub font-bold text-slate-200 relative z-10"><span>میانگین گل در این ورزشگاه:</span><strong class="text-white fm">${fa(f2(v.gf+v.ga))}</strong></div></div>`;
+};
+return`<div class="xm flex-1 ${sc}">${mh('دژ خانگی و تفکیک میزبانی','<span class="text-[17px] fm font-extrabold text-slate-300">VENUE FORTRESS</span>','bg-[#38BDF8]')}<div class="grid grid-cols-2 gap-3.5 flex-1 items-stretch">${vc(m.home,m.away,hc,ac)}${vc(m.away,m.home,ac,hc)}</div></div>`;
+}
+
+if(id==='kings'){
+const kc=(t,c)=>{const p=t.king||{name:'نامشخص',era:'',goals:0,assists:0,mpg:120,num:'9'};return`<div class="sc-card col-span-5 relative overflow-hidden p-4 rounded-3xl bg-[#0A1328]/90 border border-white/16 fcol justify-between gap-2.5" style="border-right:6px solid ${c}"><div class="absolute -left-8 -top-8 w-36 h-36 rotate-12 opacity-[0.12] pointer-events-none" style="background:repeating-linear-gradient(45deg,${c} 0 8px,transparent 8px 18px)"></div><span class="absolute left-3 bottom-0 fd font-black text-[92px] leading-none opacity-[0.07] pointer-events-none select-none" style="color:${c}">${p.num||'9'}</span><div class="relative z-10 flex items-start justify-between gap-2"><div class="min-w-0"><div class="sc-name text-[25px] font-black text-white leading-tight truncate">${p.name}</div><span class="inline-block mt-1 text-[14px] font-bold px-2.5 py-0.5 rounded-lg bg-white/10 text-slate-200">${p.era}</span></div><div class="text-center shrink-0 px-3 py-1.5 rounded-2xl border shadow-lg" style="background:${c}24;border-color:${c}75"><div class="sc-goals text-[32px] font-black leading-none" style="color:${c}">${fa(p.goals)}</div><div class="text-[11px] font-extrabold text-slate-100 mt-0.5">گل در H2H</div></div></div><div class="relative z-10 pt-2.5 border-t border-white/12 fi flex-wrap gap-2 sc-sub"><span class="px-2.5 py-1 rounded-xl bg-white/8 border border-white/12 text-[14px] font-extrabold text-slate-100">${fa(p.assists)} پاس گل</span><span class="px-2.5 py-1 rounded-xl bg-white/8 border border-white/12 text-[14px] font-extrabold text-amber-300">هر ${fa(p.mpg)} دقیقه یک گل</span></div></div>`};
+return`<div class="xm flex-1 ${sc}">${mh('پادشاهان و آقای‌گل‌های تقابل','<span class="text-[17px] fm font-extrabold text-amber-300">RIVALRY KINGS</span>','bg-[#F59E0B]')}<div class="grid grid-cols-11 items-stretch gap-3 my-auto">${kc(m.home,hc)}<div class="col-span-1 fcol items-center justify-center gap-1"><svg width="26" height="26" viewBox="0 0 24 24" fill="#FBBF24"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/></svg><span class="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#E62E45] to-[#F59E0B] border-2 border-white/40 fc fd text-[18px] font-extrabold text-white shadow-lg shadow-[#E62E45]/35">VS</span></div>${kc(m.away,ac)}</div></div>`;
+}
+
+if(id==='dna'){
+const d=m.dna||{avgGoals:2.5,btts:55,over25:50,cards:4,headline:'',body:''},ci=2*Math.PI*24;
+const rg=(pc,cl,v,l)=>`<div class="dna-tile rounded-2xl bg-[#091226]/92 border border-white/14 p-2.5 fcol items-center justify-center gap-1.5 text-center"><div class="relative fc dna-ring w-[62px] h-[62px]"><svg viewBox="0 0 60 60" class="w-full h-full -rotate-90"><circle cx="30" cy="30" r="24" stroke="#ffffff18" stroke-width="5" fill="none"/><circle cx="30" cy="30" r="24" stroke="${cl}" stroke-width="5.2" stroke-linecap="round" fill="none" stroke-dasharray="${f1(ci*Math.min(1,Math.max(.06,pc/100)))} ${f1(ci)}" style="filter:drop-shadow(0 0 6px ${cl}88)"/></svg><span class="dna-val absolute text-[17px] font-black text-white leading-none">${v}</span></div><span class="dna-lbl text-[14px] font-extrabold text-slate-300 leading-tight">${l}</span></div>`;
+return`<div class="xe flex-1 ${sc}">${mh('امضای آماری و DNA تقابل','<span class="text-[17px] fm font-extrabold text-emerald-300">FIXTURE DNA</span>','bg-emerald-400','pb-2 mb-2.5')}<div class="flex-1 fcol justify-between gap-3"><div class="grid grid-cols-4 gap-2.5">${rg(Math.min(100,d.avgGoals/4.5*100),'#34D399',fa(f2(d.avgGoals)),'میانگین گل')}${rg(d.btts,'#38BDF8',fa(d.btts)+'٪','گلزنی هر دو تیم')}${rg(d.over25,'#FBBF24',fa(d.over25)+'٪','بالای ۲.۵ گل')}${rg(Math.min(100,d.cards/7*100),'#F43F5E',fa(f1(d.cards)),'شاخص کارت')}</div><div class="dna-ed rounded-2xl bg-[#070E20]/90 border border-white/14 px-4 py-3" style="border-right:5px solid #E62E45;box-shadow:inset 0 1px 0 #ffffff14"><div class="fi gap-2 mb-1"><span class="px-2 py-0.5 rounded bg-[#E62E45]/25 border border-[#E62E45]/55 text-[#FF7084] text-[12px] font-black">جمع‌بندی تحریریه XGPedia</span></div><h4 class="dna-ed-t text-[21px] font-black text-amber-300 leading-snug mb-1">${d.headline}</h4><p class="dna-ed-b text-[17px] text-slate-100 font-semibold leading-[1.52]">${d.body}</p></div></div></div>`;
+}
+
+if(id==='timing'){
+const tH=m.timing?.home||[12,16,20,18,22,26],tA=m.timing?.away||[14,15,18,21,19,24],lb=["۰-۱۵'","۱۶-۳۰'","۳۱-۴۵'","۴۶-۶۰'","۶۱-۷۵'","۷۶-۹۰+'"];
+const tt=tH.map((v,i)=>v+(tA[i]||0)),mx=Math.max(1,...tt),hi=tt.indexOf(mx);
+const cs=lb.map((l,i)=>{const h=tH[i]||0,a=tA[i]||0,ht=i===hi;return`<div class="fcol items-center justify-end gap-1.5 rounded-2xl p-2 ${ht?'bg-[#E62E45]/16 border border-[#E62E45]/65 shadow-[0_0_20px_-6px_rgba(230,46,69,.5)]':'bg-white/[0.03] border border-white/10'}"><div class="tm-val text-[15px] font-black ${ht?'text-[#FF7084]':'text-slate-200'}">${fa(h+a)} گل</div><div class="tm-bar-wrap w-full h-[118px] flex items-end justify-center gap-1.5 px-1"><div class="w-4 rounded-t-lg transition-all" style="height:${f1(Math.max(10,h/mx*100))}%;background:${hc};box-shadow:0 0 12px ${hc}66"></div><div class="w-4 rounded-t-lg transition-all" style="height:${f1(Math.max(10,a/mx*100))}%;background:${ac};box-shadow:0 0 12px ${ac}66"></div></div><div class="tm-lbl text-[14px] font-extrabold ${ht?'text-white':'text-slate-400'} fm" dir="ltr">${l}</div></div>`}).join('');
+return`<div class="xm flex-1 ${sc}">${mh('نقشه دقیقه انفجار گل‌ها',`<div class="fi gap-2 text-[15px] font-extrabold"><span class="px-3 py-1 rounded-full bg-[#E62E45]/22 border border-[#E62E45]/55 text-[#FF7084]">پرتنش‌ترین بازه: ${lb[hi]}</span></div>`,'bg-[#F43F5E]','pb-2 mb-2.5')}<div class="grid grid-cols-6 gap-2.5 flex-1 items-stretch">${cs}</div></div>`;
+}
+return'';
+}
+
+// Slide presets, density guard & master render
+const hl=()=>{$$('.sb').forEach(b=>b.classList.toggle('on',b.dataset.s===S.sp));$$('.qb').forEach(b=>b.classList.toggle('on',b.dataset.q===S.sp));$$('.hb').forEach(b=>b.classList.toggle('on',b.dataset.h===S.hm));$$('.ab').forEach(b=>b.classList.toggle('on',b.dataset.a===S.atm))};
+
+function setSlide(id){
+S.sp=id;
+const s9=S.fmt==='9:16',set=(ids,mp={})=>S.mods.forEach(m=>{m.e=ids.includes(m.id);if(m.e)m.s=mp[m.id]||'full'});
+if(id==='slide1'){S.hm='full';set(s9?['chronicle','balance','timing']:['chronicle','balance'])}
+else if(id==='slide2'){S.hm='compact';set(s9?['momentum','fortress','timing']:['momentum','fortress'])}
+else if(id==='slide3'){S.hm='compact';set(s9?['kings','timing','dna']:['kings','timing'])}
+else if(id==='slide4'){S.hm='compact';set(s9?['dna','chronicle','balance']:['dna','chronicle'])}
+else if(id==='slide5'){S.hm='full';set(S.fmt==='16:9'?['chronicle','balance','fortress','dna']:['chronicle','balance','fortress','kings','dna'],{chronicle:'full',balance:'half',fortress:'half',kings:'half',dna:'half'})}
+hl();modUI();draw();
+}
+
+function dens(n){
+const f=S.fmt,h=S.hm,cr=S.sp==='slide5'?0:f==='4:5'?(h==='full'?n>2:n>3):f==='9:16'?(h==='full'?n>3:n>4):n>4;
+$('dc').textContent=`${fa(n)} ماژول`;
+$('dt').textContent=cr?'کمی شلوغ — کاهش ماژول یا هدر فشرده پیشنهاد می‌شود':'تراکم ایده‌آل و خوانا در موبایل';
+$('sdp').textContent=cr?'⚠ کمی شلوغ':'✓ تراکم ایده‌آل';
+['db','dd','sdp'].forEach(i=>$(i).classList.toggle('warn',cr));
+return cr;
+}
+
+function draw(){
+const m=S.m,[w,h,lb]=F[S.fmt],bd=$('ea'),by=$('cmb'),hr=$('hs'),gd=$('mg');
+const ac=S.mods.filter(x=>x.e),crw=dens(ac.length),b2=S.fmt==='16:9',dt=S.sp==='slide5',s9=S.fmt==='9:16';
+bd.style.width=`${w}px`;bd.style.height=`${h}px`;
+$('fs').setAttribute('viewBox',`0 0 ${w} ${h}`);
+bd.className=`f${S.fmt.split(':')[0]} atm-${S.atm}${crw?' dc':''}${dt?' dv':''}`;
+
+const sb=$('ts');$('sz').classList.toggle('hidden',!(s9&&S.sz));sb.classList.toggle('hidden',!s9);sb.classList.toggle('flex',s9);sb.classList.toggle('on',s9&&S.sz);
+
+const rx=w-146,rx1=w-26,rx2=w-48,by1=h-26,by2=h-48,cx=w/2,sa=(i,o)=>{const e=$(i);if(e)for(const k in o)e.setAttribute(k,o[k])};
+sa('pr',{width:w-28,height:h-28});sa('hl',{x1:cx,x2:cx,y2:h-14});['cc1','cc2','cc3','cc4','cc5'].forEach(i=>sa(i,{cx}));
+sa('rb',{x:rx});sa('ra',{d:`M${rx} 238A92 92 0 0 0 ${rx} 382`});
+sa('crh',{d:`M26 48V26H48M${rx1} 48V26H${rx2}M26 ${by2}V${by1}H48M${rx1} ${by2}V${by1}H${rx2}`});sa('hud-tr',{x:w-56});
+
+const tot=(+m.home.wins||0)+(+m.draws||0)+(+m.away.wins||0),dm=`${w}×${h}`;
+const tx={adb:dm,mdb:dm,mt:`${m.home.name} × ${m.away.name}`,mm:`${fa(m.home.wins)} برد / ${fa(m.draws)} مساوی / ${fa(m.away.wins)} برد • ${lb}`,cc:m.competition,cr:fa(m.round),cd:fa(m.eraNote),cs:m.stadiumScope||`${fa(tot)} تقابل رسمی`,cb:m.scopeBadge,so:m.source,ct:`HEAD-TO-HEAD ARCHIVE • ${(m.leagueEn||'FOOTBALL').trim().toUpperCase()} • ALL-TIME`};
+for(const k in tx)if($(k))$(k).textContent=tx[k];
+
+const gp=b2?'':s9?(dt?'gap-2.5':'gap-3.5'):dt?'gap-2':crw?'gap-2.5':'gap-3.5';
+by.className=`relative z-10 flex-1 py-1.5 overflow-hidden ${b2?'px-[38px] grid grid-cols-12 gap-7 items-stretch':`px-[38px] fcol justify-between ${gp}`}`;
+hr.className=b2?'col-span-5 fcol justify-center border-l border-white/12 pl-6':'shrink-0';
+gd.className=b2?'col-span-7 grid grid-cols-2 auto-rows-fr gap-3 min-h-0':`flex-1 grid grid-cols-2 ${dt?'auto-rows-min content-between':'auto-rows-fr'} ${gp} min-h-0`;
+
+$('beams').style.background=`linear-gradient(125deg,${m.home.color}2e 0%,transparent 44%),linear-gradient(235deg,${m.away.color}2e 0%,transparent 44%),radial-gradient(circle at 86% 24%,${m.home.color}42,transparent 46%),radial-gradient(circle at 14% 24%,${m.away.color}42,transparent 46%),radial-gradient(circle at 50% 26%,#e62e452e,transparent 48%)`;
+hr.innerHTML=heroH();gd.innerHTML=ac.map(x=>modH(x,b2)).join('');fit();
+}
+
+// Viewport auto-fit, zoom & mobile view
+function fit(){
+const vp=$('vp'),wr=$('aw'),bd=$('ea'),[w,h]=F[S.fmt];
+if(!vp||!vp.clientWidth||!vp.clientHeight)return;
+const dk=innerWidth>=1024,sc=Math.min(Math.max(200,vp.clientWidth-(dk?48:20))/w,Math.max(200,vp.clientHeight-(dk?76:138))/h,1)*S.zm;
+wr.style.width=`${Math.round(w*sc)}px`;wr.style.height=`${Math.round(h*sc)}px`;bd.style.transform=`scale(${sc})`;vp.classList.toggle('cp',S.zm>1.01);
+$$('.zb').forEach(b=>b.classList.toggle('on',Math.abs(S.zm-+b.dataset.z)<.05));
+}
+const zoom=z=>{S.zm=Math.max(.75,Math.min(2.5,+z));fit();if(S.zm<=1){const v=$('vp');v.scrollLeft=v.scrollTop=0}};
+function mob(v){
+S.mv=v;const dk=innerWidth>=1024,sh=(e,ok)=>{e.classList.toggle('hidden',!ok);e.classList.toggle('flex',ok)};
+if(!dk){sh($('sp'),v!=='preview');sh($('sc'),v==='preview');v==='preview'?requestAnimationFrame(fit):($('es').scrollTop=0)}
+else{sh($('sp'),1);sh($('sc'),1);requestAnimationFrame(fit)}
+$$('.mnb').forEach(b=>b.classList.toggle('on',b.dataset.n===v));
+}
+
+// Module toggles UI
+function modUI(){
+const host=$('mcl');
+host.innerHTML=S.mods.map((m,i)=>{const[,t,h]=MD[i];return`<div class="fbw gap-2 p-2.5 min-h-[44px] lg:min-h-[38px] rounded-xl bg-[#091124] border ${m.e?'border-white/20':'border-white/5 opacity-65'} transition"><label class="fi gap-2.5 min-w-0 flex-1 cursor-pointer"><input type="checkbox" data-m="${m.id}" ${m.e?'checked':''} class="mc accent-[#E62E45] w-4 h-4 cursor-pointer shrink-0"><span class="text-xs font-bold text-slate-100 truncate">${t}</span></label>${h?`<div class="fi bg-[#040814] rounded-lg p-0.5 border border-white/10 shrink-0"><button data-m="${m.id}" data-w="half" class="spn px-2 py-1 rounded text-[10px] font-bold ${m.s==='half'?'bg-[#E62E45] text-white':'text-slate-400'}">½</button><button data-m="${m.id}" data-w="full" class="spn px-2 py-1 rounded text-[10px] font-bold ${m.s==='full'?'bg-[#E62E45] text-white':'text-slate-400'}">۱</button></div>`:'<span class="text-[10px] text-slate-500 px-1.5 shrink-0">تمام‌عرض</span>'}</div>`}).join('');
+host.querySelectorAll('.mc').forEach(c=>c.onchange=()=>{const t=S.mods.find(x=>x.id===c.dataset.m);if(!c.checked&&S.mods.filter(x=>x.e).length<=1){c.checked=true;return T('حداقل یک ماژول باید فعال بماند')}t.e=c.checked;S.sp='custom';hl();modUI();draw()});
+host.querySelectorAll('.spn').forEach(b=>b.onclick=()=>{const t=S.mods.find(x=>x.id===b.dataset.m);if(!t)return;t.s=b.dataset.w;t.e=true;S.sp='custom';hl();modUI();draw()});
+}
+
+// Dynamic live editor builder & two-way path binder
+const getP=(o,p)=>p.split('.').reduce((a,k)=>a?.[k],o);
+const setP=(o,p,v)=>{const k=p.split('.'),l=k.pop();k.reduce((a,x)=>a[x],o)[l]=v};
+const teamFlds=(pfx,path)=>[
+  [`ed-${pfx}n`,'نام تیم',`${path}.name`,'text'],[`ed-${pfx}cd`,'کد ۳ حرفی',`${path}.code`,'code'],
+  [`ed-${pfx}s`,'زیرنویس / سرمربی',`${path}.sub`,'text',1],[`ed-${pfx}logo`,'آدرس لوگوی اختصاصی (اختیاری URL)',`${path}.logoUrl`,'url',1],
+  [`ed-${pfx}w`,'تعداد برد',`${path}.wins`,'num'],[`ed-${pfx}g`,'مجموع گل زده',`${path}.goals`,'num'],
+  [`ed-${pfx}cs`,'کلین‌شیت',`${path}.cleanSheets`,'num'],[`ed-${pfx}kn`,'برترین گلزن (نام)',`${path}.king.name`,'text'],
+  [`ed-${pfx}kg`,'گل‌های آقای‌گل',`${path}.king.goals`,'num'],[`ed-${pfx}st`,'نشان روند',`${path}.streak`,'text']
+];
+const ED_META=[['ed-comp','نام رقابت','competition','text'],['ed-round','عنوان / بازه تقابل','round','text'],['ed-era','توضیح تاریخچه','eraNote','text'],['ed-src','منبع داده','source','text']];
+const ED_ALL=[...ED_META,['ed-hc','','home.color','color'],...teamFlds('h','home'),['ed-dr','','draws','num'],['ed-ac','','away.color','color'],...teamFlds('a','away'),['ed-dt','تیتر تحلیلی','dna.headline','text'],['ed-db','متن حکم تحریریه','dna.body','area']];
+
+function buildEditor(){
+const fld=([id,lb,,tp,sp])=>`<div${sp?' class="col-span-2"':''}><label class="lbl">${lb}</label>${tp==='area'?`<textarea id="${id}" rows="3" class="inp resize-none leading-relaxed"></textarea>`:`<input id="${id}" class="inp${tp==='code'?' fm uppercase':tp==='num'?' fm':tp==='url'?' fm text-[11px]':''}" type="${tp==='num'?'number':tp==='url'?'url':'text'}"${tp==='num'?' min="0"':''}${tp==='code'?' maxlength="3"':''}${tp==='url'?' dir="ltr" placeholder="https://..."':''}>`}</div>`;
+const tCard=(tt,cid,flds)=>`<div class="bg-[#040814] border border-white/10 rounded-2xl p-3.5 space-y-3"><div class="fbw border-b border-white/10 pb-2"><span class="text-xs font-black text-white">${tt}</span><input id="${cid}" type="color" class="w-7 h-6 rounded bg-transparent border-0 cursor-pointer"></div><div class="grid grid-cols-2 gap-2.5">${flds.map(fld).join('')}</div></div>`;
+$('tab-edit').innerHTML=`<div class="bg-[#040814] border border-white/10 rounded-2xl p-3.5 space-y-3"><div class="text-xs font-black text-white border-b border-white/10 pb-2">مشخصات کلی تقابل</div><div class="grid grid-cols-2 gap-2.5">${ED_META.map(fld).join('')}</div></div>${tCard('تیم اول (راست / میزبان)','ed-hc',teamFlds('h','home'))}<div class="bg-[#040814] border border-white/10 rounded-2xl p-3.5"><div class="fbw gap-3"><label class="text-xs font-extrabold text-slate-200">تعداد تساوی‌های کل تاریخچه</label><input id="ed-dr" class="inp fm w-24 text-center" type="number" min="0"></div></div>${tCard('تیم دوم (چپ / رقیب)','ed-ac',teamFlds('a','away'))}<div class="bg-[#040814] border border-white/10 rounded-2xl p-3.5 space-y-2.5"><div class="text-xs font-black text-amber-300 border-b border-white/10 pb-2">جمع‌بندی تحریریه XGPedia (ماژول DNA)</div>${fld(['ed-dt','تیتر تحلیلی','dna.headline','text'])}${fld(['ed-db','متن حکم تحریریه','dna.body','area'])}</div>`;
+ED_ALL.forEach(([id,,path,tp])=>{const el=$(id);if(el)el.oninput=e=>{const v=e.target.value;setP(S.m,path,tp==='num'?Math.max(0,parseInt(v,10)||0):tp==='code'?v.toUpperCase():v);draw()}});
+}
+const syncEditor=()=>ED_ALL.forEach(([id,,path])=>{const el=$(id);if(el)el.value=getP(S.m,path)??''});
+
+// 2x PNG export via html-to-image
+async function exportPNG(){
+if(typeof htmlToImage==='undefined')return T('کتابخانه خروجی تصویر در دسترس نیست — لطفاً اتصال اینترنت را بررسی کنید');
+const bd=$('ea'),sz=$('sz'),pt=bd.style.transform,ps=sz.classList.contains('hidden'),[w,h]=F[S.fmt];
+T('در حال رندر تصویر PNG با کیفیت ۲ برابر (2×)...');
+try{
+sz.classList.add('hidden');bd.style.transform='none';
+const url=await htmlToImage.toPng(bd,{width:w,height:h,pixelRatio:2,backgroundColor:'#0D1730',cacheBust:true});
+const a=document.createElement('a');a.download=`XGPedia-H2H-${S.m.home.code}-${S.m.away.code}-${S.fmt.replace(':','x')}.png`;a.href=url;a.click();
+T('تصویر باکیفیت PNG با موفقیت ذخیره شد');
+}catch(err){console.error('PNG Export Error:',err);T('خطا در ذخیره تصویر (ممکن است لوگوی خارجی محدودیت CORS داشته باشد)')}
+finally{bd.style.transform=pt;if(!ps)sz.classList.remove('hidden')}
+}
+
+// Populate sidebar buttons & wire events
+$('slb').innerHTML=SU.map(([id,l,tg])=>`<button data-s="${id}" class="sb w-full min-h-[44px] lg:min-h-[40px] text-right px-3.5 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-200 text-xs font-bold fbw gap-2 transition"><span>${l}</span><span class="text-[10px] fm ${id==='slide1'?'px-2 py-0.5 rounded bg-[#E62E45] text-white':id==='slide5'?'px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/40':id==='custom'?'text-amber-400':'text-slate-400'} shrink-0">${tg}</span></button>`).join('');
+$('qsb').innerHTML=SU.filter(x=>x[3]).map(([id,,,sh])=>`<button data-q="${id}" class="qb min-h-[34px] px-3 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 shrink-0 transition">${sh}</button>`).join('');
+$('prb').innerHTML=Object.entries(PRESETS).map(([k,p])=>`<button data-p="${k}" class="pb min-h-[54px] p-2.5 rounded-xl bg-white/5 hover:bg-white/10 active:scale-[0.98] border border-white/10 text-right text-xs font-bold transition">${p.home.name} × ${p.away.name}<span class="block text-[10px] text-slate-400 font-normal mt-0.5">${p.competition} • ${fa(p.home.wins+p.draws+p.away.wins)} تقابل</span></button>`).join('');
+
+on('.stab',e=>{S.tab=e.dataset.tab;$$('.stab').forEach(x=>x.classList.toggle('on',x.dataset.tab===S.tab));$('tab-slides').classList.toggle('hidden',S.tab!=='slides');$('tab-edit').classList.toggle('hidden',S.tab!=='edit');if(S.tab==='edit')syncEditor()});
+on('.mnb',e=>mob(e.dataset.n));$('jp').onclick=()=>mob('preview');
+on('.fb',e=>{S.fmt=e.dataset.f;S.zm=1;$$('.fb').forEach(x=>x.classList.toggle('on',x.dataset.f===S.fmt));S.sp==='custom'?draw():setSlide(S.sp)});
+on('.sb',e=>setSlide(e.dataset.s));on('.qb',e=>setSlide(e.dataset.q));
+on('.hb',e=>{S.hm=e.dataset.h;S.sp='custom';hl();draw()});
+on('.ab',e=>{S.atm=e.dataset.a;hl();draw();T(`اتمسفر نوری تغییر کرد: ${e.textContent}`)});
+$('ts').onclick=()=>{S.sz=!S.sz;draw();T(S.sz?'راهنمای امن استوری فعال شد':'راهنمای امن استوری مخفی شد')};
+on('.zb',e=>zoom(e.dataset.z));$('zi').onclick=()=>zoom(S.zm+.25);$('zo').onclick=()=>zoom(S.zm-.25);
+on('.pb',e=>{S.m=structuredClone(PRESETS[e.dataset.p]);syncEditor();modUI();draw();T(`آرشیو تقابل ${S.m.home.name} × ${S.m.away.name} بارگذاری شد`)});
+$('cj').onclick=()=>{const t=document.createElement('textarea');t.value=JSON.stringify(S.m,null,2);t.style.cssText='position:fixed;opacity:0';document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();T('دیتای JSON با موفقیت کپی شد')};
+$('exp-png').onclick=exportPNG;
+
+const vp=$('vp');let dn=0,sx=0,sy=0,sl=0,st=0;
+vp.onmousedown=e=>{if(S.zm<=1.01)return;dn=1;sx=e.pageX-vp.offsetLeft;sy=e.pageY-vp.offsetTop;sl=vp.scrollLeft;st=vp.scrollTop};
+addEventListener('mouseup',()=>dn=0);
+vp.onmousemove=e=>{if(!dn)return;e.preventDefault();vp.scrollLeft=sl-(e.pageX-vp.offsetLeft-sx);vp.scrollTop=st-(e.pageY-vp.offsetTop-sy)};
+if(typeof ResizeObserver!=='undefined')new ResizeObserver(fit).observe(vp);
+addEventListener('resize',()=>{mob(S.mv);fit()});
+
+buildEditor();syncEditor();setSlide('slide1');mob('preview');
+})();
+</script>
+</body>
+</html>

@@ -470,6 +470,9 @@ html,body{{width:{w}px;height:{h}px;overflow:hidden;background:#0D1730;color:#F8
 .tt-footer-line{{border-top:1px solid rgba(255,255,255,.14);margin-bottom:8px}}
 .tt-foot-tag{{font-size:17.5px;font-weight:800;letter-spacing:.14em;color:#E2E8F0}}
 .tt-foot-handle{{font-size:20px;font-weight:800;color:#FFFFFF}}.tt-foot-end{{font-size:17px;font-weight:800;color:#FF7B8D}}
+
+footer, footer .fbw, footer .cf-row, footer .fi, footer .cf-left, footer .cf-right, .xg-footer, .foot-row, .card-footer{{flex-wrap:nowrap!important;white-space:nowrap!important;min-width:0!important;}}
+footer span, footer div, .pl-foot-tag, .pl-foot-s, .in-foot-tag, .pr-foot-tag, .st-foot-tag, .cf-tag{{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;min-width:0!important;}}
 </style>
 </head>
 <body>

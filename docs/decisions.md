@@ -189,3 +189,44 @@
   4. **اکوسیستم دادهٔ چندمنبعی رایگان + عدم وابستگی به `requests`**: برای هر کارت جدید، دادهٔ تمام بخش‌ها از چند منبع رایگان با `urllib.request`/`httpx` تأمین شود و `null ≠ 0` رعایت گردد.
   5. **چرخش چندکلیدی/چنداکانتی LLM و همگام‌سازی Timeout (`v0.27.3`)**: پشتیبانی از `VAR=k1,k2` و `VAR_2..VAR_20` + جفت‌های Cloudflare و `cancel_event` برای جلوگیری از خطای زودهنگام در ربات.
   6. **صفحه‌بندی اجباری ربات تلگرام** روی تمام لیست‌های در حال رشد + **هشتگ‌های مرتبط زیر همهٔ کارت‌ها** (`telegram_publish.py`) + **منبع لینک‌دار** + **کپشن ایمن ≤۱۰۲۴ کاراکتر** بدون برش وسط جمله.
+
+## D51 — کارت ماژولار نمرات بازیکنان (Players Rating Studio — v0.31.0)
+- پورت ۱:۱ `studio_templates/players_rating.html` به `src/xgpedia/render/card_kit/players_rating_card.py` (۱۰۰٪ آفلاین با فریم چهارگوشهٔ قرمز).
+- ۴ ماژول مستقل (`pitch`, `subs`, `ranking`, `verdict`) با پشتیبانی کامل `½`/`۱`، جابه‌جایی ترتیب، تم‌های زمین (`turf`/`navy`/`gold`)، حالت زمین (`both`/`home`/`away`) و ذخیره تا ۵ قالب نام‌گذاری‌شده.
+- تأمین دادهٔ رایگان از ESPN Soccer Summary API و پریست‌های `config/players_rating_presets.json` + دستور `/ratings`.
+
+## D52 — کارت ماژولار جدول رده‌بندی (Standings Studio — v0.31.0)
+- پورت ۱:۱ `studio_templates/standings.html` به `src/xgpedia/render/card_kit/standings_card.py` (۱۰۰٪ آفلاین).
+- ۵ ماژول مستقل (`table`, `justice`, `quadrant`, `title_race`, `relegation`) با ۳ لنز (`classic`, `xpts`, `xg`)، ۴ برش (`top6`, `top10`, `full`, `bottom`)، هدر تاج صدرنشینی/فشرده و ۵ قالب نام‌گذاری‌شده.
+- تأمین دادهٔ رایگان از ESPN Soccer Standings API + Understat (`xPTS`, `xG/90`, `xGA/90`) + شبیه‌سازی مونت‌کارلو قطعی + دستور `/standings`.
+
+## D53 — کارت ماژولار آزمایشگاه مصدومیت (Injury Lab — v0.31.0)
+- پورت ۱:۱ `studio_templates/injury_lab.html` به `src/xgpedia/render/card_kit/injury_card.py` (۱۰۰٪ آفلاین).
+- ۷ ماژول مستقل (`anatomical`, `missed`, `timeline`, `impact`, `replacements`, `history`, `verdict`) با اسکنر آناتومی ۷ ناحیه، ۴ سطح شدت (`out`/`long`/`doubt`/`fit`) و ۵ قالب نام‌گذاری‌شده.
+- تأمین دادهٔ رایگان از FPL Bootstrap/Fixtures API + فیدهای RSS فوتبال (منحصراً Soccer) + Wikimedia + دستور `/injury`.
+
+## D54 — کارت ماژولار پروفایل فنی بازیکن (Player Card Studio — v0.31.0)
+- پورت ۱:۱ `studio_templates/player_profile.html` به `src/xgpedia/render/card_kit/player_card.py` (۱۰۰٪ آفلاین).
+- ۹ ماژول مستقل (`kpi`, `percentiles`, `scout`, `radar`, `pitchmap`, `form`, `xgchain`, `duels`, `similar`) با ۳ تم (`classic`/`gold`/`blueprint`)، هدر سینمایی/فشرده و ۵ قالب نام‌گذاری‌شده.
+- تأمین دادهٔ رایگان از FPL Bootstrap + Element Summary API (صدک واقعی هم‌پستی‌ها، فرم ۶ بازی و شباهت کسینوسی DNA Match) + Wikimedia + دستور `/player`.
+
+### D55 — کارت ماژولار «تقابل مستقیم تیم‌ها» (H2H Teams Studio — v0.32.0)
+- **پورت ۱:۱ آفلاین** از `studio_templates/h2h_teams.html` در `src/xgpedia/render/card_kit/h2h_teams_card.py` با کرونوگراف ۲۴۰ درجه SVG و ۷ ماژول مستقل (`chronicle`, `balance`, `momentum`, `fortress`, `kings`, `dna`, `timing`).
+- **دادهٔ واقعی رایگان**: `src/xgpedia/providers/h2h_teams_free.py` از ESPN Soccer Scoreboard + Summary (`headToHeadGames`) و Football-Data.org v4 (اختیاری) + پریست‌های `config/h2h_teams_presets.json`؛ دستور `/h2hteams`.
+
+### D56 — کارت ماژولار «کارت بازیکن FC27» (FC27 Chrono Player Card — v0.32.0)
+- **پورت ۱:۱ آفلاین** از `studio_templates/player_fc27.html` در `src/xgpedia/render/card_kit/player_fc27_card.py` با ۶ پوسته (`signature`, `persian` با اسطرلاب طلایی، `icon`, `tots`, `ucl`, `future`) و ۶ ماژول مستقل (`fc_card`, `per90`, `index_form`, `radar`, `heatmap`, `verdict`).
+- **دادهٔ واقعی رایگان**: `src/xgpedia/providers/player_fc27_free.py` از FPL Official Bootstrap/Element-Summary + عکس رسمی فصل جاری لیگ برتر + TheSportsDB (`Soccer`-only) برای شماره پیراهن واقعی؛ دستور `/fc27`.
+
+### D57 — کارت ماژولار «مقایسه دو بازیکن» (H2H Players Duel Studio — v0.32.0)
+- **پورت ۱:۱ آفلاین** از `studio_templates/h2h_players.html` در `src/xgpedia/render/card_kit/h2h_players_card.py` با استیج دوئل، الماس VS و ۷ ماژول مستقل (`vitals`, `dna`, `radar`, `finishing`, `trend`, `impact`, `archetype`).
+- **دادهٔ واقعی رایگان**: `src/xgpedia/providers/h2h_players_free.py` (جفت‌سازی خودکار هم‌پست‌های برتر FPL + عکس رسمی فصل جاری + TheSportsDB)؛ دستور `/h2hplayers`.
+
+### D58 — کارت ماژولار «جدول گلزنان / کفش طلا» (Top Scorers Studio — v0.32.0)
+- **پورت ۱:۱ آفلاین** از `studio_templates/top_scorers.html` در `src/xgpedia/render/card_kit/top_scorers_card.py` با ۶ ماژول مستقل (`leaderboard`, `insight`, `duel`, `radar`, `matrix`, `trajectory`).
+- **دادهٔ واقعی رایگان**: `src/xgpedia/providers/top_scorers_free.py` از FPL Official Bootstrap (گل، Opta xG، دقایق، عکس رسمی) + Football-Data.org v4 (اختیاری)؛ دستور `/scorers`.
+
+### D59 — کارت ماژولار «نتایج بازی‌های روز / ۲۴ ساعت اخیر» (Matchday Results Studio — v0.32.0)
+- **پورت ۱:۱ آفلاین** از `studio_templates/matchday_results.html` در `src/xgpedia/render/card_kit/matchday_results_card.py` با ۶ ماژول مستقل (`featured`, `scoreboard`, `bento_grid`, `xg_divergence`, `awards`, `editorial`).
+- **دادهٔ واقعی ۲۴ ساعته**: `src/xgpedia/providers/matchday_results_free.py` با فیلتر دقیق `is_finished_within_24h` (۱ ثانیه تا ۲۴ ساعت قبل) روی ۱۴ لیگ معتبر فوتبال در ESPN Soccer API (بدون xG جعلی، `null ≠ 0`)؛ دستور `/results`.
+- **استاندارد فریم ۴ گوشه قرمز یکپارچه** در تمام ۵ کارت رعایت شده است (`pad_top=24/22/139`, `pad_bot=20/16/171`, `header 12px 36px 8px`, `stage 8px 40px`, `footer 10px 44px 10px`).

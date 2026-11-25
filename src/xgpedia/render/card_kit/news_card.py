@@ -740,6 +740,9 @@ html,body{{width:{w}px;height:{h}px;overflow:hidden;background:#0D1730;color:#F8
 .nw-tx-arrow{{width:100%;display:flex;align-items:center;gap:4px}}
 .nw-tx-line{{height:3px;flex:1;border-radius:99px}}
 .nw-tx-contract{{font-size:15px;font-weight:800;color:#E2E8F0;white-space:nowrap}}
+
+footer, footer .fbw, footer .cf-row, footer .fi, footer .cf-left, footer .cf-right, .xg-footer, .foot-row, .card-footer{{flex-wrap:nowrap!important;white-space:nowrap!important;min-width:0!important;}}
+footer span, footer div, .pl-foot-tag, .pl-foot-s, .in-foot-tag, .pr-foot-tag, .st-foot-tag, .cf-tag{{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;min-width:0!important;}}
 </style>
 </head>
 <body>

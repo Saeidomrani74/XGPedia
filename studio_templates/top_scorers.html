@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>XGPedia Top Scorers Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Space+Grotesk:wght@600;700;800&family=Vazirmatn:wght@400..900&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{font-family:Vazirmatn,system-ui,-apple-system,sans-serif;background:#030711;color:#F8FAFC;overflow:hidden;font-feature-settings:"tnum";font-variant-numeric:tabular-nums}
+.fm{font-family:'JetBrains Mono','Space Grotesk',monospace}
+.fd{font-family:'Space Grotesk',sans-serif}
+.fi{display:flex;align-items:center}
+.fc{display:flex;align-items:center;justify-content:center}
+.fbw{display:flex;align-items:center;justify-content:space-between}
+.fcol{display:flex;flex-direction:column}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:#050914b3}
+::-webkit-scrollbar-thumb{background:#94a3b847;border-radius:99px;&:hover{background:#e62e45bf}}
+.ns{-ms-overflow-style:none;scrollbar-width:none;&::-webkit-scrollbar{display:none}}
+._bg{background:#02050D radial-gradient(circle at 50% 28%,#e62e4516,transparent 56%)}
+#vp{-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;&.cp{cursor:grab;&:active{cursor:grabbing}}}
+#aw{position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 32px 90px -12px #000000eb,0 0 0 1px #ffffff24;border-radius:20px;overflow:hidden;transition:width .16s ease-out,height .16s ease-out}
+._sl{background:repeating-linear-gradient(to bottom,#ffffff04 0 1px,#0000 1px 4px)}
+#ea{position:absolute;top:0;left:0;transform-origin:0 0;background:#0D1730;color:#F8FAFC;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;user-select:none;transition:transform .16s ease-out;&.f4{padding:18px 0 12px}&.f9{padding:135px 0 165px}&.f16{padding:16px 0 8px}}
+.xm,.xe,.xh{position:relative;border-radius:24px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 14px 36px -10px #0000008c,inset 0 1px 0 #ffffff17}
+.xm{background:linear-gradient(165deg,#101d3bdb,#091023f2);border:1.5px solid #f8fafc24;padding:18px 24px}
+.xe{background:linear-gradient(155deg,#121f3deb,#090f20f7);border:1.5px solid #7fa6e83d;padding:18px 24px;box-shadow:0 14px 36px -10px #0000008c,inset 0 1px 0 #ffffff1a}
+.xh{background:linear-gradient(145deg,#152344eb,#091024f5 62%,#161c34f0);border:1.5px solid #fbbf2461;box-shadow:0 20px 48px -12px #000000b3,0 0 36px -10px #fbbf242e,inset 0 1px 0 #fde68a47;&.cl{border-color:#e62e457a;box-shadow:0 20px 48px -12px #000000b3,0 0 36px -10px #e62e4538,inset 0 1px 0 #ff6b7f47}}
+.gt{background:linear-gradient(135deg,#FEF08A 0%,#FBBF24 45%,#D97706 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.gp{background:linear-gradient(135deg,#fde68a38,#f59e0b24);border:1.5px solid #fbbf2485;color:#FDE68A;box-shadow:0 0 18px #fbbf2429,inset 0 1px 0 #fef08a47}
+.cp2{background:linear-gradient(135deg,#e62e4547,#e62e4524);border:1.5px solid #ff6b7f8c;color:#FF8596;box-shadow:0 0 18px #e62e4533,inset 0 1px 0 #ffa0af40}
+.lr{position:relative;display:grid;align-items:center;border-radius:14px;background:linear-gradient(135deg,#16213ed6,#0b1224eb);border:1px solid #ffffff1c;box-shadow:0 6px 18px -6px #00000073,inset 0 1px 0 #ffffff12;overflow:hidden}
+.ps{background-image:repeating-linear-gradient(-45deg,#ffffff52 0 4px,#ffffff0f 4px 8px)}
+.ct{height:14px;background:#ffffff1a;overflow:hidden;display:flex;align-items:center;&.hs{justify-content:flex-end}&.as{justify-content:flex-start}}
+.ct.hs,.ch{border-radius:0 99px 99px 0}
+.ct.as,.ca{border-radius:99px 0 0 99px}
+.ch,.ca{height:100%;transition:width .25s ease}
+.r2{background:linear-gradient(145deg,#E2E8F0,#94A3B8);color:#091023}
+.r3{background:linear-gradient(145deg,#FDBA74,#C2410C);color:#091023}
+.rn{background:#ffffff14;border:1px solid #ffffff29;color:#CBD5E1}
+.spb{padding-bottom:env(safe-area-inset-bottom,0)}
+.fb{min-height:36px;border-radius:8px;font-size:12px;font-weight:600;color:#94a3b8;transition:all .15s;&:hover{color:#fff}}
+.zb{min-height:36px;padding-inline:10px;border-radius:12px;background:#ffffff0d;color:#e2e8f0;font-size:12px;font-weight:700;transition:all .15s;&:hover{background:#ffffff26}}
+.zpm{min-width:36px;min-height:36px;border-radius:12px;background:#ffffff0d;color:#fff;font-weight:900;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .15s;&:hover{background:#ffffff26}&:active{transform:scale(.95)}}
+.hb{min-height:40px;padding:6px 10px;border-radius:12px;border:1px solid #ffffff1a;background:#ffffff0d;color:#cbd5e1;font-size:12px;font-weight:700;transition:all .15s;&:hover{background:#ffffff1a}&.on{border-color:#E62E45;background:#e62e452e;color:#fff;font-weight:800}&.og{border-color:#F59E0B;background:#f59e0b2b;color:#FDE68A;font-weight:800}}
+.mnb{min-height:56px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#94a3b8;transition:all .15s;&:hover{color:#e2e8f0}&.on{color:#FF556B;background:#e62e4526}}
+@media(min-width:1024px){.fb{min-height:32px;padding-inline:12px}.zb{min-height:32px}.zpm{min-width:32px;min-height:32px}}
+.fb.on,.qb.on,.zb.on{background:#E62E45;color:#fff;font-weight:800;border-color:#E62E45}
+.zb.on{padding-inline:12px}
+.sb.on{border-color:#E62E45;background:#e62e4526;color:#fff}
+.pb.on{border-color:#F59E0B;background:#f59e0b1f;color:#fff}
+#ts.on{background:#f59e0b40;border-color:#fbbf24b3;color:#fde68a;font-weight:800}
+</style>
+</head>
+<body class="h-[100dvh] fcol bg-[#030711] text-[#F8FAFC]">
+<div class="flex-1 fcol lg:flex-row min-h-0 overflow-hidden relative">
+<aside id="sp" class="hidden lg:flex w-full lg:w-[425px] bg-[#070D1D] lg:border-l border-white/10 flex-col shrink-0 h-full min-h-0 overflow-hidden">
+<div class="lg:hidden sticky top-0 z-20 bg-[#040814]/95 backdrop-blur-md border-b border-white/10 px-3.5 py-2.5 fbw gap-2 shrink-0">
+<div class="min-w-0"><div id="mt" class="text-sm font-black text-white truncate"></div><div id="mm" class="text-xs font-bold text-slate-400 mt-0.5"></div></div>
+<button id="jp" class="min-h-[40px] px-3.5 py-2 rounded-xl bg-[#E62E45]/20 hover:bg-[#E62E45]/30 active:scale-95 border border-[#E62E45]/50 text-[#FF5E72] text-xs font-extrabold fi gap-1.5 shrink-0 transition"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg><span>پیش‌نمایش</span></button>
+</div>
+<div class="hidden lg:flex items-center justify-between bg-[#040814] border-b border-white/10 px-3.5 py-2.5 shrink-0"><div class="fi gap-2"><span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_8px_#FBBF24]"></span><span class="text-xs font-black text-white">استودیو کفش طلا • XGPedia</span></div><span class="text-[10px] font-bold text-slate-500">ادیت داده‌ها: بلوک PRESETS</span></div>
+<div id="es" class="flex-1 overflow-y-auto p-4 pb-24 lg:pb-4 space-y-5">
+<div class="rounded-2xl px-3.5 py-2.5 border border-amber-400/35 bg-amber-500/10 text-amber-200 fbw gap-2 text-xs font-extrabold"><div class="fi gap-2"><span class="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0"></span><span>هماهنگ با هویت بصری XGPedia</span></div><span class="fm text-[11px] opacity-85 shrink-0">GOLDEN BOOT</span></div>
+<div><label class="block text-sm lg:text-xs font-extrabold text-slate-200 mb-2">اسلایدهای کاروسل جدول گلزنان (۴ اسلاید)</label><div class="space-y-2" id="slb"></div></div>
+<div><label class="block text-sm lg:text-xs font-extrabold text-slate-200 mb-2">پریست لیگ‌های معتبر (فصل ۲۶/۲۷)</label><div class="grid grid-cols-2 gap-2" id="prb"></div></div>
+<div class="bg-[#040814] border border-white/10 rounded-2xl p-3.5 space-y-2.5"><div class="fbw gap-2"><span class="text-sm lg:text-xs font-extrabold text-white">مرتب‌سازی زنده جدول و صدرنشین</span><span class="text-[10px] fm text-amber-400 font-bold">LIVE SORT</span></div><div class="grid grid-cols-2 gap-2" id="srtb"></div></div>
+<div class="bg-[#040814] border border-white/10 rounded-2xl p-3.5 space-y-3">
+<span class="block text-sm lg:text-xs font-extrabold text-white">تنظیمات بصری و تراکم کارت</span>
+<div class="space-y-1.5"><span class="block text-[11px] font-bold text-slate-400">تم رنگی صدرنشین و نشان‌ها</span><div class="grid grid-cols-2 gap-2"><button data-th="gold" class="thb hb">طلایی کفش طلا</button><button data-th="classic" class="thb hb">کلاسیک قرمز</button></div></div>
+<div class="space-y-1.5"><span class="block text-[11px] font-bold text-slate-400">تعداد نفرات در جدول اصلی (اسلاید ۱)</span><div class="grid grid-cols-4 gap-1.5" id="rcw"></div></div>
+<div class="space-y-1.5"><span class="block text-[11px] font-bold text-slate-400">ماژول تکمیلی زیر جدول (اسلاید ۱)</span><div class="grid grid-cols-3 gap-1.5"><button data-bm="insight" class="bmb hb text-[11px]">تحلیل و آمار</button><button data-bm="clinical" class="bmb hb text-[11px]">برترین‌های xG</button><button data-bm="none" class="bmb hb text-[11px]">بدون ماژول</button></div></div>
+<label class="fbw gap-2 p-2.5 rounded-xl bg-[#091124] border border-white/10 cursor-pointer"><div class="min-w-0"><span class="block text-xs font-extrabold text-slate-100">نمایش تفکیک پنالتی روی نوارها</span><span class="block text-[10px] text-slate-400 mt-0.5">هاشور مجزا برای گل‌های پنالتی کنار NPG</span></div><input id="pt" type="checkbox" checked class="accent-[#E62E45] w-5 h-5 cursor-pointer shrink-0"></label>
+</div>
+</div>
+<div class="hidden lg:flex p-3 bg-[#040814] border-t border-white/10 items-center justify-between gap-2 shrink-0"><button id="cj" class="flex-1 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-slate-300 transition">کپی دیتای JSON</button><span id="adb" class="px-3 py-2 rounded-xl bg-black/50 border border-white/10 text-[11px] fm text-slate-400"></span></div>
+</aside>
+<main id="sc" class="flex-1 fcol _bg min-h-0 overflow-hidden relative">
+<div class="fcol lg:flex-row lg:items-center lg:justify-between gap-2 px-3 py-2 bg-[#070D1D]/92 backdrop-blur-md border-b border-white/10 shrink-0 z-10">
+<div class="fbw gap-2 shrink-0"><div class="flex-1 lg:flex-none grid grid-cols-3 lg:flex bg-[#030711] p-1 rounded-xl border border-white/10 gap-1"><button data-f="4:5" class="fb on">پست 4:5</button><button data-f="9:16" class="fb">استوری 9:16</button><button data-f="16:9" class="fb">بنر 16:9</button></div><span id="mdb" class="lg:hidden px-2.5 py-2 rounded-xl bg-[#030711] border border-white/10 text-[11px] fm text-slate-300 shrink-0"></span></div>
+<div class="fbw gap-2 min-w-0 lg:flex-1"><div id="qsb" class="fi gap-1.5 overflow-x-auto ns py-0.5"></div><span id="sdp" class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/35 text-emerald-300 text-[11px] font-extrabold shrink-0">✓ آماده انتشار</span></div>
+</div>
+<div id="vp" class="flex-1 w-full h-full overflow-auto flex p-3 sm:p-6 pb-32 lg:pb-16"><div class="m-auto fc"><div id="aw"><div id="ea" class="f4" dir="rtl">
+<div id="ag" class="absolute inset-0 pointer-events-none z-0"></div>
+<svg id="fs" class="absolute inset-0 w-full h-full pointer-events-none z-0" viewBox="0 0 1080 1350" preserveAspectRatio="xMidYMid slice" fill="none"><defs><pattern id="tg" width="54" height="54" patternUnits="userSpaceOnUse"><path d="M54 0H0v54" stroke="#F8FAFC" stroke-opacity=".055"/></pattern><radialGradient id="rf" cx="50%" cy="28%" r="44%"><stop id="rf0" offset="0" stop-color="#FBBF24" stop-opacity=".2"/><stop offset=".55" stop-color="#E62E45" stop-opacity=".07"/><stop offset="1" stop-color="#E62E45" stop-opacity="0"/></radialGradient></defs><rect width="100%" height="100%" fill="url(#tg)"/><rect id="pr" x="12" y="12" width="1056" height="1326" rx="18" stroke="#F8FAFC" stroke-opacity=".11" stroke-width="1.5"/><g stroke="#F8FAFC" stroke-opacity=".09" stroke-width="1.5"><line id="hl" x1="540" y1="12" x2="540" y2="1338" stroke-dasharray="8 8"/><circle id="c0" cx="540" cy="315" r="145"/></g><g stroke="#F8FAFC" stroke-opacity=".07" stroke-width="1.5"><rect x="12" y="145" width="135" height="360"/><path d="M147 245A95 95 0 0 1 147 405"/><rect id="rb" x="933" y="145" width="135" height="360"/><path id="ra" d="M933 245A95 95 0 0 0 933 405"/></g><circle id="c1" cx="540" cy="315" r="250" fill="url(#rf)"/><circle id="c2" cx="540" cy="315" r="215" stroke="#E62E45" stroke-opacity=".18" stroke-width="1.2" stroke-dasharray="4 6"/><circle id="c3" cx="540" cy="315" r="295" stroke="#F8FAFC" stroke-opacity=".07"/><circle id="c4" cx="540" cy="315" r="375" stroke="#F8FAFC" stroke-opacity=".045"/><path id="crh" d="M24 44V24H44M1056 44V24H1036M24 1306V1326H44M1056 1306V1326H1036" stroke="#E62E45" stroke-opacity=".55" stroke-width="2"/></svg>
+<div class="absolute inset-0 _sl pointer-events-none z-0"></div>
+<div id="sz" class="hidden absolute inset-0 pointer-events-none z-30 fcol justify-between">
+<div class="w-full h-[135px] bg-[#E62E45]/18 border-b-2 border-dashed border-[#FF6B7F]/80 flex items-end justify-center pb-3"><span class="px-4 py-1 rounded-full bg-[#070D1D]/90 border border-[#FF6B7F]/60 text-[#FF8A9A] text-[20px] font-extrabold">ناحیه امن بالای استوری (پروفایل اینستاگرام • ۱۳۵px)</span></div>
+<div class="w-full h-[165px] bg-[#E62E45]/18 border-t-2 border-dashed border-[#FF6B7F]/80 flex items-start justify-center pt-3"><span class="px-4 py-1 rounded-full bg-[#070D1D]/90 border border-[#FF6B7F]/60 text-[#FF8A9A] text-[20px] font-extrabold">ناحیه امن پایین استوری (نوار ارسال پیام • ۱۶۵px)</span></div>
+</div>
+<header id="cm" class="relative z-10 px-[40px] pt-2 pb-2 fbw gap-4 shrink-0">
+<div class="fcol items-start gap-2 min-w-0">
+<div class="fi flex-wrap gap-2.5"><div class="px-4 py-1.5 rounded-full text-[23px] font-black fi gap-2.5 border text-[#F8FAFC]" style="background:#152347e6;border-color:#ffffff2e"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8m-4-4v4m-5-17h10v5a5 5 0 01-10 0V4zM5 6H3v2a3 3 0 003 3h1m12-5h2v2a3 3 0 01-3 3h-1"/></svg><span id="cc"></span></div><span id="cr" class="px-4 py-1.5 rounded-full text-[21px] font-extrabold tracking-tight border" style="background:#e62e452e;border-color:#e62e4580;color:#FF6B7F"></span></div>
+<div class="fi gap-2 text-[19px] font-bold text-slate-200"><span id="cd"></span></div>
+</div>
+<div id="bl" class="fi gap-3 shrink-0" dir="ltr"><svg width="54" height="54" viewBox="0 0 48 48" fill="none"><path d="M24 2.5L42 10.2V23.4C42 34.6 34.3 43 24 45.6C13.7 43 6 34.6 6 23.4V10.2Z" fill="#152347" stroke="#E62E45" stroke-width="2.6"/><circle cx="24" cy="24" r="9.5" stroke="#f8fafc47" stroke-width="1.5"/><line x1="24" y1="9" x2="24" y2="39" stroke="#f8fafc47" stroke-width="1.2" stroke-dasharray="2.5 2.5"/><path d="M16.5 16.5L31.5 31.5M31.5 16.5L16.5 31.5" stroke="#E62E45" stroke-width="3.2" stroke-linecap="round"/><circle cx="24" cy="24" r="3" fill="#F8FAFC"/></svg><div class="fd font-extrabold text-[34px] leading-none tracking-tight"><span style="color:#E62E45">XG</span><span style="color:#F8FAFC">Pedia</span></div></div>
+</header>
+<div id="cmb" class="relative z-10 flex-1 px-[40px] py-1.5 min-h-0 overflow-hidden"></div>
+<footer id="cf" class="relative z-10 px-[40px] pt-2.5 pb-4 shrink-0"><div class="border-t border-white/12 mb-2"></div><div class="fbw gap-4"><div class="fi gap-2.5 min-w-0"><span class="w-3 h-3 rounded-full bg-[#E62E45] shrink-0"></span><span id="ct" dir="ltr" class="fm text-[18px] font-extrabold tracking-[0.14em] uppercase text-slate-100 truncate"></span></div><div class="fi gap-3 fm shrink-0" dir="ltr"><span class="text-[20px] font-extrabold text-white">@XGPedia</span><span class="text-slate-500 text-[17px]">|</span><span id="so" class="text-[17px] font-semibold text-slate-300"></span></div></div></footer>
+</div></div></div></div>
+<div class="fixed lg:absolute bottom-[78px] lg:bottom-4 left-1/2 -translate-x-1/2 z-20 fi gap-1.5 p-1.5 rounded-2xl bg-[#070D1D]/92 backdrop-blur-xl border border-white/15 shadow-2xl max-w-[96vw]">
+<button id="zo" title="کوچک‌نمایی" class="zpm">−</button>
+<button data-z="1" class="zb">تناسب</button>
+<button data-z="1.5" class="zb fm">1.5×</button>
+<button data-z="2" class="zb fm">2×</button>
+<button id="zi" title="بزرگ‌نمایی" class="zpm">+</button>
+<button id="ts" class="hidden min-h-[36px] lg:min-h-[32px] px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-slate-300 text-xs font-bold items-center gap-1.5 whitespace-nowrap transition mr-1"><span>راهنمای امن استوری</span></button>
+</div>
+</main>
+</div>
+<nav aria-label="ناوبری موبایل" class="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[#070D1D]/95 backdrop-blur-xl border-t border-white/12 spb">
+<div class="grid grid-cols-2 px-1.5 py-1.5 gap-1">
+<button data-n="preview" class="mnb"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span class="text-[11px] font-extrabold">پیش‌نمایش</span></button>
+<button data-n="slides" class="mnb"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg><span class="text-[11px] font-bold">اسلایدها</span></button>
+</div>
+</nav>
+<div id="to" role="status" aria-live="polite" class="fixed bottom-24 lg:bottom-5 left-1/2 -translate-x-1/2 lg:left-5 lg:translate-x-0 z-50 px-4 py-2.5 rounded-xl bg-[#0F172A]/95 backdrop-blur-md border border-[#E62E45]/60 text-white text-xs font-bold shadow-2xl whitespace-nowrap opacity-0 pointer-events-none transition-opacity duration-200"></div>
+<script>
+(()=>{
+'use strict';
+
+const PRESETS={
+pl:{
+competition:'لیگ برتر انگلیس',round:'هفته ۲۴ • رقابت کفش طلا',leagueEn:'PREMIER LEAGUE',season:'26/27',weekCode:'W24',source:'Opta / Understat',
+weeks:['۱۷','۱۸','۱۹','۲۰','۲۱','۲۲','۲۳','۲۴'],
+paceInsight:'ارلینگ هالند با نرخ ۱.۰۱ گل در هر ۹۰ دقیقه در مسیر شکستن رکورد تاریخی ۳۶ گل است؛ اما محمد صلاح با +۳.۲ گل بیشتر از امید گل، زهردارترین تمام‌کننده دو ماه اخیر لیگ برتر بوده است.',
+players:[
+{name:'ارلینگ هالند',short:'هالند',club:'منچسترسیتی',code:'MCI',pos:'مهاجم نوک',num:9,color:'#38BDF8',secondary:'#FFFFFF',goals:22,pen:3,xg:19.4,mins:1960,shots:89,sot:48,streak:1,radar:[96,98,92,76,94,92],pace:[14,15,17,18,19,20,21,22],photoUrl:null},
+{name:'محمد صلاح',short:'صلاح',club:'لیورپول',code:'LIV',pos:'وینگر راست',num:11,color:'#EF0107',secondary:'#FDE047',goals:20,pen:5,xg:16.8,mins:2040,shots:78,sot:41,streak:1,radar:[94,91,68,86,96,99],pace:[13,14,15,16,17,18,19,20],photoUrl:null},
+{name:'الکساندر ایساک',short:'ایساک',club:'نیوکاسل',code:'NEW',pos:'مهاجم نوک',num:14,color:'#E2E8F0',secondary:'#1E293B',goals:17,pen:2,xg:14.6,mins:1810,shots:64,sot:34,streak:1,radar:[91,89,78,80,92,86],pace:[9,10,12,13,14,15,16,17],photoUrl:null},
+{name:'کول پالمر',short:'پالمر',club:'چلسی',code:'CHE',pos:'هافبک تهاجمی',num:20,color:'#3B82F6',secondary:'#FFFFFF',goals:15,pen:4,xg:12.7,mins:1995,shots:71,sot:35,streak:0,radar:[90,82,62,92,97,94],pace:[10,11,11,12,13,14,14,15],photoUrl:null},
+{name:'بوکایو ساکا',short:'ساکا',club:'آرسنال',code:'ARS',pos:'وینگر راست',num:7,color:'#E62E45',secondary:'#FFFFFF',goals:14,pen:2,xg:12.9,mins:1920,shots:66,sot:31,streak:0,radar:[86,84,65,85,90,95],pace:[8,9,10,11,12,12,13,14],photoUrl:null},
+{name:'اولی واتکینز',short:'واتکینز',club:'استون ویلا',code:'AVL',pos:'مهاجم نوک',num:11,color:'#A855F7',secondary:'#38BDF8',goals:13,pen:1,xg:14.3,mins:1890,shots:69,sot:33,streak:0,radar:[81,90,84,72,82,85],pace:[8,9,9,10,11,12,12,13],photoUrl:null},
+{name:'برایان امبومو',short:'امبومو',club:'برنتفورد',code:'BRE',pos:'وینگر راست',num:19,color:'#F43F5E',secondary:'#FFFFFF',goals:13,pen:3,xg:10.4,mins:2010,shots:54,sot:29,streak:1,radar:[89,81,66,83,88,82],pace:[7,8,9,10,10,11,12,13],photoUrl:null},
+{name:'متئوس کونیا',short:'کونیا',club:'ولورهمپتون',code:'WOL',pos:'مهاجم سایه',num:10,color:'#F59E0B',secondary:'#111827',goals:11,pen:0,xg:9.1,mins:1850,shots:61,sot:28,streak:0,radar:[87,80,70,91,84,84],pace:[6,7,8,8,9,10,10,11],photoUrl:null}
+]
+},
+ucl:{
+competition:'لیگ قهرمانان اروپا',round:'پایان دور گروهی و پلی‌آف • کفش طلا',leagueEn:'CHAMPIONS LEAGUE',season:'26/27',weekCode:'MD10',source:'Opta / UEFA Analytics',
+weeks:['۳','۴','۵','۶','۷','۸','۹','۱۰'],
+paceInsight:'کیلیان امباپه با ۴ گل در دو بازی اخیر پلی‌آف از هری کین سبقت گرفت. رافینیا و لواندوفسکی به تنهایی بیش از ۴۲٪ کل امید گل بارسلونا در این فصل اروپا را تولید کرده‌اند.',
+players:[
+{name:'کیلیان امباپه',short:'امباپه',club:'رئال مادرید',code:'RMA',pos:'مهاجم نوک',num:9,color:'#F59E0B',secondary:'#FFFFFF',goals:11,pen:2,xg:8.9,mins:810,shots:42,sot:24,streak:1,radar:[95,94,74,89,96,92],pace:[3,4,5,6,7,7,9,11],photoUrl:null},
+{name:'هری کین',short:'کین',club:'بایرن مونیخ',code:'BAY',pos:'مهاجم نوک',num:9,color:'#EF0107',secondary:'#FFFFFF',goals:10,pen:4,xg:9.2,mins:845,shots:37,sot:21,streak:1,radar:[96,92,90,91,98,94],pace:[4,5,6,6,7,8,9,10],photoUrl:null},
+{name:'رابرت لواندوفسکی',short:'لواندوفسکی',club:'بارسلونا',code:'BAR',pos:'مهاجم نوک',num:9,color:'#E62E45',secondary:'#3B82F6',goals:9,pen:2,xg:8.4,mins:760,shots:33,sot:19,streak:0,radar:[93,96,91,78,94,86],pace:[3,5,6,7,8,8,9,9],photoUrl:null},
+{name:'ارلینگ هالند',short:'هالند',club:'منچسترسیتی',code:'MCI',pos:'مهاجم نوک',num:9,color:'#38BDF8',secondary:'#FFFFFF',goals:9,pen:1,xg:9.6,mins:830,shots:39,sot:22,streak:1,radar:[92,98,93,75,91,84],pace:[3,4,5,5,6,7,8,9],photoUrl:null},
+{name:'رافینیا',short:'رافینیا',club:'بارسلونا',code:'BAR',pos:'وینگر چپ',num:11,color:'#3B82F6',secondary:'#E62E45',goals:8,pen:0,xg:6.3,mins:790,shots:31,sot:17,streak:1,radar:[91,85,68,88,90,96],pace:[2,4,5,6,6,7,8,8],photoUrl:null},
+{name:'وینیسیوس جونیور',short:'وینیسیوس',club:'رئال مادرید',code:'RMA',pos:'وینگر چپ',num:7,color:'#FBBF24',secondary:'#1E293B',goals:7,pen:1,xg:6.5,mins:780,shots:29,sot:15,streak:0,radar:[88,88,62,82,89,93],pace:[2,3,4,5,5,6,7,7],photoUrl:null},
+{name:'سرهو گیراسی',short:'گیراسی',club:'دورتموند',code:'BVB',pos:'مهاجم نوک',num:9,color:'#EAB308',secondary:'#09090B',goals:7,pen:2,xg:6.1,mins:720,shots:26,sot:14,streak:0,radar:[89,91,88,74,88,83],pace:[2,3,4,4,5,6,6,7],photoUrl:null},
+{name:'ویکتور گیوکرس',short:'گیوکرس',club:'اسپورتینگ',code:'SCP',pos:'مهاجم نوک',num:9,color:'#10B981',secondary:'#FFFFFF',goals:6,pen:2,xg:5.8,mins:740,shots:28,sot:14,streak:0,radar:[87,90,82,79,87,84],pace:[1,2,4,4,5,5,6,6],photoUrl:null}
+]
+},
+laliga:{
+competition:'لالیگا اسپانیا',round:'هفته ۲۵ • نبرد پی‌چی‌چی',leagueEn:'LALIGA EA SPORTS',season:'26/27',weekCode:'W25',source:'Opta / LaLiga Beyond Stats',
+weeks:['۱۸','۱۹','۲۰','۲۱','۲۲','۲۳','۲۴','۲۵'],
+paceInsight:'دوئل پی‌چی‌چی بین امباپه و لواندوفسکی به حساس‌ترین نقطه فصل رسیده است. خولین آلوارز با نرخ تبدیل شوت ۲۶.۴٪، اقتصادی‌ترین مهاجم لالیگا در محوطه جریمه محسوب می‌شود.',
+players:[
+{name:'کیلیان امباپه',short:'امباپه',club:'رئال مادرید',code:'RMA',pos:'مهاجم نوک',num:9,color:'#F59E0B',secondary:'#FFFFFF',goals:21,pen:4,xg:18.6,mins:2010,shots:92,sot:49,streak:1,radar:[95,94,72,90,94,95],pace:[12,13,15,16,17,19,20,21],photoUrl:null},
+{name:'رابرت لواندوفسکی',short:'لواندوفسکی',club:'بارسلونا',code:'BAR',pos:'مهاجم نوک',num:9,color:'#E62E45',secondary:'#2563EB',goals:19,pen:3,xg:17.9,mins:1930,shots:77,sot:42,streak:0,radar:[94,97,92,78,95,88],pace:[14,15,15,16,17,18,18,19],photoUrl:null},
+{name:'رافینیا',short:'رافینیا',club:'بارسلونا',code:'BAR',pos:'وینگر چپ',num:11,color:'#3B82F6',secondary:'#E62E45',goals:15,pen:1,xg:12.4,mins:2050,shots:68,sot:34,streak:1,radar:[91,86,69,89,91,97],pace:[9,10,11,12,12,13,14,15],photoUrl:null},
+{name:'خولین آلوارز',short:'آلوارز',club:'اتلتیکو مادرید',code:'ATM',pos:'مهاجم دوم',num:19,color:'#F43F5E',secondary:'#FFFFFF',goals:14,pen:2,xg:11.1,mins:1860,shots:53,sot:30,streak:1,radar:[92,88,75,87,93,89],pace:[7,8,9,10,11,12,13,14],photoUrl:null},
+{name:'لامین یامال',short:'یامال',club:'بارسلونا',code:'BAR',pos:'وینگر راست',num:19,color:'#38BDF8',secondary:'#E62E45',goals:12,pen:0,xg:9.6,mins:1980,shots:64,sot:31,streak:1,radar:[88,82,58,92,94,98],pace:[6,7,8,9,9,10,11,12],photoUrl:null},
+{name:'وینیسیوس جونیور',short:'وینیسیوس',club:'رئال مادرید',code:'RMA',pos:'وینگر چپ',num:7,color:'#FBBF24',secondary:'#0F172A',goals:12,pen:2,xg:11.8,mins:1890,shots:62,sot:29,streak:0,radar:[86,89,61,81,87,92],pace:[8,9,9,10,10,11,11,12],photoUrl:null},
+{name:'آنته بودیمیر',short:'بودیمیر',club:'اوساسونا',code:'OSA',pos:'مهاجم نوک',num:17,color:'#DC2626',secondary:'#1E3A8A',goals:12,pen:4,xg:12.6,mins:1940,shots:58,sot:27,streak:0,radar:[82,91,95,70,86,78],pace:[7,8,9,9,10,11,11,12],photoUrl:null},
+{name:'جود بلینگام',short:'بلینگام',club:'رئال مادرید',code:'RMA',pos:'هافبک تهاجمی',num:5,color:'#E2E8F0',secondary:'#F59E0B',goals:10,pen:0,xg:9.3,mins:1820,shots:49,sot:24,streak:0,radar:[87,89,84,82,92,91],pace:[5,6,7,7,8,9,9,10],photoUrl:null}
+]
+},
+pgpl:{
+competition:'لیگ برتر خلیج فارس',round:'هفته ۲۱ • رقابت آقای گلی',leagueEn:'PERSIAN GULF PRO LEAGUE',season:'26/27',weekCode:'W21',source:'Metrica / XGPedia Iran',
+weeks:['۱۴','۱۵','۱۶','۱۷','۱۸','۱۹','۲۰','۲۱'],
+paceInsight:'امیرحسین حسین‌زاده با ۰.۷۱ گل در هر ۹۰ دقیقه و بدون وابستگی زیاد به پنالتی پیشتاز آقای گلی است؛ در حالی که علی علیپور با ثبت +۲.۴ گل بالاتر از امید گل، در ۵ هفته اخیر اوج گرفته است.',
+players:[
+{name:'امیرحسین حسین‌زاده',short:'حسین‌زاده',club:'تراکتور',code:'TRA',pos:'مهاجم سایه',num:99,color:'#EF0107',secondary:'#FFFFFF',goals:13,pen:1,xg:10.4,mins:1645,shots:56,sot:29,streak:1,radar:[93,90,74,88,92,95],pace:[7,8,9,9,10,11,12,13],photoUrl:null},
+{name:'علی علیپور',short:'علیپور',club:'پرسپولیس',code:'PRS',pos:'مهاجم نوک',num:9,color:'#E62E45',secondary:'#FFFFFF',goals:12,pen:2,xg:9.6,mins:1690,shots:52,sot:27,streak:1,radar:[91,92,82,81,90,87],pace:[6,7,7,8,9,10,11,12],photoUrl:null},
+{name:'مهدی لیموچی',short:'لیموچی',club:'سپاهان',code:'SEP',pos:'وینگر چپ',num:7,color:'#F59E0B',secondary:'#111827',goals:10,pen:0,xg:7.8,mins:1580,shots:45,sot:23,streak:1,radar:[90,84,68,89,89,92],pace:[5,6,7,7,8,8,9,10],photoUrl:null},
+{name:'شهریار مغانلو',short:'مغانلو',club:'سپاهان',code:'SEP',pos:'مهاجم نوک',num:70,color:'#FBBF24',secondary:'#0F172A',goals:9,pen:3,xg:9.8,mins:1520,shots:48,sot:22,streak:0,radar:[83,93,94,76,87,81],pace:[5,6,6,7,7,8,8,9],photoUrl:null},
+{name:'تومیسلاو اشتراکالی',short:'اشتراکالی',club:'تراکتور',code:'TRA',pos:'مهاجم نوک',num:25,color:'#F43F5E',secondary:'#FFFFFF',goals:9,pen:0,xg:8.2,mins:1490,shots:41,sot:21,streak:0,radar:[87,89,86,74,85,84],pace:[5,5,6,7,7,8,9,9],photoUrl:null},
+{name:'رامین رضاییان',short:'رضاییان',club:'استقلال',code:'EST',pos:'مدافع راست',num:10,color:'#3B82F6',secondary:'#FFFFFF',goals:8,pen:4,xg:6.9,mins:1740,shots:39,sot:19,streak:0,radar:[85,76,72,91,94,90],pace:[4,5,5,6,6,7,7,8],photoUrl:null},
+{name:'اوستون اورونوف',short:'اورونوف',club:'پرسپولیس',code:'PRS',pos:'وینگر چپ',num:70,color:'#FB7185',secondary:'#FFFFFF',goals:7,pen:0,xg:5.5,mins:1340,shots:36,sot:18,streak:1,radar:[88,83,64,87,88,89],pace:[3,4,4,5,5,6,6,7],photoUrl:null},
+{name:'رضا غندی‌پور',short:'غندی‌پور',club:'ملوان',code:'MLV',pos:'مهاجم نوک',num:9,color:'#38BDF8',secondary:'#FFFFFF',goals:7,pen:1,xg:7.6,mins:1510,shots:43,sot:19,streak:0,radar:[80,86,84,73,81,79],pace:[3,4,5,5,6,6,7,7],photoUrl:null}
+]
+}
+};
+
+const F={'4:5':[1080,1350,'پست 4:5'],'9:16':[1080,1920,'استوری 9:16'],'16:9':[1920,1080,'بنر 16:9']};
+const SL=[['slide1','اسلاید ۱: رقابت کفش طلا (کارت اصلی)','SLIDE 1','اسلاید ۱ • کفش طلا','GOLDEN BOOT RACE'],['slide2','اسلاید ۲: دوئل صدرنشینان (H2H و رادار)','SLIDE 2','اسلاید ۲ • دوئل صدر','STRIKER HEAD-TO-HEAD'],['slide3','اسلاید ۳: نقشه کلینیکال تمام‌کنندگی (G vs xG)','SLIDE 3','اسلاید ۳ • نقشه xG','CLINICAL FINISHING MATRIX'],['slide4','اسلاید ۴: ریتم و مسیر کفش طلا (روند گلزنی)','SLIDE 4','اسلاید ۴ • مسیر کفش طلا','GOLDEN BOOT TRAJECTORY']];
+const SR=[['goals','تعداد گل (Goals)'],['npg','بدون پنالتی (NPG)'],['xg','امید گل (xG)'],['delta','کلینیکال (G−xG)'],['g90','گل در ۹۰ دقیقه']];
+const S={fmt:'4:5',sl:'slide1',pk:'pl',sr:'goals',th:'gold',rc:8,bm:'insight',pen:1,sz:1,mv:'preview',zm:1,d:structuredClone(PRESETS.pl)};
+
+const $=i=>document.getElementById(i),$$=s=>document.querySelectorAll(s),on=(s,f)=>$$(s).forEach(e=>e.onclick=()=>f(e));
+const f1=v=>(+v).toFixed(1),f2=v=>(+v).toFixed(2),fa=v=>String(v).replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d]),p2=n=>fa(String(n).padStart(2,'0')),sg=(v,d=1)=>`${v>=0?'+':'−'}${fa(Math.abs(v).toFixed(d))}`;
+const lum=h=>{const c=(h||'#E62E45').replace('#',''),n=parseInt(c.length===3?c.replace(/./g,x=>x+x):c,16)||0,a=[n>>16&255,n>>8&255,n&255].map(v=>(v/=255)<=.03928?v/12.92:((v+.055)/1.055)**2.4);return a[0]*.2126+a[1]*.7152+a[2]*.0722};
+const ctr=h=>lum(h)>.55?'#070D1D':'#fff';
+const T=m=>{const e=$('to');if(!e)return;e.textContent=m;e.classList.replace('opacity-0','opacity-100');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.replace('opacity-100','opacity-0'),2200)};
+const spL=(P,t=.24)=>P.length<2?P[0]?`M${P[0].x} ${P[0].y}`:'':P.reduce((d,p,i)=>{if(!i)return`M${f1(p.x)} ${f1(p.y)}`;const a=P[i-2]||P[0],b=P[i-1],c=P[i+1]||p;return`${d} C${f1(b.x+(p.x-a.x)*t)} ${f1(b.y+(p.y-a.y)*t)},${f1(p.x-(c.x-b.x)*t)} ${f1(p.y-(c.y-b.y)*t)},${f1(p.x)} ${f1(p.y)}`},'');
+const cw=(z=18,c='#FBBF24')=>`<svg width="${z}" height="${z}" viewBox="0 0 24 24" fill="${c}" style="flex-shrink:0"><path d="M3 18h18v2H3v-2zm0-2L1 7l5.5 3.5L12 3l5.5 7.5L23 7l-2 9H3z"/></svg>`;
+const fl=(z=15)=>`<svg width="${z}" height="${z}" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M12 2c.6 3.2-1.2 5.3-2.5 6.8C8 10.6 7 12.2 7 14.5a5 5 0 0 0 10 0c0-3.2-1.9-5.6-3-7-.2 1.4-.9 2.3-1.8 2.8.5-2.6.4-5.7-.2-8.3z" fill="#F97316" stroke="#FDE047" stroke-width="1.2"/></svg>`;
+const mh=(t,r,b='bg-[#E62E45]',mb='mb-3 pb-2.5')=>`<div class="fbw ${mb} border-b border-white/12 shrink-0"><div class="fi gap-2.5 min-w-0"><span class="w-2 h-6 rounded-full ${b} shrink-0"></span><h3 class="text-[25px] font-black text-white truncate">${t}</h3></div><div class="shrink-0">${r}</div></div>`;
+const dp=(d,cp)=>`<span dir="ltr" class="inline-flex items-center justify-center rounded-xl border font-black leading-none whitespace-nowrap ${d>=0?'bg-emerald-500/20 border-emerald-400/50 text-emerald-300':'bg-rose-500/20 border-rose-400/50 text-rose-300'} ${cp?'px-2.5 py-1 text-[17px]':'px-3.5 py-1.5 text-[20px]'}">${sg(d,1)}</span>`;
+
+const cr=(p,z=44,u='c')=>{
+const pr=p.color||'#E62E45',sc=p.secondary||'#fff',cd=(p.code||'FC').slice(0,3).toUpperCase(),k=`${u}_${cd}_${z}`,d='M90 16L150 40V88C150 128 124.5 156.5 90 166C55.5 156.5 30 128 30 88V40Z';
+return`<svg width="${z}" height="${z}" viewBox="0 0 180 180" fill="none" style="filter:drop-shadow(0 6px 12px #00000080);flex-shrink:0"><defs><linearGradient id="g${k}" x1="20" y1="15" x2="160" y2="165" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="${sc}" stop-opacity=".95"/><stop offset=".5" stop-color="${pr}" stop-opacity=".92"/><stop offset="1" stop-color="${sc}" stop-opacity=".72"/></linearGradient><clipPath id="cl${k}"><path d="${d}"/></clipPath></defs><path d="M90 12L154 38V88C154 130.5 127 160.5 90 170.5C53 160.5 26 130.5 26 88V38Z" fill="${pr}" fill-opacity=".22"/><g clip-path="url(#cl${k})"><rect x="25" y="12" width="130" height="158" fill="${pr}"/><path d="M25 112L155 56V84L25 140Z" fill="${sc}" fill-opacity=".28"/><path d="M90 16L150 40V58L90 34L30 58V40Z" fill="${sc}" fill-opacity=".88"/><ellipse cx="90" cy="30" rx="65" ry="26" fill="#fff" fill-opacity=".14"/></g><path d="${d}" stroke="url(#g${k})" stroke-width="5.5"/><rect x="38" y="66" width="104" height="50" rx="14" fill="${lum(pr)>.62?'#0D1730':'#070d1da8'}" stroke="${sc}" stroke-opacity=".55" stroke-width="2.2"/><text x="90" y="102" text-anchor="middle" fill="#fff" font-family="Space Grotesk,JetBrains Mono,sans-serif" font-weight="800" font-size="34" letter-spacing="1.5">${cd}</text></svg>`;
+};
+
+const ja=(p,z=148,ld=1,u='j')=>{
+const ac=ld?(S.th==='gold'?'#FBBF24':'#E62E45'):p.color,pr=p.color||'#38BDF8',sc=p.secondary||'#fff',k=`${u}_${p.code}_${p.num}_${z}`;
+if(p.photoUrl)return`<div style="width:${z}px;height:${z}px;border-radius:999px;padding:4px;background:linear-gradient(135deg,${ac},${pr});box-shadow:0 0 28px ${ac}55;flex-shrink:0"><img src="${p.photoUrl}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;border-radius:999px;background:#091023"></div>`;
+const jp='M56 48L72 41C77 50 103 50 108 41L124 48L152 72L136 96L124 88V166H56V88L44 96L28 72Z';
+return`<svg width="${z}" height="${z}" viewBox="0 0 180 180" fill="none" style="filter:drop-shadow(0 14px 24px #0000009e);flex-shrink:0"><defs><radialGradient id="b${k}" cx="50%" cy="42%" r="55%"><stop offset="0" stop-color="${pr}" stop-opacity=".42"/><stop offset=".7" stop-color="#091124" stop-opacity=".95"/><stop offset="1" stop-color="#050914"/></radialGradient><linearGradient id="r${k}" x1="0" y1="0" x2="180" y2="180" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="${ld&&S.th==='gold'?'#FEF08A':ac}"/><stop offset=".5" stop-color="${ac}"/><stop offset="1" stop-color="${pr}"/></linearGradient><linearGradient id="k${k}" x1="40" y1="30" x2="140" y2="160" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="${pr}"/><stop offset="1" stop-color="${pr}" stop-opacity=".78"/></linearGradient><pattern id="m${k}" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><line x1="0" y1="0" x2="0" y2="10" stroke="${sc}" stroke-opacity=".16" stroke-width="2"/></pattern><clipPath id="c${k}"><circle cx="90" cy="90" r="80"/></clipPath></defs><circle cx="90" cy="90" r="87" stroke="${ac}" stroke-opacity=".34" stroke-width="1.5" stroke-dasharray="5 5"/><circle cx="90" cy="90" r="81" fill="url(#b${k})" stroke="url(#r${k})" stroke-width="4"/><g clip-path="url(#c${k})"><circle cx="90" cy="145" r="52" stroke="#fff" stroke-opacity=".08" stroke-width="1.5"/><path d="${jp}" fill="url(#k${k})" stroke="${sc}" stroke-opacity=".65" stroke-width="2.5" stroke-linejoin="round"/><path d="${jp}" fill="url(#m${k})"/><path d="M28 72L44 96L50 92L35 67ZM152 72L136 96L130 92L145 67Z" fill="${sc}" fill-opacity=".85"/><path d="M72 41C78 54 102 54 108 41L103 40C98 48 82 48 77 40Z" fill="${sc}" fill-opacity=".92"/><text x="90" y="121" text-anchor="middle" fill="${ctr(pr)}" font-family="Space Grotesk,JetBrains Mono,sans-serif" font-weight="800" font-size="48" letter-spacing="-1">${p.num||9}</text><circle cx="109" cy="70" r="5" fill="${sc}" fill-opacity=".9"/></g></svg>`;
+};
+
+const rnk=()=>S.d.players.map(p=>{
+const npg=Math.max(0,p.goals-p.pen),delta=+(p.goals-p.xg).toFixed(2),m90=p.mins/90||1;
+return{...p,npg,delta,g90:+(p.goals/m90).toFixed(2),npxg90:+(Math.max(0,p.xg-p.pen*.78)/m90).toFixed(2),sot90:+(p.sot/m90).toFixed(2),mpg:p.goals?Math.round(p.mins/p.goals):999,conv:p.shots?+(p.goals/p.shots*100).toFixed(1):0};
+}).sort((a,b)=>S.sr==='npg'?b.npg-a.npg||b.goals-a.goals:S.sr==='xg'?b.xg-a.xg||b.goals-a.goals:S.sr==='delta'?b.delta-a.delta||b.goals-a.goals:S.sr==='g90'?b.g90-a.g90||b.goals-a.goals:b.goals-a.goals||b.npg-a.npg||a.mins-b.mins);
+
+function s1(P){
+const L=P[0],b16=S.fmt==='16:9',b9=S.fmt==='9:16',gd=S.th==='gold',rc=S.rc,rs=P.slice(1,rc),mx=Math.max(...P.slice(0,rc).map(p=>Math.max(p.goals,p.xg)),1)*1.08;
+const bc=gd?'gp':'cp2',hc=gd?'':'cl',ac=gd?'#FBBF24':'#E62E45',nc=gd?'gt':'text-white';
+const st={goals:'صدرنشین جدول گلزنان',npg:'برترین گلزن بدون پنالتی',xg:'بالاترین امید گل (xG)',delta:'کلینیکال‌ترین تمام‌کننده',g90:'بیشترین نرخ گل در ۹۰ دقیقه'}[S.sr];
+const kp=`<div class="grid grid-cols-3 gap-2.5 ${b16?'mt-4':'mt-3'} pt-3 border-t border-white/12"><div class="rounded-2xl bg-[#060C1D]/85 border border-sky-400/25 px-3.5 py-2 fbw gap-2"><span class="text-[16px] font-bold text-slate-300">امید گل (xG)</span><span class="text-[23px] font-black text-sky-300">${fa(f1(L.xg))}</span></div><div class="rounded-2xl bg-[#060C1D]/85 border ${L.delta>=0?'border-emerald-400/30':'border-rose-400/30'} px-3.5 py-2 fbw gap-2"><span class="text-[16px] font-bold text-slate-300">کلینیکال</span><span dir="ltr" class="text-[23px] font-black ${L.delta>=0?'text-emerald-300':'text-rose-300'}">${sg(L.delta,1)}</span></div><div class="rounded-2xl bg-[#060C1D]/85 border border-white/12 px-3.5 py-2 fbw gap-2"><span class="text-[16px] font-bold text-slate-300">نرخ در ۹۰'</span><span class="text-[23px] font-black text-amber-300">${fa(f2(L.g90))}</span></div></div>`;
+
+const hero=b16?`<div class="xh ${hc} h-full justify-between p-6"><div class="fd font-black text-[230px] leading-none absolute -left-4 -top-6 pointer-events-none opacity-[0.06]" style="color:${ac}">${String(L.num).padStart(2,'0')}</div><div class="absolute -right-16 -top-16 w-72 h-72 rounded-full pointer-events-none" style="background:radial-gradient(circle,${L.color}38,transparent 70%)"></div><div class="relative z-10 fcol gap-4"><div class="fbw gap-2"><div class="fi gap-2 px-4 py-1.5 rounded-full text-[18px] font-black ${bc}">${cw(20,gd?'#FBBF24':'#FF6B7F')}<span>${st}</span></div><span class="fm text-[22px] font-extrabold text-amber-300/90">#01</span></div><div class="fi gap-5 mt-1">${ja(L,172,1,'h16')}<div class="min-w-0 flex-1 fcol gap-2"><h1 class="text-[42px] font-black text-white leading-[1.08] tracking-tight">${L.name}</h1><div class="fi gap-2.5">${cr(L,38,'hc16')}<span class="text-[23px] font-extrabold text-slate-200">${L.club}</span><span class="px-2.5 py-0.5 rounded-lg bg-white/10 text-[16px] font-bold text-slate-300">${L.pos}</span></div></div></div></div><div class="relative z-10 rounded-3xl bg-[#070E20]/85 border border-white/12 p-5 fbw gap-4 my-2"><div class="fi items-baseline gap-3"><span class="text-[92px] font-black leading-none tracking-tight ${nc}">${fa(L.goals)}</span><div class="fcol"><span class="text-[28px] font-black text-white leading-none">گل</span><span class="fm text-[15px] font-bold text-slate-400 mt-1">GOALS</span></div></div><div class="grid grid-cols-2 gap-2.5 flex-1 max-w-[330px]"><div class="rounded-2xl bg-white/[0.05] border border-white/10 px-3 py-2.5 text-center"><div class="text-[14px] font-bold text-slate-400">گل پنالتی</div><div class="text-[27px] font-black text-slate-100 leading-tight">${fa(L.pen)}</div></div><div class="rounded-2xl bg-white/[0.05] border border-white/10 px-3 py-2.5 text-center"><div class="text-[14px] font-bold text-slate-400">تبدیل شوت</div><div class="text-[27px] font-black text-emerald-300 leading-tight">${fa(f1(L.conv))}٪</div></div></div></div><div class="relative z-10">${kp}</div></div>`
+:`<div class="xh ${hc} shrink-0 ${b9?'p-6':'px-6 py-4'}"><div class="fd font-black text-[200px] leading-none absolute left-4 -top-7 pointer-events-none opacity-[0.06]" style="color:${ac}">${String(L.num).padStart(2,'0')}</div><div class="absolute -right-16 -top-16 w-72 h-72 rounded-full pointer-events-none" style="background:radial-gradient(circle,${L.color}3b,transparent 70%)"></div><div class="relative z-10 fbw gap-5"><div class="fi gap-4 min-w-0 flex-1">${ja(L,b9?160:126,1,'h1')}<div class="min-w-0 fcol gap-1.5"><div class="fi gap-2 flex-wrap"><div class="fi gap-2 px-3.5 py-1 rounded-full text-[16px] font-black ${bc}">${cw(17,gd?'#FBBF24':'#FF6B7F')}<span>${st}</span></div><span class="px-2.5 py-1 rounded-full bg-white/10 text-[14px] font-extrabold text-slate-200">${L.pos}</span></div><h1 class="${b9?'text-[42px]':'text-[38px]'} font-black text-white leading-[1.08] tracking-tight truncate">${L.name}</h1><div class="fi gap-2.5">${cr(L,34,'hc1')}<span class="text-[21px] font-extrabold text-slate-200">${L.club}</span>${L.streak?`<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-orange-500/20 border border-orange-400/40 text-orange-300 text-[14px] font-extrabold">${fl(14)} فرم داغ</span>`:''}</div></div></div><div class="fcol items-end gap-2 shrink-0 pl-1"><div class="fi items-baseline gap-2.5"><span class="${b9?'text-[84px]':'text-[76px]'} font-black leading-[0.88] tracking-tight ${nc}">${fa(L.goals)}</span><div class="fcol items-start"><span class="text-[25px] font-black text-white leading-none">گل</span><span class="fm text-[13px] font-bold text-slate-400 mt-1">GOALS</span></div></div><div class="fi gap-2 justify-end"><span class="px-2.5 py-1 rounded-xl bg-white/[0.07] border border-white/12 text-[15px] font-extrabold text-slate-300">پنالتی <b class="text-white">${fa(L.pen)}</b></span><span class="px-2.5 py-1 rounded-xl bg-emerald-500/15 border border-emerald-400/35 text-[15px] font-extrabold text-emerald-300">تبدیل <b>${fa(f1(L.conv))}٪</b></span></div></div></div><div class="relative z-10">${kp}</div></div>`;
+
+const hb=!b16&&S.bm!=='none',rp=b9?'px-3.5 py-2.5':hb?'px-3.5 py-1.5':'px-3.5 py-2',gc=b16?'grid-template-columns:46px minmax(220px,1.1fr) minmax(0,1.55fr) 172px;gap:12px':'grid-template-columns:42px minmax(215px,1.08fr) minmax(0,1.48fr) 164px;gap:10px';
+const rows=rs.map((p,i)=>{
+const rk=i+2,np=S.pen?p.npg/mx*100:p.goals/mx*100,pp=S.pen?p.pen/mx*100:0,xp=Math.min(98.5,Math.max(2,p.xg/mx*100));
+return`<div class="lr ${rp}" style="${gc}"><span class="absolute right-0 inset-y-1.5 w-[4px] rounded-l-full" style="background:${p.color}"></span><div class="fc pr-1"><span class="${b9?'w-9 h-9 text-[16px]':'w-8 h-8 text-[15px]'} rounded-lg fc fm font-extrabold ${rk===2?'r2':rk===3?'r3':'rn'}">${p2(rk)}</span></div><div class="fi gap-2.5 min-w-0">${cr(p,b9?36:31,`r${rk}`)}<div class="min-w-0 flex-1"><div class="fi gap-1.5 min-w-0"><span class="${b9?'text-[22px]':'text-[20px]'} font-black text-white leading-tight truncate">${p.name}</span>${p.streak?fl(14):''}</div><div class="text-[13.5px] font-bold text-slate-400 truncate leading-tight">${p.club} <span class="text-slate-600">•</span> ${fa(f2(p.g90))} در ۹۰'</div></div></div><div class="min-w-0 fcol justify-center"><div class="relative w-full ${b9?'h-[16px]':'h-[13px]'} rounded-full bg-[#060C1E] border border-white/10 overflow-visible flex items-center" dir="ltr"><div class="h-full flex items-center overflow-hidden rounded-full w-full"><div class="h-full transition-all duration-300" style="width:${f1(np)}%;background:linear-gradient(90deg,${p.color}cc,${p.color});box-shadow:0 0 10px ${p.color}55"></div>${pp>0?`<div class="h-full ps border-l border-white/40 transition-all duration-300" style="width:${f1(pp)}%;background-color:${p.color}66"></div>`:''}</div><div class="absolute top-[-3.5px] bottom-[-3.5px] w-[3px] rounded-full bg-white shadow-[0_0_9px_#38BDF8,0_0_4px_#fff] z-10" style="left:${f1(xp)}%"></div></div></div><div class="fi justify-end gap-2 shrink-0"><div class="fcol items-end leading-none"><span class="${b9?'text-[29px]':'text-[27px]'} font-black text-white leading-none">${fa(p.goals)}</span><span class="text-[11.5px] font-extrabold text-sky-300/90 mt-0.5 fm">xG ${fa(f1(p.xg))}</span></div>${dp(p.delta,1)}</div></div>`;
+}).join('');
+
+const lg=`<div class="fi flex-wrap gap-3 text-[14px] font-bold text-slate-300"><span class="fi gap-1.5"><span class="w-3 h-2 rounded-sm bg-[#E62E45]"></span>جریان بازی</span>${S.pen?'<span class="fi gap-1.5"><span class="w-3 h-2 rounded-sm bg-slate-500/60 ps border border-white/30"></span>پنالتی</span>':''}<span class="fi gap-1.5"><span class="w-[3px] h-3.5 rounded-full bg-white shadow-[0_0_8px_#38BDF8]"></span>امید گل (xG)</span></div>`;
+const lb=`<div class="xm ${hb&&!b9?'shrink-0':'flex-1'} min-h-0 px-5 py-3.5 justify-between">${mh('جدول برترین گلزنان و مقایسه با امید گل',lg,gd?'bg-amber-400':'bg-[#E62E45]','mb-2 pb-2')}<div class="fcol ${hb&&!b9?'':'flex-1 justify-between'} ${b9?'gap-2':'gap-1.5'} min-h-0">${rows}</div></div>`;
+
+let bm='';
+if(hb){
+const t8=P.slice(0,8),tg=t8.reduce((a,b)=>a+b.goals,0),tp=t8.reduce((a,b)=>a+b.pen,0),bc1=[...t8].sort((a,b)=>b.delta-a.delta)[0],bx=[...t8].sort((a,b)=>b.xg-a.xg)[0],bg=[...t8].sort((a,b)=>b.g90-a.g90)[0];
+if(S.bm==='insight')bm=`<div class="xe flex-1 min-h-0 px-5 py-3.5 justify-between gap-2.5" style="border-right:5px solid ${ac}"><div class="fbw gap-2"><div class="fi gap-2"><span class="w-2 h-5 rounded-full ${gd?'bg-amber-400':'bg-[#E62E45]'}"></span><span class="text-[20px] font-black text-amber-300">نبض رقابت کفش طلا</span></div><div class="fi gap-2 text-[14px] font-extrabold"><span class="px-2.5 py-0.5 rounded-lg bg-white/[0.07] border border-white/10 text-slate-200">مجموع ۸ نفر: <b class="text-white">${fa(tg)} گل</b></span><span class="px-2.5 py-0.5 rounded-lg bg-amber-500/15 border border-amber-400/35 text-amber-300">سهم پنالتی: <b>${fa(Math.round(tp/Math.max(1,tg)*100))}٪</b></span><span class="px-2.5 py-0.5 rounded-lg bg-emerald-500/15 border border-emerald-400/35 text-emerald-300">کلینیکال: <b>${bc1.short} (${sg(bc1.delta,1)})</b></span></div></div><p class="text-[19px] leading-[1.52] text-slate-100 font-semibold line-clamp-2">${S.d.paceInsight}</p></div>`;
+else{
+const mp=(t,g,pl,v,c)=>`<div class="rounded-2xl bg-[#070E20]/85 border border-white/12 px-4 py-2.5 fcol justify-between gap-1.5" style="border-right:4px solid ${c}"><div class="fbw gap-1"><span class="text-[14px] font-extrabold text-slate-400">${t}</span><span class="fm text-[11px] font-extrabold" style="color:${c}">${g}</span></div><div class="fbw gap-2"><div class="fi gap-2 min-w-0">${cr(pl,28,`b${g}`)}<span class="text-[19px] font-black text-white truncate">${pl.short}</span></div><span dir="ltr" class="text-[23px] font-black leading-none shrink-0" style="color:${c}">${v}</span></div></div>`;
+bm=`<div class="xe flex-1 min-h-0 px-5 py-3.5 justify-center"><div class="grid grid-cols-3 gap-3">${mp('کلینیکال‌ترین','G−xG',bc1,sg(bc1.delta,1),'#34D399')}${mp('بالاترین امید گل','TOP xG',bx,fa(f1(bx.xg)),'#38BDF8')}${mp("بیشترین نرخ ۹۰'",'G/90',bg,fa(f2(bg.g90)),'#FBBF24')}</div></div>`;
+}
+}
+return b16?`<div class="h-full grid grid-cols-12 gap-6 items-stretch"><div class="col-span-5 h-full">${hero}</div><div class="col-span-7 h-full fcol justify-between gap-3">${lb}</div></div>`:`<div class="h-full fcol justify-between gap-3">${hero}${lb}${bm}</div>`;
+}
+
+function s2(P){
+const p1=P[0],p2=P[1],b16=S.fmt==='16:9',b9=S.fmt==='9:16',c1=p1.color,c2=p2.color;
+const pc=(p,ld,u,al)=>`<div class="col-span-4 fcol items-center text-center"><div class="relative mb-2">${ja(p,b16?132:148,ld,u)}<div class="absolute -bottom-2 ${al}">${cr(p,46,'c'+u)}</div></div><h2 class="${b16?'text-[30px]':'text-[34px]'} font-black text-white leading-tight mt-1">${p.name}</h2><p class="text-[18px] font-bold text-slate-300 mt-0.5">${p.club} • ${p.pos}</p><div class="fi gap-2 mt-2.5"><span class="px-3 py-1 rounded-xl bg-white/10 text-[18px] font-black text-white">${fa(p.goals)} گل</span><span class="px-3 py-1 rounded-xl bg-sky-500/15 border border-sky-400/35 text-[18px] font-black text-sky-300">xG ${fa(f1(p.xg))}</span></div></div>`;
+const dh=`<div class="xm shrink-0 ${b16?'p-5':'px-6 py-5'}"><div class="grid grid-cols-11 items-center gap-3">${pc(p1,1,'d1','-left-2')}<div class="col-span-3 fcol items-center justify-center gap-3"><div class="w-[2px] h-8" style="background:linear-gradient(to bottom,transparent,#E62E45)"></div><div class="relative fc"><div class="w-[74px] h-[74px] rounded-[20px] rotate-45 bg-[#E62E45] shadow-[0_0_36px_#e62e458c] border-2 border-white/30"></div><span class="absolute fd font-extrabold text-[30px] text-white tracking-tight">VS</span></div><div class="w-[2px] h-8" style="background:linear-gradient(to top,transparent,#E62E45)"></div><div class="w-full rounded-2xl bg-[#070E20] border border-white/12 px-3 py-2 text-center"><div class="text-[13px] font-bold text-slate-400">دقیقه به ازای هر گل</div><div class="fc gap-3 mt-1"><span class="text-[24px] font-black" style="color:${c1}">${fa(p1.mpg)}'</span><span class="text-slate-500 text-[16px]">/</span><span class="text-[24px] font-black" style="color:${c2}">${fa(p2.mpg)}'</span></div></div></div>${pc(p2,0,'d2','-right-2')}</div></div>`;
+
+const mt=[['گل در ۹۰ دقیقه (G/90)',p1.g90,p2.g90,2,''],['امید گل بدون پنالتی (npxG/90)',p1.npxg90,p2.npxg90,2,''],['شوت در چارچوب (SOT/90)',p1.sot90,p2.sot90,2,''],['نرخ تبدیل شوت (%)',p1.conv,p2.conv,1,'٪']];
+const bf=`<div class="xm ${b16?'flex-1':'shrink-0'} justify-between">${mh('مقایسه فنی دوئل صدرنشینان','<span class="fm text-[18px] font-extrabold text-slate-400">HEAD-TO-HEAD</span>','bg-[#E62E45]','mb-3 pb-2')}<div class="flex-1 fcol justify-center ${b9?'gap-5':'gap-3.5'}">${mt.map(([l,v1,v2,d,sf])=>{const m=Math.max(v1,v2,.01);return`<div class="space-y-1.5"><div class="grid grid-cols-3 items-center"><span class="text-right text-[28px] font-black leading-none" style="color:${c1}">${fa(v1.toFixed(d))}${sf}</span><span class="text-center text-[19px] font-extrabold text-slate-200">${l}</span><span class="text-left text-[28px] font-black leading-none" style="color:${c2}">${fa(v2.toFixed(d))}${sf}</span></div><div class="grid grid-cols-2 gap-2"><div class="ct hs"><div class="ch" style="width:${f1(v1/m*100)}%;background:${c1}"></div></div><div class="ct as"><div class="ca" style="width:${f1(v2/m*100)}%;background:${c2}"></div></div></div></div>`}).join('')}</div></div>`;
+
+const lb=['تمام‌کنندگی','حضور در محوطه','ضربه سر','شوت از راه دور','خونسردی','مشارکت گل'],cx=450,cy=205,R=122,dx=R*.866+28;
+const pt=a=>a.map((v,i)=>{const an=(i*60-90)*Math.PI/180,r=Math.max(18,Math.min(100,v))/100*R;return{x:cx+r*Math.cos(an),y:cy+r*Math.sin(an)}});
+const py=a=>a.map(p=>`${f1(p.x)},${f1(p.y)}`).join(' '),rg=k=>Array.from({length:6},(_,i)=>{const an=(i*60-90)*Math.PI/180;return`${f1(cx+R*k*Math.cos(an))},${f1(cy+R*k*Math.sin(an))}`}).join(' ');
+const q1=pt(p1.radar),q2=pt(p2.radar),sp=[[cx,32,'middle'],[cx+dx,cy-R*.5-6,'start'],[cx+dx,cy+R*.5-2,'start'],[cx,cy+R+34,'middle'],[cx-dx,cy+R*.5-2,'end'],[cx-dx,cy-R*.5-6,'end']];
+const dt=(a,c,r)=>a.map(p=>`<circle cx="${f1(p.x)}" cy="${f1(p.y)}" r="${r}" fill="${c}" stroke="#fff" stroke-width="2"/>`).join('');
+const rd=`<div class="xe flex-1 min-h-0 justify-between">${mh('رادار ۶ محوره پروفایل مهاجم',`<div class="fi gap-4 text-[18px] font-extrabold"><span class="fi gap-2"><span class="w-3 h-3 rounded-full" style="background:${c1}"></span>${p1.short}</span><span class="fi gap-2"><span class="w-3 h-3 rounded-full" style="background:${c2}"></span>${p2.short}</span></div>`,'bg-amber-400','mb-2 pb-2')}<div class="flex-1 fc min-h-0" dir="ltr"><svg class="w-full h-full max-h-[395px]" viewBox="0 0 900 410" fill="none"><g stroke="#ffffff26" stroke-width="1.6">${[1,.75,.5,.25].map(k=>`<polygon points="${rg(k)}"/>`).join('')}<line x1="${cx}" y1="${cy-R}" x2="${cx}" y2="${cy+R}"/><line x1="${cx+R*.866}" y1="${cy-R*.5}" x2="${cx-R*.866}" y2="${cy+R*.5}"/><line x1="${cx+R*.866}" y1="${cy+R*.5}" x2="${cx-R*.866}" y2="${cy-R*.5}"/></g><polygon points="${py(q2)}" fill="${c2}" fill-opacity=".24" stroke="${c2}" stroke-width="3.6"/><polygon points="${py(q1)}" fill="${c1}" fill-opacity=".3" stroke="${c1}" stroke-width="4.2"/>${dt(q2,c2,5)}${dt(q1,c1,6)}${lb.map((l,i)=>{const[x,y,an]=sp[i];return`<g><text x="${f1(x)}" y="${f1(y)}" text-anchor="${an}" fill="#F8FAFC" font-family="Vazirmatn" font-weight="800" font-size="23">${l}</text><text x="${f1(x)}" y="${f1(y+29)}" text-anchor="${an}" font-family="Vazirmatn" font-weight="900" font-size="21"><tspan fill="${c1}">${fa(p1.radar[i])}</tspan><tspan fill="#64748B"> / </tspan><tspan fill="${c2}">${fa(p2.radar[i])}</tspan></text></g>`}).join('')}</svg></div></div>`;
+
+return b16?`<div class="h-full grid grid-cols-12 gap-6 items-stretch"><div class="col-span-6 h-full fcol gap-5">${dh}${bf}</div><div class="col-span-6 h-full fcol">${rd}</div></div>`:`<div class="h-full fcol justify-between gap-4">${dh}${bf}${rd}</div>`;
+}
+
+function s3(P){
+const b16=S.fmt==='16:9',b9=S.fmt==='9:16',ls=P.slice(0,8);
+const r0=Math.max(0,Math.floor(Math.min(...ls.map(p=>Math.min(p.xg,p.goals)))-1)),r1=Math.ceil(Math.max(...ls.map(p=>Math.max(p.xg,p.goals)))+1);
+const sp0=Math.max(4,r1-r0),st=sp0<=6?1:sp0<=12?2:sp0<=18?3:sp0<=24?4:5,mn=Math.floor(r0/st)*st,mx=Math.ceil(r1/st)*st,spn=Math.max(st,mx-mn);
+const W=960,H=b9?820:b16?700:650,pL=78,pR=46,pT=44,pB=72,pW=W-pL-pR,pH=H-pT-pB;
+const tX=v=>pL+(v-mn)/spn*pW,tY=v=>pT+pH-(v-mn)/spn*pH,tk=[];for(let v=mn;v<=mx;v+=st)tk.push(v);
+
+const nd=ls.map((p,i)=>{const x=tX(p.xg),y=tY(p.goals),r=i?21:25;let ly=y-r-14;if(ly<pT+26)ly=y+r+26;return{p,i,x,y,r,lx:x,ly}});
+for(let k=0;k<18;k++)for(let i=0;i<nd.length;i++){for(let j=i+1;j<nd.length;j++){const a=nd[i],b=nd[j];if(Math.abs(a.lx-b.lx)<105&&Math.abs(a.ly-b.ly)<34){const ps=(34-Math.abs(a.ly-b.ly))*.55;a.ly<=b.ly?(a.ly-=ps,b.ly+=ps):(a.ly+=ps,b.ly-=ps)}}nd[i].lx=Math.max(pL+60,Math.min(W-pR-60,nd[i].lx));nd[i].ly=Math.max(pT+24,Math.min(H-pB-14,nd[i].ly))}
+
+const sc=`<div class="xm flex-1 min-h-0 justify-between">${mh('نقشه کلینیکال تمام‌کنندگی (گل زده در برابر امید گل)','<span class="fm text-[18px] font-extrabold text-emerald-300">GOALS vs xG MATRIX</span>','bg-emerald-400','mb-2 pb-2')}<div class="flex-1 fc min-h-0" dir="ltr"><svg class="w-full h-full" viewBox="0 0 ${W} ${H}" fill="none"><defs><linearGradient id="cz" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#10B981" stop-opacity=".17"/><stop offset="1" stop-color="#10B981" stop-opacity=".02"/></linearGradient><linearGradient id="uz" x1="1" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#F43F5E" stop-opacity=".16"/><stop offset="1" stop-color="#F43F5E" stop-opacity=".02"/></linearGradient></defs><polygon points="${pL},${pT} ${W-pR},${pT} ${pL},${H-pB}" fill="url(#cz)"/><polygon points="${W-pR},${pT} ${W-pR},${H-pB} ${pL},${H-pB}" fill="url(#uz)"/><g stroke="#ffffff17" stroke-width="1.4" stroke-dasharray="5 5">${tk.map(t=>`<line x1="${f1(tX(t))}" y1="${pT}" x2="${f1(tX(t))}" y2="${H-pB}"/><line x1="${pL}" y1="${f1(tY(t))}" x2="${W-pR}" y2="${f1(tY(t))}"/>`).join('')}</g><rect x="${pL}" y="${pT}" width="${pW}" height="${pH}" rx="12" stroke="#ffffff26" stroke-width="1.8"/><line x1="${pL}" y1="${H-pB}" x2="${W-pR}" y2="${pT}" stroke="#F8FAFC" stroke-opacity=".55" stroke-width="2.4" stroke-dasharray="10 8"/><g transform="translate(${pL+pW*.68},${pT+pH*.32}) rotate(-32)"><rect x="-52" y="-16" width="104" height="28" rx="8" fill="#091023" stroke="#ffffff33" stroke-width="1.2"/><text x="0" y="4" text-anchor="middle" fill="#E2E8F0" font-family="Space Grotesk" font-weight="800" font-size="16">G = xG</text></g><rect x="${pL+18}" y="${pT+16}" width="310" height="38" rx="10" fill="#06221b" fill-opacity=".86" stroke="#34D399" stroke-opacity=".45"/><text x="${pL+173}" y="${pT+41}" text-anchor="middle" fill="#34D399" font-family="Vazirmatn" font-weight="800" font-size="17">تمام‌کنندگی فراتر از انتظار • CLINICAL</text><rect x="${W-pR-306}" y="${H-pB-54}" width="290" height="38" rx="10" fill="#280b14" fill-opacity=".86" stroke="#F43F5E" stroke-opacity=".45"/><text x="${W-pR-161}" y="${H-pB-29}" text-anchor="middle" fill="#FDA4AF" font-family="Vazirmatn" font-weight="800" font-size="17">کمتر از انتظار • UNDERPERFORMING</text>${tk.map(t=>`<text x="${f1(tX(t))}" y="${H-pB+30}" text-anchor="middle" fill="#94A3B8" font-family="Vazirmatn" font-weight="800" font-size="20">${fa(t)}</text><text x="${pL-16}" y="${f1(tY(t)+7)}" text-anchor="end" fill="#94A3B8" font-family="Vazirmatn" font-weight="800" font-size="20">${fa(t)}</text>`).join('')}<text x="${pL+pW/2}" y="${H-12}" text-anchor="middle" fill="#38BDF8" font-family="Vazirmatn" font-weight="900" font-size="22">امید گل تولیدی (xG)</text><text x="24" y="${pT+pH/2}" text-anchor="middle" fill="#F8FAFC" font-family="Vazirmatn" font-weight="900" font-size="22" transform="rotate(-90 24 ${pT+pH/2})">تعداد گل زده (Goals)</text>${nd.map(n=>`<g><line x1="${f1(n.x)}" y1="${f1(n.y)}" x2="${f1(n.lx)}" y2="${f1(n.ly)}" stroke="${n.p.color}" stroke-opacity=".45" stroke-width="1.5" stroke-dasharray="3 3"/><circle cx="${f1(n.x)}" cy="${f1(n.y)}" r="${n.r+7}" fill="${n.p.color}" fill-opacity=".22"/><circle cx="${f1(n.x)}" cy="${f1(n.y)}" r="${n.r}" fill="${n.p.color}" stroke="${n.i?'#fff':'#FBBF24'}" stroke-width="${n.i?2.5:3.5}"/><text x="${f1(n.x)}" y="${f1(n.y+7)}" text-anchor="middle" fill="${ctr(n.p.color)}" font-family="Space Grotesk" font-weight="800" font-size="${n.i?17:20}">${n.p.num}</text><rect x="${f1(n.lx-58)}" y="${f1(n.ly-17)}" width="116" height="30" rx="9" fill="#070E20" fill-opacity=".92" stroke="${n.p.color}" stroke-opacity=".65" stroke-width="1.4"/><text x="${f1(n.lx)}" y="${f1(n.ly+4)}" text-anchor="middle" fill="#F8FAFC" font-family="Vazirmatn" font-weight="800" font-size="16">${n.p.short}</text></g>`).join('')}</svg></div></div>`;
+
+const bf=[...ls].sort((a,b)=>b.delta-a.delta)[0],xm=[...ls].sort((a,b)=>b.xg-a.xg)[0],fs=[...ls].sort((a,b)=>a.mpg-b.mpg)[0];
+const hi=(t,g,pl,bv,sb,c)=>`<div class="xe p-4 justify-between gap-2" style="border-right:5px solid ${c}"><div class="fbw gap-2"><span class="text-[17px] font-extrabold text-slate-300">${t}</span><span class="fm text-[12px] font-extrabold px-2 py-0.5 rounded-lg bg-white/10" style="color:${c}">${g}</span></div><div class="fi gap-3 my-1">${cr(pl,42,`h${g}`)}<div class="min-w-0"><div class="text-[23px] font-black text-white truncate">${pl.name}</div><div class="text-[15px] font-bold text-slate-400 truncate">${pl.club}</div></div></div><div class="pt-2 border-t border-white/10 fbw gap-2"><span dir="ltr" class="text-[28px] font-black leading-none" style="color:${c}">${bv}</span><span class="text-[15px] font-bold text-slate-300">${sb}</span></div></div>`;
+const hs=`<div class="${b16?'fcol justify-between gap-4 h-full':'grid grid-cols-3 gap-4 shrink-0'}">${hi('بهترین تمام‌کننده','CLINICAL',bf,sg(bf.delta,1),`${fa(bf.goals)} گل از ${fa(f1(bf.xg))} xG`,'#34D399')}${hi('ماشین خلق موقعیت','TOP xG',xm,fa(f1(xm.xg)),`${fa(xm.shots)} شوت در فصل`,'#38BDF8')}${hi('سریع‌ترین گلزن','MINS/GOAL',fs,`${fa(fs.mpg)}'`,`${fa(f2(fs.g90))} گل در ۹۰ دقیقه`,'#FBBF24')}</div>`;
+
+return b16?`<div class="h-full grid grid-cols-12 gap-6 items-stretch"><div class="col-span-8 h-full fcol">${sc}</div><div class="col-span-4 h-full">${hs}</div></div>`:`<div class="h-full fcol justify-between gap-4">${sc}${hs}</div>`;
+}
+
+function s4(P){
+const b16=S.fmt==='16:9',b9=S.fmt==='9:16',t4=P.slice(0,4),t5=P.slice(0,5),wk=Array.isArray(S.d.weeks)&&S.d.weeks.length>=2?S.d.weeks:['۱','۲','۳','۴','۵','۶','۷','۸'],wl=wk.length;
+const sp=p=>{const r=Array.isArray(p.pace)&&p.pace.length?p.pace:[p.goals||0],o=[];for(let i=0;i<wl;i++){const v=+r[Math.min(i,r.length-1)];o.push(Number.isFinite(v)?v:i?o[i-1]:0)}return o};
+const W=940,H=b9?560:b16?515:430,pL=62,pR=172,pT=30,pB=82,pW=W-pL-pR,pH=H-pT-pB;
+const av=t4.flatMap(sp),r0=Math.max(0,Math.floor(Math.min(...av)-1)),r1=Math.ceil(Math.max(...av)+1),sp0=Math.max(4,r1-r0),ys=sp0<=6?1:sp0<=12?2:sp0<=18?3:4,mn=Math.floor(r0/ys)*ys,mx=Math.ceil(r1/ys)*ys,spn=Math.max(ys,mx-mn);
+const yt=[];for(let v=mn;v<=mx;v+=ys)yt.push(v);
+const sr=t4.map((p,i)=>{const pts=sp(p).map((v,j)=>({x:pL+j/Math.max(1,wl-1)*pW,y:pT+pH-(v-mn)/spn*pH})),l=pts[pts.length-1];return{p,i,pts,d:spL(pts,.24),ex:l.x,ey:l.y,ly:l.y}});
+sr.sort((a,b)=>a.ly-b.ly);
+for(let i=1;i<sr.length;i++)if(sr[i].ly-sr[i-1].ly<38)sr[i].ly=sr[i-1].ly+38;
+for(let i=sr.length-1;i>=0;i--){if(sr[i].ly>pT+pH-12)sr[i].ly=pT+pH-12;if(i&&sr[i].ly-sr[i-1].ly<36)sr[i-1].ly=sr[i].ly-36}
+sr.sort((a,b)=>b.i-a.i);
+const l1=sr.find(x=>!x.i);
+
+const pc=`<div class="xm flex-1 min-h-0 justify-between">${mh('مسیر و ریتم رقابت کفش طلا (۸ هفته اخیر)','<span class="fm text-[18px] font-extrabold text-amber-300">GOLDEN BOOT RACE</span>','bg-amber-400','mb-2 pb-2')}<div class="flex-1 fc min-h-[260px] w-full" dir="ltr"><svg class="w-full h-full block" width="100%" height="100%" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" fill="none"><defs><linearGradient id="la" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${t4[0].color}" stop-opacity=".3"/><stop offset="1" stop-color="${t4[0].color}" stop-opacity="0"/></linearGradient></defs>${yt.map(v=>{const y=pT+pH-(v-mn)/spn*pH;return`<line x1="${pL}" y1="${f1(y)}" x2="${W-pR}" y2="${f1(y)}" stroke="#ffffff1a" stroke-width="1.4" stroke-dasharray="5 5"/><text x="${pL-14}" y="${f1(y+6)}" text-anchor="end" fill="#94A3B8" font-family="Vazirmatn" font-weight="800" font-size="19">${fa(v)}</text>`}).join('')}${wk.map((w,i)=>{const x=pL+i/Math.max(1,wl-1)*pW,cn=fa(String(w).replace(/[^\d۰-۹]/g,''));return`<line x1="${f1(x)}" y1="${pT}" x2="${f1(x)}" y2="${pT+pH}" stroke="#ffffff0d" stroke-width="1.2"/><line x1="${f1(x)}" y1="${pT+pH}" x2="${f1(x)}" y2="${pT+pH+7}" stroke="#94A3B8" stroke-opacity=".55" stroke-width="1.6"/><text x="${f1(x)}" y="${pT+pH+30}" text-anchor="middle" fill="#E2E8F0" font-family="Vazirmatn" font-weight="900" font-size="20">${cn}</text>`}).join('')}<line x1="${pL}" y1="${pT+pH}" x2="${W-pR}" y2="${pT+pH}" stroke="#ffffff33" stroke-width="1.8"/><g><line x1="${pL}" y1="${H-18}" x2="${pL+pW/2-112}" y2="${H-18}" stroke="#ffffff26" stroke-width="1.4"/><line x1="${pL+pW/2+112}" y1="${H-18}" x2="${W-pR}" y2="${H-18}" stroke="#ffffff26" stroke-width="1.4"/><path d="M${W-pR-6} ${H-22}L${W-pR} ${H-18}L${W-pR-6} ${H-14}" stroke="#FBBF24" stroke-opacity=".75" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="${pL+pW/2-104}" y="${H-33}" width="208" height="30" rx="15" fill="#091124" stroke="#FBBF24" stroke-opacity=".42" stroke-width="1.4"/><text x="${pL+pW/2}" y="${H-12}" text-anchor="middle" fill="#FDE68A" font-family="Vazirmatn" font-weight="800" font-size="15.5">شماره هفته رقابت‌ها</text></g><path d="${l1.d} L ${f1(l1.ex)} ${pT+pH} L ${pL} ${pT+pH} Z" fill="url(#la)"/>${sr.map(s=>`<g><path d="${s.d}" stroke="${s.p.color}" stroke-width="${s.i?3.8:5.2}" fill="none" stroke-linecap="round" opacity="${s.i?.88:1}"/>${s.pts.slice(0,-1).map(q=>`<circle cx="${f1(q.x)}" cy="${f1(q.y)}" r="${s.i?3.6:4.8}" fill="${s.p.color}" stroke="#0D1730" stroke-width="1.6"/>`).join('')}<circle cx="${f1(s.ex)}" cy="${f1(s.ey)}" r="${s.i?7.5:10}" fill="${s.p.color}" stroke="#fff" stroke-width="2.5"/><line x1="${f1(s.ex+10)}" y1="${f1(s.ey)}" x2="${f1(s.ex+24)}" y2="${f1(s.ly)}" stroke="${s.p.color}" stroke-opacity=".6" stroke-width="1.6"/><rect x="${f1(s.ex+24)}" y="${f1(s.ly-16)}" width="136" height="32" rx="10" fill="#091124" stroke="${s.p.color}" stroke-width="1.6"/><text x="${f1(s.ex+92)}" y="${f1(s.ly+5)}" text-anchor="middle" fill="#fff" font-family="Vazirmatn" font-weight="900" font-size="15.5">${s.p.short} (${fa(s.p.goals)})</text></g>`).join('')}</svg></div></div>`;
+
+const mg=Math.max(...t5.map(p=>p.g90),.5);
+const rt=`<div class="xm shrink-0 justify-between">${mh('بهره‌وری گلزنی (گل در ۹۰ دقیقه و میانگین دقایق)','<span class="fm text-[17px] font-extrabold text-sky-300">G/90 &amp; MINS/GOAL</span>','bg-sky-400','mb-3 pb-2')}<div class="fcol ${b9?'gap-3.5':'gap-2.5'}">${t5.map(p=>`<div class="grid items-center gap-3" style="grid-template-columns:165px 1fr 150px"><div class="fi gap-2.5 min-w-0">${cr(p,32,`t${p.num}`)}<span class="text-[19px] font-black text-white truncate">${p.short}</span></div><div class="h-[20px] rounded-full bg-[#060C1E] border border-white/10 overflow-hidden flex items-center" dir="ltr"><div class="h-full rounded-full" style="width:${f1(p.g90/mg*100)}%;background:linear-gradient(90deg,${p.color}cc,${p.color});box-shadow:0 0 12px ${p.color}55"></div></div><div class="fi justify-end gap-2 shrink-0"><span class="text-[21px] font-black text-white">${fa(f2(p.g90))}</span><span class="px-2 py-0.5 rounded-lg bg-white/10 text-[14px] font-extrabold text-slate-300">هر ${fa(p.mpg)}'</span></div></div>`).join('')}</div></div>`;
+const ic=`<div class="xe shrink-0 py-4 px-6" style="border-right:5px solid #E62E45"><div class="fbw gap-2 mb-1.5"><span class="text-[20px] font-black text-amber-300">تحلیل ریتم گلزنی XGPedia</span><span class="fm text-[15px] font-extrabold text-slate-400">PACE INSIGHT</span></div><p class="text-[21px] leading-[1.58] text-slate-100 font-semibold">${S.d.paceInsight}</p></div>`;
+
+return b16?`<div class="h-full grid grid-cols-12 gap-6 items-stretch"><div class="col-span-7 h-full fcol">${pc}</div><div class="col-span-5 h-full fcol justify-between gap-4">${rt}${ic}</div></div>`:`<div class="h-full fcol justify-between gap-4">${pc}${rt}${ic}</div>`;
+}
+
+function draw(){
+const[w,h,lb]=F[S.fmt],bd=$('ea'),by=$('cmb'),P=rnk(),L=P[0],s9=S.fmt==='9:16',sl=SL.find(x=>x[0]===S.sl)||SL[0];
+bd.style.width=`${w}px`;bd.style.height=`${h}px`;bd.className=`f${S.fmt.split(':')[0]}`;$('fs').setAttribute('viewBox',`0 0 ${w} ${h}`);
+const sb=$('ts');$('sz').classList.toggle('hidden',!(s9&&S.sz));sb.classList.toggle('hidden',!s9);sb.classList.toggle('flex',s9);sb.classList.toggle('on',s9&&S.sz);
+const rx=w-147,rx1=w-24,rx2=w-44,by1=h-24,by2=h-44,sa=(i,o)=>{const e=$(i);for(const k in o)e.setAttribute(k,o[k])};
+sa('pr',{width:w-24,height:h-24});sa('hl',{x1:w/2,x2:w/2,y2:h-12});['c0','c1','c2','c3','c4'].forEach(i=>sa(i,{cx:w/2}));
+sa('rb',{x:rx});sa('ra',{d:`M${rx} 245A95 95 0 0 0 ${rx} 405`});sa('crh',{d:`M24 44V24H44M${rx1} 44V24H${rx2}M24 ${by2}V${by1}H44M${rx1} ${by2}V${by1}H${rx2}`});
+const tc=S.th==='gold'?'#FBBF24':'#E62E45';$('rf0').setAttribute('stop-color',tc);
+$('ag').style.background=`radial-gradient(circle at 82% 24%,${L.color}36,transparent 48%),radial-gradient(circle at 18% 26%,${tc}28,transparent 46%),radial-gradient(circle at 50% 80%,#e62e4518,transparent 52%)`;
+const dm=`${w}×${h}`,tx={adb:dm,mdb:dm,mt:`${S.d.competition} • کفش طلا`,mm:`صدرنشین: ${L.short} (${fa(L.goals)} گل) • ${lb}`,cc:S.d.competition,cr:fa(S.d.round),cd:`فصل ${fa(S.d.season)}`,so:S.d.source,ct:`${S.d.leagueEn} ${S.d.season} ${S.d.weekCode} • ${sl[4]}`};
+for(const k in tx)$(k).textContent=tx[k];
+by.innerHTML=S.sl==='slide1'?s1(P):S.sl==='slide2'?s2(P):S.sl==='slide3'?s3(P):s4(P);
+$$('.sb').forEach(b=>b.classList.toggle('on',b.dataset.s===S.sl));$$('.qb').forEach(b=>b.classList.toggle('on',b.dataset.q===S.sl));
+$$('.pb').forEach(b=>b.classList.toggle('on',b.dataset.p===S.pk));$$('.srt').forEach(b=>b.classList.toggle('on',b.dataset.st===S.sr));
+$$('.thb').forEach(b=>{b.classList.toggle('og',b.dataset.th==='gold'&&S.th==='gold');b.classList.toggle('on',b.dataset.th==='classic'&&S.th==='classic')});
+$$('.rcb').forEach(b=>b.classList.toggle('on',+b.dataset.rc===S.rc));$$('.bmb').forEach(b=>b.classList.toggle('on',b.dataset.bm===S.bm));
+fit();
+}
+
+function fit(){
+const vp=$('vp'),wr=$('aw'),bd=$('ea'),[w,h]=F[S.fmt];
+if(!vp||!vp.clientWidth||!vp.clientHeight)return;
+const dk=innerWidth>=1024,sc=Math.min(Math.max(200,vp.clientWidth-(dk?48:22))/w,Math.max(200,vp.clientHeight-(dk?76:138))/h,1)*S.zm;
+wr.style.width=`${Math.round(w*sc)}px`;wr.style.height=`${Math.round(h*sc)}px`;bd.style.transform=`scale(${sc})`;vp.classList.toggle('cp',S.zm>1.01);
+$$('.zb').forEach(b=>b.classList.toggle('on',Math.abs(S.zm-+b.dataset.z)<.05));
+}
+const zoom=z=>{S.zm=Math.max(.75,Math.min(2.5,+z));fit();if(S.zm<=1){const v=$('vp');v.scrollLeft=v.scrollTop=0}};
+function mob(v){
+S.mv=v;const dk=innerWidth>=1024,sh=(e,ok)=>{e.classList.toggle('hidden',!ok);e.classList.toggle('flex',ok)};
+if(!dk){sh($('sp'),v!=='preview');sh($('sc'),v==='preview');v==='preview'?requestAnimationFrame(fit):($('es').scrollTop=0)}else{sh($('sp'),1);sh($('sc'),1);requestAnimationFrame(fit)}
+$$('.mnb').forEach(b=>b.classList.toggle('on',b.dataset.n===v));
+}
+
+$('slb').innerHTML=SL.map(([id,l,t])=>`<button data-s="${id}" class="sb w-full min-h-[46px] lg:min-h-[42px] text-right px-3.5 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-200 text-sm lg:text-xs font-bold fbw gap-2 transition"><span>${l}</span><span class="text-[11px] lg:text-[10px] fm ${id==='slide1'?'px-2 py-0.5 rounded bg-amber-400 text-[#070D1D] font-extrabold':'text-slate-400'} shrink-0">${t}</span></button>`).join('');
+$('qsb').innerHTML=SL.map(([id,,,sh])=>`<button data-q="${id}" class="qb min-h-[34px] px-3 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 shrink-0 transition">${sh}</button>`).join('');
+$('prb').innerHTML=Object.entries(PRESETS).map(([k,p])=>`<button data-p="${k}" class="pb min-h-[54px] p-2.5 rounded-xl bg-white/5 hover:bg-white/10 active:scale-[0.98] border border-white/10 text-right text-sm lg:text-xs font-bold transition">${p.competition}<span class="block text-xs lg:text-[10px] text-slate-400 font-normal mt-0.5">${p.players[0].short} (${fa(p.players[0].goals)}) • ${p.weekCode}</span></button>`).join('');
+$('srtb').innerHTML=SR.map(([k,l],i)=>`<button data-st="${k}" class="srt hb ${i===SR.length-1?'col-span-2':''}">${l}</button>`).join('');
+$('rcw').innerHTML=[5,6,7,8].map(n=>`<button data-rc="${n}" class="rcb hb">${fa(n)} نفر</button>`).join('');
+
+on('.mnb',e=>mob(e.dataset.n));$('jp').onclick=()=>mob('preview');
+on('.fb',e=>{S.fmt=e.dataset.f;S.zm=1;$$('.fb').forEach(x=>x.classList.toggle('on',x.dataset.f===S.fmt));draw()});
+on('.sb',e=>{S.sl=e.dataset.s;draw()});on('.qb',e=>{S.sl=e.dataset.q;draw()});
+on('.pb',e=>{S.pk=e.dataset.p;S.d=structuredClone(PRESETS[S.pk]);draw();T(`جدول گلزنان ${S.d.competition} بارگذاری شد`)});
+on('.srt',e=>{S.sr=e.dataset.st;draw();T(`مرتب‌سازی بر اساس «${e.textContent}» انجام شد`)});
+on('.thb',e=>{S.th=e.dataset.th;draw()});on('.rcb',e=>{S.rc=+e.dataset.rc;draw()});on('.bmb',e=>{S.bm=e.dataset.bm;draw()});
+$('pt').onchange=e=>{S.pen=e.target.checked;draw()};
+$('ts').onclick=()=>{S.sz=!S.sz;draw();T(S.sz?'راهنمای امن استوری فعال شد':'راهنمای امن استوری مخفی شد')};
+on('.zb',e=>zoom(e.dataset.z));$('zi').onclick=()=>zoom(S.zm+.25);$('zo').onclick=()=>zoom(S.zm-.25);
+$('cj').onclick=()=>{const t=document.createElement('textarea');t.value=JSON.stringify(S.d,null,2);t.style.cssText='position:fixed;opacity:0';document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();T('دیتای JSON لیگ در حافظه کپی شد')};
+
+const vp=$('vp');let dn=0,sx=0,sy=0,sl=0,st=0;
+vp.onmousedown=e=>{if(S.zm<=1.01)return;dn=1;sx=e.pageX-vp.offsetLeft;sy=e.pageY-vp.offsetTop;sl=vp.scrollLeft;st=vp.scrollTop};
+addEventListener('mouseup',()=>dn=0);
+vp.onmousemove=e=>{if(!dn)return;e.preventDefault();vp.scrollLeft=sl-(e.pageX-vp.offsetLeft-sx);vp.scrollTop=st-(e.pageY-vp.offsetTop-sy)};
+if(typeof ResizeObserver!=='undefined')new ResizeObserver(fit).observe(vp);
+addEventListener('resize',()=>{mob(S.mv);fit()});
+
+draw();mob('preview');
+})();
+</script>
+</body>
+</html>

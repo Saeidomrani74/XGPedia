@@ -29,7 +29,7 @@ from src.xgpedia.db import db
 
 # وضعیت‌های مجاز برای شروع فلوی انتشار — پست published قبلاً کارش تمام است
 SUBMITTABLE_STATUSES = {"draft", "validated", "awaiting_approval"}
-POST_TYPE_FA = {"preview": "پیش‌بازی", "post_match": "پس از بازی", "number_of_day": "عدد روز", "on_this_day": "در چنین روزی", "breaking_news": "خبر فوری", "birthday": "تولد اسطوره", "transfer_radar": "رادار نقل‌وانتقالات", "this_or_that": "این یا اون"}
+POST_TYPE_FA = {"preview": "پیش‌بازی", "post_match": "پس از بازی", "number_of_day": "عدد روز", "on_this_day": "در چنین روزی", "breaking_news": "خبر فوری", "birthday": "تولد اسطوره", "transfer_radar": "رادار نقل‌وانتقالات", "this_or_that": "این یا اون", "players_rating": "نمرات بازیکنان", "standings": "جدول رده‌بندی", "injury_lab": "گزارش مصدومیت", "player_profile": "پروفایل بازیکن", "h2h_teams": "تقابل مستقیم تیم‌ها", "player_fc27": "کارت بازیکن FC27", "h2h_players": "مقایسه دو بازیکن", "top_scorers": "جدول گلزنان", "matchday_results": "نتایج بازی‌های روز", "quote": "نقل‌قول روز", "debate": "مناظره روز"}
 HASHTAG_BY_TYPE = {
     "preview": "#پیش_بازی",
     "post_match": "#پس_از_بازی",
@@ -39,6 +39,17 @@ HASHTAG_BY_TYPE = {
     "birthday": "#تولدت_مبارک",
     "transfer_radar": "#نقل_و_انتقالات",
     "this_or_that": "#این_یا_اون",
+    "players_rating": "#نمرات_بازیکنان",
+    "standings": "#جدول_رده_بندی",
+    "injury_lab": "#گزارش_پزشکی",
+    "player_profile": "#پروفایل_بازیکن",
+    "h2h_teams": "#تقابل_مستقیم",
+    "player_fc27": "#کارت_FC27",
+    "h2h_players": "#مقایسه_بازیکنان",
+    "top_scorers": "#کفش_طلا",
+    "matchday_results": "#نتایج_فوتبال",
+    "quote": "#نقل_قول_فوتبالی",
+    "debate": "#مناظره_فوتبالی",
 }
 
 
@@ -87,6 +98,9 @@ _SOURCE_LINKS: dict[str, tuple[str, str]] = {
     "sky sports": ("Sky Sports", "https://www.skysports.com/transfer-centre"),
     "caughtoffside": ("CaughtOffside", "https://www.caughtoffside.com/"),
     "90min": ("90min", "https://www.90min.com/"),
+    "premier league / fpl official": ("Premier League FPL", "https://fantasy.premierleague.com/"),
+    "premier league / opta fpl": ("Premier League Opta", "https://fantasy.premierleague.com/"),
+    "fpl": ("Premier League FPL", "https://fantasy.premierleague.com/"),
 }
 
 _CLUB_HASHTAGS: list[tuple[tuple[str, ...], str]] = [
@@ -195,6 +209,79 @@ def _build_relevant_hashtags(post: dict, facts: dict, draft: dict) -> str:
                 so = facts.get(side) if isinstance(facts.get(side), dict) else {}
                 if so.get("name"):
                     _add(_slug_fa_hashtag(str(so["name"])))
+    elif ptype == "players_rating":
+        _add("#تحلیل_آماری")
+        if isinstance(facts, dict):
+            for side in ("home", "away"):
+                so = facts.get(side) if isinstance(facts.get(side), dict) else {}
+                if so.get("name"):
+                    _add(_slug_fa_hashtag(str(so["name"])))
+    elif ptype == "standings":
+        _add("#جدول_لیگ")
+        if isinstance(facts, dict) and facts.get("name"):
+            _add(_slug_fa_hashtag(str(facts["name"])))
+    elif ptype == "injury_lab":
+        _add("#مصدومیت")
+        if isinstance(facts, dict):
+            pl = facts.get("player") if isinstance(facts.get("player"), dict) else {}
+            if pl.get("name"):
+                _add(_slug_fa_hashtag(str(pl["name"])))
+            if pl.get("club"):
+                _add(_slug_fa_hashtag(str(pl["club"])))
+    elif ptype == "player_profile":
+        _add("#آنالیز_بازیکن")
+        if isinstance(facts, dict):
+            if facts.get("name"):
+                _add(_slug_fa_hashtag(str(facts["name"])))
+            if facts.get("club"):
+                _add(_slug_fa_hashtag(str(facts["club"])))
+    elif ptype == "h2h_teams":
+        _add("#تاریخچه_تقابل")
+        if isinstance(facts, dict):
+            for side in ("home", "away"):
+                so = facts.get(side) if isinstance(facts.get(side), dict) else {}
+                if so.get("name"):
+                    _add(_slug_fa_hashtag(str(so["name"])))
+    elif ptype == "player_fc27":
+        _add("#کارت_بازیکن")
+        if isinstance(facts, dict):
+            if facts.get("name"):
+                _add(_slug_fa_hashtag(str(facts["name"])))
+            if facts.get("club"):
+                _add(_slug_fa_hashtag(str(facts["club"])))
+    elif ptype == "h2h_players":
+        _add("#دوئل_بازیکنان")
+        if isinstance(facts, dict):
+            for side in ("p1", "p2"):
+                so = facts.get(side) if isinstance(facts.get(side), dict) else {}
+                if so.get("name"):
+                    _add(_slug_fa_hashtag(str(so["name"])))
+    elif ptype == "top_scorers":
+        _add("#جدول_گلزنان")
+        if isinstance(facts, dict) and facts.get("competition"):
+            _add(_slug_fa_hashtag(str(facts["competition"])))
+    elif ptype == "matchday_results":
+        _add("#نتایج_۲۴_ساعت")
+        if isinstance(facts, dict) and facts.get("competition"):
+            _add(_slug_fa_hashtag(str(facts["competition"])))
+    elif ptype == "quote":
+        _add("#نقل_قول_روز")
+        if isinstance(facts, dict):
+            if facts.get("speaker"):
+                _add(_slug_fa_hashtag(str(facts["speaker"])))
+            if facts.get("competition"):
+                _add(_slug_fa_hashtag(str(facts["competition"])))
+    elif ptype == "debate":
+        _add("#مناظره_روز")
+        if isinstance(facts, dict):
+            for sk in ("sideA", "sideB"):
+                so = facts.get(sk) if isinstance(facts.get(sk), dict) else {}
+                if so.get("name"):
+                    _add(_slug_fa_hashtag(str(so["name"])))
+    elif ptype == "number_of_day":
+        _add("#آمار_فوتبال")
+        if isinstance(facts, dict) and facts.get("subject"):
+            _add(_slug_fa_hashtag(str(facts["subject"])))
 
     # استخراج تیم‌ها از facts ساختاریافته (پیش‌بازی / پس‌ازبازی)
     if isinstance(facts, dict):

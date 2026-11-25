@@ -676,6 +676,9 @@ html,body{{width:{w}px;height:{h}px;overflow:hidden;background:#0D1730;color:#F8
 .bd-foot-handle{{font-size:19.5px;font-weight:800;color:#FFFFFF}}
 .bd-foot-src{{font-size:16.5px;font-weight:600;color:#CBD5E1}}
 .bd-sep{{color:#64748B}}
+
+footer, footer .fbw, footer .cf-row, footer .fi, footer .cf-left, footer .cf-right, .xg-footer, .foot-row, .card-footer{{flex-wrap:nowrap!important;white-space:nowrap!important;min-width:0!important;}}
+footer span, footer div, .pl-foot-tag, .pl-foot-s, .in-foot-tag, .pr-foot-tag, .st-foot-tag, .cf-tag{{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;min-width:0!important;}}
 </style>
 </head>
 <body>

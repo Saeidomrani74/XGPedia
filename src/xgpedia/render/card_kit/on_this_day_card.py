@@ -1225,6 +1225,9 @@ html,body{{width:{w}px;height:{h}px;overflow:hidden;background:var(--xg-canvas);
 .otd-ed-tag{{display:flex;align-items:center;gap:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.10);
   font-size:17.5px;font-weight:800;color:#6EE7B7}}
 .otd-emerald-dot{{width:10px;height:10px;border-radius:999px;background:#34D399;flex-shrink:0}}
+
+footer, footer .fbw, footer .cf-row, footer .fi, footer .cf-left, footer .cf-right, .xg-footer, .foot-row, .card-footer{{flex-wrap:nowrap!important;white-space:nowrap!important;min-width:0!important;}}
+footer span, footer div, .pl-foot-tag, .pl-foot-s, .in-foot-tag, .pr-foot-tag, .st-foot-tag, .cf-tag{{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;min-width:0!important;}}
 </style>
 </head>
 <body>

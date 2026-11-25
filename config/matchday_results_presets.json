@@ -1,0 +1,560 @@
+[
+  {
+    "id": "epl_w9",
+    "is_preset": true,
+    "title": "نتایج بازی‌های روز",
+    "competition": "لیگ برتر انگلیس",
+    "round": "هفته نهم • یکشنبه طوفانی",
+    "leagueEn": "PREMIER LEAGUE 26/27 W9",
+    "wmText": "MATCHDAY 09",
+    "day": "یکشنبه ۶ آبان ۱۴۰۵",
+    "source": "Opta / XGPedia Lab",
+    "featuredIdx": 0,
+    "motm": {
+      "name": "بوکایو ساکا",
+      "team": "آرسنال",
+      "color": "#EF0107",
+      "rating": "۹.۲",
+      "stat": "۱ گل • ۱ پاس گل • ۰.۹۱ xG+xA"
+    },
+    "editorialNote": "شبی که برایتون با ۰.۸۸ xG در سنت‌جیمزز پارک ۳ امتیاز را ربود و آرسنال نیمه دوم امارات را به آتش کشید.",
+    "matches": [
+      {
+        "home": {
+          "name": "آرسنال",
+          "code": "ARS",
+          "color": "#EF0107",
+          "secondary": "#FFFFFF",
+          "score": 3,
+          "xg": 2.46,
+          "scorers": "ساکا ۲۲' • هاورتز ۵۸' • مارتینلی ۸۴'"
+        },
+        "away": {
+          "name": "لیورپول",
+          "code": "LIV",
+          "color": "#38BDF8",
+          "secondary": "#F6EB61",
+          "score": 1,
+          "xg": 1.28,
+          "scorers": "صلاح ۳۹'"
+        },
+        "status": "FT",
+        "ht": "۱-۱",
+        "tag": "نبرد صدرنشینان • طوفان نیمه دوم امارات"
+      },
+      {
+        "home": {
+          "name": "منچسترسیتی",
+          "code": "MCI",
+          "color": "#38BDF8",
+          "secondary": "#FFFFFF",
+          "score": 2,
+          "xg": 2.14,
+          "scorers": "هالند ۱۴' • فودن ۷۱'"
+        },
+        "away": {
+          "name": "چلسی",
+          "code": "CHE",
+          "color": "#3B82F6",
+          "secondary": "#FBBF24",
+          "score": 2,
+          "xg": 1.86,
+          "scorers": "پالمر ۴۳' (پ) • جکسون ۸۸'"
+        },
+        "status": "FT",
+        "ht": "۱-۱",
+        "tag": "کامبک دیرهنگام چلسی در اتحاد"
+      },
+      {
+        "home": {
+          "name": "نیوکاسل",
+          "code": "NEW",
+          "color": "#CBD5E1",
+          "secondary": "#0F172A",
+          "score": 1,
+          "xg": 2.31,
+          "scorers": "ایساک ۳۱'"
+        },
+        "away": {
+          "name": "برایتون",
+          "code": "BHA",
+          "color": "#0EA5E9",
+          "secondary": "#FFFFFF",
+          "score": 2,
+          "xg": 0.88,
+          "scorers": "میتوما ۶۴' • ولبک ۷۹'"
+        },
+        "status": "FT",
+        "ht": "۱-۰",
+        "tag": "بزرگ‌ترین سرقت آماری هفته در سنت‌جیمزز"
+      },
+      {
+        "home": {
+          "name": "استون ویلا",
+          "code": "AVL",
+          "color": "#A855F7",
+          "secondary": "#7DD3FC",
+          "score": 2,
+          "xg": 1.74,
+          "scorers": "واتکینز ۱۹' • راجرز ۶۷'"
+        },
+        "away": {
+          "name": "تاتنهام",
+          "code": "TOT",
+          "color": "#E2E8F0",
+          "secondary": "#1E293B",
+          "score": 0,
+          "xg": 0.92,
+          "scorers": ""
+        },
+        "status": "FT",
+        "ht": "۱-۰",
+        "tag": "کلین‌شیت تاکتیکی اونای امری"
+      },
+      {
+        "home": {
+          "name": "منچستریونایتد",
+          "code": "MUN",
+          "color": "#DC2626",
+          "secondary": "#FACC15",
+          "score": 3,
+          "xg": 2.05,
+          "scorers": "برونو ۲۷' • گارناچو ۵۳' • هویلوند ۸۱'"
+        },
+        "away": {
+          "name": "وستهام",
+          "code": "WHU",
+          "color": "#9F1239",
+          "secondary": "#38BDF8",
+          "score": 0,
+          "xg": 0.64,
+          "scorers": ""
+        },
+        "status": "FT",
+        "ht": "۱-۰",
+        "tag": "برتری مطلق در اولدترافورد"
+      }
+    ]
+  },
+  {
+    "id": "ucl_n1",
+    "is_preset": true,
+    "title": "نتایج شب اروپایی",
+    "competition": "لیگ قهرمانان اروپا",
+    "round": "هفته چهارم • شب اول",
+    "leagueEn": "UEFA CHAMPIONS LEAGUE 26/27 MD4",
+    "wmText": "UCL NIGHT 04",
+    "day": "سه‌شنبه ۱۵ آبان ۱۴۰۵",
+    "source": "Opta / UEFA Analytics",
+    "featuredIdx": 0,
+    "motm": {
+      "name": "لامین یامال",
+      "team": "بارسلونا",
+      "color": "#E62E45",
+      "rating": "۹.۵",
+      "stat": "۲ گل • ۱ پاس گل • ۱.۱۴ xG+xA"
+    },
+    "editorialNote": "جشنواره گل در مونتجوئیک و برتری کلینیکال رئال در برنابئو؛ اینتر با دفاع آهنین آرسنال را مهار کرد.",
+    "matches": [
+      {
+        "home": {
+          "name": "رئال مادرید",
+          "code": "RMA",
+          "color": "#F59E0B",
+          "secondary": "#FFFFFF",
+          "score": 2,
+          "xg": 1.68,
+          "scorers": "امباپه ۳۴' • وینیسیوس ۷۹'"
+        },
+        "away": {
+          "name": "بایرن مونیخ",
+          "code": "BAY",
+          "color": "#EF4444",
+          "secondary": "#FFFFFF",
+          "score": 1,
+          "xg": 1.92,
+          "scorers": "کین ۵۲'"
+        },
+        "status": "FT",
+        "ht": "۱-۰",
+        "tag": "درام کلاسیک برنابئو • زهر ضدحملات رئال"
+      },
+      {
+        "home": {
+          "name": "بارسلونا",
+          "code": "BAR",
+          "color": "#E62E45",
+          "secondary": "#2563EB",
+          "score": 4,
+          "xg": 3.18,
+          "scorers": "یامال ۱۲'، ۶۵' • رافینیا ۴۴' • لواندوفسکی ۸۳'"
+        },
+        "away": {
+          "name": "پاری‌سن‌ژرمن",
+          "code": "PSG",
+          "color": "#3B82F6",
+          "secondary": "#EF4444",
+          "score": 1,
+          "xg": 1.34,
+          "scorers": "دمبله ۲۸'"
+        },
+        "status": "FT",
+        "ht": "۲-۱",
+        "tag": "نمایش هجومی فلیک با ۳.۱۸ امید گل"
+      },
+      {
+        "home": {
+          "name": "اینتر میلان",
+          "code": "INT",
+          "color": "#2563EB",
+          "secondary": "#0F172A",
+          "score": 1,
+          "xg": 0.94,
+          "scorers": "لائوتارو ۴۵+۲'"
+        },
+        "away": {
+          "name": "آرسنال",
+          "code": "ARS",
+          "color": "#EF0107",
+          "secondary": "#FFFFFF",
+          "score": 0,
+          "xg": 1.61,
+          "scorers": ""
+        },
+        "status": "FT",
+        "ht": "۱-۰",
+        "tag": "بلاک دفاعی اینزاگی برابر فشار آرسنال"
+      },
+      {
+        "home": {
+          "name": "منچسترسیتی",
+          "code": "MCI",
+          "color": "#38BDF8",
+          "secondary": "#FFFFFF",
+          "score": 3,
+          "xg": 2.55,
+          "scorers": "هالند ۱۹'، ۶۲' • ساوینیو ۷۷'"
+        },
+        "away": {
+          "name": "دورتموند",
+          "code": "BVB",
+          "color": "#FACC15",
+          "secondary": "#0F172A",
+          "score": 2,
+          "xg": 1.49,
+          "scorers": "گیراسی ۴۰' • آدیمی ۸۵'"
+        },
+        "status": "FT",
+        "ht": "۱-۱",
+        "tag": "آتش‌بازی ۵ گله در ورزشگاه اتحاد"
+      },
+      {
+        "home": {
+          "name": "بایر لورکوزن",
+          "code": "LEV",
+          "color": "#DC2626",
+          "secondary": "#111827",
+          "score": 2,
+          "xg": 1.82,
+          "scorers": "ویرتز ۲۴' • بونیفیس ۷۴'"
+        },
+        "away": {
+          "name": "آث میلان",
+          "code": "ACM",
+          "color": "#F43F5E",
+          "secondary": "#111827",
+          "score": 2,
+          "xg": 1.58,
+          "scorers": "لئائو ۵۱' • پولیشیچ ۸۹'"
+        },
+        "status": "FT",
+        "ht": "۱-۰",
+        "tag": "تساوی پرهیجان با گل دقیقه ۸۹ میلان"
+      }
+    ]
+  },
+  {
+    "id": "pgpl_w11",
+    "is_preset": true,
+    "title": "نتایج لیگ برتر ایران",
+    "competition": "لیگ برتر خلیج فارس",
+    "round": "هفته یازدهم • روز دربی",
+    "leagueEn": "PERSIAN GULF PRO LEAGUE 26/27 W11",
+    "wmText": "DERBY W11",
+    "day": "پنجشنبه ۱۷ آبان ۱۴۰۵",
+    "source": "Metrica / XGPedia Iran",
+    "featuredIdx": 0,
+    "motm": {
+      "name": "اوستون اورونوف",
+      "team": "پرسپولیس",
+      "color": "#E62E45",
+      "rating": "۸.۹",
+      "stat": "۱ گل • ۵ دریبل موفق • ۰.۷۲ xG"
+    },
+    "editorialNote": "پرسپولیس در شهرآورد با برتری آماری به پیروزی رسید و چادرملو با ۰.۵۲ xG سه امتیاز اراک را شکار کرد.",
+    "matches": [
+      {
+        "home": {
+          "name": "پرسپولیس",
+          "code": "PRS",
+          "color": "#E62E45",
+          "secondary": "#FFFFFF",
+          "score": 2,
+          "xg": 1.95,
+          "scorers": "اورونوف ۳۳' • علیپور ۷۶'"
+        },
+        "away": {
+          "name": "استقلال",
+          "code": "EST",
+          "color": "#3B82F6",
+          "secondary": "#FFFFFF",
+          "score": 1,
+          "xg": 1.12,
+          "scorers": "ماشاریپوف ۵۸'"
+        },
+        "status": "FT",
+        "ht": "۱-۰",
+        "tag": "شهرآورد پایتخت • کنترل کامل میانه میدان"
+      },
+      {
+        "home": {
+          "name": "سپاهان",
+          "code": "SEP",
+          "color": "#FACC15",
+          "secondary": "#111827",
+          "score": 3,
+          "xg": 2.42,
+          "scorers": "کریمی ۱۸' • لیموچی ۵۴' • شکاری ۸۲'"
+        },
+        "away": {
+          "name": "تراکتور",
+          "code": "TRC",
+          "color": "#DC2626",
+          "secondary": "#FFFFFF",
+          "score": 0,
+          "xg": 0.98,
+          "scorers": ""
+        },
+        "status": "FT",
+        "ht": "۱-۰",
+        "tag": "پیروزی مقتدرانه در نقش‌جهان"
+      },
+      {
+        "home": {
+          "name": "فولاد خوزستان",
+          "code": "FOL",
+          "color": "#EF4444",
+          "secondary": "#FACC15",
+          "score": 1,
+          "xg": 1.21,
+          "scorers": "انصاری ۴۱'"
+        },
+        "away": {
+          "name": "ذوب‌آهن",
+          "code": "ZOB",
+          "color": "#10B981",
+          "secondary": "#FFFFFF",
+          "score": 1,
+          "xg": 1.08,
+          "scorers": "آذرباد ۶۹'"
+        },
+        "status": "FT",
+        "ht": "۱-۰",
+        "tag": "تساوی عادلانه در فولاد آرنا"
+      },
+      {
+        "home": {
+          "name": "گل‌گهر سیرجان",
+          "code": "GOL",
+          "color": "#38BDF8",
+          "secondary": "#1E3A8A",
+          "score": 2,
+          "xg": 1.64,
+          "scorers": "تیکدری ۲۹' • عاشوری ۷۴'"
+        },
+        "away": {
+          "name": "ملوان انزلی",
+          "code": "MLV",
+          "color": "#0EA5E9",
+          "secondary": "#FFFFFF",
+          "score": 0,
+          "xg": 0.71,
+          "scorers": ""
+        },
+        "status": "FT",
+        "ht": "۱-۰",
+        "tag": "کلین‌شیت خانگی شاگردان تارتار"
+      },
+      {
+        "home": {
+          "name": "آلومینیوم اراک",
+          "code": "ALU",
+          "color": "#10B981",
+          "secondary": "#FFFFFF",
+          "score": 0,
+          "xg": 1.48,
+          "scorers": ""
+        },
+        "away": {
+          "name": "چادرملو اردکان",
+          "code": "CHD",
+          "color": "#F59E0B",
+          "secondary": "#1E293B",
+          "score": 1,
+          "xg": 0.52,
+          "scorers": "محمودآبادی ۸۷'"
+        },
+        "status": "FT",
+        "ht": "۰-۰",
+        "tag": "شگفتی و سرقت ۳ امتیاز در دقیقه ۸۷"
+      }
+    ]
+  },
+  {
+    "id": "euro_mix",
+    "is_preset": true,
+    "title": "خلاصه شب داغ اروپا",
+    "competition": "لالیگا و سری‌آ",
+    "round": "یکشنبه کلاسیک اروپا",
+    "leagueEn": "EUROPEAN SUPER SUNDAY 26/27",
+    "wmText": "EL CLASICO",
+    "day": "یکشنبه ۲۰ آبان ۱۴۰۵",
+    "source": "Opta / XGPedia Global",
+    "featuredIdx": 0,
+    "motm": {
+      "name": "کیلیان امباپه",
+      "team": "رئال مادرید",
+      "color": "#F59E0B",
+      "rating": "۹.۳",
+      "stat": "۲ گل • ۶ شوت • ۱.۳۲ xG"
+    },
+    "editorialNote": "ال‌کلاسیکوی ۵ گله با گل وقت اضافه بلینگام؛ شبی با میانگین ۳.۴ گل در هر مسابقه!",
+    "matches": [
+      {
+        "league": "لالیگا اسپانیا",
+        "leagueColor": "#F59E0B",
+        "home": {
+          "name": "رئال مادرید",
+          "code": "RMA",
+          "color": "#F59E0B",
+          "secondary": "#FFFFFF",
+          "score": 3,
+          "xg": 2.48,
+          "scorers": "امباپه ۱۷'، ۶۴' • بلینگام ۹۰+۱'"
+        },
+        "away": {
+          "name": "بارسلونا",
+          "code": "BAR",
+          "color": "#E62E45",
+          "secondary": "#1D4ED8",
+          "score": 2,
+          "xg": 2.19,
+          "scorers": "یامال ۳۸' • رافینیا ۷۶'"
+        },
+        "status": "FT",
+        "ht": "۱-۱",
+        "tag": "ال‌کلاسیکو • گل پیروزی بلینگام در وقت اضافه"
+      },
+      {
+        "league": "لالیگا اسپانیا",
+        "leagueColor": "#F59E0B",
+        "home": {
+          "name": "اتلتیکو مادرید",
+          "code": "ATM",
+          "color": "#EF4444",
+          "secondary": "#FFFFFF",
+          "score": 1,
+          "xg": 0.96,
+          "scorers": "آلوارز ۶۷'"
+        },
+        "away": {
+          "name": "اتلتیک بیلبائو",
+          "code": "ATH",
+          "color": "#DC2626",
+          "secondary": "#F8FAFC",
+          "score": 0,
+          "xg": 1.38,
+          "scorers": ""
+        },
+        "status": "FT",
+        "ht": "۰-۰",
+        "tag": "برد اقتصادی سیمئونه در متروپولیتانو"
+      },
+      {
+        "league": "لالیگا اسپانیا",
+        "leagueColor": "#F59E0B",
+        "home": {
+          "name": "خیرونا",
+          "code": "GIR",
+          "color": "#F43F5E",
+          "secondary": "#FFFFFF",
+          "score": 2,
+          "xg": 1.88,
+          "scorers": "تسیگانکوف ۲۹' • رویز ۶۱'"
+        },
+        "away": {
+          "name": "رئال سوسیداد",
+          "code": "RSO",
+          "color": "#3B82F6",
+          "secondary": "#FFFFFF",
+          "score": 1,
+          "xg": 1.21,
+          "scorers": "اویارزابال ۸۴'"
+        },
+        "status": "FT",
+        "ht": "۱-۰",
+        "tag": "فوتبال مالکانه خیرونا در مونتیلیوی"
+      },
+      {
+        "league": "سری‌آ ایتالیا",
+        "leagueColor": "#38BDF8",
+        "home": {
+          "name": "اینتر میلان",
+          "code": "INT",
+          "color": "#2563EB",
+          "secondary": "#0F172A",
+          "score": 2,
+          "xg": 2.05,
+          "scorers": "تورام ۲۳' • چالهان‌اوغلو ۵۵'"
+        },
+        "away": {
+          "name": "یوونتوس",
+          "code": "JUV",
+          "color": "#E2E8F0",
+          "secondary": "#0F172A",
+          "score": 2,
+          "xg": 1.72,
+          "scorers": "ولاهوویچ ۴۴' • ییلدیز ۸۱'"
+        },
+        "status": "FT",
+        "ht": "۱-۱",
+        "tag": "دربی ایتالیا در سن‌سیرو برنده نداشت"
+      },
+      {
+        "league": "سری‌آ ایتالیا",
+        "leagueColor": "#38BDF8",
+        "home": {
+          "name": "ناپولی",
+          "code": "NAP",
+          "color": "#38BDF8",
+          "secondary": "#FFFFFF",
+          "score": 3,
+          "xg": 2.34,
+          "scorers": "لوکاکو ۱۵' • کواراتسخلیا ۴۹' • مک‌تومینای ۷۸'"
+        },
+        "away": {
+          "name": "آث میلان",
+          "code": "ACM",
+          "color": "#F43F5E",
+          "secondary": "#111827",
+          "score": 1,
+          "xg": 1.09,
+          "scorers": "موراتا ۶۳'"
+        },
+        "status": "FT",
+        "ht": "۱-۰",
+        "tag": "قدرت‌نمایی کونته در مارادونا"
+      }
+    ]
+  }
+]
