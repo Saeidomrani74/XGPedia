@@ -137,6 +137,18 @@ def _brand_logo_html() -> str:
 
 
 def _crest_svg(p: dict[str, Any], sz: int) -> str:
+    from src.xgpedia.providers.pl_badges_free import get_pl_badge_data_uri
+    _luri = p.get("logoUrl") or get_pl_badge_data_uri(
+        str(p.get("club") or p.get("team") or ""),
+        tla_hint=str(p.get("code") or p.get("clubCode") or ""),
+        fetch_network=False,
+    )
+    if _luri:
+        return (
+            f'<div style="width:{sz}px;height:{sz}px;flex-shrink:0;display:flex;align-items:center;justify-content:center;'
+            f'border-radius:50%;background:rgba(7,13,29,.72);padding:{max(3, sz // 11)}px;filter:drop-shadow(0 8px 16px rgba(0,0,0,.5))">'
+            f'<img src="{esc(_luri)}" alt="{esc(p.get("code") or "")}" style="width:100%;height:100%;object-fit:contain;display:block"/></div>'
+        )
     c1 = str(p.get("color") or "#EF0107")
     c2 = str(p.get("secondary") or "#FFFFFF")
     cd = esc(str(p.get("code") or "FC")[:3].upper())

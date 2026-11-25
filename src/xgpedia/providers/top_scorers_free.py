@@ -165,6 +165,62 @@ def _match_understat_player(umap: dict[str, dict[str, int]], full_en: str, short
     return None
 
 
+
+
+def _fetch_fd_pl_penalties(api_key: str) -> dict[str, dict[str, int]]:
+    """پشتیبان دقیق تعداد پنالتی گلزنان لیگ برتر از Football-Data.org (در صورت وجود کلید رایگان)."""
+    import unicodedata as _ud
+    if not api_key:
+        return {}
+    url = "https://api.football-data.org/v4/competitions/PL/scorers?limit=25"
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "X-Auth-Token": api_key})
+        with urllib.request.urlopen(req, timeout=7.0) as resp:
+            payload = json.loads(resp.read().decode("utf-8", errors="replace"))
+        out: dict[str, dict[str, int]] = {}
+        for row in (payload.get("scorers") or []):
+            if not isinstance(row, dict):
+                continue
+            pl = row.get("player") or {}
+            nm = str(pl.get("name") or "").strip().lower()
+            pen = row.get("penalties")
+            if not nm or pen is None:
+                continue
+            norm = "".join(c for c in _ud.normalize("NFKD", nm) if not _ud.combining(c))
+            ent = {"goals": int(row.get("goals") or 0), "pen": int(pen), "shots": 0}
+            out[norm] = ent
+            parts = norm.split()
+            if len(parts) >= 2:
+                out[parts[-1]] = ent
+        return out
+    except Exception:
+        return {}
+
+
+def _fetch_epl_penalties_and_shots_map(bootstrap: dict[str, Any] | None = None) -> dict[str, dict[str, int]]:
+    """تجمیع چندمنبعی تعداد واقعی پنالتی و شوت بازیکنان لیگ برتر (Understat + BBC Sport + Football-Data.org)."""
+    merged: dict[str, dict[str, int]] = {}
+    # ۱) Understat (دقیق‌ترین منبع: goals - npg + shots)
+    u_map = _fetch_understat_epl_player_stats(bootstrap)
+    if u_map:
+        merged.update(u_map)
+    # ۲) BBC Sport Top Scorers (تکمیل یا پشتیبان بدون کلید)
+    if len(merged) < 12:
+        bbc_map = _fetch_bbc_epl_penalties_and_shots()
+        for k, v in bbc_map.items():
+            if k not in merged:
+                merged[k] = v
+            elif merged[k].get("shots", 0) == 0 and v.get("shots", 0) > 0:
+                merged[k]["shots"] = v["shots"]
+    # ۳) Football-Data.org PL (در صورت تنظیم کلید رایگان در .env)
+    fd_key = os.environ.get("FOOTBALL_DATA_API_KEY", "").strip()
+    if fd_key and len(merged) < 12:
+        for k, v in _fetch_fd_pl_penalties(fd_key).items():
+            if k not in merged:
+                merged[k] = v
+    return merged
+
+
 def parse_fpl_top_scorers(bootstrap: dict[str, Any], *, top_n: int = 8, understat_map: dict[str, dict[str, int]] | None = None) -> dict[str, Any] | None:
     if not isinstance(bootstrap, dict):
         return None
@@ -348,7 +404,8 @@ def fetch_live_top_scorers_items(*, force_refresh: bool = False) -> list[dict[st
     items: list[dict[str, Any]] = []
     try:
         bootstrap = _http_get_json(FPL_BOOTSTRAP_URL, timeout=9.0)
-        epl = parse_fpl_top_scorers(bootstrap, top_n=8)
+        pen_map = _fetch_epl_penalties_and_shots_map(bootstrap)
+        epl = parse_fpl_top_scorers(bootstrap, top_n=8, understat_map=pen_map)
         if epl:
             items.append(epl)
     except Exception:

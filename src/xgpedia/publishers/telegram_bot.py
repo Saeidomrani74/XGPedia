@@ -202,6 +202,10 @@ def _cards_studio_markup() -> InlineKeyboardMarkup:
                 InlineKeyboardButton(text="🔢 عدد روز", callback_data="nd:list:1"),
             ],
             [
+                InlineKeyboardButton(text="📈 خلاصه هفته و فرم", callback_data="mw:list:1"),
+                InlineKeyboardButton(text="🎯 نقشه شوت و xG", callback_data="sm:list:1"),
+            ],
+            [
                 InlineKeyboardButton(text="📡 رفتن به مرکز دیتای زنده", callback_data="nav:sync"),
                 InlineKeyboardButton(text="🏠 پنل اصلی", callback_data="nav:home"),
             ],
@@ -305,6 +309,8 @@ def _preview_keyboard(post_id: int, fixture_id: str, post_type: str = "preview")
         "quote": ("qt", "💬 لیست نقل‌قول‌های روز"),
         "debate": ("db", "🔥 لیست مناظره‌های روز"),
         "number_of_day": ("nd", "🔢 لیست اعداد روز"),
+        "matchweek_wrapup": ("mw", "📈 لیست خلاصهٔ هفته و فرم"),
+        "shotmap_xg": ("sm", "🎯 لیست نقشهٔ شوت و امید گل"),
     }
     if post_type in _MODULAR_PK:
         _pf, _lbl = _MODULAR_PK[post_type]
@@ -943,7 +949,7 @@ async def on_any_text(m: Message, bot: Bot | None = None) -> None:
             return
         from src.xgpedia.layout_templates import save_layout_template
         try:
-            if card_kind in {"players_rating", "standings", "injury_lab", "player_profile", "h2h_teams", "player_fc27", "h2h_players", "top_scorers", "matchday_results", "quote", "debate", "number_of_day"}:
+            if card_kind in {"players_rating", "standings", "injury_lab", "player_profile", "h2h_teams", "player_fc27", "h2h_players", "top_scorers", "matchday_results", "quote", "debate", "number_of_day", "matchweek_wrapup", "shotmap_xg"}:
                 from src.xgpedia.publishers.modular_cards_bot import (
                     MODULAR_STATES,
                     render_modular_customizer_view,

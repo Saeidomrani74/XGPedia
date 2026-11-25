@@ -344,6 +344,53 @@ def build_fpl_live_numbers(boot: dict[str, Any] | None = None, fixtures: list[di
                     "kpis": [[f"{cs_pct}٪", "نرخ کلین‌شیت"], [str(st_d["ga"]), "گل خورده"], [str(st_d["pts"]), "امتیاز"]],
                 })
 
+
+    # 6. بیشترین مشارکت گل (گل + پاس گل) فصل جاری
+    involvers = sorted(
+        [e for e in elements if int(e.get("minutes") or 0) >= 270 and (int(e.get("goals_scored") or 0) + int(e.get("assists") or 0)) >= 3],
+        key=lambda x: (int(x.get("goals_scored") or 0) + int(x.get("assists") or 0), float(x.get("expected_goals") or 0.0) + float(x.get("expected_assists") or 0.0)),
+        reverse=True,
+    )
+    if len(involvers) >= 2:
+        p1, p2 = involvers[0], involvers[1]
+        ga1 = int(p1.get("goals_scored") or 0) + int(p1.get("assists") or 0)
+        ga2 = int(p2.get("goals_scored") or 0) + int(p2.get("assists") or 0)
+        t_obj = teams.get(p1.get("team"), {})
+        c_info = lookup_pl_club(str(t_obj.get("short_name") or t_obj.get("name") or ""))
+        en_full = f"{p1.get('first_name', '')} {p1.get('second_name', '')}".strip()
+        fa_full = _fa_name(en_full)
+        club_fa = c_info[0] if c_info else str(t_obj.get("name") or "")
+        code = str(t_obj.get("short_name") or "PL")[:3].upper()
+        g1_v, a1_v = int(p1.get("goals_scored") or 0), int(p1.get("assists") or 0)
+        mins_v = max(1, int(p1.get("minutes") or 1))
+        xgi_v = float(p1.get("expected_goals") or 0.0) + float(p1.get("expected_assists") or 0.0)
+        items.append({
+            "id": f"live_nod_ga_{p1.get('id')}",
+            "is_live": True,
+            "fit_score": 96,
+            "mode": "cathedral",
+            "accent": c_info[2] if c_info else "#38BDF8",
+            "number": str(ga1),
+            "suffix": "",
+            "unit": f"مشارکت مستقیم گل در هفته {cur_gw}",
+            "issue": f"{cur_gw:03d}",
+            "category": "مؤثرترین بازیکن لیگ برتر",
+            "date": f"هفته {cur_gw} فصل جاری",
+            "subject": fa_full,
+            "subjectEn": en_full.upper()[:22],
+            "subjectCode": code,
+            "pinText": f"{g1_v} گل و {a1_v} پاس گل رسمی",
+            "ribbonText": f"مؤثرترین ستاره لیگ • {ga1} مشارکت گل",
+            "headline": f"{fa_full}؛ مؤثرترین بازیکن فصل لیگ برتر با {ga1} مشارکت مستقیم گل",
+            "body": f"ستاره {club_fa} در {mins_v} دقیقه حضور در میدان روی {ga1} گل ({g1_v} گل و {a1_v} پاس گل) نقش مستقیم داشته و امید مشارکت {xgi_v:.1f} ثبت کرده است.",
+            "source": "Premier League / Opta FPL",
+            "benchLabel": f"نفر دوم ({_fa_name(str(p2.get('web_name') or ''))})",
+            "benchVal": ga2,
+            "heroNumVal": ga1,
+            "deltaLabel": f"+{ga1 - ga2} مشارکت بیشتر از نفر دوم" if ga1 > ga2 else "صدرنشین مشترک مشارکت گل",
+            "kpis": [[str(g1_v), "گل زده"], [str(a1_v), "پاس گل"], [f"{xgi_v:.1f}", "امید xG+xA"]],
+        })
+
     return items
 
 
@@ -370,6 +417,23 @@ def extract_news_number_candidate(
     hero = nums[0]
     hid = hashlib.sha1(f"{source_name}|{t}".encode("utf-8", errors="ignore")).hexdigest()[:10]
     val_f = float(hero)
+    # استخراج واحد فارسی واقعی بر اساس کلیدواژه خبر (بدون عبارات کلیشه‌ای)
+    unit_fa = ""
+    if "unbeaten" in low or "without defeat" in low:
+        unit_fa = "بازی پیاپی بدون شکست"
+    elif "hat-trick" in low or "hat trick" in low:
+        unit_fa = "هت‌تریک ثبت‌شده"
+    elif "clean sheet" in low:
+        unit_fa = "کلین‌شیت ثبت‌شده"
+    elif "goals" in low or "goal" in low:
+        unit_fa = "گل ثبت‌شده"
+    elif "win" in low or "victories" in low or "streak" in low:
+        unit_fa = "پیروزی پیاپی"
+    elif "matches" in low or "games" in low:
+        unit_fa = "مسابقه رسمی"
+    elif "years" in low:
+        unit_fa = "سال"
+
     return {
         "id": f"live_nod_news_{hid}",
         "is_live": True,
@@ -378,24 +442,26 @@ def extract_news_number_candidate(
         "accent": "#E62E45",
         "number": hero,
         "suffix": "",
-        "unit": "آمار برگزیده روز فوتبال",
+        "unit": unit_fa,
         "issue": hero.replace(".", "")[:3].zfill(3),
-        "category": "آمار زنده رسانه‌ای",
+        "category": "آمار زنده فوتبال",
         "date": "گزارش زنده امروز",
-        "subject": source_name,
-        "subjectEn": "LIVE FOOTBALL STAT",
+        "subject": "فوتبال اروپا",
+        "subjectEn": "XGPEDIA",
         "subjectCode": "XGP",
-        "pinText": "عدد داغ در رسانه‌های معتبر اروپا",
-        "ribbonText": f"NUMBER OF THE DAY • {source_name.upper()}",
-        "headline": t[:85],
-        "body": (d or t)[:185],
+        "pinText": "",
+        "ribbonText": f"عدد روز فوتبال • {unit_fa or 'آمار ویژه'}",
+        "headline": t[:95],
+        "body": (d or t)[:200],
+        "headline_en": t[:120],
+        "body_en": (d or t)[:240],
         "source": source_name,
         "source_url": source_url,
-        "benchLabel": "شاخص مرجع",
-        "benchVal": max(1, round(val_f * 0.8)),
+        "benchLabel": "",
+        "benchVal": None,
         "heroNumVal": val_f,
-        "deltaLabel": "رکورد / آمار زنده امروز",
-        "kpis": [[hero, "عدد شاخص"], ["LIVE", "وضعیت داده"], [source_name[:10], "منبع"]],
+        "deltaLabel": "",
+        "kpis": [],
     }
 
 
@@ -431,8 +497,11 @@ def fetch_live_number_of_day_items(*, force_refresh: bool = False, max_items: in
         return [dict(x) for x in _NOD_CACHE["items"]]
 
     items: list[dict[str, Any]] = []
-    items.extend(build_fpl_live_numbers())
-    items.extend(_fetch_news_numbers())
+    fpl_items = build_fpl_live_numbers()
+    items.extend(fpl_items)
+    # فقط وقتی دیتای غنی و داده‌محور FPL کم باشد از اعداد خبری RSS استفاده شود
+    if len(fpl_items) < 4:
+        items.extend(_fetch_news_numbers())
 
     seen: set[str] = set()
     uniq: list[dict[str, Any]] = []
@@ -455,3 +524,85 @@ def list_all_number_of_day_items(*, include_live: bool = True, force_refresh: bo
     presets = load_number_of_day_presets()
     live = fetch_live_number_of_day_items(force_refresh=force_refresh) if include_live else []
     return {"live": live, "presets": presets}
+
+
+_FORBIDDEN_NOD_PHRASES = (
+    "آمار برگزیده روز فوتبال",
+    "عدد داغ در رسانه‌های معتبر اروپا",
+    "عدد داغ در رسانه های معتبر اروپا",
+)
+_FORBIDDEN_NOD_KPI_LABELS = frozenset({"عدد شاخص", "وضعیت داده", "منبع"})
+
+
+def _looks_english_text(text: str) -> bool:
+    s = str(text or "").strip()
+    if not s:
+        return False
+    en_n = sum(1 for c in s if "a" <= c.lower() <= "z")
+    fa_n = sum(1 for c in s if "\u0600" <= c <= "\u06ff")
+    return en_n >= 8 and en_n > fa_n * 1.2
+
+
+def _translate_nod_text_fa(text: str, *, kind: str = "headline") -> str:
+    raw = str(text or "").strip()
+    if not raw or not _looks_english_text(raw):
+        return raw
+    try:
+        from src.xgpedia.editorial.llm_provider import generate_text
+        if kind == "headline":
+            prompt = (
+                "تیتر آماری فوتبال زیر را به فارسی روان، کوتاه و مجله‌ای (حداکثر ۱۲ کلمه) ترجمه کن. "
+                "فقط خود تیتر فارسی را بدون توضیح اضافه برگردان:\n" + raw
+            )
+            max_tok = 90
+        else:
+            prompt = (
+                "متن کوتاه آماری فوتبال زیر را به فارسی روان، دقیق و خبری (حداکثر ۲ جمله) ترجمه کن. "
+                "فقط خود متن فارسی را برگردان:\n" + raw
+            )
+            max_tok = 180
+        res = generate_text(prompt, max_tokens=max_tok)
+        if res and len(res.strip()) >= 8 and not _looks_english_text(res):
+            return res.strip().strip('"\'«»')
+    except Exception:
+        pass
+    return raw
+
+
+def hydrate_number_of_day_item(item: dict[str, Any]) -> dict[str, Any]:
+    """تکمیل و فارسی‌سازی نهایی آیتم «عدد روز» پیش از رندر آفلاین + حذف عبارات و KPIهای اضافی."""
+    out = dict(item)
+    # ۱) حذف عبارات ممنوعه
+    for field in ("unit", "pinText", "deltaLabel", "category"):
+        val = str(out.get(field) or "").strip()
+        if val in _FORBIDDEN_NOD_PHRASES:
+            out[field] = ""
+    # ۲) حذف KPIهای اضافی (عدد شاخص، وضعیت داده، منبع)
+    if isinstance(out.get("kpis"), list):
+        out["kpis"] = [
+            k for k in out["kpis"]
+            if isinstance(k, (list, tuple)) and len(k) >= 2 and str(k[1]).strip() not in _FORBIDDEN_NOD_KPI_LABELS
+        ]
+    # ۳) فارسی‌سازی تیتر، متن و موضوع در صورت انگلیسی بودن
+    if _looks_english_text(str(out.get("headline") or "")):
+        tr_hl = _translate_nod_text_fa(str(out["headline"]), kind="headline")
+        if _looks_english_text(tr_hl):
+            num_s = f"{out.get('number') or ''}{out.get('suffix') or ''}"
+            unit_s = str(out.get("unit") or "").strip()
+            out["headline"] = f"ثبت آمار {num_s} {unit_s} در فوتبال امروز".strip()
+        else:
+            out["headline"] = tr_hl
+    if _looks_english_text(str(out.get("body") or "")):
+        tr_bd = _translate_nod_text_fa(str(out["body"]), kind="body")
+        if _looks_english_text(tr_bd):
+            num_s = f"{out.get('number') or ''}{out.get('suffix') or ''}"
+            unit_s = str(out.get("unit") or "آمار ویژه").strip()
+            out["body"] = f"رکورد و عدد {num_s} ({unit_s}) یکی از شاخص‌ترین داده‌های ثبت‌شده در رقابت‌های امروز فوتبال است."
+        else:
+            out["body"] = tr_bd
+    if _looks_english_text(str(out.get("subject") or "")):
+        out["subject"] = "فوتبال اروپا"
+    if _looks_english_text(str(out.get("ribbonText") or "")):
+        unit_s = str(out.get("unit") or "آمار ویژه").strip()
+        out["ribbonText"] = f"عدد روز فوتبال • {unit_s}"
+    return out

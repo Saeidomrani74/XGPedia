@@ -40,6 +40,195 @@ _LIVE_CACHE: dict[str, Any] = {"ts": 0.0, "items": []}
 _CACHE_TTL_SEC = 180.0
 
 
+
+_UNDERSTAT_LEAGUE_BY_SLUG: dict[str, str] = {
+    "eng.1": "EPL",
+    "esp.1": "La_liga",
+    "ita.1": "Serie_A",
+    "ger.1": "Bundesliga",
+    "fra.1": "Ligue_1",
+}
+
+
+def _resolve_pl_logo_fast(name_en: str, tla: str) -> str | None:
+    try:
+        from src.xgpedia.providers.pl_badges_free import get_pl_badge_data_uri
+        return get_pl_badge_data_uri(name_en, tla_hint=tla, fetch_network=False)
+    except Exception:
+        return None
+
+
+def _norm_team_key(name: str) -> str:
+    import unicodedata as _ud
+    s = "".join(c for c in _ud.normalize("NFKD", str(name or "").lower()) if not _ud.combining(c))
+    s = re.sub(r"\b(fc|cf|afc|sc|sv|ac|as|ssc|rcd|ud|cd|real|club|de|la|el|the)\b", " ", s)
+    return re.sub(r"[^a-z0-9]+", "", s)
+
+
+def _fetch_understat_league_xg_matches(u_league: str, *, timeout: float = 7.0) -> list[dict[str, Any]]:
+    """استخراج xG واقعی تمام بازی‌های پایان‌یافته یک لیگ از Understat (datesData — یک درخواست سبک بدون کلید)."""
+    now = datetime.now(timezone.utc)
+    cur_yr = now.year if now.month >= 7 else now.year - 1
+    for yr in (cur_yr, cur_yr - 1):
+        try:
+            req = urllib.request.Request(
+                f"https://understat.com/league/{u_league}/{yr}",
+                headers={"User-Agent": USER_AGENT, "Accept-Language": "en-US,en;q=0.9"},
+            )
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                html_txt = resp.read().decode("utf-8", errors="replace")
+            m = re.search(r"datesData\s*=\s*JSON\.parse\('([^']+)'\)", html_txt)
+            if not m:
+                continue
+            dates = json.loads(m.group(1).encode("utf-8").decode("unicode_escape"))
+            if isinstance(dates, list) and dates:
+                return [d for d in dates if isinstance(d, dict) and d.get("isResult")]
+        except Exception:
+            continue
+    return []
+
+
+def _match_understat_xg(dates: list[dict[str, Any]], home_en: str, away_en: str, hs: int, as_: int) -> tuple[float, float] | None:
+    hn = _norm_team_key(home_en)
+    an = _norm_team_key(away_en)
+    if not hn or not an:
+        return None
+    for d in reversed(dates):
+        dh = _norm_team_key(str((d.get("h") or {}).get("title") or ""))
+        da = _norm_team_key(str((d.get("a") or {}).get("title") or ""))
+        dg = d.get("goals") or {}
+        dxg = d.get("xG") or {}
+        if not dh or not da or dxg.get("h") is None or dxg.get("a") is None:
+            continue
+        if (hn[:4] in dh or dh[:4] in hn) and (an[:4] in da or da[:4] in an):
+            try:
+                if int(dg.get("h")) == hs and int(dg.get("a")) == as_:
+                    return round(float(dxg["h"]), 2), round(float(dxg["a"]), 2)
+            except (TypeError, ValueError):
+                continue
+    return None
+
+
+def _extract_competitor_xg(comp_obj: dict[str, Any]) -> float | None:
+    for st in (comp_obj.get("statistics") or []):
+        if not isinstance(st, dict):
+            continue
+        nm = str(st.get("name") or st.get("label") or "").lower().strip()
+        if nm in ("expectedgoals", "expected goals", "xg", "expected_goals") or "expectedgoal" in nm:
+            try:
+                return round(float(st.get("displayValue") or st.get("value")), 2)
+            except (TypeError, ValueError):
+                pass
+    return None
+
+
+def _infer_understat_league(m: dict[str, Any]) -> str | None:
+    slug = str(m.get("league_slug") or "").strip().lower()
+    if slug in _UNDERSTAT_LEAGUE_BY_SLUG:
+        return _UNDERSTAT_LEAGUE_BY_SLUG[slug]
+    blob = f"{m.get('league_en') or ''} {m.get('league') or ''} {m.get('tag') or ''}".lower()
+    if "premier" in blob or "لیگ برتر انگلیس" in blob or "eng.1" in blob:
+        return "EPL"
+    if "laliga" in blob or "la liga" in blob or "لالیگا" in blob or "esp.1" in blob:
+        return "La_liga"
+    if "serie a" in blob or "سری آ" in blob or "ita.1" in blob:
+        return "Serie_A"
+    if "bundesliga" in blob or "بوندس" in blob or "ger.1" in blob:
+        return "Bundesliga"
+    if "ligue 1" in blob or "لیگ یک" in blob or "fra.1" in blob:
+        return "Ligue_1"
+    return None
+
+
+def _fetch_espn_event_xg(slug: str, event_id: str, *, timeout: float = 6.0) -> tuple[float, float] | None:
+    """دریافت xG واقعی یک مسابقه از اندپوینت ESPN Match Summary (boxscore.teams.statistics)."""
+    if not event_id:
+        return None
+    s_path = slug if (slug and slug != "all") else "all"
+    url = f"https://site.api.espn.com/apis/site/v2/sports/soccer/{s_path}/summary?event={event_id}"
+    try:
+        data = _http_get_json(url, timeout=timeout)
+    except Exception:
+        return None
+    teams = ((data.get("boxscore") or {}).get("teams") or []) if isinstance(data, dict) else []
+    xg_by_ha: dict[str, float] = {}
+    for idx, t in enumerate(teams):
+        if not isinstance(t, dict):
+            continue
+        ha = str(t.get("homeAway") or ("home" if idx == 0 else "away")).lower()
+        for st in (t.get("statistics") or []):
+            if not isinstance(st, dict):
+                continue
+            nm = str(st.get("name") or st.get("label") or "").lower().strip()
+            if nm in ("expectedgoals", "expected goals", "xg", "expected_goals") or "expectedgoal" in nm:
+                try:
+                    xg_by_ha[ha] = round(float(st.get("displayValue") or st.get("value")), 2)
+                except (TypeError, ValueError):
+                    pass
+    if "home" in xg_by_ha and "away" in xg_by_ha:
+        return xg_by_ha["home"], xg_by_ha["away"]
+    return None
+
+
+def enrich_matches_with_real_xg(
+    matches: list[dict[str, Any]],
+    *,
+    understat_cache: dict[str, list[dict[str, Any]]] | None = None,
+) -> list[dict[str, Any]]:
+    """تکمیل xG واقعی هر مسابقه از Understat (۵ لیگ بزرگ اروپا) و ESPN Summary (با رعایت اکید null != 0)."""
+    u_cache = understat_cache if understat_cache is not None else {}
+    needed_u_leagues: set[str] = set()
+    for m in matches:
+        h, a = m.get("home") or {}, m.get("away") or {}
+        if h.get("xg") is not None and a.get("xg") is not None:
+            continue
+        ul = _infer_understat_league(m)
+        if ul and ul not in u_cache:
+            needed_u_leagues.add(ul)
+
+    if needed_u_leagues:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=min(5, len(needed_u_leagues))) as pool:
+            futs = {pool.submit(_fetch_understat_league_xg_matches, ul): ul for ul in needed_u_leagues}
+            for fut in concurrent.futures.as_completed(futs):
+                ul = futs[fut]
+                try:
+                    u_cache[ul] = fut.result()
+                except Exception:
+                    u_cache[ul] = []
+
+    pending_espn: list[tuple[dict[str, Any], str, str]] = []
+    for m in matches:
+        h, a = m.get("home") or {}, m.get("away") or {}
+        if h.get("xg") is not None and a.get("xg") is not None:
+            continue
+        slug = str(m.get("league_slug") or "")
+        ul = _infer_understat_league(m)
+        hs, as_ = int(h.get("score") or 0), int(a.get("score") or 0)
+        h_en = str(h.get("name_en") or h.get("name") or "")
+        a_en = str(a.get("name_en") or a.get("name") or "")
+        hit: tuple[float, float] | None = None
+        if ul and u_cache.get(ul):
+            hit = _match_understat_xg(u_cache[ul], h_en, a_en, hs, as_)
+        if hit is not None:
+            h["xg"], a["xg"] = hit[0], hit[1]
+        elif m.get("event_id"):
+            pending_espn.append((m, slug, str(m["event_id"])))
+
+    if pending_espn:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=min(6, len(pending_espn))) as pool:
+            futs = {pool.submit(_fetch_espn_event_xg, sl, eid): m for m, sl, eid in pending_espn[:10]}
+            for fut in concurrent.futures.as_completed(futs):
+                m = futs[fut]
+                try:
+                    hit = fut.result()
+                except Exception:
+                    hit = None
+                if hit is not None:
+                    (m.get("home") or {})["xg"] = hit[0]
+                    (m.get("away") or {})["xg"] = hit[1]
+    return matches
+
+
 def _http_get_json(url: str, timeout: float = 10.0) -> Any:
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/json"})
     with urllib.request.urlopen(req, timeout=timeout) as resp:
@@ -151,20 +340,24 @@ def parse_espn_finished_24h_matches(
             "league_en": league_en,
             "home": {
                 "name": h_fa,
+                "name_en": str(ht.get("displayName") or ht.get("shortDisplayName") or ""),
                 "code": h_code,
                 "color": h_col,
                 "secondary": h_sec,
+                "logoUrl": _resolve_pl_logo_fast(str(ht.get("displayName") or ""), h_code),
                 "score": hs,
-                "xg": None,  # null != 0
+                "xg": _extract_competitor_xg(home_c),
                 "scorers": h_sc,
             },
             "away": {
                 "name": a_fa,
+                "name_en": str(at.get("displayName") or at.get("shortDisplayName") or ""),
                 "code": a_code,
                 "color": a_col,
                 "secondary": a_sec,
+                "logoUrl": _resolve_pl_logo_fast(str(at.get("displayName") or ""), a_code),
                 "score": as_,
-                "xg": None,  # null != 0
+                "xg": _extract_competitor_xg(away_c),
                 "scorers": a_sc,
             },
             "status": status_short if status_short in ("FT", "AET", "PEN") else "FT",
@@ -595,8 +788,13 @@ def fetch_live_matchday_results_items(*, force_refresh: bool = False) -> list[di
 
     seen_ids: set[str] = set()
     all_matches, fpl_motm = _fetch_fpl_finished_24h_matches(now_utc)
+    for m in all_matches:
+        m.setdefault("league_slug", "eng.1")
+        m.setdefault("finished_elapsed_sec", int(m.get("elapsed_sec") or 0))
     seen_pairs = {(m['home']['code'], m['away']['code'], m['home']['score'], m['away']['score']) for m in all_matches}
     by_league: dict[str, tuple[str, str, list[dict[str, Any]]]] = {}
+    if all_matches:
+        by_league["eng.1"] = ("لیگ برتر انگلیس", "PREMIER LEAGUE", list(all_matches))
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
         futs = {
@@ -612,11 +810,18 @@ def fetch_live_matchday_results_items(*, force_refresh: bool = False) -> list[di
             uniq = []
             for m in ms:
                 eid = str(m.get("event_id") or "")
+                pair_k = (m["home"]["code"], m["away"]["code"], m["home"]["score"], m["away"]["score"])
+                if pair_k in seen_pairs:
+                    continue
                 if eid and eid not in seen_ids:
                     seen_ids.add(eid)
+                    seen_pairs.add(pair_k)
                     uniq.append(m)
             if uniq:
-                by_league[slug] = (fa_name, en_name, uniq)
+                if slug in by_league:
+                    by_league[slug][2].extend(uniq)
+                else:
+                    by_league[slug] = (fa_name, en_name, uniq)
                 all_matches.extend(uniq)
 
     # تکمیل از فید جامع soccer/all/scoreboard در صورت کم بودن نتایج لیگ‌های منتخب
@@ -643,6 +848,10 @@ def fetch_live_matchday_results_items(*, force_refresh: bool = False) -> list[di
         except Exception:
             pass
 
+    _u_xg_cache: dict[str, list[dict[str, Any]]] = {}
+    enrich_matches_with_real_xg(all_matches, understat_cache=_u_xg_cache)
+    for _slug_k, (_fn, _en, _lms) in by_league.items():
+        enrich_matches_with_real_xg(_lms, understat_cache=_u_xg_cache)
     all_matches.sort(key=lambda m: int(m.get("finished_elapsed_sec") or 0))
     cards: list[dict[str, Any]] = []
     if all_matches:

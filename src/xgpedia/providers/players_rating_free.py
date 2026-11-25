@@ -468,10 +468,10 @@ def fetch_live_rated_matches(force_refresh: bool = False) -> list[dict[str, Any]
                 eid = str(m.get("espn_event_id") or m.get("id") or "")
                 if eid and eid not in seen_ids:
                     seen_ids.add(eid)
-                    pk = (m['home']['code'], m['away']['code'], m.get('homeGoals'), m.get('awayGoals'))
-            if pk not in seen_pairs:
-                seen_pairs.add(pk)
-                results.append(m)
+                    pk = (m["home"]["code"], m["away"]["code"], m.get("homeGoals"), m.get("awayGoals"))
+                    if pk not in seen_pairs:
+                        seen_pairs.add(pk)
+                        results.append(m)
 
     # تکمیل از فید جامع تمام لیگ‌های فوتبال ESPN در صورت کم بودن نتایج
     if len(results) < 4:
@@ -482,10 +482,10 @@ def fetch_live_rated_matches(force_refresh: bool = False) -> list[dict[str, Any]
                 eid = str(m.get("espn_event_id") or m.get("id") or "")
                 if eid and eid not in seen_ids:
                     seen_ids.add(eid)
-                    pk = (m['home']['code'], m['away']['code'], m.get('homeGoals'), m.get('awayGoals'))
-            if pk not in seen_pairs:
-                seen_pairs.add(pk)
-                results.append(m)
+                    pk = (m["home"]["code"], m["away"]["code"], m.get("homeGoals"), m.get("awayGoals"))
+                    if pk not in seen_pairs:
+                        seen_pairs.add(pk)
+                        results.append(m)
         except Exception:
             pass
 

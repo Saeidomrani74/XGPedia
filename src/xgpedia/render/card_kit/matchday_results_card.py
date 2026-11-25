@@ -364,14 +364,14 @@ def _header_gauge(st: dict[str, Any]) -> str:
         col = "#34D399" if st["effDelta"] >= 0 else "#FF7B8C"
         ring_val = f"{_fa(eff)}٪"
         ring_sub = "EFF"
-        xg_line = f'<span class="fm" style="font-size:11.5px;font-weight:800;color:{col}" dir="ltr">{_fa(f"{tot_xg:.1f}")} xG</span>'
+        xg_line = f'<span class="fm" style="font-size:14.5px;font-weight:800;color:{col}" dir="ltr">{_fa(f"{tot_xg:.1f}")} xG</span>'
     else:
         circ = 2.0 * math.pi * 24.0
         dash = circ * 0.72
         col = "#38BDF8"
         ring_val = f"{_fa(tot_g)}"
         ring_sub = "GOALS"
-        xg_line = '<span class="fm" style="font-size:11px;font-weight:800;color:#94A3B8" dir="ltr">— xG</span>'
+        xg_line = '<span class="fm" style="font-size:13.5px;font-weight:800;color:#CBD5E1" dir="ltr">— xG</span>'
 
     return (
         f'<div class="hdr-gauge fi" style="gap:10px;padding:6px 12px;border-radius:16px;background:rgba(7,14,32,.9);border:1px solid rgba(255,255,255,.15)">'
@@ -380,11 +380,11 @@ def _header_gauge(st: dict[str, Any]) -> str:
         f'<circle cx="30" cy="30" r="24" stroke="#ffffff18" stroke-width="5"/>'
         f'<circle cx="30" cy="30" r="24" stroke="{col}" stroke-width="5" stroke-linecap="round" stroke-dasharray="{dash:.1f} {circ:.1f}" transform="rotate(-90 30 30)"/></svg>'
         f'<div class="fcol" style="position:absolute;inset:0;align-items:center;justify-content:center">'
-        f'<span style="font-size:13.5px;font-weight:900;line-height:1;color:#fff">{ring_val}</span>'
-        f'<span class="fm" style="font-size:8px;font-weight:700;color:#94A3B8;margin-top:2px">{ring_sub}</span></div></div>'
+        f'<span style="font-size:16px;font-weight:900;line-height:1;color:#fff">{ring_val}</span>'
+        f'<span class="fm" style="font-size:10px;font-weight:800;color:#CBD5E1;margin-top:2px">{ring_sub}</span></div></div>'
         f'<div class="fcol" style="text-align:right;line-height:1.15">'
-        f'<span style="font-size:11.5px;font-weight:800;color:#94A3B8">زهر گلزنی روز</span>'
-        f'<span style="font-size:17px;font-weight:900;color:#fff;margin-top:2px">{_fa(tot_g)} <span style="font-size:11.5px;font-weight:700;color:#94A3B8">گل</span></span>'
+        f'<span style="font-size:14.5px;font-weight:800;color:#CBD5E1">زهر گلزنی روز</span>'
+        f'<span style="font-size:20px;font-weight:900;color:#fff;margin-top:2px">{_fa(tot_g)} <span style="font-size:14px;font-weight:800;color:#CBD5E1">گل</span></span>'
         f'{xg_line}</div></div>'
     )
 
@@ -402,7 +402,7 @@ def _featured_hero(m: dict[str, Any], theme: str, compact: bool) -> str:
     h_sc = _format_scorers(h, m.get("goals"), "h")
     a_sc = _format_scorers(a, m.get("goals"), "a")
     ht_raw = m.get("ht") or (f"{h.get('ht')}-{a.get('ht')}" if h.get("ht") is not None and a.get("ht") is not None else None)
-    ht_html = f'<span style="font-size:12.5px;font-weight:700;color:#94A3B8;margin-top:4px">نیمه اول: {_fa(ht_raw)}</span>' if ht_raw else ""
+    ht_html = f'<span style="font-size:15.5px;font-weight:800;color:#CBD5E1;margin-top:4px">نیمه اول: {_fa(ht_raw)}</span>' if ht_raw else ""
     hxg_html = f'<div class="fi" style="gap:6px;margin-top:4px"><span style="width:9px;height:9px;border-radius:50%;background:{hc}"></span><span class="fm" style="font-size:21px;font-weight:800;color:{_bright(hc)}">{_fa(f"{float(hxg):.2f}")} xG</span></div>' if hxg is not None else ""
     axg_html = f'<div class="fi" style="justify-content:flex-end;gap:6px;margin-top:4px"><span class="fm" style="font-size:21px;font-weight:800;color:{_bright(ac)}">{_fa(f"{float(axg):.2f}")} xG</span><span style="width:9px;height:9px;border-radius:50%;background:{ac}"></span></div>' if axg is not None else ""
     chart_html = _step_xg_chart(m, compact)
@@ -421,9 +421,9 @@ def _featured_hero(m: dict[str, Any], theme: str, compact: bool) -> str:
         f'<div style="position:absolute;top:0;left:0;right:0;height:4.5px;background:linear-gradient(270deg,{hc} 0%,{hc} {max(14, min(86, round(float(hxg)/(float(hxg)+float(axg))*100))) if (hxg is not None and axg is not None and (float(hxg)+float(axg))>0.01) else 50}%,{ac} {max(14, min(86, round(float(hxg)/(float(hxg)+float(axg))*100))) if (hxg is not None and axg is not None and (float(hxg)+float(axg))>0.01) else 50}%,{ac} 100%)"></div>'
         f'<div class="fcol" style="position:relative;z-index:2;gap:10px">'
         f'<div class="fbw" style="gap:8px"><div class="fi" style="gap:8px;min-width:0">'
-        f'<span style="padding:3px 12px;border-radius:99px;background:#E62E45;color:#fff;font-size:13px;font-weight:900;box-shadow:0 6px 18px #e62e4577;flex-shrink:0">★ نبرد شاخص روز</span>'
-        f'<span style="font-size:17.5px;font-weight:800;color:#E2E8F0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{esc(m.get("tag") or m.get("comp") or "")}</span></div>'
-        f'<div class="fi" style="gap:8px;flex-shrink:0"><span class="vb-badge {v_cls}" style="padding:4px 11px;font-size:13px"><span>{v_ico}</span><span>{v_lbl}</span></span>'
+        f'<span style="padding:3px 12px;border-radius:99px;background:#E62E45;color:#fff;font-size:15.5px;font-weight:900;box-shadow:0 6px 18px #e62e4577;flex-shrink:0">★ نبرد شاخص روز</span>'
+        f'<span style="font-size:20px;font-weight:800;color:#F1F5F9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{esc(m.get("tag") or m.get("comp") or "")}</span></div>'
+        f'<div class="fi" style="gap:8px;flex-shrink:0"><span class="vb-badge {v_cls}" style="padding:5px 12px;font-size:15.5px"><span>{v_ico}</span><span>{v_lbl}</span></span>'
         f'<span class="fm" style="padding:3px 9px;border-radius:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);font-size:13px;font-weight:800;color:#fff">{esc(m.get("status") or "FT")}</span></div></div>'
         f'<div style="display:grid;grid-template-columns:repeat(11,1fr);align-items:center;gap:12px">'
         f'<div class="fi" style="grid-column:span 4;gap:14px;min-width:0;opacity:{"0.75" if as_>hs else "1"}">'
@@ -447,7 +447,7 @@ def _league_divider(league_name: str, accent_col: str, col_span: bool) -> str:
         f'<div class="fi" style="{cs}gap:10px;padding:2px 4px;flex-shrink:0">'
         f'<div class="fi" style="gap:7px;padding:4px 12px;border-radius:99px;background:rgba(9,19,43,.95);border:1px solid rgba(255,255,255,.15);border-right:3.5px solid {accent_col};flex-shrink:0">'
         f'<span style="width:7px;height:7px;border-radius:50%;background:{accent_col};box-shadow:0 0 8px {accent_col}"></span>'
-        f'<span style="font-size:13px;font-weight:900;color:#fff;line-height:1">{esc(league_name)}</span></div>'
+        f'<span style="font-size:16px;font-weight:900;color:#fff;line-height:1">{esc(league_name)}</span></div>'
         f'<div style="flex:1;height:1px;background:linear-gradient(90deg,transparent,{accent_col}66,#ffffff1f)"></div></div>'
     )
 
@@ -462,14 +462,14 @@ def _bento_card(m: dict[str, Any], idx: int, tall: bool) -> str:
     c_sz = 58 if tall else 52
     sc_fs = 42 if tall else 36
     ht_raw = m.get("ht") or (f"{h.get('ht')}-{a.get('ht')}" if h.get("ht") is not None and a.get("ht") is not None else None)
-    ht_badge = f'<span class="fm" style="font-size:12px;font-weight:800;color:#94A3B8">HT {_fa(ht_raw)}</span>' if ht_raw else '<span class="fm" style="font-size:11.5px;font-weight:800;color:#64748B">FULL-TIME</span>'
+    ht_badge = f'<span class="fm" style="font-size:14.5px;font-weight:800;color:#CBD5E1">HT {_fa(ht_raw)}</span>' if ht_raw else '<span class="fm" style="font-size:14px;font-weight:800;color:#94A3B8">پایان بازی</span>'
     top_bar = (
         '<div class="_warnstripe" style="position:absolute;top:0;left:0;right:0;height:5px;border-bottom:1px solid rgba(230,46,69,.6)"></div>'
         if is_shock else
         f'<div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(270deg,{hc} 0%,{hc} {max(14, min(86, round(float(hxg)/(float(hxg)+float(axg))*100))) if (hxg is not None and axg is not None and (float(hxg)+float(axg))>0.01) else 50}%,{ac} {max(14, min(86, round(float(hxg)/(float(hxg)+float(axg))*100))) if (hxg is not None and axg is not None and (float(hxg)+float(axg))>0.01) else 50}%,{ac} 100%)"></div>'
     )
-    hxg_s = f'<span class="fm" style="font-size:13px;font-weight:800;color:{_bright(hc)}">{_fa(f"{float(hxg):.2f}")} xG</span>' if hxg is not None else ""
-    axg_s = f'<span class="fm" style="font-size:13px;font-weight:800;color:{_bright(ac)}">{_fa(f"{float(axg):.2f}")} xG</span>' if axg is not None else ""
+    hxg_s = f'<span class="fm" style="font-size:16px;font-weight:800;color:{_bright(hc)}">{_fa(f"{float(hxg):.2f}")} xG</span>' if hxg is not None else ""
+    axg_s = f'<span class="fm" style="font-size:16px;font-weight:800;color:{_bright(ac)}">{_fa(f"{float(axg):.2f}")} xG</span>' if axg is not None else ""
     xg_bar = ""
     if hxg is not None and axg is not None:
         mx = max(float(hxg), float(axg), 0.1)
@@ -482,7 +482,7 @@ def _bento_card(m: dict[str, Any], idx: int, tall: bool) -> str:
     h_sc = _format_scorers(h, m.get("goals"), "h")
     a_sc = _format_scorers(a, m.get("goals"), "a")
     sc_row = (
-        f'<div class="fbw" style="gap:8px;font-size:14.5px;font-weight:700;color:#CBD5E1">'
+        f'<div class="fbw" style="gap:8px;font-size:17px;font-weight:800;color:#E2E8F0">'
         f'<span style="text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{"⚽ " + esc(h_sc) if h_sc else "—"}</span>'
         f'<span style="text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{esc(a_sc) + " ⚽" if a_sc else "—"}</span></div>'
     )
@@ -492,11 +492,11 @@ def _bento_card(m: dict[str, Any], idx: int, tall: bool) -> str:
         f'<div style="position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at {aura_pos},{"#e62e4538" if is_shock else win_col+"2e"},transparent 62%)"></div>'
         f'{top_bar}'
         f'<div class="fbw" style="position:relative;z-index:2;gap:8px">'
-        f'<span class="vb-badge {v_cls}" style="padding:3px 10px;font-size:12px"><span>{v_ico}</span><span>{"شوک آماری روز" if is_shock else v_lbl}</span></span>{ht_badge}</div>'
+        f'<span class="vb-badge {v_cls}" style="padding:4px 11px;font-size:14.5px"><span>{v_ico}</span><span>{"شوک آماری روز" if is_shock else v_lbl}</span></span>{ht_badge}</div>'
         f'<div style="position:relative;z-index:2;display:grid;grid-template-columns:repeat(11,1fr);align-items:center;gap:6px">'
         f'<div class="fcol" style="grid-column:span 4;align-items:center;text-align:center;gap:4px;min-width:0;opacity:{"0.72" if as_>hs else "1"}">'
         f'{_crest_svg(h, f"bc{idx}h", c_sz)}'
-        f'<div style="font-size:21px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%">{esc(h.get("name", ""))}</div>{hxg_s}</div>'
+        f'<div style="font-size:24px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%">{esc(h.get("name", ""))}</div>{hxg_s}</div>'
         f'<div class="fcol" style="grid-column:span 3;align-items:center;justify-content:center">'
         f'<div class="scb fc" style="border-radius:15px;padding:6px 10px;gap:9px;width:100%">'
         f'<span style="font-size:{sc_fs}px;font-weight:900;line-height:1;color:{"#fff" if hs>=as_ else "#CBD5E1"}">{_fa(hs)}</span>'
@@ -504,7 +504,7 @@ def _bento_card(m: dict[str, Any], idx: int, tall: bool) -> str:
         f'<span style="font-size:{sc_fs}px;font-weight:900;line-height:1;color:{"#fff" if as_>=hs else "#CBD5E1"}">{_fa(as_)}</span></div></div>'
         f'<div class="fcol" style="grid-column:span 4;align-items:center;text-align:center;gap:4px;min-width:0;opacity:{"0.72" if hs>as_ else "1"}">'
         f'{_crest_svg(a, f"bc{idx}a", c_sz)}'
-        f'<div style="font-size:21px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%">{esc(a.get("name", ""))}</div>{axg_s}</div></div>'
+        f'<div style="font-size:24px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%">{esc(a.get("name", ""))}</div>{axg_s}</div></div>'
         f'<div class="fcol" style="position:relative;z-index:2;gap:5px;padding-top:6px;border-top:1px solid rgba(255,255,255,.1)">'
         f'{xg_bar}{_goal_timeline_svg(m)}{sc_row}</div></div>'
     )
@@ -521,13 +521,13 @@ def _scoreboard_rows(matches: list[dict[str, Any]], comp_fallback: str, theme: s
         v_cls, v_lbl, v_ico, _ = _verdict(m)
         h_sc = _format_scorers(h, m.get("goals"), "h")
         a_sc = _format_scorers(a, m.get("goals"), "a")
-        hxg_r = f'<div class="fm" style="font-size:13.5px;font-weight:800;color:{_bright(hc)}">{_fa(f"{float(hxg):.2f}")} xG</div>' if hxg is not None else ""
-        axg_r = f'<div class="fm" style="font-size:13.5px;font-weight:800;color:{_bright(ac)}">xG {_fa(f"{float(axg):.2f}")}</div>' if axg is not None else ""
+        hxg_r = f'<div class="fm" style="font-size:16.5px;font-weight:800;color:{_bright(hc)}">{_fa(f"{float(hxg):.2f}")} xG</div>' if hxg is not None else ""
+        axg_r = f'<div class="fm" style="font-size:16.5px;font-weight:800;color:{_bright(ac)}">xG {_fa(f"{float(axg):.2f}")}</div>' if axg is not None else ""
         parts.append(
             f'<div class="mr fcol" style="flex:1;padding:{"9px 18px" if compact else "11px 20px"};justify-content:center;gap:6px;border-right:5px solid {hc if hs>=as_ else hc+"55"};border-left:5px solid {ac if as_>=hs else ac+"55"}">'
             f'<div style="position:relative;z-index:2;display:grid;grid-template-columns:repeat(11,1fr);align-items:center;gap:8px">'
             f'<div class="fi" style="grid-column:span 4;gap:10px;min-width:0">{_crest_svg(h, f"r{idx}h", 48 if compact else 56)}'
-            f'<div style="min-width:0"><div style="font-size:{22 if compact else 25}px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{esc(h.get("name",""))}</div>{hxg_r}</div></div>'
+            f'<div style="min-width:0"><div style="font-size:{25 if compact else 28}px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{esc(h.get("name",""))}</div>{hxg_r}</div></div>'
             f'<div class="fcol" style="grid-column:span 3;align-items:center;gap:4px">'
             f'<div class="scb fc" style="border-radius:15px;padding:4px 16px;gap:12px;min-width:134px">'
             f'<span style="font-size:{30 if compact else 35}px;font-weight:900;color:#fff">{_fa(hs)}</span>'
@@ -535,11 +535,11 @@ def _scoreboard_rows(matches: list[dict[str, Any]], comp_fallback: str, theme: s
             f'<span style="font-size:{30 if compact else 35}px;font-weight:900;color:#fff">{_fa(as_)}</span></div>'
             f'<div style="width:100%;max-width:200px">{_goal_timeline_svg(m)}</div></div>'
             f'<div class="fi" style="grid-column:span 4;justify-content:flex-end;text-align:left;gap:10px;min-width:0">'
-            f'<div style="min-width:0"><div style="font-size:{22 if compact else 25}px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{esc(a.get("name",""))}</div>{axg_r}</div>'
+            f'<div style="min-width:0"><div style="font-size:{25 if compact else 28}px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{esc(a.get("name",""))}</div>{axg_r}</div>'
             f'{_crest_svg(a, f"r{idx}a", 48 if compact else 56)}</div></div>'
-            f'<div style="display:grid;grid-template-columns:repeat(11,1fr);align-items:center;gap:8px;padding-top:4px;border-top:1px solid rgba(255,255,255,.1);font-size:13px;font-weight:700;color:#E2E8F0">'
+            f'<div style="display:grid;grid-template-columns:repeat(11,1fr);align-items:center;gap:8px;padding-top:4px;border-top:1px solid rgba(255,255,255,.1);font-size:16px;font-weight:800;color:#F1F5F9">'
             f'<div style="grid-column:span 4;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{"⚽ "+esc(h_sc) if h_sc else ""}</div>'
-            f'<div class="fc" style="grid-column:span 3"><span class="vb-badge {v_cls}" style="padding:2px 9px;font-size:11.5px">{v_ico} {v_lbl}</span></div>'
+            f'<div class="fc" style="grid-column:span 3"><span class="vb-badge {v_cls}" style="padding:3px 11px;font-size:14px">{v_ico} {v_lbl}</span></div>'
             f'<div style="grid-column:span 4;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{esc(a_sc)+" ⚽" if a_sc else ""}</div></div></div>'
         )
     return "".join(parts)
@@ -586,10 +586,11 @@ def _footer_dock(item: dict[str, Any], st: dict[str, Any]) -> str:
     bins = st["bins"]
     bmax = max(max(bins), 1)
     mini_bars = "".join(
-        f'<div class="fcol" style="flex:1;align-items:center;justify-content:flex-end;height:100%">'
+        f'<div class="fcol" style="flex:1;align-items:center;justify-content:flex-end;height:100%;gap:2px">'
+        f'<span style="font-size:12.5px;font-weight:900;line-height:1;color:{"#FF8A9A" if (b==bmax and b>0) else ("#F8FAFC" if b>0 else "#64748B")}">{_fa(b)}</span>'
         + (
-            f'<div style="width:100%;border-radius:5px 5px 0 0;height:{max(22, round(b/bmax*100))}%;background:{"#E62E45" if b==bmax else "#38BDF8"};opacity:{"1" if b==bmax else ".78"}"></div>'
-            if b > 0 else ""
+            f'<div style="width:100%;border-radius:5px 5px 0 0;height:{max(22, round(b/bmax*68))}%;background:{"#E62E45" if b==bmax else "#38BDF8"};opacity:{"1" if b==bmax else ".84"}"></div>'
+            if b > 0 else '<div style="width:100%;height:3px;border-radius:2px;background:rgba(255,255,255,.15)"></div>'
         )
         + '</div>'
         for b in bins
@@ -605,9 +606,9 @@ def _footer_dock(item: dict[str, Any], st: dict[str, Any]) -> str:
             f'<div class="fc" style="position:relative;width:46px;height:50px;flex-shrink:0">'
             f'<svg width="46" height="50" viewBox="0 0 48 52" fill="none"><polygon points="24,2 45,14 45,38 24,50 3,38 3,14" fill="#F59E0B28" stroke="#FBBF24" stroke-width="2.2"/></svg>'
             f'<span style="position:absolute;font-size:16px;font-weight:900;color:#FDE68A">{_fa(motm.get("rating", "8.8"))}</span></div>'
-            f'<div style="min-width:0"><div style="font-size:11.5px;font-weight:800;color:#FCD34D">⭐ ستاره روز • {esc(motm.get("team", ""))}</div>'
-            f'<div style="font-size:23px;font-weight:900;color:#fff;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{esc(motm.get("name", ""))}</div>'
-            f'<div style="font-size:14.5px;font-weight:700;color:#CBD5E1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{_fa(motm.get("stat", ""))}</div></div></div>'
+            f'<div style="min-width:0"><div style="font-size:14.5px;font-weight:800;color:#FCD34D">⭐ ستاره روز • {esc(motm.get("team", ""))}</div>'
+            f'<div style="font-size:26px;font-weight:900;color:#fff;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{esc(motm.get("name", ""))}</div>'
+            f'<div style="font-size:17px;font-weight:800;color:#E2E8F0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{_fa(motm.get("stat", ""))}</div></div></div>'
         )
         mid_span = 4
     else:
@@ -618,11 +619,11 @@ def _footer_dock(item: dict[str, Any], st: dict[str, Any]) -> str:
         f'<div style="display:grid;grid-template-columns:repeat(12,1fr);gap:11px;flex-shrink:0">'
         f'{motm_html}'
         f'<div class="fcol" style="grid-column:span {mid_span};border-radius:16px;background:rgba(9,19,42,.95);border:1px solid rgba(255,255,255,.14);padding:10px 14px;justify-content:center;gap:4px">'
-        f'<div class="fbw" style="font-size:11.5px;font-weight:800;color:#94A3B8"><span>راندمان کل روز</span><span class="fm" style="color:#6EE7B7" dir="ltr">{xg_txt}</span></div>'
-        f'<div style="font-size:17.5px;font-weight:800;color:#F1F5F9;line-height:1.35">{esc(ed_note)}</div></div>'
+        f'<div class="fbw" style="font-size:14.5px;font-weight:800;color:#CBD5E1"><span>راندمان کل روز</span><span class="fm" style="color:#6EE7B7" dir="ltr">{xg_txt}</span></div>'
+        f'<div style="font-size:20px;font-weight:800;color:#F8FAFC;line-height:1.4">{esc(ed_note)}</div></div>'
         f'<div class="fcol" style="grid-column:span 3;border-radius:16px;background:rgba(9,19,42,.95);border:1px solid rgba(255,255,255,.14);padding:10px 13px;justify-content:space-between">'
-        f'<div class="fbw" style="font-size:11px;font-weight:800;color:#94A3B8"><span>نبض دقایق گل</span><span class="fm" style="color:#FF7B8C">0\'–90\'</span></div>'
-        f'<div class="fi" style="align-items:flex-end;gap:5px;height:38px;margin-top:4px;border-bottom:1px solid rgba(255,255,255,.18)" dir="ltr">{mini_bars}</div><div class="fbw fm" style="font-size:10px;font-weight:800;color:#94A3B8;margin-top:3px" dir="ltr"><span>0</span><span>15</span><span>30</span><span>45</span><span>60</span><span>75</span><span>90</span></div></div></div>'
+        f'<div class="fbw" style="font-size:14px;font-weight:800;color:#CBD5E1"><span>نبض دقایق گل</span><span class="fm" style="color:#FF7B8C">0\'–90\'</span></div>'
+        f'<div class="fi" style="align-items:flex-end;gap:5px;height:50px;margin-top:4px;border-bottom:1px solid rgba(255,255,255,.18)" dir="ltr">{mini_bars}</div><div class="fbw fm" style="font-size:12.5px;font-weight:800;color:#CBD5E1;margin-top:3px" dir="ltr"><span>0</span><span>15</span><span>30</span><span>45</span><span>60</span><span>75</span><span>90</span></div></div></div>'
     )
 
 

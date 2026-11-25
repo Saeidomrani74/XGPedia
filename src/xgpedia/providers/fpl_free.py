@@ -355,3 +355,48 @@ class FPLFreeProvider:
             if parsed:
                 return parsed
         return None
+
+
+# ---------------------------------------------------------------------------
+# توابع عمومی و کش‌شده دریافت Bootstrap و Fixtures رسمی FPL (بدون requests)
+# ---------------------------------------------------------------------------
+_FPL_CACHE: dict[str, tuple[float, Any]] = {}
+_FPL_CACHE_TTL = 600.0
+_FPL_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+FPL_FIXTURES_URL = "https://fantasy.premierleague.com/api/fixtures/"
+
+
+def _fpl_get_json_urllib(url: str, *, timeout: float = 9.0) -> Any:
+    import json
+    import urllib.request
+    req = urllib.request.Request(url, headers={"User-Agent": _FPL_UA, "Accept": "application/json"})
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return json.loads(resp.read().decode("utf-8", errors="replace"))
+
+
+def fetch_fpl_bootstrap(*, force_refresh: bool = False, timeout: float = 9.0) -> dict[str, Any]:
+    """دریافت کش‌شده و رایگان `bootstrap-static` رسمی لیگ برتر انگلیس (بدون کلید API و بدون requests)."""
+    import time
+    now = time.monotonic()
+    hit = _FPL_CACHE.get("bootstrap")
+    if not force_refresh and hit and (now - hit[0]) < _FPL_CACHE_TTL and isinstance(hit[1], dict):
+        return hit[1]
+    data = _fpl_get_json_urllib(FPL_BOOTSTRAP_URL, timeout=timeout)
+    if isinstance(data, dict):
+        _FPL_CACHE["bootstrap"] = (now, data)
+        return data
+    return {}
+
+
+def fetch_fpl_fixtures(*, force_refresh: bool = False, timeout: float = 9.0) -> list[dict[str, Any]]:
+    """دریافت کش‌شده و رایگان `fixtures` رسمی لیگ برتر انگلیس (بدون کلید API و بدون requests)."""
+    import time
+    now = time.monotonic()
+    hit = _FPL_CACHE.get("fixtures")
+    if not force_refresh and hit and (now - hit[0]) < _FPL_CACHE_TTL and isinstance(hit[1], list):
+        return hit[1]
+    data = _fpl_get_json_urllib(FPL_FIXTURES_URL, timeout=timeout)
+    if isinstance(data, list):
+        _FPL_CACHE["fixtures"] = (now, data)
+        return data
+    return []

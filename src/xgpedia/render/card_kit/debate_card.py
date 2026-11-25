@@ -104,21 +104,33 @@ def _side_badge(side: dict[str, Any], uid: str, size: int, color: str) -> str:
     sec = str(side.get("secondary") or "#FFFFFF")
     img = str(side.get("img") or "").strip()
     cd = str(side.get("code") or "XGP").strip().upper()[:3]
-    if img:
+    sname = str(side.get("name") or "").strip()
+    ent_type = str(side.get("entityType") or "").lower()
+    is_team = ent_type == "team"
+    try:
+        from src.xgpedia.providers.pl_badges_free import get_pl_badge_data_uri, lookup_pl_club
+        name_club_hit = lookup_pl_club(sname) if sname else None
+        if name_club_hit is not None:
+            is_team = True
+    except Exception:
+        name_club_hit = None
+
+    # برای اشخاص (نه تیم‌ها): نمایش عکس پرتره دقیق
+    if img and not is_team:
         return (
             f'<div style="position:relative;width:{size}px;height:{size}px;flex-shrink:0">'
             f'<div style="position:absolute;inset:-6px;border-radius:26px;border:1.5px dashed {color}88"></div>'
             f'<div style="width:100%;height:100%;border-radius:20px;padding:4px;background:linear-gradient(135deg,{color},{sec}66);'
             f'box-shadow:0 16px 34px -6px {color}77,0 12px 24px rgba(0,0,0,.55);overflow:hidden">'
-            f'<img src="{img}" alt="{esc(side.get("name", ""))}" style="width:100%;height:100%;object-fit:cover;object-position:50% 18%;border-radius:16px;display:block"/>'
+            f'<img src="{img}" alt="{esc(sname)}" style="width:100%;height:100%;object-fit:cover;object-position:50% 18%;border-radius:16px;display:block"/>'
             f'</div></div>'
         )
-    # لوگوی واقعی باشگاه لیگ برتر اگر کد باشگاه لیگ برتری باشد
+    # لوگوی واقعی باشگاه لیگ برتر انگلیس (آفلاین از brand/crests یا کش رسمی)
     try:
         from src.xgpedia.providers.pl_badges_free import get_pl_badge_data_uri, lookup_pl_club
-        info = lookup_pl_club(cd)
+        info = name_club_hit or lookup_pl_club(cd, tla_hint=cd)
         if info and info[4]:
-            uri = get_pl_badge_data_uri(info[4], size=100 if size >= 70 else 70)
+            uri = get_pl_badge_data_uri(info[1], tla_hint=info[1], badge_code=info[4], size=100 if size >= 70 else 70, fetch_network=False)
             if uri:
                 return (
                     f'<div style="width:{size}px;height:{size}px;display:flex;align-items:center;justify-content:center;'
@@ -301,7 +313,7 @@ def render_debate_html(
                 for k, a in enumerate((side.get("args") or [])[:max_args])
             )
             blind_html = (
-                f'<div class="blind-box amber-tape"><div class="blind-t">⚡ چالش اصلی این جبهه:</div>'
+                f'<div class="blind-box amber-tape"><div class="blind-t">⚡ چالش اصلی:</div>'
                 f'<div class="blind-b">{esc(side.get("blindspot", ""))}</div></div>'
                 if (show_blind and not is16 and side.get("blindspot")) else ""
             )
@@ -315,19 +327,27 @@ def render_debate_html(
                 f'<div class="fcol gap14 rel-z">'
                 f'<div class="fi gap14" style="{pad_side}">{_side_badge(side, uid, 76 if is16 else 88, col)}'
                 f'<div class="min0">'
-                f'<div class="fi gap8" style="margin-bottom:4px"><span class="side-pill fm" style="background:{col};color:{contrast_ink(col)}">SIDE 0{idx + 1}</span>'
-                f'<span style="font-size:15px;font-weight:800;color:#CBD5E1">جبهه {"اول" if idx == 0 else "دوم"}</span></div>'
                 f'<h2 class="plate-name" style="font-size:{29 if is16 else 34}px">{esc(side.get("name", ""))}</h2>'
-                f'<div class="plate-sub">{esc(side.get("sub", ""))}</div></div></div>'
+                f'<div class="plate-sub">{esc(str(side.get("sub") or "").replace("جبهه اول • ", "").replace("جبهه دوم • ", "").replace("جبهه موافق • ", "").replace("جبهه مخالف • ", "").replace("جبهه منتقد • ", ""))}</div></div></div>'
                 f'<div class="thesis-box" style="border-right:5px solid {col}">'
                 f'<span class="thesis-q fd" style="color:{col}">“</span>'
                 f'<p style="font-size:{19.5 if is16 else 21.5}px;font-weight:900;color:#fff;line-height:1.46;position:relative;z-index:2">{esc(side.get("thesis", ""))}</p></div>'
                 f'<div class="fcol gap10">{args_html}</div></div>'
                 f'<div class="fcol gap12 rel-z" style="padding-top:8px">{blind_html}'
-                f'<div class="plate-stat"><div class="min0"><div style="font-size:14px;font-weight:700;color:#94A3B8">{esc(side.get("statLabel", ""))}</div>'
-                f'<div style="font-size:21px;font-weight:900;color:{col}">{fa(esc(side.get("statVal", "")))}</div></div>'
-                f'<div class="stat-track"><div class="stat-fill" style="width:{bar_w}%;background:linear-gradient(90deg,{col}88,{col});box-shadow:0 0 12px {col}"></div></div>'
-                f'</div></div></div>'
+                + (
+                    f'<div class="plate-stat"><div class="min0"><div style="font-size:14px;font-weight:700;color:#94A3B8">{esc(side.get("statLabel", ""))}</div>'
+                    f'<div style="font-size:21px;font-weight:900;color:{col}">{fa(esc(side.get("statVal", "")))}</div></div>'
+                    f'<div class="stat-track"><div class="stat-fill" style="width:{bar_w}%;background:linear-gradient(90deg,{col}88,{col});box-shadow:0 0 12px {col}"></div></div>'
+                    f'</div>'
+                    if (
+                        str(side.get("statLabel") or "").strip()
+                        and str(side.get("statVal") or "").strip()
+                        and str(side.get("statLabel") or "").strip() not in {"شاخص داغی بحث", "شاخص واکنش هواداران"}
+                        and str(side.get("statVal") or "").strip() != "بحث داغ روز"
+                    )
+                    else ""
+                )
+                + '</div></div>'
             )
 
         vs_badge = (
@@ -390,7 +410,7 @@ def render_debate_html(
                 f'<h3 class="sec-t">رادار ۶ محوره مناظره</h3></div><span class="fm" style="font-size:15px;font-weight:800;color:#94A3B8">XGPEDIA MODEL</span></div>'
                 f'<div class="flex1 fc">{_radar_svg(item, ca, cb, False)}</div></div>'
                 f'<div class="xe" style="padding:20px;gap:14px"><div class="sec-h"><div class="fi gap10"><span class="bar-amb"></span>'
-                f'<h3 class="sec-t">نقطه کور هر جبهه</h3></div><span class="fm" style="font-size:14.5px;font-weight:800;color:#FCD34D">COUNTER-PUNCH</span></div>'
+                f'<h3 class="sec-t">نقطه کور هر طرف</h3></div><span class="fm" style="font-size:14.5px;font-weight:800;color:#FCD34D">COUNTER-PUNCH</span></div>'
                 f'<div class="fcol flex1 justify-center gap14">{_ko_card(sa, ca)}{_ko_card(sb, cb)}</div></div></div></div>'
             )
         else:

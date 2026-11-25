@@ -2674,8 +2674,12 @@ async def generate_quote_post_async(
     hl_style: str | None = None, grade: str | None = None, custom_modules: list[dict[str, Any]] | None = None,
     platform: str = "telegram", out_dir: Path | None = None, progress_cb: Callable[[str], Awaitable[None]] | None = None,
 ) -> PostGenerationResult:
+    import asyncio
     from src.xgpedia.providers.quote_free import hydrate_quote_item
     from src.xgpedia.render.card_kit.quote_card import QUOTE_FORMATS, render_quote_html
+    if progress_cb:
+        await progress_cb("⏳ در حال ترجمه فارسی نقل‌قول و دریافت آمار زنده...")
+    item = await asyncio.to_thread(hydrate_quote_item, item)
     sp = str(item.get("speaker") or "نقل‌قول روز")
     comp = str(item.get("competition") or "فوتبال جهان")
     q_clean = str(item.get("quote") or "").replace("*", "")
@@ -2687,7 +2691,7 @@ async def generate_quote_post_async(
     if grade:
         extra["grade"] = grade
     return await _generate_v32_modular_post_async(
-        post_type="quote", item=item, hydrate_fn=hydrate_quote_item, render_fn=render_quote_html,
+        post_type="quote", item=item, hydrate_fn=None, render_fn=render_quote_html,
         formats_map=QUOTE_FORMATS, title=title, caption_text=cap, slide=slide, header_mode=header_mode,
         fmt=fmt, custom_modules=custom_modules, extra_kwargs=extra or None,
         platform=platform, out_dir=out_dir, progress_cb=progress_cb,
@@ -2718,14 +2722,54 @@ async def generate_number_of_day_post_async(
     theme: str = "lalezar", custom_modules: list[dict[str, Any]] | None = None,
     platform: str = "telegram", out_dir: Path | None = None, progress_cb: Callable[[str], Awaitable[None]] | None = None,
 ) -> PostGenerationResult:
+    from src.xgpedia.providers.number_of_day_free import hydrate_number_of_day_item
     from src.xgpedia.render.card_kit.number_of_day_card import NOD_FORMATS, render_number_of_day_html
+    item = hydrate_number_of_day_item(item)
     num = f"{item.get('number', '')}{item.get('suffix', '')}"
     sub = str(item.get("subject") or "عدد روز")
     title = f"عدد روز | {num} — {sub}"
     cap = f"🔢 عدد روز XGPedia: {num} {item.get('unit', '')}\n📌 {item.get('headline', '')}\n{item.get('body', '')}\n📊 منبع: {item.get('source', 'XGPedia')}\n@XGPedia"
     return await _generate_v32_modular_post_async(
-        post_type="number_of_day", item=item, hydrate_fn=None, render_fn=render_number_of_day_html,
+        post_type="number_of_day", item=item, hydrate_fn=hydrate_number_of_day_item, render_fn=render_number_of_day_html,
         formats_map=NOD_FORMATS, title=title, caption_text=cap, slide=slide, header_mode=header_mode,
+        fmt=fmt, theme=theme, custom_modules=custom_modules,
+        platform=platform, out_dir=out_dir, progress_cb=progress_cb,
+    )
+
+
+async def generate_matchweek_wrapup_post_async(
+    item: dict[str, Any], *, slide: str = "slide1", header_mode: str = "full", fmt: str = "4:5",
+    theme: str = "classic", custom_modules: list[dict[str, Any]] | None = None,
+    platform: str = "telegram", out_dir: Path | None = None, progress_cb: Callable[[str], Awaitable[None]] | None = None,
+) -> PostGenerationResult:
+    from src.xgpedia.render.card_kit.matchweek_wrapup_card import WRAPUP_FORMATS, render_matchweek_wrapup_html
+    comp = str(item.get("competition") or "لیگ برتر انگلیس")
+    rnd = str(item.get("round") or "خلاصهٔ هفته و قدرت فرم")
+    verdict = str(item.get("editorialVerdict") or "")
+    title = f"خلاصهٔ هفته | {comp}"
+    cap = f"📊 {rnd}\n{verdict}\n📈 منبع: {item.get('source', 'XGPedia')}\n@XGPedia"
+    return await _generate_v32_modular_post_async(
+        post_type="matchweek_wrapup", item=item, hydrate_fn=None, render_fn=render_matchweek_wrapup_html,
+        formats_map=WRAPUP_FORMATS, title=title, caption_text=cap, slide=slide, header_mode=header_mode,
+        fmt=fmt, theme=theme, custom_modules=custom_modules,
+        platform=platform, out_dir=out_dir, progress_cb=progress_cb,
+    )
+
+
+async def generate_shotmap_xg_post_async(
+    item: dict[str, Any], *, slide: str = "slide1", header_mode: str = "full", fmt: str = "4:5",
+    theme: str = "classic", custom_modules: list[dict[str, Any]] | None = None,
+    platform: str = "telegram", out_dir: Path | None = None, progress_cb: Callable[[str], Awaitable[None]] | None = None,
+) -> PostGenerationResult:
+    from src.xgpedia.providers.shotmap_xg_free import hydrate_shotmap_xg_item
+    from src.xgpedia.render.card_kit.shotmap_xg_card import SHOTMAP_FORMATS, render_shotmap_xg_html
+    h_nm = str((item.get("home") or {}).get("name") or "")
+    a_nm = str((item.get("away") or {}).get("name") or "")
+    title = f"نقشهٔ شوت و امید گل | {h_nm} × {a_nm}"
+    cap = f"🎯 نقشهٔ شوت و مومنتوم امید گل | {h_nm} × {a_nm}\n{item.get('editorialVerdict') or ''}\n📊 منبع: {item.get('source', 'Understat / XGPedia')}\n@XGPedia"
+    return await _generate_v32_modular_post_async(
+        post_type="shotmap_xg", item=item, hydrate_fn=hydrate_shotmap_xg_item, render_fn=render_shotmap_xg_html,
+        formats_map=SHOTMAP_FORMATS, title=title, caption_text=cap, slide=slide, header_mode=header_mode,
         fmt=fmt, theme=theme, custom_modules=custom_modules,
         platform=platform, out_dir=out_dir, progress_cb=progress_cb,
     )

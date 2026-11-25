@@ -773,3 +773,67 @@ class FallbackChain:
             return self.primary.generate(system_prompt, facts)
         except Exception:
             return self.secondary.generate(system_prompt, facts)
+
+
+def generate_text(
+    prompt: str,
+    *,
+    max_tokens: int = 240,
+    system_prompt: str | None = None,
+    cancel_event: threading.Event | None = None,
+) -> str | None:
+    """تولید یا ترجمه سریع متن آزاد (غیرJSON) با استفاده از همان زنجیرهٔ رایگان LLM پروژه."""
+    p_txt = str(prompt or "").strip()
+    if not p_txt:
+        return None
+    sys_msg = system_prompt or (
+        "تو مترجم و دبیر تحریریه ورزشی فارسی هستی. دقیق، روان و کوتاه به فارسی بنویس و فقط پاسخ نهایی را برگردان."
+    )
+    messages = [
+        {"role": "system", "content": sys_msg},
+        {"role": "user", "content": p_txt},
+    ]
+    chain = build_free_llm_chain_from_env()
+    if not chain:
+        try:
+            client = OpenAICompatibleLLM(supports_json_mode=False, max_attempts=1, timeout=18.0)
+            out = client._chat(messages)
+            return out.strip() if out else None
+        except Exception:
+            return None
+
+    now = time.monotonic()
+    start_idx = get_llm_start_index(len(chain))
+    ordered = list(enumerate(chain))[start_idx:] + list(enumerate(chain))[:start_idx]
+    for _idx, ep in ordered:
+        if cancel_event is not None and cancel_event.is_set():
+            return None
+        b = ep.base_url.rstrip("/")
+        k_spec = (b, ep.model, _key_hash(ep.api_key))
+        k_wide = (b, ep.model, "*")
+        if _ENDPOINT_COOLDOWN_UNTIL.get(k_spec, 0.0) > now or _ENDPOINT_COOLDOWN_UNTIL.get(k_wide, 0.0) > now:
+            continue
+        try:
+            client = OpenAICompatibleLLM(
+                max_attempts=1,
+                backoff_seconds=0.0,
+                base_url=ep.base_url,
+                api_key=ep.api_key,
+                model=ep.model,
+                require_auth=ep.require_auth,
+                extra_headers=ep.extra_headers,
+                supports_json_mode=False,
+                timeout=18.0,
+            )
+            out = client._chat(messages)
+            if out and out.strip():
+                _ENDPOINT_COOLDOWN_UNTIL.pop(k_spec, None)
+                return out.strip()
+        except Exception as e:
+            short_err = f"{type(e).__name__}: {str(e)[:120]}"
+            if "404" in short_err:
+                _ENDPOINT_COOLDOWN_UNTIL[k_wide] = time.monotonic() + 1800.0
+            elif any(tok in short_err for tok in ("429", "503", "Timeout", "502", "504", "402", "401", "403")):
+                _ENDPOINT_COOLDOWN_UNTIL[k_spec] = time.monotonic() + 900.0
+            continue
+    return None

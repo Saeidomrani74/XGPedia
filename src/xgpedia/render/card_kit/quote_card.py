@@ -70,7 +70,7 @@ def get_quote_modules(item: dict[str, Any], slide: str = "slide1") -> tuple[list
     mods: list[dict[str, Any]] = []
     missing: list[str] = []
     for mid, title_fa, def_on in _MODULE_SPECS:
-        if mid == "stats" and not has_stats:
+        if mid == "stats" and not has_stats and not item.get("is_live"):
             missing.append("نوار بررسی آماری (دیتای زنده ندارد)")
             mods.append({"id": mid, "title_fa": title_fa, "enabled": False, "span": "full", "can_half": False})
         else:
@@ -103,9 +103,9 @@ def _club_badge_or_crest(code: str, primary: str, secondary: str, size: int, uid
     cd = (code or "XGP").strip().upper()[:3]
     try:
         from src.xgpedia.providers.pl_badges_free import get_pl_badge_data_uri, lookup_pl_club
-        info = lookup_pl_club(cd)
+        info = lookup_pl_club(cd, tla_hint=cd)
         if info and info[4]:
-            uri = get_pl_badge_data_uri(info[4], size=100 if size >= 70 else 70)
+            uri = get_pl_badge_data_uri(info[1], tla_hint=info[1], badge_code=info[4], size=100 if size >= 70 else 70, fetch_network=False)
             if uri:
                 return (
                     f'<div style="width:{size}px;height:{size}px;display:flex;align-items:center;justify-content:center;'
@@ -116,6 +116,23 @@ def _club_badge_or_crest(code: str, primary: str, secondary: str, size: int, uid
                 )
     except Exception:
         pass
+
+    if cd == "XGP":
+        try:
+            import base64 as _b64
+            from src.xgpedia.config import ROOT as _ROOT
+            _svg_p = _ROOT / "brand" / "logo" / "svg" / "logo-xg-red.svg"
+            if _svg_p.exists():
+                _b64_uri = "data:image/svg+xml;base64," + _b64.b64encode(_svg_p.read_bytes()).decode("ascii")
+                return (
+                    f'<div style="width:{size}px;height:{size}px;display:flex;align-items:center;justify-content:center;'
+                    f'background:rgba(15,23,42,.72);border:1.5px solid rgba(230,46,69,.42);border-radius:18px;padding:10px;'
+                    f'box-shadow:0 10px 22px rgba(0,0,0,.55);flex-shrink:0">'
+                    f'<img src="{_b64_uri}" alt="XGPedia" style="width:100%;height:100%;object-fit:contain;display:block"/>'
+                    f'</div>'
+                )
+        except Exception:
+            pass
 
     p = primary or "#E62E45"
     s = secondary or "#FFFFFF"
@@ -184,7 +201,7 @@ def _stats_bar_html(item: dict[str, Any], col: str, show_stats: bool, compact: b
         f'<div class="st-head">'
         f'<span class="st-dot" style="background:{col};box-shadow:0 0 14px {col}"></span>'
         f'<div><div class="st-title" style="font-size:{t_sz}px">بررسی آماری</div>'
-        f'<div class="fm st-sub" dir="ltr">XGPEDIA DATA</div></div>'
+        f'<div class="st-sub">آمار زنده XGPedia</div></div>'
         f'</div>'
         f'<div class="st-grid" style="grid-template-columns:repeat({len(items)},minmax(0,1fr))">{cells}</div>'
         f'</div>'
@@ -299,7 +316,9 @@ def render_quote_html(
             f"radial-gradient(circle at 50% 44%,rgba(16,29,59,.50),transparent 65%)"
         )
 
-    # لایه عکس پس‌زمینه (فقط spotlight و poster)
+    pad_top = 139 if is9 else (24 if is16 else 22)
+    pad_bot = 171 if is9 else (20 if is16 else 16)
+    # لایه عکس پس‌زمینه (فقط spotlight و poster — نسبت ثابت 16:10 بدون کشیدگی)
     bg_photo_html = ""
     if photo and layout in {"spotlight", "poster"}:
         duo_div = (
@@ -312,28 +331,37 @@ def render_quote_html(
             if gr == "rim" else ""
         )
         if layout == "spotlight":
-            grad = (
-                f"linear-gradient(90deg,rgba(13,23,48,{min(.97, vig + .28):.2f}) 0%,rgba(13,23,48,{min(.94, vig + .18):.2f}) 44%,"
-                f"rgba(13,23,48,.34) 72%,rgba(13,23,48,.72) 100%),linear-gradient(180deg,rgba(13,23,48,.78) 0%,transparent 22%,transparent 72%,rgba(13,23,48,.96) 100%)"
-                if is16 else
-                f"linear-gradient(180deg,rgba(13,23,48,.82) 0%,rgba(13,23,48,.18) 26%,rgba(13,23,48,{vig * .78:.2f}) 54%,"
-                f"rgba(13,23,48,{min(.98, vig + .32):.2f}) 78%,#0D1730 100%)"
-            )
-            bg_photo_html = (
-                f'<div class="abs-fill z1">'
-                f'<img src="{photo}" alt="" class="full-img grade-{gr}" style="object-position:{"18%" if is16 else "50%"} {py}%;transform:scale({pz/100:.2f});transform-origin:center {py}%"/>'
-                f'{duo_div}{rim_div}'
-                f'<div class="abs-fill" style="background:{grad}"></div>'
-                f'<div class="abs-fill" style="background:radial-gradient(circle at {"24% 42%" if is16 else "50% 26%"},rgba({rgb},.32),transparent 54%)"></div>'
-                f'</div>'
-            )
+            if is16:
+                bg_photo_html = (
+                    f'<div class="abs-fill z1" style="display:flex;align-items:center;justify-content:flex-end">'
+                    f'<div style="position:relative;width:54%;aspect-ratio:16/10;max-height:100%;overflow:hidden">'
+                    f'<img src="{photo}" alt="" class="full-img grade-{gr}" style="object-position:50% {py}%"/>'
+                    f'{duo_div}{rim_div}'
+                    f'<div class="abs-fill" style="background:linear-gradient(90deg,#0D1730 0%,rgba(13,23,48,.55) 28%,transparent 65%,rgba(13,23,48,.45) 100%)"></div>'
+                    f'<div class="abs-fill" style="background:linear-gradient(180deg,rgba(13,23,48,.75) 0%,transparent 22%,transparent 75%,#0D1730 100%)"></div>'
+                    f'</div></div>'
+                )
+            else:
+                ar_v = "4/3" if is9 else "16/10"
+                bg_photo_html = (
+                    f'<div class="abs-fill z1">'
+                    f'<div style="position:absolute;top:0;left:0;right:0;width:100%;aspect-ratio:{ar_v};overflow:hidden">'
+                    f'<img src="{photo}" alt="" class="full-img grade-{gr}" style="object-position:50% {py}%"/>'
+                    f'{duo_div}{rim_div}'
+                    f'<div class="abs-fill" style="background:linear-gradient(90deg,rgba(13,23,48,.90) 0%,rgba(13,23,48,.18) 12%,transparent 24%,transparent 76%,rgba(13,23,48,.18) 88%,rgba(13,23,48,.90) 100%)"></div>'
+                    f'<div class="abs-fill" style="background:linear-gradient(180deg,rgba(13,23,48,.78) 0%,rgba(13,23,48,.10) 18%,rgba(13,23,48,.14) 50%,rgba(13,23,48,.84) 82%,#0D1730 100%)"></div>'
+                    f'</div></div>'
+                )
         else:
+            ar_v = "4/3" if is9 else "16/10"
             bg_photo_html = (
                 f'<div class="abs-fill z1">'
-                f'<img src="{photo}" alt="" class="full-img grade-{gr}" style="object-position:50% {py}%;transform:scale({pz/100:.2f});opacity:.50"/>'
+                f'<div style="position:absolute;top:0;left:0;right:0;width:100%;aspect-ratio:{ar_v};overflow:hidden">'
+                f'<img src="{photo}" alt="" class="full-img grade-{gr}" style="object-position:50% {py}%;opacity:.56"/>'
                 f'{duo_div}<div class="abs-fill halftone"></div>'
-                f'<div class="abs-fill" style="background:linear-gradient(160deg,rgba(13,23,48,.92) 8%,rgba({rgb},.22) 48%,rgba(13,23,48,.96) 90%)"></div>'
-                f'</div>'
+                f'<div class="abs-fill" style="background:linear-gradient(90deg,rgba(13,23,48,.90) 0%,transparent 22%,transparent 78%,rgba(13,23,48,.90) 100%)"></div>'
+                f'<div class="abs-fill" style="background:linear-gradient(180deg,rgba(13,23,48,.82) 0%,rgba({rgb},.16) 44%,rgba(13,23,48,.86) 82%,#0D1730 100%)"></div>'
+                f'</div></div>'
             )
 
     # واترمارک تایپوگرافی پس‌زمینه
@@ -349,7 +377,12 @@ def render_quote_html(
 
     # بدنهٔ ۵ اسلاید
     stats_html = _stats_bar_html(item, col, show_stats, compact=(is16 or layout in {"magazine", "poster", "duel"}))
-    match_txt = esc(item.get("match") or item.get("context") or "")
+    _raw_match = str(item.get("match") or item.get("context") or "").strip()
+    _m_en = sum(1 for c in _raw_match if "a" <= c.lower() <= "z")
+    _m_fa = sum(1 for c in _raw_match if "\u0600" <= c <= "\u06ff")
+    if _m_en >= 10 and _m_en > _m_fa * 1.4:
+        _raw_match = str(item.get("context") or "گفت‌وگوی ویژه")
+    match_txt = esc(_raw_match)
 
     if layout == "spotlight":
         if is16:
@@ -361,7 +394,7 @@ def render_quote_html(
                 f'<div class="sp-sep">{_speaker_block_html(item, col, True, False)}</div>'
                 f'{stats_html}</div>'
                 f'<div class="spot-16-side"><div class="spot-pill"><span class="pdot" style="background:{col};box-shadow:0 0 12px {col}"></span>'
-                f'<span class="fm" dir="ltr">EDITORIAL SPOTLIGHT</span></div></div></div>'
+                f'<span>نقل‌قول ویژه</span></div></div></div>'
             )
         else:
             body_html = (
@@ -369,7 +402,7 @@ def render_quote_html(
                 f'<div class="fcol gap20">'
                 f'<div class="q-accent-row">{_quote_glyph(col, 84)}'
                 f'<div class="q-line-sm" style="background:linear-gradient(270deg,{col},transparent)"></div>'
-                f'<span class="q-tag fm" dir="ltr">QUOTE // 01</span></div>'
+                f'<span class="q-tag">نقل‌قول روز</span></div>'
                 f'<blockquote class="q-txt" {q_dir_prefix}font-size:{fs}px;line-height:1.46;text-shadow:0 12px 38px rgba(0,0,0,.72)">{q_html}</blockquote>'
                 f'</div>'
                 f'<div class="sp-sep">{_speaker_block_html(item, col, False, False)}</div>'
@@ -383,7 +416,7 @@ def render_quote_html(
         if photo:
             pframe = (
                 f'<div class="mag-photo" style="border-color:rgba({rgb},.55);box-shadow:0 24px 60px -12px rgba(0,0,0,.85),0 0 40px -12px rgba({rgb},.35)">'
-                f'<img src="{photo}" alt="{esc(item.get("speaker", ""))}" class="full-img grade-{gr}" style="object-position:50% {py}%;transform:scale({pz/100:.2f})"/>'
+                f'<img src="{photo}" alt="{esc(item.get("speaker", ""))}" class="full-img grade-{gr}" style="object-position:50% {py}%"/>'
                 f'{duo_div}'
                 f'<div class="abs-fill" style="background:linear-gradient(180deg,rgba(13,23,48,.12) 0%,transparent 48%,rgba(13,23,48,.90) 100%)"></div>'
                 f'<div class="mag-corner" style="border-color:{col}"></div>'
@@ -400,7 +433,7 @@ def render_quote_html(
             )
         qcard = (
             f'<div class="xe mag-qcard" style="border-right:7px solid {col}">'
-            f'<div class="fbw">{_quote_glyph(col, 68)}<span class="q-tag fm" dir="ltr">EDITORIAL COVER</span></div>'
+            f'<div class="fbw">{_quote_glyph(col, 68)}<span class="q-tag">جلد مجله</span></div>'
             f'<blockquote class="q-txt" {q_dir_prefix}font-size:{fs}px;line-height:1.45;margin:auto 0">{q_html}</blockquote>'
             f'<div class="mag-foot"><span class="pdot" style="background:{col}"></span><span class="trunc">{match_txt}</span></div>'
             f'</div>'
@@ -419,7 +452,7 @@ def render_quote_html(
             f'<div class="tac-hdr"><div class="fi gap14">'
             f'<span style="width:10px;height:36px;border-radius:99px;background:{col};box-shadow:0 0 18px {col}"></span>'
             f'<div><div style="font-size:24px;font-weight:900;color:#fff">نقل‌قول برگزیده</div>'
-            f'<div class="fm" dir="ltr" style="font-size:13.5px;font-weight:700;color:#94A3B8;letter-spacing:.12em">TACTICAL VOICE • XGPEDIA</div></div>'
+            f'<div style="font-size:15px;font-weight:700;color:#94A3B8">صدای تاکتیکی • XGPedia</div></div>'
             f'</div>{_quote_glyph(col, 66)}</div>'
             f'<blockquote class="q-txt" {q_dir_prefix}font-size:{round(fs * 1.05)}px;line-height:1.48;margin:auto 0;position:relative;z-index:2">{q_html}</blockquote>'
             f'<div class="sp-sep" style="position:relative;z-index:2">{_speaker_block_html(item, col, is16, True)}</div>'
@@ -443,7 +476,7 @@ def render_quote_html(
                 if gr == "duotone" else ""
             )
             media = (
-                f'<img src="{ph}" alt="{esc(sp)}" class="full-img grade-{gr}" style="object-position:50% {py}%;transform:scale({pz/100:.2f})"/>'
+                f'<img src="{ph}" alt="{esc(sp)}" class="full-img grade-{gr}" style="object-position:50% {py}%"/>'
                 f'{duo}'
                 f'<div class="abs-fill" style="background:linear-gradient(180deg,rgba(9,16,35,.08) 0%,rgba(9,16,35,.22) 50%,rgba(9,16,35,.92) 100%)"></div>'
                 f'<div class="abs-fill" style="background:radial-gradient(circle at {"80%" if is_r else "20%"} 18%,rgba({rb},.42),transparent 58%)"></div>'
@@ -457,7 +490,7 @@ def render_quote_html(
                 f'<article class="xe duel-card" style="border-color:rgba({rb},.46);box-shadow:0 26px 56px -14px rgba(0,0,0,.92),0 0 38px -18px rgba({rb},.50),inset 0 1px 0 rgba(255,255,255,.2)">'
                 f'<div class="duel-top-bar" style="background:{c};box-shadow:0 0 20px {c}"></div>'
                 f'<div class="duel-wm" style="{wm_pos};font-size:{136 if is16 else 112}px;-webkit-text-stroke:1.5px rgba({rb},.18)">{cd_up}</div>'
-                f'<div class="duel-media" style="height:{ph_h}">{media}'
+                f'<div class="duel-media" style="aspect-ratio:4/3;width:calc(100% - 28px)">{media}'
                 f'<div style="position:absolute;top:14px;{corner_pos};z-index:10">{_club_badge_or_crest(cd, c, "#FFFFFF", 62 if is16 else 54, f"dcr{idx}")}</div>'
                 f'<div class="duel-media-line" style="background:linear-gradient(90deg,transparent,{c},transparent)"></div></div>'
                 f'<div class="duel-body">'
@@ -501,14 +534,16 @@ def render_quote_html(
             f'{stats_html}</div>'
         )
 
-    # پدینگ یکپارچه فریم چهارگوشه قرمز XGPedia
-    pad_top = 139 if is9 else (24 if is16 else 22)
-    pad_bot = 171 if is9 else (20 if is16 else 16)
+
     rx1, rx2, by1, by2 = w - 24, w - 44, h - 24, h - 44
 
     comp_txt = esc(item.get("competition") or "فوتبال جهان")
     date_txt = fa(esc(item.get("date") or "نقل‌قول زنده"))
-    ticker_txt = esc(str(item.get("ticker") or "XGPEDIA • QUOTE STUDIO").upper())
+    _raw_tk = str(item.get("ticker") or "").strip()
+    _tk_en = sum(1 for c in _raw_tk if "a" <= c.lower() <= "z")
+    _tk_fa = sum(1 for c in _raw_tk if "\u0600" <= c <= "\u06ff")
+    _comp_fb = item.get("competition") or "فوتبال جهان"
+    ticker_txt = esc(f"{_comp_fb} • نقل‌قول روز" if (not _raw_tk or _tk_en > _tk_fa) else _raw_tk)
     src_txt = esc(item.get("source") or "XGPedia")
     hdr_sub = (
         ""
@@ -599,7 +634,7 @@ html,body{{width:{w}px;height:{h}px;overflow:hidden;background:#0D1730;color:#F8
 .st-cell{{border-radius:16px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.11);padding:10px 12px;text-align:center}}
 .st-val{{font-weight:900;color:#FFFFFF;line-height:1.1}}
 .st-lbl{{font-weight:700;color:#CBD5E1;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
-.mag-photo{{position:relative;border-radius:26px;overflow:hidden;border:2px solid rgba(255,255,255,.25);height:100%;min-height:280px}}
+.mag-photo{{position:relative;border-radius:26px;overflow:hidden;border:2px solid rgba(255,255,255,.25);width:100%;aspect-ratio:4/3;max-height:100%}}
 .mag-nophoto{{height:100%;padding:28px;align-items:center;justify-content:center;text-align:center;gap:14px}}
 .mag-corner{{position:absolute;top:16px;left:16px;width:28px;height:28px;border-top:3px solid;border-left:3px solid;border-top-left-radius:8px}}
 .mag-cap{{position:absolute;bottom:16px;right:18px;left:18px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px}}
@@ -669,7 +704,7 @@ html,body{{width:{w}px;height:{h}px;overflow:hidden;background:#0D1730;color:#F8
   </header>
   <main class="stage">{body_html}</main>
   <footer class="ftr">
-    <div class="ftr-l"><span class="ftr-dot"></span><span class="ftr-tk fm" dir="ltr">{ticker_txt}</span></div>
+    <div class="ftr-l"><span class="ftr-dot"></span><span class="ftr-tk">{ticker_txt}</span></div>
     <div class="ftr-r fm" dir="ltr"><span class="ftr-brand">@XGPedia</span><span style="color:#64748B">|</span><span class="ftr-src">{src_txt}</span></div>
   </footer>
 </div>

@@ -47,6 +47,8 @@ MODULAR_STATES: dict[str, dict[int, dict[str, Any]]] = {
     "quote": {},
     "debate": {},
     "number_of_day": {},
+    "matchweek_wrapup": {},
+    "shotmap_xg": {},
 }
 MODULAR_ITEMS_MAP: dict[str, dict[str, dict[str, Any]]] = {
     "players_rating": {},
@@ -61,6 +63,8 @@ MODULAR_ITEMS_MAP: dict[str, dict[str, dict[str, Any]]] = {
     "quote": {},
     "debate": {},
     "number_of_day": {},
+    "matchweek_wrapup": {},
+    "shotmap_xg": {},
 }
 MODULAR_PICKER_STATE: dict[tuple[str, int], dict[str, Any]] = {}
 
@@ -77,6 +81,8 @@ MODULAR_LAST_DATA: dict[str, dict[str, list[dict[str, Any]]]] = {
     "quote": {"live": [], "presets": []},
     "debate": {"live": [], "presets": []},
     "number_of_day": {"live": [], "presets": []},
+    "matchweek_wrapup": {"live": [], "presets": []},
+    "shotmap_xg": {"live": [], "presets": []},
 }
 
 # نقشهٔ مشخصات ۴ کارت
@@ -201,6 +207,26 @@ CARD_SPECS: dict[str, dict[str, Any]] = {
         "default_hm": "full",
         "hm_labels": ("هدر کامل", "هدر فشرده"),
     },
+    "matchweek_wrapup": {
+        "prefix": "mw",
+        "cprefix": "mwc",
+        "icon": "📈",
+        "title": "خلاصهٔ هفته و قدرت فرم",
+        "cmd": "wrapup",
+        "list_hint": "لیگ مورد نظر را برای کارت خلاصهٔ هفته و فرم ۵ بازی انتخاب کنید:",
+        "default_hm": "full",
+        "hm_labels": ("هدر کامل", "هدر فشرده"),
+    },
+    "shotmap_xg": {
+        "prefix": "sm",
+        "cprefix": "smc",
+        "icon": "🎯",
+        "title": "نقشهٔ شوت و مومنتوم امید گل",
+        "cmd": "shotmap",
+        "list_hint": "مسابقهٔ مورد نظر را برای رندر نقشهٔ شوت و مومنتوم امید گل انتخاب کنید:",
+        "default_hm": "full",
+        "hm_labels": ("اسکوربورد کامل", "هدر فشرده"),
+    },
 }
 
 
@@ -277,6 +303,11 @@ def _item_label(card_kind: str, it: dict[str, Any]) -> str:
     if card_kind == "number_of_day":
         num = f"{it.get('number', '')}{it.get('suffix', '')}"
         return f"[{num}] {it.get('subject', '')} — {it.get('unit', '')}"
+    if card_kind == "matchweek_wrapup":
+        return f"{it.get('competition', '')} — {it.get('round', 'خلاصه هفته')}"
+    if card_kind == "shotmap_xg":
+        h, a = it.get("home") or {}, it.get("away") or {}
+        return f"{h.get('name', '')} {h.get('score', 0)}-{a.get('score', 0)} {a.get('name', '')} ({it.get('competition', '')})"
     return f"{it.get('name', '')} ({it.get('club', '')}) • XG {it.get('ovr', '')}"
 
 
@@ -405,6 +436,14 @@ def _get_slides_and_modules(card_kind: str, item: dict[str, Any], slide: str) ->
         from src.xgpedia.render.card_kit.number_of_day_card import NOD_SLIDES, get_number_of_day_modules
         mods, miss = get_number_of_day_modules(preview_it, slide)
         return NOD_SLIDES, mods, miss
+    if card_kind == "matchweek_wrapup":
+        from src.xgpedia.render.card_kit.matchweek_wrapup_card import WRAPUP_SLIDES, get_matchweek_wrapup_modules
+        mods, miss = get_matchweek_wrapup_modules(preview_it, slide)
+        return [(sid, lbl, "full") for sid, lbl, _, _ in WRAPUP_SLIDES], mods, miss
+    if card_kind == "shotmap_xg":
+        from src.xgpedia.render.card_kit.shotmap_xg_card import SHOTMAP_SLIDES, get_shotmap_xg_modules
+        mods, miss = get_shotmap_xg_modules(preview_it, slide)
+        return [(sid, lbl, "full") for sid, lbl, _, _ in SHOTMAP_SLIDES], mods, miss
     from src.xgpedia.render.card_kit.player_card import PLAYER_SLIDES, get_player_modules
     if not preview_it.get("scout"):
         preview_it["scout"] = {"title": "گزارش دیده‌بان", "body": "(در مرحله ساخت تکمیل می‌شود)", "strengths": [], "watchout": "", "tag": "XGPedia"}
@@ -460,6 +499,8 @@ def render_modular_customizer_view(card_kind: str, st: dict[str, Any]) -> tuple[
         extra_info = f"🎨 اتمسفر بصری: <b>{st.get('theme', 'classic')}</b>"
     elif card_kind == "number_of_day":
         extra_info = f"🔠 فونت عدد: <b>{st.get('theme', 'lalezar')}</b>"
+    elif card_kind in {"matchweek_wrapup", "shotmap_xg"}:
+        extra_info = f"🎨 تم بصری: <b>{st.get('theme', 'classic')}</b>"
 
     lines = [
         f"{spec['icon']} <b>{html.escape(spec['title'])}</b>",
@@ -564,6 +605,18 @@ def render_modular_customizer_view(card_kind: str, st: dict[str, Any]) -> tuple[
             InlineKeyboardButton(text=("✅ " if th == k else "") + lbl, callback_data=f"{cpref}:opt:th:{k}")
             for k, lbl in (("classic", "کلاسیک XG"), ("pitch", "شب استادیوم"), ("derby", "دربی آتشین"))
         ])
+    elif card_kind == "matchweek_wrapup":
+        th = st.get("theme", "classic")
+        rows.append([
+            InlineKeyboardButton(text=("✅ " if th == k else "") + lbl, callback_data=f"{cpref}:opt:th:{k}")
+            for k, lbl in (("classic", "کلاسیک XG"), ("gold", "طلایی ویژه"), ("ucl", "آبی اروپایی"))
+        ])
+    elif card_kind == "shotmap_xg":
+        th = st.get("theme", "classic")
+        rows.append([
+            InlineKeyboardButton(text=("✅ " if th == k else "") + lbl, callback_data=f"{cpref}:opt:th:{k}")
+            for k, lbl in (("classic", "کلاسیک XG"), ("pitch", "شب استادیوم"), ("gold", "طلایی ویژه"))
+        ])
     elif card_kind == "number_of_day":
         th = st.get("theme", "lalezar")
         rows.append([
@@ -643,6 +696,12 @@ def _fetch_provider_data(card_kind: str, *, include_live: bool = True, force_ref
     if card_kind == "number_of_day":
         from src.xgpedia.providers.number_of_day_free import fetch_live_number_of_day_items, load_number_of_day_presets
         return {"live": fetch_live_number_of_day_items(force_refresh=force_refresh) if include_live else [], "presets": load_number_of_day_presets()}
+    if card_kind == "matchweek_wrapup":
+        from src.xgpedia.providers.matchweek_wrapup_free import fetch_live_matchweek_wrapup_items, load_matchweek_wrapup_presets
+        return {"live": fetch_live_matchweek_wrapup_items(force_refresh=force_refresh) if include_live else [], "presets": load_matchweek_wrapup_presets()}
+    if card_kind == "shotmap_xg":
+        from src.xgpedia.providers.shotmap_xg_free import fetch_live_shotmap_xg_items, load_shotmap_xg_presets
+        return {"live": fetch_live_shotmap_xg_items(force_refresh=force_refresh) if include_live else [], "presets": load_shotmap_xg_presets()}
     from src.xgpedia.providers.player_profile_free import list_player_profile_items
     return list_player_profile_items(include_live=include_live, force_refresh=force_refresh)
 
@@ -1004,6 +1063,8 @@ def _register_card_handlers(card_kind: str) -> None:
             st["theme"] = "classic"
         elif card_kind == "number_of_day":
             st["theme"] = "lalezar"
+        elif card_kind in {"matchweek_wrapup", "shotmap_xg"}:
+            st["theme"] = "classic"
         MODULAR_STATES[card_kind][cb.from_user.id] = st
         text, kb = render_modular_customizer_view(card_kind, st)
         await cb.message.answer(text, parse_mode="HTML", reply_markup=kb)
@@ -1220,6 +1281,16 @@ def _register_card_handlers(card_kind: str) -> None:
                     res = await tw.generate_number_of_day_post_async(
                         st["item"], slide=st["slide"], header_mode=st["header_mode"], fmt=st["fmt"],
                         theme=st.get("theme", "lalezar"), custom_modules=st["modules"], progress_cb=_progress,
+                    )
+                elif card_kind == "matchweek_wrapup":
+                    res = await tw.generate_matchweek_wrapup_post_async(
+                        st["item"], slide=st["slide"], header_mode=st["header_mode"], fmt=st["fmt"],
+                        theme=st.get("theme", "classic"), custom_modules=st["modules"], progress_cb=_progress,
+                    )
+                elif card_kind == "shotmap_xg":
+                    res = await tw.generate_shotmap_xg_post_async(
+                        st["item"], slide=st["slide"], header_mode=st["header_mode"], fmt=st["fmt"],
+                        theme=st.get("theme", "classic"), custom_modules=st["modules"], progress_cb=_progress,
                     )
                 else:
                     res = await tw.generate_player_profile_post_async(

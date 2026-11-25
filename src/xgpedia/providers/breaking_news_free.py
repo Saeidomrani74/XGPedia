@@ -125,12 +125,15 @@ def upgrade_news_image_url(url: str | None) -> str | None:
     # BBC iChef CDN: /240/ یا /320/ یا /480/ -> /1024/
     u = re.sub(r"(ichef\.bbci\.co\.uk/[^/]+/[^/]+/)\d+/", r"\g<1>1024/", u)
     u = re.sub(r"(ichef\.bbci\.co\.uk/news/)\d+/", r"\g<1>1024/", u)
-    # Guardian CDN: width=140/460 -> width=1200
-    if "i.guim.co.uk" in u:
+    # Guardian CDN: فقط اگر امضای HMAC (`s=`) نداشته باشد width را ارتقا بده؛ تغییر width در لینک امضادار باعث HTTP 403 می‌شود
+    if "i.guim.co.uk" in u and not re.search(r"[?&]s=", u):
         u = re.sub(r"([?&])width=\d+", r"\g<1>width=1200", u)
     # ESPN combiner: w=300 -> w=1200
     if "espncdn.com" in u:
         u = re.sub(r"([?&])w=\d+", r"\g<1>w=1200", u)
+    # Sky Sports (365dm.com): /384x216/ یا /768x432/ -> /1600x900/
+    if "365dm.com" in u:
+        u = re.sub(r"/\d{3,4}x\d{3,4}/", "/1600x900/", u)
     return u
 
 

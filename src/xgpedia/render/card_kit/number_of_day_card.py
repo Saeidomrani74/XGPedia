@@ -198,7 +198,12 @@ def render_number_of_day_html(
             f'font-weight="{fw}" font-size="{sz}" letter-spacing="{fls}" {attrs}>{s}</text>'
         )
 
-    kpis = [k for k in (item.get("kpis") or []) if isinstance(k, (list, tuple)) and len(k) >= 2][:3]
+    _banned_kpi_labels = {"عدد شاخص", "وضعیت داده", "منبع"}
+    _banned_phrases = {"آمار برگزیده روز فوتبال", "عدد داغ در رسانه‌های معتبر اروپا", "عدد داغ در رسانه های معتبر اروپا"}
+    kpis = [
+        k for k in (item.get("kpis") or [])
+        if isinstance(k, (list, tuple)) and len(k) >= 2 and str(k[1]).strip() not in _banned_kpi_labels
+    ][:3]
 
     def _kpi_bar(compact: bool) -> str:
         if not show_kpis or not kpis:
@@ -212,17 +217,30 @@ def render_number_of_day_html(
         )
         return f'<div class="kpi-bar" style="padding:{"12px 0" if compact else "14px 0"}">{cells}</div>'
 
-    unit_txt = esc(item.get("unit") or "")
-    pin_txt = esc(item.get("pinText") or "")
+    _raw_unit = str(item.get("unit") or "").strip()
+    _raw_pin = str(item.get("pinText") or "").strip()
+    _raw_delta = str(item.get("deltaLabel") or "").strip()
+    unit_txt = esc("" if _raw_unit in _banned_phrases else _raw_unit)
+    pin_txt = esc("" if _raw_pin in _banned_phrases else _raw_pin)
     hl_txt = esc(item.get("headline") or "")
     body_txt = esc(item.get("body") or "")
-    sub_txt = esc(item.get("subject") or "")
+    sub_txt = esc(item.get("subject") or "فوتبال")
     sub_en = esc(str(item.get("subjectEn") or item.get("subjectCode") or "XGPEDIA").upper())
     sub_code = esc(str(item.get("subjectCode") or "XGP").upper())
     bench_lbl = esc(item.get("benchLabel") or "رکورد قبلی")
-    delta_txt = esc(item.get("deltaLabel") or item.get("pinText") or "")
-    ribbon_txt = esc(str(item.get("ribbonText") or "NUMBER OF THE DAY • XGPEDIA").upper())
+    delta_txt = esc("" if _raw_delta in _banned_phrases else (_raw_delta or ("" if _raw_pin in _banned_phrases else _raw_pin)))
+    _raw_rib = str(item.get("ribbonText") or "").strip()
+    _rib_ascii = sum(1 for c in _raw_rib if "a" <= c.lower() <= "z")
+    _rib_fa = sum(1 for c in _raw_rib if "\u0600" <= c <= "\u06ff")
+    _rib_fallback = _raw_unit or "آمار ویژه"
+    ribbon_txt = esc(f"عدد روز فوتبال • {_rib_fallback}" if (not _raw_rib or _rib_ascii > _rib_fa) else _raw_rib)
     issue_txt = esc(str(item.get("issue") or "001"))
+    unit_badge_html = f'<span class="u-box" style="background:{ac}">{unit_txt}</span>' if unit_txt else ""
+    pin_badge_html = f'<span class="pin-w">{pin_txt}</span>' if pin_txt else ""
+    pin_a_html = f'<span class="pill-a" style="background:{ac}">{pin_txt}</span>' if pin_txt else ""
+    pin_b_html = f'<span class="pill-b" style="border-color:{ac}90">{pin_txt}</span>' if pin_txt else ""
+    delta_a_html = f'<span class="pill-a" style="background:{ac}">{delta_txt}</span>' if delta_txt else ""
+    delta_b_html = f'<span class="pill-b" style="align-self:flex-start;border-color:{ac}">{delta_txt}</span>' if delta_txt else ""
 
     if mode == "gazette":
         cx = w * (0.27 if is16 else 0.52)
@@ -248,12 +266,12 @@ def render_number_of_day_html(
             f'<g stroke="#F8FAFC" stroke-opacity=".22" stroke-width="1.5">'
             f'<line x1="{gx}" y1="108" x2="{gx}" y2="{h - 86}"/><line x1="44" y1="{g1}" x2="{rb}" y2="{g1}"/>'
             f'<line x1="44" y1="{g2}" x2="{rb}" y2="{g2}"/><line x1="44" y1="108" x2="44" y2="{h - 86}"/><line x1="{rb}" y1="108" x2="{rb}" y2="{h - 86}"/></g>'
-            f'<text x="{gx + 16}" y="{g1 + 26}" text-anchor="start" font-family="JetBrains Mono,monospace" font-weight="800" font-size="14" fill="#FFF" fill-opacity=".9">01 // HERO METRIC</text>'
-            f'<text x="58" y="{g1 + 26}" text-anchor="start" font-family="JetBrains Mono,monospace" font-weight="700" font-size="13.5" fill="#94A3B8">PREV RECORD: {esc(item.get("benchVal", ""))}</text>'
-            f'<text x="58" y="{g1 + 48}" text-anchor="start" font-family="JetBrains Mono,monospace" font-weight="800" font-size="13" fill="#CBD5E1" fill-opacity=".65">XGP-ARCHIVE // {sub_code}</text>'
-            f'<g clip-path="url(#qR)">{_tx_el(cx + 12, y_t + 12, fs, f"fill='none' stroke='{ac}' stroke-opacity='.55' stroke-width='3'")}{_tx_el(cx, y_t, fs, "fill='#F8FAFC'")}</g>'
-            f'<g clip-path="url(#qC)">{_tx_el(cx, y_t, fs, "fill='#070D1D'")}{_tx_el(cx, y_t, fs, "fill='none' stroke='#FFF' stroke-width='3.5'")}</g>'
-            f'<g clip-path="url(#qW)">{_tx_el(cx, y_t, fs, f"fill='{ac}'")}</g></svg>'
+            f'<text x="{gx + (rb - gx) // 2}" y="{g1 + 30}" text-anchor="middle" font-family="Vazirmatn,sans-serif" font-weight="800" font-size="16" fill="#FFF" fill-opacity=".92">آمار شاخص</text>'
+            + (f'<text x="{(44 + gx) // 2}" y="{g1 + 30}" text-anchor="middle" font-family="Vazirmatn,sans-serif" font-weight="700" font-size="15" fill="#94A3B8">رکورد قبلی: {old_tx}</text>' if old_tx else '')
+            + ''
+            + '<g clip-path="url(#qR)">' + _tx_el(cx + 12, y_t + 12, fs, f'fill="none" stroke="{ac}" stroke-opacity=".55" stroke-width="3"') + _tx_el(cx, y_t, fs, 'fill="#F8FAFC"') + '</g>'
+            + '<g clip-path="url(#qC)">' + _tx_el(cx, y_t, fs, 'fill="#070D1D"') + _tx_el(cx, y_t, fs, 'fill="none" stroke="#FFF" stroke-width="3.5"') + '</g>'
+            + '<g clip-path="url(#qW)">' + _tx_el(cx, y_t, fs, f'fill="{ac}"') + '</g></svg>'
         )
         kpi_rows = "".join(
             f'<div class="gz-kpi"><span style="font-size:18px;font-weight:700;color:#CBD5E1">{esc(lbl)}</span>'
@@ -268,7 +286,7 @@ def render_number_of_day_html(
             ) if show_kpis else ""
             body_html = (
                 f'<div class="grid-2-16"><div class="fcol justify-center gap18">'
-                f'<div class="fi gap10" style="flex-wrap:wrap"><span class="u-box" style="background:{ac}">{unit_txt}</span><span class="pin-w">{pin_txt}</span></div>'
+                f'<div class="fi gap10" style="flex-wrap:wrap">{unit_badge_html}{pin_badge_html}</div>'
                 f'<h1 style="font-size:44px;font-weight:900;line-height:1.18;color:#fff">{hl_txt}</h1>'
                 f'<p style="font-size:21px;line-height:1.58;color:#E2E8F0;font-weight:600">{body_txt}</p>'
                 f'<div class="grid-3-div">{kpi_16}</div></div><div></div></div>'
@@ -277,7 +295,7 @@ def render_number_of_day_html(
             body_html = (
                 f'<div class="fcol flex1 justify-end" style="padding-bottom:10px">'
                 f'<div class="gz-bot"><div class="fcol gap12">'
-                f'<div class="fi gap10" style="flex-wrap:wrap"><span class="u-box" style="background:{ac}">{unit_txt}</span><span class="pin-w">{pin_txt}</span></div>'
+                f'<div class="fi gap10" style="flex-wrap:wrap">{unit_badge_html}{pin_badge_html}</div>'
                 f'<h1 style="font-size:{42 if is9 else 36}px;font-weight:900;line-height:1.18;color:#fff">{hl_txt}</h1>'
                 f'<p style="font-size:{21.5 if is9 else 19}px;line-height:1.55;color:#E2E8F0;font-weight:600">{body_txt}</p></div>'
                 f'<div class="gz-kpis">{kpi_rows}</div></div></div>'
@@ -299,12 +317,12 @@ def render_number_of_day_html(
             f'<stop offset="56%" stop-color="#FFF"/><stop offset="82%" stop-color="#E2E8F0"/><stop offset="100%" stop-color="{ac}"/></linearGradient></defs>'
             f'{old_g}<circle cx="{cx:.0f}" cy="{cy - 10:.0f}" r="{min(w, h) * 0.34:.0f}" stroke="{ac}" stroke-opacity=".38" stroke-width="3"/>'
             f'<circle cx="{cx:.0f}" cy="{cy - 10:.0f}" r="{min(w, h) * 0.38:.0f}" stroke="#FFF" stroke-opacity=".10" stroke-width="1.5" stroke-dasharray="4 10"/>'
-            f'{ex}{_tx_el(cx, y_t, fs, "fill='url(#cF)'")}{_tx_el(cx, y_t, fs, "fill='none' stroke='#FFF' stroke-opacity='.95' stroke-width='3'")}</svg>'
+            + f'{ex}' + _tx_el(cx, y_t, fs, 'fill="url(#cF)"') + _tx_el(cx, y_t, fs, 'fill="none" stroke="#FFF" stroke-opacity=".95" stroke-width="3"') + '</svg>'
         )
         if is16:
             body_html = (
                 f'<div class="grid-2-16"><div class="fcol justify-center gap18">'
-                f'<div class="fi gap12"><span class="pill-a" style="background:{ac}">{pin_txt}</span><span class="fm" style="font-size:18px;font-weight:700;color:#94A3B8" dir="ltr">{sub_en}</span></div>'
+                f'<div class="fi gap12">{pin_a_html}<span style="font-size:19px;font-weight:800;color:#CBD5E1">{sub_txt}</span></div>'
                 f'<h1 style="font-size:44px;font-weight:900;line-height:1.18;color:#fff">{hl_txt}</h1>'
                 f'<p style="font-size:21px;line-height:1.6;color:#E2E8F0;font-weight:600;border-right:4px solid {ac};padding-right:18px">{body_txt}</p>'
                 f'{_kpi_bar(True)}</div><div class="fcol justify-end items-center" style="padding-bottom:18px">'
@@ -313,10 +331,10 @@ def render_number_of_day_html(
         else:
             body_html = (
                 f'<div class="fcol flex1 justify-between" style="padding-bottom:10px">'
-                f'<div class="fbw" style="padding-top:8px"><span class="pill-b" style="border-color:{ac}90">{pin_txt}</span>'
-                f'<span class="fm" style="font-size:18px;font-weight:800;letter-spacing:.18em;color:#CBD5E1" dir="ltr">{sub_en}</span></div>'
-                f'<div class="fcol gap14"><div class="fc"><div class="unit-grad" style="background:linear-gradient(135deg,{ac},#0B1633)">{unit_txt}</div></div>'
-                f'<h1 style="font-size:{44 if is9 else 38}px;font-weight:900;line-height:1.18;color:#fff;text-align:center">{hl_txt}</h1>'
+                f'<div class="fbw" style="padding-top:8px">{pin_b_html}'
+                f'<span style="font-size:19px;font-weight:800;color:#CBD5E1">{sub_txt}</span></div>'
+                + ('<div class="fcol gap14">' + (f'<div class="fc"><div class="unit-grad" style="background:linear-gradient(135deg,{ac},#0B1633)">{unit_txt}</div></div>' if unit_txt else ''))
+                + f'<h1 style="font-size:{44 if is9 else 38}px;font-weight:900;line-height:1.18;color:#fff;text-align:center">{hl_txt}</h1>'
                 f'<p style="font-size:{22 if is9 else 20}px;line-height:1.55;color:#E2E8F0;font-weight:600;text-align:center;max-width:880px;margin:0 auto">{body_txt}</p>'
                 f'{_kpi_bar(not is9)}</div></div>'
             )
@@ -340,21 +358,21 @@ def render_number_of_day_html(
         )
         old_g = (
             f'<g opacity=".22" transform="translate({cx - 170:.0f},{cy - 150:.0f}) rotate(-12)">'
-            f'{_tx_el(0, 0, round(fs * 0.42), "fill='none' stroke='#FFF' stroke-width='2.5'", old_tx)}'
+            + _tx_el(0, 0, round(fs * 0.42), 'fill="none" stroke="#FFF" stroke-width="2.5"', old_tx) +
             f'<line x1="-110" y1="-45" x2="110" y2="-45" stroke="{ac}" stroke-width="6"/></g>'
             if (show_bench and old_tx) else ""
         )
         art_svg = (
             f'<svg class="abs-fill" style="z-index:1;width:100%;height:100%" viewBox="0 0 {w} {h}" fill="none" dir="ltr">'
             f'<defs><linearGradient id="sF" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#FFF"/><stop offset="45%" stop-color="#F8FAFC"/><stop offset="100%" stop-color="{ac}"/></linearGradient></defs>'
-            f'{old_g}{crk}{shd}{_tx_el(cx + 16, y_t + 18, fs, "fill='#02050D' fill-opacity='.88'")}'
-            f'{_tx_el(cx, y_t, fs, "fill='url(#sF)'")}{_tx_el(cx, y_t, fs, "fill='none' stroke='#FFF' stroke-width='3.5'")}</svg>'
+            + f'{old_g}{crk}{shd}' + _tx_el(cx + 16, y_t + 18, fs, 'fill="#02050D" fill-opacity=".88"') +
+            _tx_el(cx, y_t, fs, 'fill="url(#sF)"') + _tx_el(cx, y_t, fs, 'fill="none" stroke="#FFF" stroke-width="3.5"') + '</svg>'
         )
         bench_span = f'<span style="font-size:19px;font-weight:700;color:#CBD5E1">{bench_lbl}: <b style="color:#fff;text-decoration:line-through;text-decoration-color:{ac}">{old_tx}</b></span>' if (show_bench and old_tx) else ""
         if is16:
             body_html = (
                 f'<div class="grid-2-16"><div class="fcol justify-center gap18">'
-                f'<span class="pill-b" style="align-self:flex-start;border-color:{ac}">{delta_txt}</span>'
+                f'{delta_b_html}'
                 f'<h1 style="font-size:44px;font-weight:900;line-height:1.18;color:#fff">{hl_txt}</h1>'
                 f'<p style="font-size:21px;line-height:1.58;color:#E2E8F0;font-weight:600">{body_txt}</p>'
                 f'{_kpi_bar(True)}</div><div class="fcol justify-end items-center" style="padding-bottom:18px">'
@@ -363,10 +381,10 @@ def render_number_of_day_html(
         else:
             body_html = (
                 f'<div class="fcol flex1 justify-between" style="padding-bottom:10px">'
-                f'<div style="display:flex;justify-content:flex-end;padding-top:8px"><span class="pill-a" style="background:{ac}">{delta_txt}</span></div>'
+                f'<div style="display:flex;justify-content:flex-end;padding-top:8px">{delta_a_html}</div>'
                 f'<div class="fcol gap14">'
                 f'<div class="fbw" style="border-bottom:1px solid rgba(255,255,255,.15);padding-bottom:10px"><span style="font-size:27px;font-weight:900;color:#fff">{unit_txt}</span>{bench_span}</div>'
-                f'<h1 style="font-size:{44 if is9 else 38}px;font-weight:900;line-height:1.18;color:#fff">{hl_txt}</h1>'
+                + f'<h1 style="font-size:{44 if is9 else 38}px;font-weight:900;line-height:1.18;color:#fff">{hl_txt}</h1>'
                 f'<p style="font-size:{22 if is9 else 20}px;line-height:1.55;color:#E2E8F0;font-weight:600">{body_txt}</p>'
                 f'{_kpi_bar(not is9)}</div></div>'
             )
@@ -386,20 +404,20 @@ def render_number_of_day_html(
             f'<clipPath id="c1"><polygon points="0,0 {w},0 {w},{y1 - 55:.0f} 0,{y1 + 55:.0f}"/></clipPath>'
             f'<clipPath id="c2"><polygon points="0,{y1 + 55:.0f} {w},{y1 - 55:.0f} {w},{y2 - 55:.0f} 0,{y2 + 55:.0f}"/></clipPath>'
             f'<clipPath id="c3"><polygon points="0,{y2 + 55:.0f} {w},{y2 - 55:.0f} {w},{h} 0,{h}"/></clipPath></defs>'
-            f'{wl}{_tx_el(cx - 16, y_t, fs, "fill='#00F0FF' fill-opacity='.45'")}'
-            f'{_tx_el(cx + 16, y_t, fs, f"fill='{ac}' fill-opacity='.62'")}'
-            f'<g clip-path="url(#c1)" transform="translate(18,-10)">{_tx_el(cx, y_t, fs, "fill='#FFF'")}</g>'
-            f'<g clip-path="url(#c2)" transform="translate(-22,0)">{_tx_el(cx, y_t, fs, "fill='#F8FAFC'")}{_tx_el(cx, y_t, fs, f"fill='none' stroke='{ac}' stroke-width='4'")}</g>'
-            f'<g clip-path="url(#c3)" transform="translate(14,12)">{_tx_el(cx, y_t, fs, "fill='#E2E8F0'")}</g>'
-            f'<line x1="0" y1="{y1 + 55:.0f}" x2="{w}" y2="{y1 - 55:.0f}" stroke="{ac}" stroke-width="4"/>'
+            + f'{wl}' + _tx_el(cx - 16, y_t, fs, 'fill="#00F0FF" fill-opacity=".45"') +
+            _tx_el(cx + 16, y_t, fs, f'fill="{ac}" fill-opacity=".62"') +
+            '<g clip-path="url(#c1)" transform="translate(18,-10)">' + _tx_el(cx, y_t, fs, 'fill="#FFF"') + '</g>'
+            + '<g clip-path="url(#c2)" transform="translate(-22,0)">' + _tx_el(cx, y_t, fs, 'fill="#F8FAFC"') + _tx_el(cx, y_t, fs, f'fill="none" stroke="{ac}" stroke-width="4"') + '</g>'
+            + '<g clip-path="url(#c3)" transform="translate(14,12)">' + _tx_el(cx, y_t, fs, 'fill="#E2E8F0"') + '</g>'
+            + f'<line x1="0" y1="{y1 + 55:.0f}" x2="{w}" y2="{y1 - 55:.0f}" stroke="{ac}" stroke-width="4"/>'
             f'<line x1="0" y1="{y2 + 55:.0f}" x2="{w}" y2="{y2 - 55:.0f}" stroke="#00F0FF" stroke-opacity=".85" stroke-width="2.5"/>'
             f'<g transform="translate({cx:.0f},{y2 - 2:.0f}) rotate(-6.2)"><rect x="-390" y="-24" width="780" height="48" fill="{ac}"/>'
-            f'<text x="0" y="9" text-anchor="middle" font-family="Space Grotesk,JetBrains Mono,sans-serif" font-weight="800" font-size="21" letter-spacing="4" fill="#FFF">{ribbon_txt}</text></g></svg>'
+            f'<text x="0" y="9" text-anchor="middle" font-family="Vazirmatn,sans-serif" font-weight="900" font-size="22" fill="#FFF">{ribbon_txt}</text></g></svg>'
         )
         if is16:
             body_html = (
                 f'<div class="grid-2-16"><div class="fcol justify-center gap18">'
-                f'<span class="u-box" style="align-self:flex-start;background:{ac}">{pin_txt}</span>'
+                f'{pin_a_html}'
                 f'<h1 style="font-size:44px;font-weight:900;line-height:1.18;color:#fff">{hl_txt}</h1>'
                 f'<p style="font-size:21px;line-height:1.58;color:#E2E8F0;font-weight:600">{body_txt}</p>'
                 f'{_kpi_bar(True)}</div><div class="fcol justify-end items-center" style="padding-bottom:18px">'
@@ -408,10 +426,10 @@ def render_number_of_day_html(
         else:
             body_html = (
                 f'<div class="fcol flex1 justify-between" style="padding-bottom:10px">'
-                f'<div style="display:flex;justify-content:flex-start;padding-top:8px"><span class="pin-w">{pin_txt}</span></div>'
+                f'<div style="display:flex;justify-content:flex-start;padding-top:8px">{pin_badge_html}</div>'
                 f'<div class="fcol gap14">'
-                f'<div class="fi gap12"><span class="u-box" style="background:{ac}">{unit_txt}</span><span style="font-size:22px;font-weight:900;color:#fff">{sub_txt}</span></div>'
-                f'<h1 style="font-size:{44 if is9 else 38}px;font-weight:900;line-height:1.18;color:#fff">{hl_txt}</h1>'
+                f'<div class="fi gap12">{unit_badge_html}<span style="font-size:22px;font-weight:900;color:#fff">{sub_txt}</span></div>'
+                + f'<h1 style="font-size:{44 if is9 else 38}px;font-weight:900;line-height:1.18;color:#fff">{hl_txt}</h1>'
                 f'<p style="font-size:{22 if is9 else 20}px;line-height:1.55;color:#E2E8F0;font-weight:600">{body_txt}</p>'
                 f'{_kpi_bar(not is9)}</div></div>'
             )
@@ -436,16 +454,17 @@ def render_number_of_day_html(
             f'<clipPath id="fH"><rect x="{0 if is16 else d_x}" y="0" width="{d_x if is16 else w - d_x}" height="{h}"/></clipPath>'
             f'<path id="fA" d="M {s_x} {s_y} m -54,0 a 54,54 0 1,1 108,0 a 54,54 0 1,1 -108,0"/></defs>'
             f'<line x1="{d_x}" y1="108" x2="{d_x}" y2="{h - 88}" stroke="{ac}" stroke-opacity=".6" stroke-width="2"/>'
-            f'<g clip-path="url(#fH)">{_tx_el(n_x, n_y - 88, fs, "fill='none' stroke='#FFF' stroke-opacity='.14' stroke-width='2.5'")}'
-            f'{_tx_el(n_x, n_y + fs * .26, fs, "fill='url(#fG)'")}{_tx_el(n_x, n_y + fs * .26, fs, "fill='url(#fS)'")}'
-            f'{_tx_el(n_x, n_y + fs * .26, fs, "fill='none' stroke='#FFF' stroke-opacity='.88' stroke-width='3'")}</g>'
-            f'<g><circle cx="{s_x}" cy="{s_y}" r="68" fill="#060C1C" fill-opacity=".94" stroke="url(#fG)" stroke-width="2.8"/>'
+            + '<g clip-path="url(#fH)">' + _tx_el(n_x, n_y - 88, fs, 'fill="none" stroke="#FFF" stroke-opacity=".14" stroke-width="2.5"') +
+            _tx_el(n_x, n_y + fs * .26, fs, 'fill="url(#fG)"') + _tx_el(n_x, n_y + fs * .26, fs, 'fill="url(#fS)"') +
+            _tx_el(n_x, n_y + fs * .26, fs, 'fill="none" stroke="#FFF" stroke-opacity=".88" stroke-width="3"') + '</g>'
+            + f'<g><circle cx="{s_x}" cy="{s_y}" r="68" fill="#060C1C" fill-opacity=".94" stroke="url(#fG)" stroke-width="2.8"/>'
             f'<circle cx="{s_x}" cy="{s_y}" r="40" fill="none" stroke="#FFF" stroke-opacity=".25" stroke-width="1.4" stroke-dasharray="3 4"/>'
             f'<text font-family="Space Grotesk,JetBrains Mono,sans-serif" font-weight="800" font-size="11" letter-spacing="2.3" fill="#F8FAFC"><textPath href="#fA" startOffset="0%">★ XGPEDIA COLLECTOR ★ ARCHIVE EDITION </textPath></text>'
             f'<text x="{s_x}" y="{s_y + 8}" text-anchor="middle" font-family="JetBrains Mono,monospace" font-weight="800" font-size="22" fill="{ac}">#{issue_txt}</text></g>{bars}</svg>'
         )
         hv = max(1.0, float(item.get("heroNumVal") or 91))
-        bv = max(1.0, float(item.get("benchVal") or round(hv * 0.8)))
+        _raw_bv = item.get("benchVal")
+        bv = max(1.0, float(_raw_bv)) if _raw_bv is not None else 0.0
         mx = max(hv, bv, 1.0)
         bench_block = (
             f'<div class="foil-bench">'
@@ -454,7 +473,7 @@ def render_number_of_day_html(
             f'<div class="fbar"><div class="fbar-f" style="width:{hv / mx * 100:.1f}%;background:{ac}"></div></div>'
             f'<div class="fbw" style="font-size:15px;font-weight:700;color:#94A3B8"><span>{bench_lbl}</span><span>{old_tx}</span></div>'
             f'<div class="fbar" style="height:10px"><div class="fbar-f" style="width:{bv / mx * 100:.1f}%;background:#94A3B8"></div></div></div>'
-            if show_bench else ""
+            if (show_bench and _raw_bv is not None and old_tx) else ""
         )
         foil_kpis = (
             '<div class="foil-kpis">' + "".join(
@@ -465,9 +484,9 @@ def render_number_of_day_html(
         ) if (show_kpis and kpis) else ""
         col_html = (
             f'<div class="fcol justify-between" style="height:100%;padding:16px 0;gap:14px">'
-            f'<div class="fcol gap12"><div class="fm" style="font-size:16px;font-weight:800;letter-spacing:.18em;color:#94A3B8" dir="ltr">{sub_en} // {sub_code}</div>'
-            f'<span class="u-box" style="align-self:flex-start;background:{ac};border-radius:10px;font-size:20px">{unit_txt}</span>'
-            f'<h1 style="font-size:{40 if (is9 or is16) else 34}px;font-weight:900;line-height:1.2;color:#fff">{hl_txt}</h1>'
+            f'<div class="fcol gap12"><div style="font-size:18px;font-weight:800;color:#94A3B8">{sub_txt}</div>'
+            + (f'<span class="u-box" style="align-self:flex-start;background:{ac};border-radius:10px;font-size:20px">{unit_txt}</span>' if unit_txt else '')
+            + f'<h1 style="font-size:{40 if (is9 or is16) else 34}px;font-weight:900;line-height:1.2;color:#fff">{hl_txt}</h1>'
             f'<p style="font-size:{21 if (is9 or is16) else 18.5}px;line-height:1.55;color:#E2E8F0;font-weight:600">{body_txt}</p></div>'
             f'{bench_block}{foil_kpis}</div>'
         )
@@ -479,7 +498,9 @@ def render_number_of_day_html(
     cat_txt = esc(item.get("category") or "عدد روز فوتبال")
     date_txt = fa(esc(item.get("date") or "فصل جاری"))
     src_txt = esc(item.get("source") or "XGPedia")
-    ticker_txt = f"NUMBER OF THE DAY • {mode_en} • #{issue_txt}"
+    mode_fa_map = {"gazette": "تحلیل سوئیسی", "cathedral": "یادمان آماری", "shatter": "رکوردشکنی", "chromatic": "گلیچ آماری", "foil": "نسخه کلکسیونی"}
+    _mfa = mode_fa_map.get(mode, "آمار ویژه")
+    ticker_txt = f"عدد روز XGPedia • {_mfa} • شماره {fa(issue_txt)}"
     hdr_sub = "" if header_mode == "compact" else f'<div class="hdr-sub"><span style="color:#fff">{sub_txt}</span><span style="color:#64748B">•</span><span>{date_txt}</span></div>'
 
     return f"""<!DOCTYPE html>
@@ -545,7 +566,7 @@ html,body{{width:{w}px;height:{h}px;overflow:hidden;background:#081024;color:#F8
     <div>
       <div class="fi gap10" style="flex-wrap:wrap">
         <div class="hdr-pill"><span class="pdot" style="background:{ac}"></span><span>عدد روز</span><span style="color:#94A3B8">•</span><span>{cat_txt}</span></div>
-        <span class="iss-pill fm" dir="ltr">ISSUE #{issue_txt}</span>
+        <span class="iss-pill">شماره {fa(issue_txt)}</span>
       </div>
       {hdr_sub}
     </div>
@@ -553,7 +574,7 @@ html,body{{width:{w}px;height:{h}px;overflow:hidden;background:#081024;color:#F8
   </header>
   <main class="stage">{body_html}</main>
   <footer class="ftr">
-    <div class="ftr-l"><span class="ftr-dot"></span><span class="ftr-tk fm" dir="ltr">{ticker_txt}</span></div>
+    <div class="ftr-l"><span class="ftr-dot"></span><span class="ftr-tk">{ticker_txt}</span></div>
     <div class="ftr-r fm" dir="ltr"><span class="ftr-brand">@XGPedia</span><span style="color:#64748B">|</span><span class="ftr-src">{src_txt}</span></div>
   </footer>
 </div>

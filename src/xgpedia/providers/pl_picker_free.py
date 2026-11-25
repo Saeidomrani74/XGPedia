@@ -183,6 +183,116 @@ def _fetch_understat_epl_season_dates(season_yr: int) -> list[dict[str, Any]]:
     return []
 
 
+
+_CSV_H2H_CACHE_DIR = Path(__file__).resolve().parents[3] / "output" / ".pl_h2h_csv_cache"
+
+
+def _norm_pl_team_h2h(s: str) -> str:
+    import unicodedata as _ud
+    raw = "".join(c for c in _ud.normalize("NFKD", str(s or "").lower()) if not _ud.combining(c)).strip()
+    aliases = {
+        "man city": "manchester city",
+        "manchester city fc": "manchester city",
+        "man utd": "manchester united",
+        "man united": "manchester united",
+        "manchester united fc": "manchester united",
+        "spurs": "tottenham",
+        "tottenham hotspur": "tottenham",
+        "tottenham hotspur fc": "tottenham",
+        "nott'm forest": "nottingham forest",
+        "nottm forest": "nottingham forest",
+        "nottingham forest fc": "nottingham forest",
+        "wolves": "wolverhampton",
+        "wolverhampton wanderers": "wolverhampton",
+        "newcastle": "newcastle united",
+        "newcastle utd": "newcastle united",
+        "west ham": "west ham united",
+        "leicester": "leicester city",
+        "brighton & hove albion": "brighton",
+        "brighton and hove albion": "brighton",
+        "afc bournemouth": "bournemouth",
+        "leeds united": "leeds",
+        "ipswich town": "ipswich",
+        "luton town": "luton",
+        "sheffield united": "sheffield utd",
+    }
+    return aliases.get(raw, raw)
+
+
+def _fetch_fd_couk_e0_season(season_yr: int) -> list[dict[str, Any]]:
+    """دریافت و کش دائمی فایل آزاد E0.csv یک فصل لیگ برتر از football-data.co.uk (بدون کلید API و بدون requests)."""
+    import csv
+    import io
+    try:
+        _CSV_H2H_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        now_yr = datetime.now(timezone.utc).year
+        yy = f"{season_yr % 100:02d}{(season_yr + 1) % 100:02d}"
+        cache_f = _CSV_H2H_CACHE_DIR / f"E0_{yy}.json"
+        if cache_f.exists() and cache_f.stat().st_size > 400:
+            age = time.time() - cache_f.stat().st_mtime
+            if season_yr < now_yr - 1 or age < 43200:
+                return json.loads(cache_f.read_text(encoding="utf-8"))
+        url = f"https://www.football-data.co.uk/mmz4281/{yy}/E0.csv"
+        req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+        with urllib.request.urlopen(req, timeout=6.5) as resp:
+            raw_csv = resp.read().decode("utf-8-sig", errors="replace")
+        rows: list[dict[str, Any]] = []
+        for row in csv.DictReader(io.StringIO(raw_csv)):
+            ht = (row.get("HomeTeam") or "").strip()
+            at = (row.get("AwayTeam") or "").strip()
+            hg_s = (row.get("FTHG") or "").strip()
+            ag_s = (row.get("FTAG") or "").strip()
+            dt_s = (row.get("Date") or "").strip()
+            if not (ht and at and hg_s.isdigit() and ag_s.isdigit()):
+                continue
+            # Convert DD/MM/YY or DD/MM/YYYY -> YYYY-MM-DD
+            iso_dt = ""
+            parts = dt_s.split("/")
+            if len(parts) == 3:
+                d_p, m_p, y_p = parts
+                y_full = f"20{y_p}" if len(y_p) == 2 else y_p
+                iso_dt = f"{y_full}-{m_p.zfill(2)}-{d_p.zfill(2)}"
+            rows.append({"date": iso_dt, "h": ht, "a": at, "hg": int(hg_s), "ag": int(ag_s)})
+        if rows:
+            cache_f.write_text(json.dumps(rows, ensure_ascii=False), encoding="utf-8")
+            return rows
+    except Exception:
+        pass
+    return []
+
+
+def _collect_football_data_couk_pl_h2h(t1_en: str, t2_en: str, *, fpl_season_yr: int, start_yr: int = 2010) -> list[dict[str, Any]]:
+    """جمع‌آوری تاریخچه کامل تقابل‌های دو تیم در لیگ برتر از ۲۰۱۰ تا امروز از فایل‌های رسمی E0.csv."""
+    import concurrent.futures
+    n1, n2 = _norm_pl_team_h2h(t1_en), _norm_pl_team_h2h(t2_en)
+    seasons = list(range(start_yr, fpl_season_yr + 1))
+    out: list[dict[str, Any]] = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as ex:
+        for yr, rows in zip(seasons, ex.map(_fetch_fd_couk_e0_season, seasons)):
+            for r in rows:
+                dh = _norm_pl_team_h2h(r.get("h") or "")
+                da = _norm_pl_team_h2h(r.get("a") or "")
+                m1 = (n1 == dh or (len(n1) >= 5 and (n1[:5] in dh or dh[:5] in n1))) and (n2 == da or (len(n2) >= 5 and (n2[:5] in da or da[:5] in n2)))
+                m2 = (n2 == dh or (len(n2) >= 5 and (n2[:5] in dh or dh[:5] in n2))) and (n1 == da or (len(n1) >= 5 and (n1[:5] in da or da[:5] in n1)))
+                if not (m1 or m2):
+                    continue
+                t1_is_home = bool(m1)
+                hg_raw, ag_raw = int(r["hg"]), int(r["ag"])
+                dt_s = str(r.get("date") or "")
+                out.append({
+                    "date": dt_s,
+                    "year": dt_s[:4] or str(yr),
+                    "comp": "لیگ برتر",
+                    "t1_is_home": t1_is_home,
+                    "hg": hg_raw if t1_is_home else ag_raw,
+                    "ag": ag_raw if t1_is_home else hg_raw,
+                    "hxg": None,
+                    "axg": None,
+                })
+    out.sort(key=lambda g: g["date"], reverse=True)
+    return out
+
+
 def _collect_multi_season_pl_h2h(t1_en: str, t2_en: str, *, fpl_season_yr: int) -> list[dict[str, Any]]:
     """جمع‌آوری موازی تمام تقابل‌های تاریخی دو تیم در لیگ برتر انگلیس از ۲۰۱۴ تا امروز همراه با xG واقعی."""
     import concurrent.futures
@@ -294,6 +404,33 @@ def build_pl_h2h_teams_item(
     evs = boot.get("events") or []
     fpl_yr = int(str(evs[0].get("deadline_time") or "2025")[:4]) if (evs and isinstance(evs[0], dict) and str(evs[0].get("deadline_time") or "")[:4].isdigit()) else 2025
     hist = _collect_multi_season_pl_h2h(t1["raw_name"], t2["raw_name"], fpl_season_yr=fpl_yr)
+    # تکمیل تاریخچه چندفصله (۲۰۱۰ تا امروز) از football-data.co.uk E0.csv برای همه جفت‌تیم‌ها (از جمله وقتی Understat ناقص است)
+    csv_hist = _collect_football_data_couk_pl_h2h(t1["raw_name"], t2["raw_name"], fpl_season_yr=fpl_yr, start_yr=2010)
+    if csv_hist:
+        by_date = {g["date"]: g for g in hist if g.get("date")}
+        for cg in csv_hist:
+            dt_k = cg.get("date") or ""
+            if dt_k and dt_k not in by_date:
+                hist.append(cg)
+                by_date[dt_k] = cg
+    # پشتیبان تکمیلی از openfootball/football.json اگر هنوز تاریخچه کوتاه بود
+    if len(hist) < 4:
+        try:
+            from src.xgpedia.providers.open_football_hub import fetch_openfootball_h2h
+            of_res = fetch_openfootball_h2h("en.1", t1["raw_name"], t2["raw_name"])
+            by_date = {g["date"]: g for g in hist if g.get("date")}
+            for rg in (of_res.get("recent") or []):
+                dt_k = str(rg.get("date") or "")[:10]
+                if dt_k and dt_k not in by_date:
+                    t1_h = _norm_pl_team_h2h(str(rg.get("team1") or ""))[:5] == _norm_pl_team_h2h(t1["raw_name"])[:5]
+                    s1, s2 = int(rg.get("g1") or 0), int(rg.get("g2") or 0)
+                    hist.append({
+                        "date": dt_k, "year": dt_k[:4], "comp": "لیگ برتر", "t1_is_home": t1_h,
+                        "hg": s1 if t1_h else s2, "ag": s2 if t1_h else s1, "hxg": None, "axg": None,
+                    })
+                    by_date[dt_k] = hist[-1]
+        except Exception:
+            pass
 
     # Merge any current-season finished FPL fixtures not already in hist
     seen_dates = {g["date"] for g in hist}

@@ -217,6 +217,8 @@ def build_fpl_live_debates(boot: dict[str, Any] | None = None, fixtures: list[di
                 "code": cd1,
                 "color": col1,
                 "secondary": "#FFFFFF",
+                "entityType": "person",
+                "fpl_photo_code": str(p1.get("code") or ""),
                 "img": img1,
                 "thesis": f"ثبت {g1} گل از امید گل {xg1:.2f} با نرخ {g90_1:.2f} گل در هر ۹۰ دقیقه",
                 "args": [
@@ -234,6 +236,8 @@ def build_fpl_live_debates(boot: dict[str, Any] | None = None, fixtures: list[di
                 "code": cd2,
                 "color": col2,
                 "secondary": "#FFFFFF",
+                "entityType": "person",
+                "fpl_photo_code": str(p2.get("code") or ""),
                 "img": img2,
                 "thesis": f"ثبت {g2} گل از امید گل {xg2:.2f} با نرخ {g90_2:.2f} گل در هر ۹۰ دقیقه",
                 "args": [
@@ -346,6 +350,7 @@ def build_fpl_live_debates(boot: dict[str, Any] | None = None, fixtures: list[di
                     "code": cd1,
                     "color": col1,
                     "secondary": "#FFFFFF",
+                    "entityType": "team",
                     "img": None,
                     "thesis": f"صدرنشینی مقتدرانه با {int(s1['w'])} برد و تفاضل گل {gd1:+d} در {int(s1['mp'])} مسابقه",
                     "args": [
@@ -363,6 +368,7 @@ def build_fpl_live_debates(boot: dict[str, Any] | None = None, fixtures: list[di
                     "code": cd2,
                     "color": col2,
                     "secondary": "#FFFFFF",
+                    "entityType": "team",
                     "img": None,
                     "thesis": f"تعقیب بی‌وقفه صدر با {int(s2['w'])} برد و {int(s2['gf'])} گل زده",
                     "args": [
@@ -451,6 +457,8 @@ def build_fpl_live_debates(boot: dict[str, Any] | None = None, fixtures: list[di
                 "code": cd1,
                 "color": col1,
                 "secondary": "#FFFFFF",
+                "entityType": "person",
+                "fpl_photo_code": str(p1.get("code") or ""),
                 "img": img1,
                 "thesis": f"خلق موقعیت مستمر با امید پاس گل {xa1:.2f} و شاخص خلاقیت {cr1:.0f}",
                 "args": [
@@ -468,6 +476,8 @@ def build_fpl_live_debates(boot: dict[str, Any] | None = None, fixtures: list[di
                 "code": cd2,
                 "color": col2,
                 "secondary": "#FFFFFF",
+                "entityType": "person",
+                "fpl_photo_code": str(p2.get("code") or ""),
                 "img": img2,
                 "thesis": f"بازی‌سازی مؤثر با امید پاس گل {xa2:.2f} و شاخص خلاقیت {cr2:.0f}",
                 "args": [
@@ -547,17 +557,17 @@ def extract_news_debate_candidate(
         q_title = f"کدام تیم در نبرد {n1} و {n2} دست بالا را دارد؟"
         hl = f"{n1} و {n2}"
         side_a = {
-            "name": n1, "sub": "جبهه اول • برتری تاکتیکی", "code": cd1, "color": col1, "secondary": "#FFFFFF", "img": img_hd,
+            "name": n1, "sub": "برتری تاکتیکی و ساختاری", "code": cd1, "color": col1, "secondary": "#FFFFFF", "entityType": "team", "img": None,
             "thesis": f"ساختار منسجم‌تر و کنترل جریان بازی در لحظات کلیدی به سود {n1}",
             "args": [f"آمادگی بالای مهره‌های کلیدی {n1} در هفته‌های اخیر", f"برتری در مدیریت ریتم مسابقه و خلق موقعیت‌های باکیفیت", "ثبات ساختاری در فاز انتقال دفاع به حمله"],
-            "statLabel": "شاخص داغی بحث", "statVal": f"{min(97, score + 10)}°",
+            "statLabel": "", "statVal": "",
             "blindspot": f"آسیب‌پذیری در فضاهای پشت خط دفاعی برابر ضدحملات سریع {n2}",
         }
         side_b = {
-            "name": n2, "sub": "جبهه دوم • پتانسیل شگفتی و ضربه", "code": cd2, "color": col2, "secondary": "#FFFFFF", "img": None,
+            "name": n2, "sub": "کیفیت فردی و توان تغییر بازی", "code": cd2, "color": col2, "secondary": "#FFFFFF", "entityType": "team", "img": None,
             "thesis": f"کیفیت فردی و توان تغییر جریان مسابقه در لحظات حساس به سود {n2}",
             "args": [f"انگیزه بالا و تهدید مستقیم دروازه از سوی خط حمله {n2}", "توانایی بهره‌برداری از اشتباهات فردی و ضربات ایستگاهی", "شخصیت تیمی در بازی‌های بزرگ و پرفشار"],
-            "statLabel": "شاخص واکنش هواداران", "statVal": "بحث داغ روز",
+            "statLabel": "", "statVal": "",
             "blindspot": f"چالش مهار پرس از بالای {n1} در نیمه اول مسابقه",
         }
         radar_labels = ["انسجام تیمی", "کیفیت فردی", "فاز هجومی", "ساختار دفاعی", "فرم اخیر", "فشار روانی"]
@@ -576,14 +586,14 @@ def extract_news_debate_candidate(
         q_title = f"جنجال داوری در {club_lbl}؛ تصمیم درست قانون یا اشتباه پرهزینه؟"
         hl = "جنجال داوری"
         side_a = {
-            "name": "جبهه موافق تصمیم", "sub": "انطباق با پروتکل VAR و قانون", "code": "PRO", "color": "#38BDF8", "secondary": "#FFFFFF", "img": img_hd,
+            "name": "موافق تصمیم داور", "sub": "انطباق با پروتکل VAR و قانون", "code": "PRO", "color": "#38BDF8", "secondary": "#FFFFFF", "entityType": "stance", "img": None,
             "thesis": "تصمیم داور مطابق متن صریح قانون و بازبینی تصاویر VAR بوده است",
             "args": ["شفافیت پروتکل داوری در صحنه‌های حساس محوطه جریمه", "اولویت اجرای یکسان قانون بر هیجان لحظه‌ای سکوها", "کاهش خطای آشکار انسانی با تکیه بر بازبینی ویدیویی"],
             "statLabel": "شدت واکنش", "statVal": "داغ و جنجالی",
             "blindspot": "تفسیرپذیری برخی صحنه‌های ۵۰-۵۰ حتی با بازبینی چندباره",
         }
         side_b = {
-            "name": "جبهه منتقد تصمیم", "sub": "اعتراض به ریتم و تفسیر سخت‌گیرانه", "code": "CON", "color": "#E62E45", "secondary": "#FFFFFF", "img": None,
+            "name": "منتقد تصمیم داور", "sub": "اعتراض به ریتم و تفسیر سخت‌گیرانه", "code": "CON", "color": "#E62E45", "secondary": "#FFFFFF", "img": None,
             "thesis": "تفسیر بیش‌ازحد سخت‌گیرانه روح طبیعی فوتبال و عدالت بازی را مخدوش کرد",
             "args": ["تغییر سرنوشت نتیجه با یک تصمیم میلیمتری و بحث‌برانگیز", "نبود یکنواختی در تصمیم‌های مشابه طی هفته‌های اخیر", "توقف طولانی مسابقه و افت تمرکز بازیکنان"],
             "statLabel": "موج انتقادات", "statVal": "بالا",
@@ -606,7 +616,7 @@ def extract_news_debate_candidate(
         q_title = f"چالش بزرگ در {club_lbl}؛ تداوم مسیر فعلی یا تغییر فوری؟"
         hl = "چالش بزرگ"
         side_a = {
-            "name": "حمایت از ثبات", "sub": f"تداوم پروژه در {club_lbl}", "code": cd, "color": "#10B981", "secondary": "#FFFFFF", "img": img_hd,
+            "name": "حمایت از ثبات", "sub": f"تداوم پروژه در {club_lbl}", "code": cd, "color": "#10B981", "secondary": "#FFFFFF", "entityType": "team", "img": None,
             "thesis": "ثبات فنی و اعتماد به پروژه میان‌مدت تنها مسیر بازگشت به اوج است",
             "args": ["تغییرات شتاب‌زده در میانه فصل معمولاً بحران را عمیق‌تر می‌کند", "شاخص‌های زیربنایی تیم ظرفیت بهبود در هفته‌های آینده را دارد", "نیاز به زمان برای هماهنگی کامل ترکیب و ایده‌های تاکتیکی"],
             "statLabel": "رویکرد تحلیلی", "statVal": "پروژه بلندمدت",
@@ -764,16 +774,40 @@ def _download_img_uri(url: str | None, timeout: float = 6.0) -> str | None:
 
 
 def hydrate_debate_item(item: dict[str, Any]) -> dict[str, Any]:
-    """تکمیل نهایی آیتم مناظره پیش از رندر آفلاین (عکس base64 برای دو طرف + ترجمه hotTake در صورت انگلیسی بودن)."""
+    """تکمیل نهایی آیتم مناظره پیش از رندر آفلاین (لوگوی واقعی تیم‌ها، پرتره دقیق اشخاص و ترجمه فارسی)."""
+    from src.xgpedia.providers.player_profile_free import PL_PHOTO_URLS
     out = json.loads(json.dumps(item, ensure_ascii=False))
     for side_key in ("sideA", "sideB"):
         side = out.get(side_key)
-        if isinstance(side, dict) and side.get("img") and str(side["img"]).startswith(("http://", "https://")):
-            side["img"] = _download_img_uri(str(side["img"]))
+        if not isinstance(side, dict):
+            continue
+        ent_type = str(side.get("entityType") or "").lower()
+        # اگر طرف مناظره تیم/باشگاه باشد هرگز عکس خبری اشتباه روی آن گذاشته نشود (باید لوگوی باشگاه نمایش داده شود)
+        if ent_type == "team" or (not ent_type and lookup_pl_club(str(side.get("name") or "")) is not None):
+            side["entityType"] = "team"
+            side["img"] = None
+            continue
+        # برای اشخاص (بازیکنان/مربیان): دانلود عکس دقیق با پشتیبان چندمسیره PL_PHOTO_URLS
+        pcode = str(side.get("fpl_photo_code") or "").strip()
+        img_u = str(side.get("img") or "").strip()
+        if img_u.startswith(("http://", "https://")):
+            dl = _download_img_uri(img_u)
+            if not dl and pcode:
+                for tmpl in PL_PHOTO_URLS:
+                    dl = _download_img_uri(tmpl.format(code=pcode))
+                    if dl:
+                        break
+            side["img"] = dl
+        elif not img_u and pcode:
+            for tmpl in PL_PHOTO_URLS:
+                dl = _download_img_uri(tmpl.format(code=pcode))
+                if dl:
+                    side["img"] = dl
+                    break
     ht = str(out.get("hotTake") or "").strip()
     if ht and _looks_mostly_english(ht):
         try:
-            from src.xgpedia.llm.client import generate_text  # type: ignore
+            from src.xgpedia.editorial.llm_provider import generate_text
             res = generate_text(
                 f"این ادعای داغ فوتبالی را به فارسی روان و مجله‌ای در حداکثر ۲ جمله ترجمه کن:\n{ht}",
                 max_tokens=180,

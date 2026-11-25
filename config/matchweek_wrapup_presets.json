@@ -1,0 +1,83 @@
+{
+  "version": "1.0",
+  "presets": [
+    {
+      "id": "preset_mw_pl_w12",
+      "is_live": false,
+      "competition": "لیگ برتر انگلیس",
+      "leagueEn": "PREMIER LEAGUE",
+      "season": "26/27",
+      "week": 12,
+      "round": "هفته ۱۲ • خلاصهٔ هفته و قدرت فرم",
+      "source": "Premier League / Opta FPL",
+      "editorialVerdict": "آرسنال با نرخ ۲.۴ امتیاز در ۵ هفته اخیر پیشتاز فرم لیگ است؛ در سوی مقابل، چلسی با ثبت +۴.۱ گل فراتر از امید گل کلینیکال‌ترین تیم و کریستال پالاس بدشانس‌ترین خط حمله هفته بوده است.",
+      "awards": {
+        "bestAttack": {"name": "آرسنال", "code": "ARS", "color": "#EF0107", "val": "۲۸ گل", "sub": "میانگین ۲.۳۳ گل/بازی • ۲۳.۴ xG"},
+        "unluckiest": {"name": "کریستال پالاس", "code": "CRY", "color": "#1B458F", "val": "−۴.۳", "sub": "۱۲ گل از ۱۶.۳ امید گل (G − xG)"},
+        "bestDefense": {"name": "لیورپول", "code": "LIV", "color": "#C8102E", "val": "۷ کلین‌شیت", "sub": "تنها ۸ گل خورده در ۱۲ مسابقه"}
+      },
+      "formVsTable": [
+        {"name": "آرسنال", "code": "ARS", "color": "#EF0107", "tableRank": 1, "formRank": 1, "pts": 28, "formPts": 13, "form": ["W", "W", "D", "W", "W"], "xgDiff": 4.6},
+        {"name": "برایتون", "code": "BHA", "color": "#0057B8", "tableRank": 2, "formRank": 2, "pts": 22, "formPts": 12, "form": ["W", "W", "W", "L", "W"], "xgDiff": 2.1},
+        {"name": "لیورپول", "code": "LIV", "color": "#C8102E", "tableRank": 3, "formRank": 4, "pts": 22, "formPts": 10, "form": ["W", "D", "W", "W", "L"], "xgDiff": 1.8},
+        {"name": "منچسترسیتی", "code": "MCI", "color": "#38BDF8", "tableRank": 4, "formRank": 6, "pts": 21, "formPts": 8, "form": ["W", "L", "D", "W", "D"], "xgDiff": -1.4},
+        {"name": "چلسی", "code": "CHE", "color": "#2563EB", "tableRank": 5, "formRank": 3, "pts": 20, "formPts": 11, "form": ["W", "W", "D", "W", "D"], "xgDiff": 4.1},
+        {"name": "نیوکاسل", "code": "NEW", "color": "#CBD5E1", "tableRank": 7, "formRank": 5, "pts": 18, "formPts": 9, "form": ["W", "L", "W", "W", "L"], "xgDiff": -0.9}
+      ],
+      "overperformers": [
+        {"name": "آرسنال", "code": "ARS", "color": "#EF0107", "goals": 28, "xg": 23.4, "delta": 4.6},
+        {"name": "چلسی", "code": "CHE", "color": "#2563EB", "goals": 24, "xg": 19.9, "delta": 4.1},
+        {"name": "ناتینگهام فارست", "code": "NFO", "color": "#E53233", "goals": 18, "xg": 15.1, "delta": 2.9}
+      ],
+      "underperformers": [
+        {"name": "کریستال پالاس", "code": "CRY", "color": "#1B458F", "goals": 12, "xg": 16.3, "delta": -4.3},
+        {"name": "منچستریونایتد", "code": "MUN", "color": "#DA291C", "goals": 14, "xg": 17.6, "delta": -3.6},
+        {"name": "اورتون", "code": "EVE", "color": "#2563EB", "goals": 11, "xg": 13.9, "delta": -2.9}
+      ],
+      "totw": [
+        {"name": "داوید رایا", "pos": "GK", "clubCode": "ARS", "color": "#EF0107", "pts": 10, "stat": "کلین‌شیت + ۵ سیو"},
+        {"name": "ویرجیل فن دایک", "pos": "DEF", "clubCode": "LIV", "color": "#C8102E", "pts": 12, "stat": "۱ گل + کلین‌شیت"},
+        {"name": "گابریل ماگالاش", "pos": "DEF", "clubCode": "ARS", "color": "#EF0107", "pts": 11, "stat": "۱ گل سرنوشت‌ساز"},
+        {"name": "پدرو پورو", "pos": "DEF", "clubCode": "TOT", "color": "#E2E8F0", "pts": 9, "stat": "۱ پاس گل + کلین‌شیت"},
+        {"name": "محمد صلاح", "pos": "MID", "clubCode": "LIV", "color": "#C8102E", "pts": 15, "stat": "۲ گل + ۱ پاس گل"},
+        {"name": "بوکایو ساکا", "pos": "MID", "clubCode": "ARS", "color": "#EF0107", "pts": 13, "stat": "۱ گل + ۲ پاس گل"},
+        {"name": "کول پالمر", "pos": "MID", "clubCode": "CHE", "color": "#2563EB", "pts": 12, "stat": "۱ گل + ۱ پاس گل"},
+        {"name": "برونو فرناندش", "pos": "MID", "clubCode": "MUN", "color": "#DA291C", "pts": 11, "stat": "۴ پاس کلیدی + ۱ گل"},
+        {"name": "ارلینگ هالند", "pos": "FWD", "clubCode": "MCI", "color": "#38BDF8", "pts": 14, "stat": "۲ گل • ۱.۷۲ xG"},
+        {"name": "الکساندر ایساک", "pos": "FWD", "clubCode": "NEW", "color": "#CBD5E1", "pts": 12, "stat": "۲ گل • کلینیکال"},
+        {"name": "اولی واتکینز", "pos": "FWD", "clubCode": "AVL", "color": "#95BFE5", "pts": 10, "stat": "۱ گل + ۱ پاس گل"}
+      ]
+    },
+    {
+      "id": "preset_mw_bundesliga",
+      "is_live": false,
+      "competition": "بوندس‌لیگا آلمان",
+      "leagueEn": "BUNDESLIGA",
+      "season": "26/27",
+      "week": 11,
+      "round": "هفته ۱۱ • خلاصهٔ هفته و قدرت فرم",
+      "source": "OpenLigaDB / XGPedia",
+      "editorialVerdict": "بایرن مونیخ با خط حمله آتشین و میانگین بالای ۳ گل در هر بازی همچنان بدون شکست پیشتاز قدرت فرم بوندس‌لیگا است.",
+      "awards": {
+        "bestAttack": {"name": "بایرن مونیخ", "code": "BAY", "color": "#DC052D", "val": "۳۶ گل", "sub": "میانگین ۳.۲۷ گل در هر بازی"},
+        "unluckiest": {"name": "لایپزیش", "code": "RBL", "color": "#E62E45", "val": "−۲.۸", "sub": "تفاضل گل واقعی نسبت به xG"},
+        "bestDefense": {"name": "بایرن مونیخ", "code": "BAY", "color": "#DC052D", "val": "۸ گل خورده", "sub": "مستحکم‌ترین ساختار دفاعی لیگ"}
+      },
+      "formVsTable": [
+        {"name": "بایرن مونیخ", "code": "BAY", "color": "#DC052D", "tableRank": 1, "formRank": 1, "pts": 29, "formPts": 13, "form": ["W", "W", "D", "W", "W"], "xgDiff": 4.2},
+        {"name": "دورتموند", "code": "BVB", "color": "#F59E0B", "tableRank": 2, "formRank": 2, "pts": 23, "formPts": 12, "form": ["W", "W", "W", "W", "L"], "xgDiff": 1.9},
+        {"name": "بایر لورکوزن", "code": "B04", "color": "#EF4444", "tableRank": 3, "formRank": 3, "pts": 21, "formPts": 11, "form": ["W", "D", "W", "W", "D"], "xgDiff": 1.4},
+        {"name": "لایپزیش", "code": "RBL", "color": "#E62E45", "tableRank": 4, "formRank": 5, "pts": 20, "formPts": 8, "form": ["W", "L", "D", "W", "D"], "xgDiff": -2.8}
+      ],
+      "overperformers": [
+        {"name": "بایرن مونیخ", "code": "BAY", "color": "#DC052D", "goals": 36, "xg": 31.8, "delta": 4.2},
+        {"name": "دورتموند", "code": "BVB", "color": "#F59E0B", "goals": 24, "xg": 22.1, "delta": 1.9}
+      ],
+      "underperformers": [
+        {"name": "لایپزیش", "code": "RBL", "color": "#E62E45", "goals": 17, "xg": 19.8, "delta": -2.8},
+        {"name": "اشتوتگارت", "code": "VFB", "color": "#EF4444", "goals": 16, "xg": 18.1, "delta": -2.1}
+      ],
+      "totw": []
+    }
+  ]
+}

@@ -452,7 +452,7 @@ def test_v328_fc27_persian_and_h2h_teams_history():
     p["role"] = "مهاجم نوک تمام‌کننده • POACHER++"
     h = render_player_fc27_html(p, slide="slide1")
     assert "ارلینگ هالند" in h
-    assert 'fill="#E62E45"/>' in h and ">XG</text>" in h
+    assert ('<image href="data:image/svg+xml;base64,' in h) or ('fill="#E62E45"/>' in h and ">XG</text>" in h)
     assert "POACHER" not in h
     assert "مهاجم" in h and "top:72px" in h
 

@@ -1,8 +1,9 @@
 """لوگوهای رسمی باشگاه‌های لیگ برتر انگلیس (Premier League Official Badges) و تضمین کنتراست رنگ تیم‌ها.
 
 منبع ۱۰۰٪ رایگان و بدون کلید API:
-  - `https://resources.premierleague.com/premierleague/badges/70/t{team_code}.png`
-  - ذخیره کش روی دیسک (`output/.badge_cache/`) و تبدیل به `data:image/png;base64,...` برای رندر ۱۰۰٪ آفلاین در Playwright.
+  1. کش دیسک (`output/.badge_cache/pl_t{code}.png`) و دانلود از `resources.premierleague.com`
+  2. پشتیبان ۱۰۰٪ آفلاین و محلی از `brand/crests/{TLA}.svg` (به‌صورت `data:image/svg+xml;base64,...`)
+     تا لوگوهای باشگاه‌های انگلیسی در هر حالتی (حتی بدون اینترنت یا کش) واقعی و برداری باشند.
 """
 from __future__ import annotations
 
@@ -10,12 +11,12 @@ import base64
 import math
 import urllib.request
 from pathlib import Path
-from typing import Any
 
 from src.xgpedia.config import ROOT
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
 BADGE_CACHE_DIR = ROOT / "output" / ".badge_cache"
+LOCAL_CRESTS_DIR = ROOT / "brand" / "crests"
 
 # نقشه جامع باشگاه‌های لیگ برتر انگلیس:
 # key -> (name_fa, tla, primary_hex, secondary_hex, pl_badge_code)
@@ -61,62 +62,119 @@ PL_CLUBS_MASTER: dict[str, tuple[str, str, str, str, int]] = {
 
 _BY_TLA: dict[str, tuple[str, str, str, str, int]] = {v[1]: v for v in PL_CLUBS_MASTER.values()}
 _BY_FA: dict[str, tuple[str, str, str, str, int]] = {v[0]: v for v in PL_CLUBS_MASTER.values()}
-_MEM_CACHE: dict[int, str] = {}
+_BY_CODE: dict[int, tuple[str, str, str, str, int]] = {v[4]: v for v in PL_CLUBS_MASTER.values()}
+_MEM_CACHE: dict[str, str] = {}
 
 
-def lookup_pl_club(name_or_tla: str, tla_hint: str = "") -> tuple[str, str, str, str, int] | None:
+def lookup_pl_club(name_or_tla: str | int, tla_hint: str = "") -> tuple[str, str, str, str, int] | None:
+    if isinstance(name_or_tla, int):
+        return _BY_CODE.get(name_or_tla)
     s = str(name_or_tla or "").strip()
+    if s.isdigit() and int(s) in _BY_CODE:
+        return _BY_CODE[int(s)]
     if s in _BY_FA:
         return _BY_FA[s]
+    s_up = s.upper()
+    if s_up in _BY_TLA:
+        return _BY_TLA[s_up]
     low = s.lower()
     if low in PL_CLUBS_MASTER:
         return PL_CLUBS_MASTER[low]
     t = str(tla_hint or "").strip().upper()
     if t in _BY_TLA:
         return _BY_TLA[t]
-    for k, v in PL_CLUBS_MASTER.items():
-        if k in low or low in k:
-            return v
+    if low:
+        for k, v in PL_CLUBS_MASTER.items():
+            if k in low or (len(low) >= 4 and low in k):
+                return v
     return None
 
 
-def get_pl_badge_data_uri(name_or_tla: str, *, tla_hint: str = "", badge_code: int | None = None, fetch_network: bool = True) -> str | None:
-    """دریافت لوگوی رسمی باشگاه لیگ برتر به‌صورت data URI (با کش حافظه و دیسک)."""
-    code = badge_code
-    if code is None:
-        hit = lookup_pl_club(name_or_tla, tla_hint)
-        if hit:
-            code = hit[4]
-    if not code:
+def _load_local_crest_svg_uri(tla: str) -> str | None:
+    """بارگذاری لوگوی برداری واقعی باشگاه از پوشه محلی `brand/crests/{TLA}.svg` (۱۰۰٪ آفلاین)."""
+    t = str(tla or "").strip().upper()[:3]
+    if not t:
         return None
-    if code in _MEM_CACHE:
-        return _MEM_CACHE[code]
-
-    try:
-        BADGE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
-        cache_f = BADGE_CACHE_DIR / f"pl_t{code}.png"
-        if cache_f.exists() and cache_f.stat().st_size > 500:
-            raw = cache_f.read_bytes()
-            uri = f"data:image/png;base64,{base64.b64encode(raw).decode('ascii')}"
-            _MEM_CACHE[code] = uri
-            return uri
-        if not fetch_network:
+    svg_path = LOCAL_CRESTS_DIR / f"{t}.svg"
+    if svg_path.exists() and svg_path.stat().st_size > 100:
+        try:
+            raw = svg_path.read_bytes()
+            return f"data:image/svg+xml;base64,{base64.b64encode(raw).decode('ascii')}"
+        except Exception:
             return None
-        for sz in ("100", "70"):
+    return None
+
+
+def get_pl_badge_data_uri(
+    name_or_tla: str | int,
+    *,
+    tla_hint: str = "",
+    badge_code: int | None = None,
+    size: int | None = None,
+    fetch_network: bool = True,
+) -> str | None:
+    """دریافت لوگوی رسمی باشگاه لیگ برتر به‌صورت data URI (کش حافظه + دیسک + SVG محلی `brand/crests/`)."""
+    code = badge_code
+    tla = str(tla_hint or "").strip().upper()[:3]
+    hit = lookup_pl_club(name_or_tla, tla_hint)
+    if hit:
+        if code is None:
+            code = hit[4]
+        if not tla:
+            tla = hit[1]
+    elif code is not None and code in _BY_CODE and not tla:
+        tla = _BY_CODE[code][1]
+    elif not tla and isinstance(name_or_tla, str) and len(name_or_tla.strip()) == 3:
+        tla = name_or_tla.strip().upper()
+
+    cache_key = f"c{code}" if code else f"t{tla}"
+    if cache_key in _MEM_CACHE:
+        return _MEM_CACHE[cache_key]
+
+    # ۱) بررسی کش دیسک PNG رسمی لیگ برتر
+    if code:
+        try:
+            BADGE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+            cache_f = BADGE_CACHE_DIR / f"pl_t{code}.png"
+            if cache_f.exists() and cache_f.stat().st_size > 500:
+                raw = cache_f.read_bytes()
+                uri = f"data:image/png;base64,{base64.b64encode(raw).decode('ascii')}"
+                _MEM_CACHE[cache_key] = uri
+                return uri
+        except Exception:
+            pass
+
+    # ۲) بررسی لوگوی محلی برداری واقعی در `brand/crests/{TLA}.svg` (۱۰۰٪ آفلاین و سریع)
+    local_svg = _load_local_crest_svg_uri(tla)
+    if local_svg and not fetch_network:
+        _MEM_CACHE[cache_key] = local_svg
+        return local_svg
+
+    # ۳) دانلود آنلاین PNG رسمی لیگ برتر در صورت مجاز بودن شبکه
+    if code and fetch_network:
+        sz_order = ("100", "70") if (size is None or size >= 70) else ("70", "100")
+        for sz in sz_order:
             url = f"https://resources.premierleague.com/premierleague/badges/{sz}/t{code}.png"
             try:
                 req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
                 with urllib.request.urlopen(req, timeout=5.0) as resp:
                     raw = resp.read()
                 if len(raw) > 500 and raw[:4] == b"\x89PNG":
-                    cache_f.write_bytes(raw)
+                    try:
+                        BADGE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+                        (BADGE_CACHE_DIR / f"pl_t{code}.png").write_bytes(raw)
+                    except Exception:
+                        pass
                     uri = f"data:image/png;base64,{base64.b64encode(raw).decode('ascii')}"
-                    _MEM_CACHE[code] = uri
+                    _MEM_CACHE[cache_key] = uri
                     return uri
             except Exception:
                 continue
-    except Exception:
-        pass
+
+    # ۴) پشتیبان نهایی: لوگوی برداری محلی واقعی (`brand/crests/{TLA}.svg`)
+    if local_svg:
+        _MEM_CACHE[cache_key] = local_svg
+        return local_svg
     return None
 
 
@@ -140,7 +198,6 @@ def resolve_distinct_team_colors(home_hex: str, away_hex: str) -> tuple[str, str
     dist = math.sqrt((r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2)
     if dist >= 125.0:
         return hc, ac
-    # Pick a high-contrast complementary palette color far from home_hex
     candidates = ("#38BDF8", "#F59E0B", "#10B981", "#E62E45", "#A855F7", "#F8FAFC")
     best_c = ac
     best_d = dist

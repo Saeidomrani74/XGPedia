@@ -18,6 +18,20 @@ from src.xgpedia.render.card_kit.helpers import esc, f1, f2, fa, luminance
 from src.xgpedia.render.cards import _brand_logo_data_uri
 from src.xgpedia.render.studio_engine import build_embedded_font_css
 
+
+def _brand_xg_red_data_uri() -> str | None:
+    """بارگذاری آفلاین فایل رسمی برند `brand/logo/svg/logo-xg-red.svg` به‌صورت Data URI."""
+    import base64
+    from src.xgpedia.config import ROOT
+    svg_p = ROOT / "brand" / "logo" / "svg" / "logo-xg-red.svg"
+    if svg_p.exists() and svg_p.stat().st_size > 100:
+        try:
+            return f"data:image/svg+xml;base64,{base64.b64encode(svg_p.read_bytes()).decode('ascii')}"
+        except Exception:
+            return None
+    return None
+
+
 FC27_FORMATS: dict[str, tuple[int, int]] = {
     "4:5": (1080, 1350),
     "9:16": (1080, 1920),
@@ -349,9 +363,12 @@ def _render_fc27_shield(p: dict[str, Any], t: dict[str, str], scale: float = 0.9
         f'<path d="M22 14 L118 14 L160 36 L202 14 L298 14" stroke="url(#apx_{uid})" stroke-width="1.6"/>'
         f'<path d="M98 62 L160 92 L222 62" stroke="url(#apx_{uid})" stroke-width="1.6"/>'
         f'<path d="M160 16 L186 27 V46 C186 62 175 74 160 79 C145 74 134 62 134 46 V27 Z" fill="#070D1D" stroke="{t["b1"]}" stroke-width="2"/>'
-        '<rect x="145" y="33" width="30" height="30" rx="6" fill="#E62E45"/>'
-        '<text x="160" y="53" text-anchor="middle" fill="#FFFFFF" font-family="Space Grotesk,sans-serif" font-weight="900" font-size="14.5" letter-spacing="-0.4">XG</text>'
-        '<text x="122" y="38" text-anchor="end" fill="#CBD5E1" font-family="JetBrains Mono,monospace" font-size="9.5" font-weight="800" letter-spacing="1.2">XGPEDIA</text>'
+        + (
+            f'<image href="{_xg_red_uri}" x="140" y="28" width="40" height="40" preserveAspectRatio="xMidYMid meet"/>'
+            if (_xg_red_uri := _brand_xg_red_data_uri())
+            else '<rect x="145" y="33" width="30" height="30" rx="6" fill="#E62E45"/><text x="160" y="53" text-anchor="middle" fill="#FFFFFF" font-family="Space Grotesk,sans-serif" font-weight="900" font-size="14.5" letter-spacing="-0.4">XG</text>'
+        )
+        + '<text x="122" y="38" text-anchor="end" fill="#CBD5E1" font-family="JetBrains Mono,monospace" font-size="9.5" font-weight="800" letter-spacing="1.2">XGPEDIA</text>'
         f'<text x="198" y="38" text-anchor="start" fill="{t["b1"]}" font-family="JetBrains Mono,monospace" font-size="9.5" font-weight="800" letter-spacing="1.4">{esc(p.get("season") or "26/27")}</text>'
         "</svg></div>"
         '<div class="fc-sheen"></div></div>'

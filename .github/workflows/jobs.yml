@@ -26,8 +26,13 @@ jobs:
       # بازی‌های پیش‌رو — فقط وقتی secret تنظیم شده باشد.
       # تعمیر بدهی ۶/۴ HANDOFF: فلگ واقعی --days است (نه --date) و توکن سرویس
       # football-data.org است (نه API_FOOTBALL_KEY که مربوط به provider حذف‌شده است).
-      - run: python run.py fixtures --days 7
-        if: ${{ secrets.FOOTBALL_DATA_ORG_TOKEN != '' }}
+      - name: Sync upcoming fixtures (when token is configured)
+        run: |
+          if [ -n "$FOOTBALL_DATA_ORG_TOKEN" ]; then
+            python run.py fixtures --days 7
+          else
+            echo "FOOTBALL_DATA_ORG_TOKEN not set; skipping fixtures sync."
+          fi
         env:
           FOOTBALL_DATA_ORG_TOKEN: ${{ secrets.FOOTBALL_DATA_ORG_TOKEN }}
           DATABASE_PATH: data/dev.sqlite
