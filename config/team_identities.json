@@ -2,26 +2,862 @@
   "updated": "2026-11-17",
   "note": "هویت بصری هر تیم برای کارت‌ها: کد سه‌حرفی (هم‌سان با glossary_fa.json) + رنگ اصلی/ثانویه که در طراحی کارت بازی‌ها مصرف می‌شوند. رنگ‌ها ارزش رسمی باشگاه‌اند (استاندارد رایج/اینفوباکس ویکی‌پدیا) و باید با دفترچه برند هر باشگاه راستی‌آزمایی شوند — به‌ویژه HUL و COV که آستانهٔ دقیق بین نسخه‌های کهربایی/آبی‌آسمانی دارند. crest خالی یعنی لوگوی واقعی هنوز دانلود نشده (tools/fetch_crests.py) و رندرر نشان انتزاعی یک‌دست خودش را می‌سازد. این فایل فقط دادهٔ تیم است؛ رنگ برند XGPedia جدا در brand/brand.json می‌ماند.",
   "teams": {
-    "Arsenal": {"code": "ARS", "colors": {"primary": "#EF0107", "secondary": "#FFFFFF"}, "crest": null},
-    "Aston Villa": {"code": "AVL", "colors": {"primary": "#670E36", "secondary": "#95BFE8"}, "crest": null},
-    "Bournemouth": {"code": "BOU", "colors": {"primary": "#DA291C", "secondary": "#000000"}, "crest": null},
-    "Brentford": {"code": "BRE", "colors": {"primary": "#E30613", "secondary": "#FFFFFF"}, "crest": null},
-    "Brighton": {"code": "BHA", "colors": {"primary": "#0057B8", "secondary": "#FFFFFF"}, "crest": null},
-    "Chelsea": {"code": "CHE", "colors": {"primary": "#034694", "secondary": "#FFFFFF"}, "crest": null},
-    "Coventry City": {"code": "COV", "colors": {"primary": "#78D2F7", "secondary": "#0B2537"}, "crest": null},
-    "Crystal Palace": {"code": "CRY", "colors": {"primary": "#1B458F", "secondary": "#C4122E"}, "crest": null},
-    "Everton": {"code": "EVE", "colors": {"primary": "#003399", "secondary": "#FFFFFF"}, "crest": null},
-    "Fulham": {"code": "FUL", "colors": {"primary": "#FFFFFF", "secondary": "#000000"}, "crest": null},
-    "Hull City": {"code": "HUL", "colors": {"primary": "#EEA320", "secondary": "#000000"}, "crest": null},
-    "Ipswich Town": {"code": "IPS", "colors": {"primary": "#3A64A0", "secondary": "#FFFFFF"}, "crest": null},
-    "Leeds United": {"code": "LEE", "colors": {"primary": "#FFFFFF", "secondary": "#1D428A"}, "crest": null},
-    "Liverpool": {"code": "LIV", "colors": {"primary": "#C8102E", "secondary": "#F6EB61"}, "crest": null},
-    "Manchester City": {"code": "MCI", "colors": {"primary": "#6CABDD", "secondary": "#FFFFFF"}, "crest": null},
-    "Manchester United": {"code": "MUN", "colors": {"primary": "#DA291C", "secondary": "#FBE122"}, "crest": null},
-    "Newcastle United": {"code": "NEW", "colors": {"primary": "#241F20", "secondary": "#FFFFFF"}, "crest": null},
-    "Nottingham Forest": {"code": "NFO", "colors": {"primary": "#DD0000", "secondary": "#FFFFFF"}, "crest": null},
-    "Sunderland": {"code": "SUN", "colors": {"primary": "#EB172B", "secondary": "#FFFFFF"}, "crest": null},
-    "Tottenham": {"code": "TOT", "colors": {"primary": "#132257", "secondary": "#FFFFFF"}, "crest": null}
+    "Arsenal": {
+      "code": "ARS",
+      "colors": {
+        "primary": "#EF0107",
+        "secondary": "#FFFFFF"
+      },
+      "crest": null
+    },
+    "Aston Villa": {
+      "code": "AVL",
+      "colors": {
+        "primary": "#670E36",
+        "secondary": "#95BFE8"
+      },
+      "crest": null
+    },
+    "Bournemouth": {
+      "code": "BOU",
+      "colors": {
+        "primary": "#DA291C",
+        "secondary": "#000000"
+      },
+      "crest": null
+    },
+    "Brentford": {
+      "code": "BRE",
+      "colors": {
+        "primary": "#E30613",
+        "secondary": "#FFFFFF"
+      },
+      "crest": null
+    },
+    "Brighton": {
+      "code": "BHA",
+      "colors": {
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
+      },
+      "crest": null
+    },
+    "Chelsea": {
+      "code": "CHE",
+      "colors": {
+        "primary": "#034694",
+        "secondary": "#FFFFFF"
+      },
+      "crest": null
+    },
+    "Coventry City": {
+      "code": "COV",
+      "colors": {
+        "primary": "#78D2F7",
+        "secondary": "#0B2537"
+      },
+      "crest": null
+    },
+    "Crystal Palace": {
+      "code": "CRY",
+      "colors": {
+        "primary": "#1B458F",
+        "secondary": "#C4122E"
+      },
+      "crest": null
+    },
+    "Everton": {
+      "code": "EVE",
+      "colors": {
+        "primary": "#003399",
+        "secondary": "#FFFFFF"
+      },
+      "crest": null
+    },
+    "Fulham": {
+      "code": "FUL",
+      "colors": {
+        "primary": "#FFFFFF",
+        "secondary": "#000000"
+      },
+      "crest": null
+    },
+    "Hull City": {
+      "code": "HUL",
+      "colors": {
+        "primary": "#EEA320",
+        "secondary": "#000000"
+      },
+      "crest": null
+    },
+    "Ipswich Town": {
+      "code": "IPS",
+      "colors": {
+        "primary": "#3A64A0",
+        "secondary": "#FFFFFF"
+      },
+      "crest": null
+    },
+    "Leeds United": {
+      "code": "LEE",
+      "colors": {
+        "primary": "#FFFFFF",
+        "secondary": "#1D428A"
+      },
+      "crest": null
+    },
+    "Liverpool": {
+      "code": "LIV",
+      "colors": {
+        "primary": "#C8102E",
+        "secondary": "#F6EB61"
+      },
+      "crest": null
+    },
+    "Manchester City": {
+      "code": "MCI",
+      "colors": {
+        "primary": "#6CABDD",
+        "secondary": "#FFFFFF"
+      },
+      "crest": null
+    },
+    "Manchester United": {
+      "code": "MUN",
+      "colors": {
+        "primary": "#DA291C",
+        "secondary": "#FBE122"
+      },
+      "crest": null
+    },
+    "Newcastle United": {
+      "code": "NEW",
+      "colors": {
+        "primary": "#241F20",
+        "secondary": "#FFFFFF"
+      },
+      "crest": null
+    },
+    "Nottingham Forest": {
+      "code": "NFO",
+      "colors": {
+        "primary": "#DD0000",
+        "secondary": "#FFFFFF"
+      },
+      "crest": null
+    },
+    "Sunderland": {
+      "code": "SUN",
+      "colors": {
+        "primary": "#EB172B",
+        "secondary": "#FFFFFF"
+      },
+      "crest": null
+    },
+    "Tottenham": {
+      "code": "TOT",
+      "colors": {
+        "primary": "#132257",
+        "secondary": "#FFFFFF"
+      },
+      "crest": null
+    },
+    "Real Madrid": {
+      "code": "RMA",
+      "colors": {
+        "primary": "#F59E0B",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/RMA.svg"
+    },
+    "Barcelona": {
+      "code": "BAR",
+      "colors": {
+        "primary": "#A50044",
+        "secondary": "#004D98"
+      },
+      "crest": "brand/crests/BAR.svg"
+    },
+    "Atletico Madrid": {
+      "code": "ATM",
+      "colors": {
+        "primary": "#CB3524",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/ATM.svg"
+    },
+    "Girona": {
+      "code": "GIR",
+      "colors": {
+        "primary": "#CD2534",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/GIR.svg"
+    },
+    "Athletic Club": {
+      "code": "ATH",
+      "colors": {
+        "primary": "#EE2523",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/ATH.svg"
+    },
+    "Villarreal": {
+      "code": "VIL",
+      "colors": {
+        "primary": "#F5E216",
+        "secondary": "#005187"
+      },
+      "crest": "brand/crests/VIL.svg"
+    },
+    "Bayern Munich": {
+      "code": "BAY",
+      "colors": {
+        "primary": "#DC052D",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/BAY.svg"
+    },
+    "Borussia Dortmund": {
+      "code": "BVB",
+      "colors": {
+        "primary": "#FDE100",
+        "secondary": "#111827"
+      },
+      "crest": "brand/crests/BVB.svg"
+    },
+    "Bayer Leverkusen": {
+      "code": "LEV",
+      "colors": {
+        "primary": "#E32221",
+        "secondary": "#111827"
+      },
+      "crest": "brand/crests/LEV.svg"
+    },
+    "RB Leipzig": {
+      "code": "RBL",
+      "colors": {
+        "primary": "#DD0741",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/RBL.svg"
+    },
+    "VfB Stuttgart": {
+      "code": "STU",
+      "colors": {
+        "primary": "#E32219",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/STU.svg"
+    },
+    "Eintracht Frankfurt": {
+      "code": "SGE",
+      "colors": {
+        "primary": "#E1000F",
+        "secondary": "#111827"
+      },
+      "crest": "brand/crests/SGE.svg"
+    },
+    "Inter Milan": {
+      "code": "INT",
+      "colors": {
+        "primary": "#010E80",
+        "secondary": "#38BDF8"
+      },
+      "crest": "brand/crests/INT.svg"
+    },
+    "AC Milan": {
+      "code": "MIL",
+      "colors": {
+        "primary": "#FB090B",
+        "secondary": "#111827"
+      },
+      "crest": "brand/crests/MIL.svg"
+    },
+    "Juventus": {
+      "code": "JUV",
+      "colors": {
+        "primary": "#E2E8F0",
+        "secondary": "#111827"
+      },
+      "crest": "brand/crests/JUV.svg"
+    },
+    "Atalanta": {
+      "code": "ATA",
+      "colors": {
+        "primary": "#1E71B8",
+        "secondary": "#111827"
+      },
+      "crest": "brand/crests/ATA.svg"
+    },
+    "Napoli": {
+      "code": "NAP",
+      "colors": {
+        "primary": "#12A0D7",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/NAP.svg"
+    },
+    "Bologna": {
+      "code": "BOL",
+      "colors": {
+        "primary": "#9F1F33",
+        "secondary": "#1A2F48"
+      },
+      "crest": "brand/crests/BOL.svg"
+    },
+    "AS Roma": {
+      "code": "ROM",
+      "colors": {
+        "primary": "#8E1F2F",
+        "secondary": "#F0BC42"
+      },
+      "crest": "brand/crests/ROM.svg"
+    },
+    "Paris Saint-Germain": {
+      "code": "PSG",
+      "colors": {
+        "primary": "#004170",
+        "secondary": "#DA291C"
+      },
+      "crest": "brand/crests/PSG.svg"
+    },
+    "AS Monaco": {
+      "code": "MON",
+      "colors": {
+        "primary": "#E51B22",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/MON.svg"
+    },
+    "Lille": {
+      "code": "LIL",
+      "colors": {
+        "primary": "#E01E13",
+        "secondary": "#1D2B53"
+      },
+      "crest": "brand/crests/LIL.svg"
+    },
+    "Brest": {
+      "code": "BST",
+      "colors": {
+        "primary": "#E30613",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/BST.svg"
+    },
+    "Marseille": {
+      "code": "MAR",
+      "colors": {
+        "primary": "#2FAEE0",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/MAR.svg"
+    },
+    "Benfica": {
+      "code": "BEN",
+      "colors": {
+        "primary": "#E83030",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/BEN.svg"
+    },
+    "Sporting CP": {
+      "code": "SCP",
+      "colors": {
+        "primary": "#008057",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/SCP.svg"
+    },
+    "FC Porto": {
+      "code": "POR",
+      "colors": {
+        "primary": "#00428C",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/POR.svg"
+    },
+    "PSV Eindhoven": {
+      "code": "PSV",
+      "colors": {
+        "primary": "#ED1C24",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/PSV.svg"
+    },
+    "Feyenoord": {
+      "code": "FEY",
+      "colors": {
+        "primary": "#EE1C25",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/FEY.svg"
+    },
+    "Ajax": {
+      "code": "AJX",
+      "colors": {
+        "primary": "#D2122E",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/AJX.svg"
+    },
+    "Celtic": {
+      "code": "CEL",
+      "colors": {
+        "primary": "#018749",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/CEL.svg"
+    },
+    "Club Brugge": {
+      "code": "BRU",
+      "colors": {
+        "primary": "#0069B4",
+        "secondary": "#111827"
+      },
+      "crest": "brand/crests/BRU.svg"
+    },
+    "Shakhtar Donetsk": {
+      "code": "SHK",
+      "colors": {
+        "primary": "#F36E21",
+        "secondary": "#111827"
+      },
+      "crest": "brand/crests/SHK.svg"
+    },
+    "Red Bull Salzburg": {
+      "code": "SAL",
+      "colors": {
+        "primary": "#E2001A",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/SAL.svg"
+    },
+    "Galatasaray": {
+      "code": "GAL",
+      "colors": {
+        "primary": "#A90432",
+        "secondary": "#FDB912"
+      },
+      "crest": "brand/crests/GAL.svg"
+    },
+    "Real Sociedad": {
+      "code": "RSO",
+      "colors": {
+        "primary": "#0067B1",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/RSO.svg"
+    },
+    "Real Betis": {
+      "code": "BET",
+      "colors": {
+        "primary": "#0BB363",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/BET.svg"
+    },
+    "Sevilla": {
+      "code": "SEV",
+      "colors": {
+        "primary": "#D40028",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/SEV.svg"
+    },
+    "Valencia": {
+      "code": "VAL",
+      "colors": {
+        "primary": "#EE7500",
+        "secondary": "#111827"
+      },
+      "crest": "brand/crests/VAL.svg"
+    },
+    "Osasuna": {
+      "code": "OSA",
+      "colors": {
+        "primary": "#D91A21",
+        "secondary": "#0A346F"
+      },
+      "crest": "brand/crests/OSA.svg"
+    },
+    "Celta Vigo": {
+      "code": "CVG",
+      "colors": {
+        "primary": "#8AC3EE",
+        "secondary": "#E5254E"
+      },
+      "crest": "brand/crests/CVG.svg"
+    },
+    "Rayo Vallecano": {
+      "code": "RAY",
+      "colors": {
+        "primary": "#E53027",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/RAY.svg"
+    },
+    "Mallorca": {
+      "code": "MLL",
+      "colors": {
+        "primary": "#E20613",
+        "secondary": "#111827"
+      },
+      "crest": "brand/crests/MLL.svg"
+    },
+    "Getafe": {
+      "code": "GET",
+      "colors": {
+        "primary": "#005999",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/GET.svg"
+    },
+    "Alaves": {
+      "code": "ALA",
+      "colors": {
+        "primary": "#0053A0",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/ALA.svg"
+    },
+    "Espanyol": {
+      "code": "ESP",
+      "colors": {
+        "primary": "#007FC8",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/ESP.svg"
+    },
+    "Las Palmas": {
+      "code": "LPA",
+      "colors": {
+        "primary": "#FFD200",
+        "secondary": "#005AA7"
+      },
+      "crest": "brand/crests/LPA.svg"
+    },
+    "Real Valladolid": {
+      "code": "VLD",
+      "colors": {
+        "primary": "#5B2482",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/VLD.svg"
+    },
+    "Leganes": {
+      "code": "LEG",
+      "colors": {
+        "primary": "#0055A4",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/LEG.svg"
+    },
+    "Lazio": {
+      "code": "LAZ",
+      "colors": {
+        "primary": "#87D8F7",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/LAZ.svg"
+    },
+    "Fiorentina": {
+      "code": "FIO",
+      "colors": {
+        "primary": "#482E92",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/FIO.svg"
+    },
+    "Torino": {
+      "code": "TOR",
+      "colors": {
+        "primary": "#8A1E03",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/TOR.svg"
+    },
+    "Udinese": {
+      "code": "UDI",
+      "colors": {
+        "primary": "#E2E8F0",
+        "secondary": "#111827"
+      },
+      "crest": "brand/crests/UDI.svg"
+    },
+    "Genoa": {
+      "code": "GEN",
+      "colors": {
+        "primary": "#AD1919",
+        "secondary": "#0A2342"
+      },
+      "crest": "brand/crests/GEN.svg"
+    },
+    "Cagliari": {
+      "code": "CAG",
+      "colors": {
+        "primary": "#9E1B32",
+        "secondary": "#002350"
+      },
+      "crest": "brand/crests/CAG.svg"
+    },
+    "Hellas Verona": {
+      "code": "VER",
+      "colors": {
+        "primary": "#005395",
+        "secondary": "#FFD200"
+      },
+      "crest": "brand/crests/VER.svg"
+    },
+    "Empoli": {
+      "code": "EMP",
+      "colors": {
+        "primary": "#00579C",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/EMP.svg"
+    },
+    "Lecce": {
+      "code": "LEC",
+      "colors": {
+        "primary": "#E30613",
+        "secondary": "#FDE100"
+      },
+      "crest": "brand/crests/LEC.svg"
+    },
+    "Parma": {
+      "code": "PAR",
+      "colors": {
+        "primary": "#FFD200",
+        "secondary": "#003399"
+      },
+      "crest": "brand/crests/PAR.svg"
+    },
+    "Como": {
+      "code": "COM",
+      "colors": {
+        "primary": "#0054A6",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/COM.svg"
+    },
+    "Monza": {
+      "code": "MNZ",
+      "colors": {
+        "primary": "#E30613",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/MNZ.svg"
+    },
+    "Venezia": {
+      "code": "VEN",
+      "colors": {
+        "primary": "#F36E21",
+        "secondary": "#007A33"
+      },
+      "crest": "brand/crests/VEN.svg"
+    },
+    "SC Freiburg": {
+      "code": "SCF",
+      "colors": {
+        "primary": "#E30613",
+        "secondary": "#111827"
+      },
+      "crest": "brand/crests/SCF.svg"
+    },
+    "Borussia Monchengladbach": {
+      "code": "BMG",
+      "colors": {
+        "primary": "#16A34A",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/BMG.svg"
+    },
+    "Werder Bremen": {
+      "code": "SVW",
+      "colors": {
+        "primary": "#1D9053",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/SVW.svg"
+    },
+    "VfL Wolfsburg": {
+      "code": "WOB",
+      "colors": {
+        "primary": "#65B32E",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/WOB.svg"
+    },
+    "Mainz 05": {
+      "code": "M05",
+      "colors": {
+        "primary": "#C3141E",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/M05.svg"
+    },
+    "FC Augsburg": {
+      "code": "FCA",
+      "colors": {
+        "primary": "#BA3733",
+        "secondary": "#16A34A"
+      },
+      "crest": "brand/crests/FCA.svg"
+    },
+    "Union Berlin": {
+      "code": "FCU",
+      "colors": {
+        "primary": "#EB1923",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/FCU.svg"
+    },
+    "TSG Hoffenheim": {
+      "code": "TSG",
+      "colors": {
+        "primary": "#1C63B7",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/TSG.svg"
+    },
+    "FC Heidenheim": {
+      "code": "HDH",
+      "colors": {
+        "primary": "#E30613",
+        "secondary": "#003C82"
+      },
+      "crest": "brand/crests/HDH.svg"
+    },
+    "FC St. Pauli": {
+      "code": "STP",
+      "colors": {
+        "primary": "#624A2E",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/STP.svg"
+    },
+    "Holstein Kiel": {
+      "code": "KIE",
+      "colors": {
+        "primary": "#005CA9",
+        "secondary": "#E30613"
+      },
+      "crest": "brand/crests/KIE.svg"
+    },
+    "VfL Bochum": {
+      "code": "BOC",
+      "colors": {
+        "primary": "#005CA9",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/BOC.svg"
+    },
+    "Lyon": {
+      "code": "LYO",
+      "colors": {
+        "primary": "#14387F",
+        "secondary": "#DA291C"
+      },
+      "crest": "brand/crests/LYO.svg"
+    },
+    "Nice": {
+      "code": "NIC",
+      "colors": {
+        "primary": "#D40028",
+        "secondary": "#111827"
+      },
+      "crest": "brand/crests/NIC.svg"
+    },
+    "Lens": {
+      "code": "LEN",
+      "colors": {
+        "primary": "#EC1C24",
+        "secondary": "#FFD200"
+      },
+      "crest": "brand/crests/LEN.svg"
+    },
+    "Rennes": {
+      "code": "REN",
+      "colors": {
+        "primary": "#E30613",
+        "secondary": "#111827"
+      },
+      "crest": "brand/crests/REN.svg"
+    },
+    "Strasbourg": {
+      "code": "STR",
+      "colors": {
+        "primary": "#009FE3",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/STR.svg"
+    },
+    "Reims": {
+      "code": "REI",
+      "colors": {
+        "primary": "#D71920",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/REI.svg"
+    },
+    "Toulouse": {
+      "code": "TOU",
+      "colors": {
+        "primary": "#5F259F",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/TOU.svg"
+    },
+    "Auxerre": {
+      "code": "AJA",
+      "colors": {
+        "primary": "#0055A4",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/AJA.svg"
+    },
+    "Nantes": {
+      "code": "NAN",
+      "colors": {
+        "primary": "#FDE100",
+        "secondary": "#008057"
+      },
+      "crest": "brand/crests/NAN.svg"
+    },
+    "Angers": {
+      "code": "ANG",
+      "colors": {
+        "primary": "#111827",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/ANG.svg"
+    },
+    "Saint-Etienne": {
+      "code": "STE",
+      "colors": {
+        "primary": "#008E46",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/STE.svg"
+    },
+    "Le Havre": {
+      "code": "HAC",
+      "colors": {
+        "primary": "#6CABDD",
+        "secondary": "#002B5C"
+      },
+      "crest": "brand/crests/HAC.svg"
+    },
+    "Montpellier": {
+      "code": "MTP",
+      "colors": {
+        "primary": "#003B71",
+        "secondary": "#F36E21"
+      },
+      "crest": "brand/crests/MTP.svg"
+    }
   },
   "display_color_rule": "میزبان همیشه رنگ اصلی رسمی. میهمان هم رنگ اصلی رسمی؛ فقط اگر با رنگ میزبان بیش‌ازحد نزدیک بود (فاصلهٔ رنگی زیر آستانه) رنگ ثانویهٔ میهمان به‌کار می‌رود و اگر آن هم نزدیک بود، رنگ ذخیرهٔ contrast یعنی matchday_palette.sky_bright — تا دو تیم روی کارت هرگز یک‌شکل دیده نشوند.",
   "contrast_fallback_color": "#38BDF8"

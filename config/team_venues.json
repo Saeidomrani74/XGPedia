@@ -61,6 +61,267 @@
     },
     "Tottenham": {
       "stadium_fa": "ورزشگاه تاتنهام"
+    },
+    "Real Madrid": {
+      "stadium_fa": "ورزشگاه سانتیاگو برنابئو"
+    },
+    "Barcelona": {
+      "stadium_fa": "ورزشگاه اسپاتیفای نیوکمپ"
+    },
+    "Atletico Madrid": {
+      "stadium_fa": "ورزشگاه متروپولیتانو"
+    },
+    "Girona": {
+      "stadium_fa": "ورزشگاه مونتیلیوی"
+    },
+    "Athletic Club": {
+      "stadium_fa": "ورزشگاه سن مامس"
+    },
+    "Villarreal": {
+      "stadium_fa": "ورزشگاه لا سرامیکا"
+    },
+    "Bayern Munich": {
+      "stadium_fa": "ورزشگاه آلیانتس آرنا"
+    },
+    "Borussia Dortmund": {
+      "stadium_fa": "ورزشگاه سیگنال ایدونا پارک"
+    },
+    "Bayer Leverkusen": {
+      "stadium_fa": "ورزشگاه بای‌آرنا"
+    },
+    "RB Leipzig": {
+      "stadium_fa": "ورزشگاه ردبول آرنا"
+    },
+    "VfB Stuttgart": {
+      "stadium_fa": "ورزشگاه ام‌اچ‌پی آرنا"
+    },
+    "Eintracht Frankfurt": {
+      "stadium_fa": "ورزشگاه دویچه بانک پارک"
+    },
+    "Inter Milan": {
+      "stadium_fa": "ورزشگاه سن سیرو (جوزپه مه‌آتزا)"
+    },
+    "AC Milan": {
+      "stadium_fa": "ورزشگاه سن سیرو"
+    },
+    "Juventus": {
+      "stadium_fa": "ورزشگاه آلیانتس تورین"
+    },
+    "Atalanta": {
+      "stadium_fa": "ورزشگاه گویس برگامو"
+    },
+    "Napoli": {
+      "stadium_fa": "ورزشگاه دیگو آرماندو مارادونا"
+    },
+    "Bologna": {
+      "stadium_fa": "ورزشگاه رناتو دال‌آرا"
+    },
+    "AS Roma": {
+      "stadium_fa": "ورزشگاه المپیکو رم"
+    },
+    "Paris Saint-Germain": {
+      "stadium_fa": "ورزشگاه پارک دو پرنس"
+    },
+    "AS Monaco": {
+      "stadium_fa": "ورزشگاه لویی دوم"
+    },
+    "Lille": {
+      "stadium_fa": "ورزشگاه پیر مائوروی"
+    },
+    "Brest": {
+      "stadium_fa": "ورزشگاه فرانسیس لو بله"
+    },
+    "Marseille": {
+      "stadium_fa": "ورزشگاه ولودروم"
+    },
+    "Benfica": {
+      "stadium_fa": "ورزشگاه دا لوژ"
+    },
+    "Sporting CP": {
+      "stadium_fa": "ورزشگاه ژوزه آلوالاده"
+    },
+    "FC Porto": {
+      "stadium_fa": "ورزشگاه دراگائو"
+    },
+    "PSV Eindhoven": {
+      "stadium_fa": "ورزشگاه فیلیپس"
+    },
+    "Feyenoord": {
+      "stadium_fa": "ورزشگاه د کویپ"
+    },
+    "Ajax": {
+      "stadium_fa": "ورزشگاه یوهان کرایف آرنا"
+    },
+    "Celtic": {
+      "stadium_fa": "ورزشگاه سلتیک پارک"
+    },
+    "Club Brugge": {
+      "stadium_fa": "ورزشگاه یان بریدل"
+    },
+    "Shakhtar Donetsk": {
+      "stadium_fa": "ورزشگاه شاختار"
+    },
+    "Red Bull Salzburg": {
+      "stadium_fa": "ورزشگاه ردبول آرنا سالزبورگ"
+    },
+    "Galatasaray": {
+      "stadium_fa": "ورزشگاه رامس پارک"
+    },
+    "Real Sociedad": {
+      "stadium_fa": "ورزشگاه آنوئتا (رئاله آرنا)"
+    },
+    "Real Betis": {
+      "stadium_fa": "ورزشگاه بنیتو ویامارین"
+    },
+    "Sevilla": {
+      "stadium_fa": "ورزشگاه رامون سانچز پیسخوان"
+    },
+    "Valencia": {
+      "stadium_fa": "ورزشگاه مستایا"
+    },
+    "Osasuna": {
+      "stadium_fa": "ورزشگاه ال سادار"
+    },
+    "Celta Vigo": {
+      "stadium_fa": "ورزشگاه بالایدوس"
+    },
+    "Rayo Vallecano": {
+      "stadium_fa": "ورزشگاه وایکاس"
+    },
+    "Mallorca": {
+      "stadium_fa": "ورزشگاه سون مویکس"
+    },
+    "Getafe": {
+      "stadium_fa": "ورزشگاه کولیسئوم"
+    },
+    "Alaves": {
+      "stadium_fa": "ورزشگاه مندیثوروثا"
+    },
+    "Espanyol": {
+      "stadium_fa": "ورزشگاه آرسی‌دی‌ئی"
+    },
+    "Las Palmas": {
+      "stadium_fa": "ورزشگاه گران کاناریا"
+    },
+    "Real Valladolid": {
+      "stadium_fa": "ورزشگاه خوزه زورییا"
+    },
+    "Leganes": {
+      "stadium_fa": "ورزشگاه بوتارکه"
+    },
+    "Lazio": {
+      "stadium_fa": "ورزشگاه المپیکو رم"
+    },
+    "Fiorentina": {
+      "stadium_fa": "ورزشگاه آرتمیو فرانکی"
+    },
+    "Torino": {
+      "stadium_fa": "ورزشگاه المپیکو گرانده تورینو"
+    },
+    "Udinese": {
+      "stadium_fa": "ورزشگاه بلو انرژی (فریولی)"
+    },
+    "Genoa": {
+      "stadium_fa": "ورزشگاه لوئیجی فراریس"
+    },
+    "Cagliari": {
+      "stadium_fa": "ورزشگاه یونی‌پول دوموس"
+    },
+    "Hellas Verona": {
+      "stadium_fa": "ورزشگاه مارک‌آنتونیو بنتگودی"
+    },
+    "Empoli": {
+      "stadium_fa": "ورزشگاه کارلو کاستلانی"
+    },
+    "Lecce": {
+      "stadium_fa": "ورزشگاه ویا دل ماره"
+    },
+    "Parma": {
+      "stadium_fa": "ورزشگاه انیو تاردینی"
+    },
+    "Como": {
+      "stadium_fa": "ورزشگاه جوزپه سینیگاگلیا"
+    },
+    "Monza": {
+      "stadium_fa": "ورزشگاه یوپاور مونتزا"
+    },
+    "Venezia": {
+      "stadium_fa": "ورزشگاه پیرلوئیجی پنزو"
+    },
+    "SC Freiburg": {
+      "stadium_fa": "ورزشگاه یوروپا پارک"
+    },
+    "Borussia Monchengladbach": {
+      "stadium_fa": "ورزشگاه بروسیا پارک"
+    },
+    "Werder Bremen": {
+      "stadium_fa": "ورزشگاه وزرشتادیون"
+    },
+    "VfL Wolfsburg": {
+      "stadium_fa": "ورزشگاه فولکس‌واگن آرنا"
+    },
+    "Mainz 05": {
+      "stadium_fa": "ورزشگاه موا آرنا"
+    },
+    "FC Augsburg": {
+      "stadium_fa": "ورزشگاه دبلیو‌دبلیو‌کی آرنا"
+    },
+    "Union Berlin": {
+      "stadium_fa": "ورزشگاه آلتن فورسترای"
+    },
+    "TSG Hoffenheim": {
+      "stadium_fa": "ورزشگاه پرزیرو آرنا"
+    },
+    "FC Heidenheim": {
+      "stadium_fa": "ورزشگاه فویت آرنا"
+    },
+    "FC St. Pauli": {
+      "stadium_fa": "ورزشگاه میلرنتور"
+    },
+    "Holstein Kiel": {
+      "stadium_fa": "ورزشگاه هولشتاین"
+    },
+    "VfL Bochum": {
+      "stadium_fa": "ورزشگاه وونوویا رورشتادیون"
+    },
+    "Lyon": {
+      "stadium_fa": "ورزشگاه گروپاما استادیوم"
+    },
+    "Nice": {
+      "stadium_fa": "ورزشگاه آلیانتس ریویرا"
+    },
+    "Lens": {
+      "stadium_fa": "ورزشگاه بولارت دللیس"
+    },
+    "Rennes": {
+      "stadium_fa": "ورزشگاه روآزون پارک"
+    },
+    "Strasbourg": {
+      "stadium_fa": "ورزشگاه لا مینو"
+    },
+    "Reims": {
+      "stadium_fa": "ورزشگاه آگوست دلون"
+    },
+    "Toulouse": {
+      "stadium_fa": "ورزشگاه مونیسیپال تولوز"
+    },
+    "Auxerre": {
+      "stadium_fa": "ورزشگاه آبه دشان"
+    },
+    "Nantes": {
+      "stadium_fa": "ورزشگاه لا بوژوار"
+    },
+    "Angers": {
+      "stadium_fa": "ورزشگاه ریمون کوپا"
+    },
+    "Saint-Etienne": {
+      "stadium_fa": "ورزشگاه جفری گیشار"
+    },
+    "Le Havre": {
+      "stadium_fa": "ورزشگاه اوسئان"
+    },
+    "Montpellier": {
+      "stadium_fa": "ورزشگاه لا موسون"
     }
   },
   "coach_translations_fa": {
@@ -86,7 +347,7 @@
     "Oliver Glasner": "الیور گلاسنر",
     "Régis Le Bris": "رجیس لو بریس",
     "Regis Le Bris": "رجیس لو بریس",
-    "Roberto De Zerbi": "روبرتو د زربی",
+    "Roberto De Zerbi": "روبرتو دزربی",
     "Michael Carrick": "مایکل کریک",
     "Rúben Amorim": "روبن آموریم",
     "Ruben Amorim": "روبن آموریم",
@@ -125,6 +386,62 @@
     "Vincent Kompany": "ونسان کمپانی",
     "Julian Nagelsmann": "یولیان ناگلزمن",
     "Massimiliano Allegri": "ماسیمیلیانو آلگری",
-    "Antonio Conte": "آنتونیو کونته"
+    "Antonio Conte": "آنتونیو کونته",
+    "Diego Simeone": "دیگو سیمئونه",
+    "Nuri Sahin": "نوری شاهین",
+    "Niko Kovac": "نیکو کواچ",
+    "Gian Piero Gasperini": "جان پیرو گاسپرینی",
+    "Thiago Motta": "تیاگو موتا",
+    "Sergio Conceicao": "سرجیو کونسیسائو",
+    "Peter Bosz": "پتر بوش",
+    "Brendan Rodgers": "برندن راجرز",
+    "Bruno Lage": "برونو لاژه",
+    "Adi Hutter": "آدی هوتر",
+    "Bruno Genesio": "برونو جنسیو",
+    "Sebastian Hoeness": "سباستین هونس",
+    "Ernesto Valverde": "ارنستو والورده",
+    "Okan Buruk": "اوکان بوروک",
+    "Imanol Alguacil": "ایمانول آلگواسیل",
+    "Manuel Pellegrini": "مانوئل پیگرینی",
+    "Marcelino": "مارسلینو",
+    "Michel": "میچل",
+    "Claudio Giraldez": "کلودیو خیرالدز",
+    "Jagoba Arrasate": "یاگوبا آراساته",
+    "Jose Bordalas": "خوزه بوردالاس",
+    "Inigo Perez": "اینیگو پرز",
+    "Carlos Corberan": "کارلوس کوربران",
+    "Garcia Pimienta": "گارسیا پیمینتا",
+    "Vicente Moreno": "ویسنته مورنو",
+    "Marco Baroni": "مارکو بارونی",
+    "Raffaele Palladino": "رافائله پالادینو",
+    "Claudio Ranieri": "کلودیو رانیری",
+    "Cesc Fabregas": "سسک فابرگاس",
+    "Paolo Vanoli": "پائولو وانولی",
+    "Kosta Runjaic": "کوستا رونیایچ",
+    "Vincenzo Italiano": "وینچنزو ایتالیانو",
+    "Fabio Pecchia": "فابیو پکیا",
+    "Patrick Vieira": "پاتریک ویرا",
+    "Davide Nicola": "داویده نیکولا",
+    "Roberto D'Aversa": "روبرتو داورسا",
+    "Alessandro Nesta": "الساندرو نستا",
+    "Dino Toppmoller": "دینو توپ‌مولر",
+    "Julian Schuster": "یولیان شوستر",
+    "Ole Werner": "اوله ورنر",
+    "Gerardo Seoane": "جراردو سوانه",
+    "Bo Henriksen": "بو هنریکسن",
+    "Ralph Hasenhuttl": "رالف هازن‌هوتل",
+    "Jess Thorup": "یس تورپ",
+    "Frank Schmidt": "فرانک اشمیت",
+    "Alexander Blessin": "الکساندر بلسین",
+    "Steffen Baumgart": "اشتفن باومگارت",
+    "Dieter Hecking": "دیتر هکینگ",
+    "Pierre Sage": "پیر ساژ",
+    "Franck Haise": "فرانک هیز",
+    "Will Still": "ویل استیل",
+    "Eric Roy": "اریک روی",
+    "Luka Elsner": "لوکا السنر",
+    "Christophe Pelissier": "کریستف پلیسیر",
+    "Antoine Kombouare": "آنتوان کومبوآره",
+    "Jorge Sampaoli": "خورخه سامپائولی"
   }
 }

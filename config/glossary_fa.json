@@ -1,5 +1,5 @@
 {
-  "competition": "Premier League",
+  "competition": "Top 5 European Leagues & UEFA Champions League",
   "season": "2026-27",
   "updated": "2026-11-15",
   "teams": [
@@ -210,6 +210,856 @@
       "nickname_fa": "گربه‌های سیاه",
       "aliases": [
         "سیاه‌پوشان"
+      ]
+    },
+    {
+      "id": "RMA",
+      "name_en": "Real Madrid",
+      "name_fa": "رئال مادرید",
+      "nickname_fa": "کهکشانی‌ها",
+      "aliases": [
+        "رئال",
+        "مادرید",
+        "لوس بلانکوس"
+      ]
+    },
+    {
+      "id": "BAR",
+      "name_en": "Barcelona",
+      "name_fa": "بارسلونا",
+      "nickname_fa": "بلوگرانا",
+      "aliases": [
+        "بارسا",
+        "کاتالان‌ها",
+        "اف‌سی بارسلونا"
+      ]
+    },
+    {
+      "id": "ATM",
+      "name_en": "Atletico Madrid",
+      "name_fa": "اتلتیکو مادرید",
+      "nickname_fa": "روخی‌بلانکوس",
+      "aliases": [
+        "اتلتیکو",
+        "اتلتیکو مادرید",
+        "تشک‌دوزها"
+      ]
+    },
+    {
+      "id": "GIR",
+      "name_en": "Girona",
+      "name_fa": "خیرونا",
+      "nickname_fa": "بلانکی‌ورملس",
+      "aliases": [
+        "ژیرونا",
+        "خیرونا"
+      ]
+    },
+    {
+      "id": "ATH",
+      "name_en": "Athletic Club",
+      "name_fa": "اتلتیک بیلبائو",
+      "nickname_fa": "شیرهای باسک",
+      "aliases": [
+        "بیلبائو",
+        "اتلتیک کلاب"
+      ]
+    },
+    {
+      "id": "VIL",
+      "name_en": "Villarreal",
+      "name_fa": "ویارئال",
+      "nickname_fa": "زیردریایی زرد",
+      "aliases": [
+        "ویارئال"
+      ]
+    },
+    {
+      "id": "BAY",
+      "name_en": "Bayern Munich",
+      "name_fa": "بایرن مونیخ",
+      "nickname_fa": "باواریایی‌ها",
+      "aliases": [
+        "بایرن",
+        "اف‌سی بایرن",
+        "مونیخ"
+      ]
+    },
+    {
+      "id": "BVB",
+      "name_en": "Borussia Dortmund",
+      "name_fa": "بروسیا دورتموند",
+      "nickname_fa": "زنبورها",
+      "aliases": [
+        "دورتموند",
+        "زردپوشان وستفالن"
+      ]
+    },
+    {
+      "id": "LEV",
+      "name_en": "Bayer Leverkusen",
+      "name_fa": "بایر لورکوزن",
+      "nickname_fa": "ورکس‌الف",
+      "aliases": [
+        "لورکوزن",
+        "بایر ۰۴"
+      ]
+    },
+    {
+      "id": "RBL",
+      "name_en": "RB Leipzig",
+      "name_fa": "آر بی لایپزیگ",
+      "nickname_fa": "گاوهای سرخ",
+      "aliases": [
+        "لایپزیگ",
+        "لایپزیش"
+      ]
+    },
+    {
+      "id": "STU",
+      "name_en": "VfB Stuttgart",
+      "name_fa": "اشتوتگارت",
+      "nickname_fa": "شوابی‌ها",
+      "aliases": [
+        "اشتوتگارت"
+      ]
+    },
+    {
+      "id": "SGE",
+      "name_en": "Eintracht Frankfurt",
+      "name_fa": "آینتراخت فرانکفورت",
+      "nickname_fa": "عقاب‌ها",
+      "aliases": [
+        "فرانکفورت",
+        "آینتراخت"
+      ]
+    },
+    {
+      "id": "INT",
+      "name_en": "Inter Milan",
+      "name_fa": "اینتر میلان",
+      "nickname_fa": "نراتزوری",
+      "aliases": [
+        "اینتر",
+        "افعی‌ها",
+        "اینترناسیوناله"
+      ]
+    },
+    {
+      "id": "MIL",
+      "name_en": "AC Milan",
+      "name_fa": "آث میلان",
+      "nickname_fa": "روسونری",
+      "aliases": [
+        "میلان",
+        "شیاطین سرخ میلان"
+      ]
+    },
+    {
+      "id": "JUV",
+      "name_en": "Juventus",
+      "name_fa": "یوونتوس",
+      "nickname_fa": "بانوی پیر",
+      "aliases": [
+        "یووه",
+        "بیانکونری"
+      ]
+    },
+    {
+      "id": "ATA",
+      "name_en": "Atalanta",
+      "name_fa": "آتالانتا",
+      "nickname_fa": "لادئا",
+      "aliases": [
+        "آتالانتا برگامو"
+      ]
+    },
+    {
+      "id": "NAP",
+      "name_en": "Napoli",
+      "name_fa": "ناپولی",
+      "nickname_fa": "پارتنوپی",
+      "aliases": [
+        "ناپولی",
+        "آتزوری"
+      ]
+    },
+    {
+      "id": "BOL",
+      "name_en": "Bologna",
+      "name_fa": "بولونیا",
+      "nickname_fa": "روسوبلو",
+      "aliases": [
+        "بولونیا"
+      ]
+    },
+    {
+      "id": "ROM",
+      "name_en": "AS Roma",
+      "name_fa": "آاس رم",
+      "nickname_fa": "جالوروسی",
+      "aliases": [
+        "رم",
+        "گرگ‌های رم"
+      ]
+    },
+    {
+      "id": "PSG",
+      "name_en": "Paris Saint-Germain",
+      "name_fa": "پاری‌سن‌ژرمن",
+      "nickname_fa": "پاریسی‌ها",
+      "aliases": [
+        "پی‌اس‌جی",
+        "پاری سن ژرمن",
+        "PSG"
+      ]
+    },
+    {
+      "id": "MON",
+      "name_en": "AS Monaco",
+      "name_fa": "موناکو",
+      "nickname_fa": "شاهزاده‌نشین‌ها",
+      "aliases": [
+        "آاس موناکو",
+        "موناکو"
+      ]
+    },
+    {
+      "id": "LIL",
+      "name_en": "Lille",
+      "name_fa": "لیل",
+      "nickname_fa": "سگ‌های شکاری",
+      "aliases": [
+        "لیل المپیک",
+        "LOSC"
+      ]
+    },
+    {
+      "id": "BST",
+      "name_en": "Brest",
+      "name_fa": "برست",
+      "nickname_fa": "دزدان دریایی",
+      "aliases": [
+        "استاد برستوا",
+        "برست"
+      ]
+    },
+    {
+      "id": "MAR",
+      "name_en": "Marseille",
+      "name_fa": "مارسی",
+      "nickname_fa": "المپیک مارسی",
+      "aliases": [
+        "مارسی",
+        "OM"
+      ]
+    },
+    {
+      "id": "BEN",
+      "name_en": "Benfica",
+      "name_fa": "بنفیکا",
+      "nickname_fa": "عقاب‌های لیسبون",
+      "aliases": [
+        "اس‌ال بنفیکا",
+        "بنفیکا"
+      ]
+    },
+    {
+      "id": "SCP",
+      "name_en": "Sporting CP",
+      "name_fa": "اسپورتینگ لیسبون",
+      "nickname_fa": "شیرهای لیسبون",
+      "aliases": [
+        "اسپورتینگ",
+        "اسپورتینگ پرتغال"
+      ]
+    },
+    {
+      "id": "POR",
+      "name_en": "FC Porto",
+      "name_fa": "پورتو",
+      "nickname_fa": "اژدهایان",
+      "aliases": [
+        "اف‌سی پورتو",
+        "پورتو"
+      ]
+    },
+    {
+      "id": "PSV",
+      "name_en": "PSV Eindhoven",
+      "name_fa": "پی‌اس‌وی آیندهوون",
+      "nickname_fa": "آیندهوون",
+      "aliases": [
+        "پی‌اس‌وی",
+        "PSV"
+      ]
+    },
+    {
+      "id": "FEY",
+      "name_en": "Feyenoord",
+      "name_fa": "فاینورد",
+      "nickname_fa": "روتردامی‌ها",
+      "aliases": [
+        "فاینورد روتردام"
+      ]
+    },
+    {
+      "id": "AJX",
+      "name_en": "Ajax",
+      "name_fa": "آژاکس",
+      "nickname_fa": "آژاکسی‌ها",
+      "aliases": [
+        "آژاکس آمستردام"
+      ]
+    },
+    {
+      "id": "CEL",
+      "name_en": "Celtic",
+      "name_fa": "سلتیک",
+      "nickname_fa": "سفیدوسبزها",
+      "aliases": [
+        "سلتیک گلاسکو"
+      ]
+    },
+    {
+      "id": "BRU",
+      "name_en": "Club Brugge",
+      "name_fa": "کلوب بروژ",
+      "nickname_fa": "آبی‌ومشکی‌ها",
+      "aliases": [
+        "بروژ",
+        "کلوب بروژ"
+      ]
+    },
+    {
+      "id": "SHK",
+      "name_en": "Shakhtar Donetsk",
+      "name_fa": "شاختار دونتسک",
+      "nickname_fa": "معدنچی‌ها",
+      "aliases": [
+        "شاختار"
+      ]
+    },
+    {
+      "id": "SAL",
+      "name_en": "Red Bull Salzburg",
+      "name_fa": "ردبول سالزبورگ",
+      "nickname_fa": "سالزبورگ",
+      "aliases": [
+        "سالزبورگ",
+        "زالتسبورگ"
+      ]
+    },
+    {
+      "id": "GAL",
+      "name_en": "Galatasaray",
+      "name_fa": "گالاتاسرای",
+      "nickname_fa": "شیرهای استانبول",
+      "aliases": [
+        "گالا",
+        "گالاتاسرای"
+      ]
+    },
+    {
+      "id": "RSO",
+      "name_en": "Real Sociedad",
+      "name_fa": "رئال سوسیداد",
+      "nickname_fa": "تک‌شاخ‌های آبی",
+      "aliases": [
+        "سوسیداد",
+        "لا رئال"
+      ]
+    },
+    {
+      "id": "BET",
+      "name_en": "Real Betis",
+      "name_fa": "رئال بتیس",
+      "nickname_fa": "سبزوسفیدهای سویل",
+      "aliases": [
+        "بتیس",
+        "وردی‌بلانکوس"
+      ]
+    },
+    {
+      "id": "SEV",
+      "name_en": "Sevilla",
+      "name_fa": "سویا",
+      "nickname_fa": "نرویوننسی‌ها",
+      "aliases": [
+        "سویا اف‌سی",
+        "سویل"
+      ]
+    },
+    {
+      "id": "VAL",
+      "name_en": "Valencia",
+      "name_fa": "والنسیا",
+      "nickname_fa": "خفاش‌ها",
+      "aliases": [
+        "والنسیا سی‌اف"
+      ]
+    },
+    {
+      "id": "OSA",
+      "name_en": "Osasuna",
+      "name_fa": "اوساسونا",
+      "nickname_fa": "روخیوس",
+      "aliases": [
+        "پامپلونا",
+        "اوساسونا"
+      ]
+    },
+    {
+      "id": "CVG",
+      "name_en": "Celta Vigo",
+      "name_fa": "سلتاویگو",
+      "nickname_fa": "آسمانی‌پوشان ویگو",
+      "aliases": [
+        "سلتا",
+        "سلتا ویگو"
+      ]
+    },
+    {
+      "id": "RAY",
+      "name_en": "Rayo Vallecano",
+      "name_fa": "رایو وایکانو",
+      "nickname_fa": "صاعقه‌های مادرید",
+      "aliases": [
+        "رایو",
+        "وایکانو"
+      ]
+    },
+    {
+      "id": "MLL",
+      "name_en": "Mallorca",
+      "name_fa": "مایورکا",
+      "nickname_fa": "برمیون‌ها",
+      "aliases": [
+        "رئال مایورکا",
+        "مایورکا"
+      ]
+    },
+    {
+      "id": "GET",
+      "name_en": "Getafe",
+      "name_fa": "ختافه",
+      "nickname_fa": "آبی‌های مادرید",
+      "aliases": [
+        "ختافه سی‌اف"
+      ]
+    },
+    {
+      "id": "ALA",
+      "name_en": "Alaves",
+      "name_fa": "آلاوس",
+      "nickname_fa": "بابازوروس",
+      "aliases": [
+        "دپورتیوو آلاوس",
+        "آلاوس"
+      ]
+    },
+    {
+      "id": "ESP",
+      "name_en": "Espanyol",
+      "name_fa": "اسپانیول",
+      "nickname_fa": "طوطی‌های بارسلون",
+      "aliases": [
+        "اسپانیول بارسلون"
+      ]
+    },
+    {
+      "id": "LPA",
+      "name_en": "Las Palmas",
+      "name_fa": "لاس‌پالماس",
+      "nickname_fa": "زردپوشان قناری",
+      "aliases": [
+        "لاس پالماس"
+      ]
+    },
+    {
+      "id": "VLD",
+      "name_en": "Real Valladolid",
+      "name_fa": "وایادولید",
+      "nickname_fa": "پوسلا",
+      "aliases": [
+        "رئال وایادولید",
+        "وایادولید"
+      ]
+    },
+    {
+      "id": "LEG",
+      "name_en": "Leganes",
+      "name_fa": "لگانس",
+      "nickname_fa": "پپینروس",
+      "aliases": [
+        "لگانس سی‌دی"
+      ]
+    },
+    {
+      "id": "LAZ",
+      "name_en": "Lazio",
+      "name_fa": "لاتزیو",
+      "nickname_fa": "بیانکوچلستی",
+      "aliases": [
+        "اس‌اس لاتزیو",
+        "عقاب‌های رم"
+      ]
+    },
+    {
+      "id": "FIO",
+      "name_en": "Fiorentina",
+      "name_fa": "فیورنتینا",
+      "nickname_fa": "ویولا",
+      "aliases": [
+        "بنفش‌های فلورانس",
+        "آث‌اف فیورنتینا"
+      ]
+    },
+    {
+      "id": "TOR",
+      "name_en": "Torino",
+      "name_fa": "تورینو",
+      "nickname_fa": "گراناتا",
+      "aliases": [
+        "گاوهای تورین",
+        "تورینو اف‌سی"
+      ]
+    },
+    {
+      "id": "UDI",
+      "name_en": "Udinese",
+      "name_fa": "اودینزه",
+      "nickname_fa": "بیانکونری فریولی",
+      "aliases": [
+        "اودینزه کالچو"
+      ]
+    },
+    {
+      "id": "GEN",
+      "name_en": "Genoa",
+      "name_fa": "جنوا",
+      "nickname_fa": "روسوبلو",
+      "aliases": [
+        "جنوا سی‌اف‌سی"
+      ]
+    },
+    {
+      "id": "CAG",
+      "name_en": "Cagliari",
+      "name_fa": "کالیاری",
+      "nickname_fa": "روسوبلو ساردینیا",
+      "aliases": [
+        "کالیاری کالچو"
+      ]
+    },
+    {
+      "id": "VER",
+      "name_en": "Hellas Verona",
+      "name_fa": "هلاس ورونا",
+      "nickname_fa": "جالوبلو",
+      "aliases": [
+        "ورونا",
+        "هلاس ورونا"
+      ]
+    },
+    {
+      "id": "EMP",
+      "name_en": "Empoli",
+      "name_fa": "امپولی",
+      "nickname_fa": "آتزوری توسکانی",
+      "aliases": [
+        "امپولی اف‌سی"
+      ]
+    },
+    {
+      "id": "LEC",
+      "name_en": "Lecce",
+      "name_fa": "لچه",
+      "nickname_fa": "جالوروسی",
+      "aliases": [
+        "یو‌اس لچه"
+      ]
+    },
+    {
+      "id": "PAR",
+      "name_en": "Parma",
+      "name_fa": "پارما",
+      "nickname_fa": "کروچاتی",
+      "aliases": [
+        "پارما کالچو"
+      ]
+    },
+    {
+      "id": "COM",
+      "name_en": "Como",
+      "name_fa": "کومو",
+      "nickname_fa": "لاریانی",
+      "aliases": [
+        "کومو ۱۹۰۷"
+      ]
+    },
+    {
+      "id": "MNZ",
+      "name_en": "Monza",
+      "name_fa": "مونتزا",
+      "nickname_fa": "بیانکوروسو",
+      "aliases": [
+        "آث مونتزا"
+      ]
+    },
+    {
+      "id": "VEN",
+      "name_en": "Venezia",
+      "name_fa": "ونتزیا",
+      "nickname_fa": "آرانچونرووردی",
+      "aliases": [
+        "ونتزیا اف‌سی"
+      ]
+    },
+    {
+      "id": "SCF",
+      "name_en": "SC Freiburg",
+      "name_fa": "فرایبورگ",
+      "nickname_fa": "جنگل سیاه",
+      "aliases": [
+        "اس‌سی فرایبورگ",
+        "فرایبورگ"
+      ]
+    },
+    {
+      "id": "BMG",
+      "name_en": "Borussia Monchengladbach",
+      "name_fa": "بروسیا مونشن‌گلادباخ",
+      "nickname_fa": "کره‌اسب‌ها",
+      "aliases": [
+        "گلادباخ",
+        "مونشن‌گلادباخ"
+      ]
+    },
+    {
+      "id": "SVW",
+      "name_en": "Werder Bremen",
+      "name_fa": "وردربرمن",
+      "nickname_fa": "سبزوسفیدهای برمن",
+      "aliases": [
+        "برمن",
+        "وردر برمن"
+      ]
+    },
+    {
+      "id": "WOB",
+      "name_en": "VfL Wolfsburg",
+      "name_fa": "ولفسبورگ",
+      "nickname_fa": "گرگ‌ها",
+      "aliases": [
+        "وولفسبورگ",
+        "وی‌اف‌ال ولفسبورگ"
+      ]
+    },
+    {
+      "id": "M05",
+      "name_en": "Mainz 05",
+      "name_fa": "ماینتس",
+      "nickname_fa": "کارناوالی‌ها",
+      "aliases": [
+        "ماینتس ۰۵",
+        "اف‌اس‌وی ماینتس"
+      ]
+    },
+    {
+      "id": "FCA",
+      "name_en": "FC Augsburg",
+      "name_fa": "آگسبورگ",
+      "nickname_fa": "فوگراشتاتر",
+      "aliases": [
+        "آوگسبورگ",
+        "اف‌سی آگسبورگ"
+      ]
+    },
+    {
+      "id": "FCU",
+      "name_en": "Union Berlin",
+      "name_fa": "یونیون برلین",
+      "nickname_fa": "آهنین‌ها",
+      "aliases": [
+        "اونیون برلین",
+        "یونیون"
+      ]
+    },
+    {
+      "id": "TSG",
+      "name_en": "TSG Hoffenheim",
+      "name_fa": "هوفنهایم",
+      "nickname_fa": "کرایک‌گاو",
+      "aliases": [
+        "هوفنهایم ۱۸۹۹"
+      ]
+    },
+    {
+      "id": "HDH",
+      "name_en": "FC Heidenheim",
+      "name_fa": "هایدنهایم",
+      "nickname_fa": "هایدنهایم ۱۸۴۶",
+      "aliases": [
+        "هایدنهایم"
+      ]
+    },
+    {
+      "id": "STP",
+      "name_en": "FC St. Pauli",
+      "name_fa": "سن‌پائولی",
+      "nickname_fa": "کیزکیکرز",
+      "aliases": [
+        "سنت پائولی",
+        "سن پائولی"
+      ]
+    },
+    {
+      "id": "KIE",
+      "name_en": "Holstein Kiel",
+      "name_fa": "هولشتاین کیل",
+      "nickname_fa": "لک‌لک‌ها",
+      "aliases": [
+        "کیل",
+        "هولشتاین"
+      ]
+    },
+    {
+      "id": "BOC",
+      "name_en": "VfL Bochum",
+      "name_fa": "بوخوم",
+      "nickname_fa": "آبی‌وسفیدهای بوخوم",
+      "aliases": [
+        "بوخوم ۱۸۴۸"
+      ]
+    },
+    {
+      "id": "LYO",
+      "name_en": "Lyon",
+      "name_fa": "لیون",
+      "nickname_fa": "المپیک لیون",
+      "aliases": [
+        "المپیک لیون",
+        "لیون"
+      ]
+    },
+    {
+      "id": "NIC",
+      "name_en": "Nice",
+      "name_fa": "نیس",
+      "nickname_fa": "عقاب‌های نیس",
+      "aliases": [
+        "او‌جی‌سی نیس",
+        "نیس"
+      ]
+    },
+    {
+      "id": "LEN",
+      "name_en": "Lens",
+      "name_fa": "لانس",
+      "nickname_fa": "خون و طلا",
+      "aliases": [
+        "آرسی لانس",
+        "لانس"
+      ]
+    },
+    {
+      "id": "REN",
+      "name_en": "Rennes",
+      "name_fa": "رن",
+      "nickname_fa": "قرمزومشکی‌های رن",
+      "aliases": [
+        "استاد رن",
+        "رن"
+      ]
+    },
+    {
+      "id": "STR",
+      "name_en": "Strasbourg",
+      "name_fa": "استراسبورگ",
+      "nickname_fa": "آبی‌های آلزاس",
+      "aliases": [
+        "آرسی استراسبورگ",
+        "استراسبورگ"
+      ]
+    },
+    {
+      "id": "REI",
+      "name_en": "Reims",
+      "name_fa": "رمس",
+      "nickname_fa": "استاد دو رمس",
+      "aliases": [
+        "استاد رمس",
+        "رمس"
+      ]
+    },
+    {
+      "id": "TOU",
+      "name_en": "Toulouse",
+      "name_fa": "تولوز",
+      "nickname_fa": "بنفش‌های تولوز",
+      "aliases": [
+        "تولوز اف‌سی",
+        "تولوز"
+      ]
+    },
+    {
+      "id": "AJA",
+      "name_en": "Auxerre",
+      "name_fa": "اوسر",
+      "nickname_fa": "آژاکس اوسر",
+      "aliases": [
+        "آی‌جی اوسر",
+        "اوسر"
+      ]
+    },
+    {
+      "id": "NAN",
+      "name_en": "Nantes",
+      "name_fa": "نانت",
+      "nickname_fa": "قناری‌ها",
+      "aliases": [
+        "اف‌سی نانت",
+        "نانت"
+      ]
+    },
+    {
+      "id": "ANG",
+      "name_en": "Angers",
+      "name_fa": "آنژه",
+      "nickname_fa": "اس‌سی‌او آنژه",
+      "aliases": [
+        "آنژه"
+      ]
+    },
+    {
+      "id": "STE",
+      "name_en": "Saint-Etienne",
+      "name_fa": "سنت‌اتین",
+      "nickname_fa": "سبزها",
+      "aliases": [
+        "سنت اتین",
+        "آاس سنت‌اتین"
+      ]
+    },
+    {
+      "id": "HAC",
+      "name_en": "Le Havre",
+      "name_fa": "لوهاور",
+      "nickname_fa": "آسمانی‌وسرمه‌ای‌ها",
+      "aliases": [
+        "لو هاور",
+        "هاور"
+      ]
+    },
+    {
+      "id": "MTP",
+      "name_en": "Montpellier",
+      "name_fa": "مون‌پلیه",
+      "nickname_fa": "لا پایاد",
+      "aliases": [
+        "مونپلیه",
+        "مون‌پلیه"
       ]
     }
   ],
@@ -2212,6 +3062,776 @@
       "position": "MID",
       "aliases": [
         "فوفانا"
+      ]
+    },
+    {
+      "id": "mbappe-rma",
+      "name_en": "Kylian Mbappé",
+      "name_fa": "کیلیان امباپه",
+      "team": "RMA",
+      "position": "FWD",
+      "aliases": [
+        "امباپه"
+      ]
+    },
+    {
+      "id": "vinicius-rma",
+      "name_en": "Vinícius Júnior",
+      "name_fa": "وینیسیوس جونیور",
+      "team": "RMA",
+      "position": "FWD",
+      "aliases": [
+        "وینیسیوس"
+      ]
+    },
+    {
+      "id": "bellingham-rma",
+      "name_en": "Jude Bellingham",
+      "name_fa": "جود بلینگام",
+      "team": "RMA",
+      "position": "MID",
+      "aliases": [
+        "بلینگام"
+      ]
+    },
+    {
+      "id": "valverde-rma",
+      "name_en": "Federico Valverde",
+      "name_fa": "فدریکو والورده",
+      "team": "RMA",
+      "position": "MID",
+      "aliases": [
+        "والورده"
+      ]
+    },
+    {
+      "id": "courtois-rma",
+      "name_en": "Thibaut Courtois",
+      "name_fa": "تیبو کورتوا",
+      "team": "RMA",
+      "position": "GK",
+      "aliases": [
+        "کورتوا"
+      ]
+    },
+    {
+      "id": "yamal-bar",
+      "name_en": "Lamine Yamal",
+      "name_fa": "لامین یامال",
+      "team": "BAR",
+      "position": "FWD",
+      "aliases": [
+        "یامال"
+      ]
+    },
+    {
+      "id": "raphinha-bar",
+      "name_en": "Raphinha",
+      "name_fa": "رافینیا",
+      "team": "BAR",
+      "position": "FWD",
+      "aliases": [
+        "رافینیا"
+      ]
+    },
+    {
+      "id": "lewandowski-bar",
+      "name_en": "Robert Lewandowski",
+      "name_fa": "روبرت لواندوفسکی",
+      "team": "BAR",
+      "position": "FWD",
+      "aliases": [
+        "لواندوفسکی"
+      ]
+    },
+    {
+      "id": "pedri-bar",
+      "name_en": "Pedri",
+      "name_fa": "پدری",
+      "team": "BAR",
+      "position": "MID",
+      "aliases": [
+        "پدری"
+      ]
+    },
+    {
+      "id": "griezmann-atm",
+      "name_en": "Antoine Griezmann",
+      "name_fa": "آنتوان گریزمان",
+      "team": "ATM",
+      "position": "FWD",
+      "aliases": [
+        "گریزمان"
+      ]
+    },
+    {
+      "id": "alvarez-atm",
+      "name_en": "Julián Álvarez",
+      "name_fa": "خولیان آلوارز",
+      "team": "ATM",
+      "position": "FWD",
+      "aliases": [
+        "آلوارز"
+      ]
+    },
+    {
+      "id": "kane-bay",
+      "name_en": "Harry Kane",
+      "name_fa": "هری کین",
+      "team": "BAY",
+      "position": "FWD",
+      "aliases": [
+        "کین"
+      ]
+    },
+    {
+      "id": "musiala-bay",
+      "name_en": "Jamal Musiala",
+      "name_fa": "جمال موسیالا",
+      "team": "BAY",
+      "position": "MID",
+      "aliases": [
+        "موسیالا"
+      ]
+    },
+    {
+      "id": "olise-bay",
+      "name_en": "Michael Olise",
+      "name_fa": "مایکل اولیسه",
+      "team": "BAY",
+      "position": "MID",
+      "aliases": [
+        "اولیسه"
+      ]
+    },
+    {
+      "id": "kimmich-bay",
+      "name_en": "Joshua Kimmich",
+      "name_fa": "یوشوا کیمیش",
+      "team": "BAY",
+      "position": "MID",
+      "aliases": [
+        "کیمیش"
+      ]
+    },
+    {
+      "id": "guirassy-bvb",
+      "name_en": "Serhou Guirassy",
+      "name_fa": "سرهو گیراسی",
+      "team": "BVB",
+      "position": "FWD",
+      "aliases": [
+        "گیراسی"
+      ]
+    },
+    {
+      "id": "brandt-bvb",
+      "name_en": "Julian Brandt",
+      "name_fa": "یولیان برانت",
+      "team": "BVB",
+      "position": "MID",
+      "aliases": [
+        "برانت"
+      ]
+    },
+    {
+      "id": "wirtz-lev",
+      "name_en": "Florian Wirtz",
+      "name_fa": "فلوریان ویرتز",
+      "team": "LEV",
+      "position": "MID",
+      "aliases": [
+        "ویرتز"
+      ]
+    },
+    {
+      "id": "lautaro-int",
+      "name_en": "Lautaro Martínez",
+      "name_fa": "لائوتارو مارتینز",
+      "team": "INT",
+      "position": "FWD",
+      "aliases": [
+        "لائوتارو"
+      ]
+    },
+    {
+      "id": "barella-int",
+      "name_en": "Nicolò Barella",
+      "name_fa": "نیکولو بارلا",
+      "team": "INT",
+      "position": "MID",
+      "aliases": [
+        "بارلا"
+      ]
+    },
+    {
+      "id": "thuram-int",
+      "name_en": "Marcus Thuram",
+      "name_fa": "مارکوس تورام",
+      "team": "INT",
+      "position": "FWD",
+      "aliases": [
+        "تورام"
+      ]
+    },
+    {
+      "id": "leao-mil",
+      "name_en": "Rafael Leão",
+      "name_fa": "رافائل لیائو",
+      "team": "MIL",
+      "position": "FWD",
+      "aliases": [
+        "لیائو"
+      ]
+    },
+    {
+      "id": "pulisic-mil",
+      "name_en": "Christian Pulisic",
+      "name_fa": "کریستین پولیسیچ",
+      "team": "MIL",
+      "position": "MID",
+      "aliases": [
+        "پولیسیچ"
+      ]
+    },
+    {
+      "id": "vlahovic-juv",
+      "name_en": "Dušan Vlahović",
+      "name_fa": "دوشان ولاهوویچ",
+      "team": "JUV",
+      "position": "FWD",
+      "aliases": [
+        "ولاهوویچ"
+      ]
+    },
+    {
+      "id": "dembele-psg",
+      "name_en": "Ousmane Dembélé",
+      "name_fa": "عثمان دمبله",
+      "team": "PSG",
+      "position": "FWD",
+      "aliases": [
+        "دمبله"
+      ]
+    },
+    {
+      "id": "hakimi-psg",
+      "name_en": "Achraf Hakimi",
+      "name_fa": "اشرف حکیمی",
+      "team": "PSG",
+      "position": "DEF",
+      "aliases": [
+        "حکیمی"
+      ]
+    },
+    {
+      "id": "vitinha-psg",
+      "name_en": "Vitinha",
+      "name_fa": "ویتینیا",
+      "team": "PSG",
+      "position": "MID",
+      "aliases": [
+        "ویتینیا"
+      ]
+    },
+    {
+      "id": "gyokeres-scp",
+      "name_en": "Viktor Gyökeres",
+      "name_fa": "ویکتور گیوکرش",
+      "team": "SCP",
+      "position": "FWD",
+      "aliases": [
+        "گیوکرش"
+      ]
+    },
+    {
+      "id": "taremi-int",
+      "name_en": "Mehdi Taremi",
+      "name_fa": "مهدی طارمی",
+      "team": "INT",
+      "position": "FWD",
+      "aliases": [
+        "طارمی"
+      ]
+    },
+    {
+      "id": "nico-williams-ath",
+      "name_en": "Nico Williams",
+      "name_fa": "نیکو ویلیامز",
+      "team": "ATH",
+      "position": "FWD",
+      "aliases": [
+        "ویلیامز"
+      ]
+    },
+    {
+      "id": "inaki-williams-ath",
+      "name_en": "Iñaki Williams",
+      "name_fa": "اینیاکی ویلیامز",
+      "team": "ATH",
+      "position": "FWD",
+      "aliases": [
+        "اینیاکی"
+      ]
+    },
+    {
+      "id": "sancet-ath",
+      "name_en": "Oihan Sancet",
+      "name_fa": "اویهان سانست",
+      "team": "ATH",
+      "position": "MID",
+      "aliases": [
+        "سانست"
+      ]
+    },
+    {
+      "id": "kubo-rso",
+      "name_en": "Takefusa Kubo",
+      "name_fa": "تاکفوسا کوبو",
+      "team": "RSO",
+      "position": "MID",
+      "aliases": [
+        "کوبو"
+      ]
+    },
+    {
+      "id": "oyarzabal-rso",
+      "name_en": "Mikel Oyarzabal",
+      "name_fa": "میکل اویارسابال",
+      "team": "RSO",
+      "position": "FWD",
+      "aliases": [
+        "اویارسابال"
+      ]
+    },
+    {
+      "id": "zubimendi-rso",
+      "name_en": "Martín Zubimendi",
+      "name_fa": "مارتین زوبیمندی",
+      "team": "RSO",
+      "position": "MID",
+      "aliases": [
+        "زوبیمندی"
+      ]
+    },
+    {
+      "id": "baena-vil",
+      "name_en": "Álex Baena",
+      "name_fa": "الکس بائنا",
+      "team": "VIL",
+      "position": "MID",
+      "aliases": [
+        "بائنا"
+      ]
+    },
+    {
+      "id": "ayoze-vil",
+      "name_en": "Ayoze Pérez",
+      "name_fa": "آیوزه پرز",
+      "team": "VIL",
+      "position": "FWD",
+      "aliases": [
+        "آیوزه"
+      ]
+    },
+    {
+      "id": "isco-bet",
+      "name_en": "Isco",
+      "name_fa": "ایسکو",
+      "team": "BET",
+      "position": "MID",
+      "aliases": [
+        "ایسکو"
+      ]
+    },
+    {
+      "id": "locelso-bet",
+      "name_en": "Giovani Lo Celso",
+      "name_fa": "جیوانی لو سلسو",
+      "team": "BET",
+      "position": "MID",
+      "aliases": [
+        "لو سلسو"
+      ]
+    },
+    {
+      "id": "aspas-cvg",
+      "name_en": "Iago Aspas",
+      "name_fa": "یاگو آسپاس",
+      "team": "CVG",
+      "position": "FWD",
+      "aliases": [
+        "آسپاس"
+      ]
+    },
+    {
+      "id": "budimir-osa",
+      "name_en": "Ante Budimir",
+      "name_fa": "آنته بودیمیر",
+      "team": "OSA",
+      "position": "FWD",
+      "aliases": [
+        "بودیمیر"
+      ]
+    },
+    {
+      "id": "muriqi-mll",
+      "name_en": "Vedat Muriqi",
+      "name_fa": "ودات موریکی",
+      "team": "MLL",
+      "position": "FWD",
+      "aliases": [
+        "موریکی"
+      ]
+    },
+    {
+      "id": "lukaku-nap",
+      "name_en": "Romelu Lukaku",
+      "name_fa": "روملو لوکاکو",
+      "team": "NAP",
+      "position": "FWD",
+      "aliases": [
+        "لوکاکو"
+      ]
+    },
+    {
+      "id": "kvaratskhelia-nap",
+      "name_en": "Khvicha Kvaratskhelia",
+      "name_fa": "خویچا کواراتسخلیا",
+      "team": "NAP",
+      "position": "FWD",
+      "aliases": [
+        "کواراتسخلیا"
+      ]
+    },
+    {
+      "id": "mctominay-nap",
+      "name_en": "Scott McTominay",
+      "name_fa": "اسکات مک‌تامینی",
+      "team": "NAP",
+      "position": "MID",
+      "aliases": [
+        "مک‌تامینی"
+      ]
+    },
+    {
+      "id": "lookman-ata",
+      "name_en": "Ademola Lookman",
+      "name_fa": "آدمولا لوکمن",
+      "team": "ATA",
+      "position": "FWD",
+      "aliases": [
+        "لوکمن"
+      ]
+    },
+    {
+      "id": "retegui-ata",
+      "name_en": "Mateo Retegui",
+      "name_fa": "ماتئو رتگی",
+      "team": "ATA",
+      "position": "FWD",
+      "aliases": [
+        "رتگی"
+      ]
+    },
+    {
+      "id": "dybala-rom",
+      "name_en": "Paulo Dybala",
+      "name_fa": "پائولو دیبالا",
+      "team": "ROM",
+      "position": "FWD",
+      "aliases": [
+        "دیبالا"
+      ]
+    },
+    {
+      "id": "zaccagni-laz",
+      "name_en": "Mattia Zaccagni",
+      "name_fa": "ماتیا زاکانی",
+      "team": "LAZ",
+      "position": "FWD",
+      "aliases": [
+        "زاکانی"
+      ]
+    },
+    {
+      "id": "kean-fio",
+      "name_en": "Moise Kean",
+      "name_fa": "مویز کین",
+      "team": "FIO",
+      "position": "FWD",
+      "aliases": [
+        "مویز کین"
+      ]
+    },
+    {
+      "id": "yildiz-juv",
+      "name_en": "Kenan Yıldız",
+      "name_fa": "کنعان ییلدیز",
+      "team": "JUV",
+      "position": "FWD",
+      "aliases": [
+        "ییلدیز"
+      ]
+    },
+    {
+      "id": "reijnders-mil",
+      "name_en": "Tijjani Reijnders",
+      "name_fa": "تیجانی ریندرز",
+      "team": "MIL",
+      "position": "MID",
+      "aliases": [
+        "ریندرز"
+      ]
+    },
+    {
+      "id": "dimarco-int",
+      "name_en": "Federico Dimarco",
+      "name_fa": "فدریکو دیمارکو",
+      "team": "INT",
+      "position": "DEF",
+      "aliases": [
+        "دیمارکو"
+      ]
+    },
+    {
+      "id": "bastoni-int",
+      "name_en": "Alessandro Bastoni",
+      "name_fa": "الساندرو باستونی",
+      "team": "INT",
+      "position": "DEF",
+      "aliases": [
+        "باستونی"
+      ]
+    },
+    {
+      "id": "nicopaz-com",
+      "name_en": "Nico Paz",
+      "name_fa": "نیکو پاز",
+      "team": "COM",
+      "position": "MID",
+      "aliases": [
+        "نیکو پاز"
+      ]
+    },
+    {
+      "id": "marmoush-sge",
+      "name_en": "Omar Marmoush",
+      "name_fa": "عمر مرموش",
+      "team": "SGE",
+      "position": "FWD",
+      "aliases": [
+        "مرموش"
+      ]
+    },
+    {
+      "id": "ekitike-sge",
+      "name_en": "Hugo Ekitike",
+      "name_fa": "هوگو اکیتیکه",
+      "team": "SGE",
+      "position": "FWD",
+      "aliases": [
+        "اکیتیکه"
+      ]
+    },
+    {
+      "id": "simons-rbl",
+      "name_en": "Xavi Simons",
+      "name_fa": "ژاوی سیمونز",
+      "team": "RBL",
+      "position": "MID",
+      "aliases": [
+        "سیمونز"
+      ]
+    },
+    {
+      "id": "openda-rbl",
+      "name_en": "Loïs Openda",
+      "name_fa": "لوییس اوپندا",
+      "team": "RBL",
+      "position": "FWD",
+      "aliases": [
+        "اوپندا"
+      ]
+    },
+    {
+      "id": "sesko-rbl",
+      "name_en": "Benjamin Šeško",
+      "name_fa": "بنجامین ششکو",
+      "team": "RBL",
+      "position": "FWD",
+      "aliases": [
+        "ششکو"
+      ]
+    },
+    {
+      "id": "boniface-lev",
+      "name_en": "Victor Boniface",
+      "name_fa": "ویکتور بونیفیس",
+      "team": "LEV",
+      "position": "FWD",
+      "aliases": [
+        "بونیفیس"
+      ]
+    },
+    {
+      "id": "xhaka-lev",
+      "name_en": "Granit Xhaka",
+      "name_fa": "گرانیت ژاکا",
+      "team": "LEV",
+      "position": "MID",
+      "aliases": [
+        "ژاکا"
+      ]
+    },
+    {
+      "id": "tah-lev",
+      "name_en": "Jonathan Tah",
+      "name_fa": "یوناتان تا",
+      "team": "LEV",
+      "position": "DEF",
+      "aliases": [
+        "یوناتان تا"
+      ]
+    },
+    {
+      "id": "undav-stu",
+      "name_en": "Deniz Undav",
+      "name_fa": "دنیز اونداو",
+      "team": "STU",
+      "position": "FWD",
+      "aliases": [
+        "اونداو"
+      ]
+    },
+    {
+      "id": "stiller-stu",
+      "name_en": "Angelo Stiller",
+      "name_fa": "آنجلو اشتیلر",
+      "team": "STU",
+      "position": "MID",
+      "aliases": [
+        "اشتیلر"
+      ]
+    },
+    {
+      "id": "kleindienst-bmg",
+      "name_en": "Tim Kleindienst",
+      "name_fa": "تیم کلایندینست",
+      "team": "BMG",
+      "position": "FWD",
+      "aliases": [
+        "کلایندینست"
+      ]
+    },
+    {
+      "id": "burkardt-m05",
+      "name_en": "Jonathan Burkardt",
+      "name_fa": "یوناتان بورکارت",
+      "team": "M05",
+      "position": "FWD",
+      "aliases": [
+        "بورکارت"
+      ]
+    },
+    {
+      "id": "barcola-psg",
+      "name_en": "Bradley Barcola",
+      "name_fa": "بردلی بارکولا",
+      "team": "PSG",
+      "position": "FWD",
+      "aliases": [
+        "بارکولا"
+      ]
+    },
+    {
+      "id": "joaoneves-psg",
+      "name_en": "João Neves",
+      "name_fa": "ژوائو نوس",
+      "team": "PSG",
+      "position": "MID",
+      "aliases": [
+        "نوس"
+      ]
+    },
+    {
+      "id": "zaireemery-psg",
+      "name_en": "Warren Zaïre-Emery",
+      "name_fa": "وارن زئیر-امری",
+      "team": "PSG",
+      "position": "MID",
+      "aliases": [
+        "زئیر امری"
+      ]
+    },
+    {
+      "id": "greenwood-mar",
+      "name_en": "Mason Greenwood",
+      "name_fa": "میسون گرین‌وود",
+      "team": "MAR",
+      "position": "FWD",
+      "aliases": [
+        "گرین‌وود"
+      ]
+    },
+    {
+      "id": "david-lil",
+      "name_en": "Jonathan David",
+      "name_fa": "جاناتان دیوید",
+      "team": "LIL",
+      "position": "FWD",
+      "aliases": [
+        "جاناتان دیوید"
+      ]
+    },
+    {
+      "id": "lacazette-lyo",
+      "name_en": "Alexandre Lacazette",
+      "name_fa": "الکساندر لاکازت",
+      "team": "LYO",
+      "position": "FWD",
+      "aliases": [
+        "لاکازت"
+      ]
+    },
+    {
+      "id": "cherki-lyo",
+      "name_en": "Rayan Cherki",
+      "name_fa": "رایان شرقی",
+      "team": "LYO",
+      "position": "MID",
+      "aliases": [
+        "شرقی"
+      ]
+    },
+    {
+      "id": "akliouche-mon",
+      "name_en": "Maghnes Akliouche",
+      "name_fa": "مغنس آکلیوش",
+      "team": "MON",
+      "position": "MID",
+      "aliases": [
+        "آکلیوش"
+      ]
+    },
+    {
+      "id": "guessand-nic",
+      "name_en": "Evann Guessand",
+      "name_fa": "ایوان گسان",
+      "team": "NIC",
+      "position": "FWD",
+      "aliases": [
+        "گسان"
+      ]
+    },
+    {
+      "id": "nakamura-rei",
+      "name_en": "Keito Nakamura",
+      "name_fa": "کیتو ناکامورا",
+      "team": "REI",
+      "position": "FWD",
+      "aliases": [
+        "ناکامورا"
       ]
     }
   ],

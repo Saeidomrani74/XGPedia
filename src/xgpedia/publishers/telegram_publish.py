@@ -673,6 +673,7 @@ async def approve_and_publish(
     channel_id: str | int = "",
     *,
     send_poll: bool = True,
+    cross_post: bool = True,
 ) -> dict:
     """تأیید ادمین → ارسال کارت به کانال → published + ثبت دو لاگ.
 
@@ -712,7 +713,15 @@ async def approve_and_publish(
                 poll_sent = True
             except Exception:
                 poll_sent = False
-    return {"chat_id": msg.chat_id, "message_id": msg.message_id, "poll_sent": poll_sent}
+    omni_results: list[dict] = []
+    if cross_post:
+        try:
+            from src.xgpedia.publishers.omnichannel import broadcast_photo
+            outs = await broadcast_photo(image, fit_caption("", post), title=str(post.get("title") or ""))
+            omni_results = [{"platform": o.platform, "label_fa": o.label_fa, "ok": o.ok, "error": o.error} for o in outs]
+        except Exception:
+            omni_results = []
+    return {"chat_id": msg.chat_id, "message_id": msg.message_id, "poll_sent": poll_sent, "omnichannel": omni_results}
 
 
 async def reject_post(post_id: int, admin_user_id: int, reason: str = "") -> None:

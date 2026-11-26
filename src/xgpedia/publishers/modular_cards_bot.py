@@ -705,7 +705,10 @@ def render_modular_customizer_view(card_kind: str, st: dict[str, Any]) -> tuple[
         InlineKeyboardButton(text=f"💾 ذخیره قالب ({tpl_cnt}/{MAX_SAVED_TEMPLATES})", callback_data=f"{cpref}:tpl_save"),
         InlineKeyboardButton(text=f"📂 قالب‌های من ({tpl_cnt}/{MAX_SAVED_TEMPLATES})", callback_data=f"{cpref}:tpl_list"),
     ])
-    rows.append([InlineKeyboardButton(text="🎨 ساخت کارت و کپشن نهایی", callback_data=f"{cpref}:build")])
+    rows.append([
+        InlineKeyboardButton(text="🎨 ساخت کارت نهایی", callback_data=f"{cpref}:build"),
+        InlineKeyboardButton(text="🎬 ساخت ریلز (MP4)", callback_data=f"{cpref}:reel"),
+    ])
     rows.append([
         InlineKeyboardButton(text=f"{spec['icon']} بازگشت به لیست", callback_data=f"{pref}:list:1"),
         InlineKeyboardButton(text="🎨 استودیو کارت‌ها", callback_data="nav:cards"),
@@ -761,6 +764,50 @@ def _fetch_provider_data(card_kind: str, *, include_live: bool = True, force_ref
         return {"live": fetch_live_lineup_injuries_items(force_refresh=force_refresh) if include_live else [], "presets": load_lineup_injuries_presets()}
     from src.xgpedia.providers.player_profile_free import list_player_profile_items
     return list_player_profile_items(include_live=include_live, force_refresh=force_refresh)
+
+
+def _resolve_reel_pipeline(card_kind: str):
+    """بازگرداندن (slides, render_fn, hydrate_fn) برای تبدیل هر کارت اسلایدی به ریلز ویدیویی ۹:۱۶."""
+    if card_kind == "matchweek_wrapup":
+        from src.xgpedia.render.card_kit.matchweek_wrapup_card import WRAPUP_SLIDES, render_matchweek_wrapup_html
+        return [s[0] for s in WRAPUP_SLIDES], render_matchweek_wrapup_html, None
+    if card_kind == "shotmap_xg":
+        from src.xgpedia.providers.shotmap_xg_free import hydrate_shotmap_xg_item
+        from src.xgpedia.render.card_kit.shotmap_xg_card import SHOTMAP_SLIDES, render_shotmap_xg_html
+        return [s[0] for s in SHOTMAP_SLIDES], render_shotmap_xg_html, hydrate_shotmap_xg_item
+    if card_kind == "value_radar":
+        from src.xgpedia.providers.value_radar_free import hydrate_value_radar_item
+        from src.xgpedia.render.card_kit.value_radar_card import VALUE_RADAR_SLIDES, render_value_radar_html
+        return [s[0] for s in VALUE_RADAR_SLIDES], render_value_radar_html, hydrate_value_radar_item
+    if card_kind == "lineup_injuries":
+        from src.xgpedia.providers.lineup_injuries_free import hydrate_lineup_injuries_item
+        from src.xgpedia.render.card_kit.lineup_injuries_card import LINEUP_SLIDES, render_lineup_injuries_html
+        return [s[0] for s in LINEUP_SLIDES], render_lineup_injuries_html, hydrate_lineup_injuries_item
+    if card_kind == "quote":
+        from src.xgpedia.providers.quote_free import hydrate_quote_item
+        from src.xgpedia.render.card_kit.quote_card import QUOTE_SLIDES, render_quote_html
+        return [s[0] for s in QUOTE_SLIDES[:3]], render_quote_html, hydrate_quote_item
+    if card_kind == "debate":
+        from src.xgpedia.providers.debate_free import hydrate_debate_item
+        from src.xgpedia.render.card_kit.debate_card import DEBATE_SLIDES, render_debate_html
+        return [s[0] for s in DEBATE_SLIDES[:4]], render_debate_html, hydrate_debate_item
+    if card_kind == "number_of_day":
+        from src.xgpedia.providers.number_of_day_free import hydrate_number_of_day_item
+        from src.xgpedia.render.card_kit.number_of_day_card import NOD_SLIDES, render_number_of_day_html
+        return [s[0] for s in NOD_SLIDES[:3]], render_number_of_day_html, hydrate_number_of_day_item
+    if card_kind == "standings":
+        from src.xgpedia.render.card_kit.standings_card import STANDINGS_SLIDES, render_standings_html
+        return [s[0] for s in STANDINGS_SLIDES[:4]], render_standings_html, None
+    if card_kind == "top_scorers":
+        from src.xgpedia.render.card_kit.top_scorers_card import TOP_SCORERS_SLIDES, render_top_scorers_html
+        return [s[0] for s in TOP_SCORERS_SLIDES[:4]], render_top_scorers_html, None
+    if card_kind == "matchday_results":
+        from src.xgpedia.render.card_kit.matchday_results_card import RESULTS_SLIDES, render_matchday_results_html
+        return [s[0] for s in RESULTS_SLIDES[:4]], render_matchday_results_html, None
+    if card_kind == "h2h_teams":
+        from src.xgpedia.render.card_kit.h2h_teams_card import H2H_TEAMS_SLIDES, render_h2h_teams_html
+        return [s[0] for s in H2H_TEAMS_SLIDES[:4]], render_h2h_teams_html, None
+    return None, None, None
 
 
 def _register_card_handlers(card_kind: str) -> None:
@@ -1270,11 +1317,13 @@ def _register_card_handlers(card_kind: str) -> None:
             lbl = _item_label(card_kind, st["item"])[:65]
             wait_msg = await cb.message.answer(f"⏳ در حال ساخت کارت {spec['icon']} <b>{html.escape(lbl)}</b> ({st['slide']} | {st['fmt']})...", parse_mode="HTML")
 
+            from src.xgpedia.publishers.progress_utils import LiveProgressReporter
+            async def _raw_edit(full_txt: str) -> None:
+                await wait_msg.edit_text(f"{full_txt}\n{spec['icon']} <b>{html.escape(lbl)}</b>", parse_mode="HTML")
+            _rep = LiveProgressReporter(_raw_edit, min_interval_sec=2.0, heartbeat_sec=5.0)
+            _rep.start_heartbeat()
             async def _progress(msg_text: str) -> None:
-                try:
-                    await wait_msg.edit_text(f"{msg_text}\n{spec['icon']} <b>{html.escape(lbl)}</b>", parse_mode="HTML")
-                except TelegramBadRequest:
-                    pass
+                await _rep.update(msg_text)
 
             enabled_ids = [m["id"] for m in st["modules"] if m["enabled"]]
             try:
@@ -1367,8 +1416,10 @@ def _register_card_handlers(card_kind: str) -> None:
                     )
 
             except Exception as exc:
+                await _rep.stop_heartbeat()
                 await wait_msg.edit_text(f"❌ خطا در ساخت کارت {spec['title']}:\n<code>{html.escape(type(exc).__name__)}: {html.escape(str(exc)[:300])}</code>", parse_mode="HTML")
                 return
+            await _rep.stop_heartbeat()
             if not res.ok:
                 await wait_msg.edit_text(html.escape(res.format_error_fa())[:3800], parse_mode="HTML")
                 return
@@ -1376,6 +1427,48 @@ def _register_card_handlers(card_kind: str) -> None:
                 bot, cb.from_user.id, res, wait_msg,
                 note=f"✅ کارت {spec['title']} آماده شد (پست #{res.post_id} | {st['slide']} | {st['fmt']}).",
             )
+            return
+
+        elif action == "reel":
+            from aiogram.types import FSInputFile
+            from src.xgpedia.media.video_pipeline import render_modular_card_reel_async
+            slides_list, r_fn, h_fn = _resolve_reel_pipeline(card_kind)
+            if not r_fn or not slides_list:
+                await _safe_answer(cb, "ساخت ریلز چنداسلایدی فعلاً برای این کارت فعال نیست.", show_alert=True)
+                return
+            await _safe_answer(cb, "در حال ساخت ریلز ویدیویی ۹:۱۶...")
+            wait_msg = await cb.message.answer(f"🎬 در حال ساخت ریلز ویدیویی {spec['title']} (9:16)...")
+
+            from src.xgpedia.publishers.progress_utils import LiveProgressReporter
+            async def _reel_edit(full_txt: str) -> None:
+                await wait_msg.edit_text(full_txt)
+            _reel_rep = LiveProgressReporter(_reel_edit, min_interval_sec=2.2, heartbeat_sec=5.0)
+            _reel_rep.start_heartbeat()
+            async def _reel_progress(txt: str) -> None:
+                await _reel_rep.update(txt)
+
+            reel_res = await render_modular_card_reel_async(
+                card_kind=card_kind,
+                item=dict(st["item"]),
+                slides=slides_list,
+                render_fn=r_fn,
+                hydrate_fn=h_fn,
+                fmt="9:16",
+                theme=st.get("theme", "classic"),
+                header_mode=st["header_mode"],
+                custom_modules=st["modules"],
+                progress_cb=_reel_progress,
+            )
+            await _reel_rep.stop_heartbeat()
+            if not reel_res.ok or not reel_res.video_path:
+                await wait_msg.edit_text(f"❌ خطا در ساخت ریلز:\n<code>{html.escape(reel_res.error[:400])}</code>", parse_mode="HTML")
+                return
+            cap_reel = f"🎬 ریلز آمادهٔ انتشار | {spec['title']}\n📌 {_item_label(card_kind, st['item'])}\n⏱ مدت: {reel_res.duration_sec:.1f} ثانیه ({reel_res.slides_count} اسلاید)\n@XGPedia"
+            await bot.send_video(cb.from_user.id, video=FSInputFile(str(reel_res.video_path)), caption=cap_reel)
+            try:
+                await wait_msg.edit_text(f"✅ ریلز ویدیویی آماده و ارسال شد ({reel_res.duration_sec:.1f} ثانیه).")
+            except Exception:
+                pass
             return
 
         text, kb = render_modular_customizer_view(card_kind, st)

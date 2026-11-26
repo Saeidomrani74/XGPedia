@@ -117,6 +117,11 @@ class AiogramTransport:
         )
         return tp.SentMessage(chat_id=msg.chat.id, message_id=msg.message_id)
 
+    async def send_video(self, chat_id: int | str, video: str, caption: str = "") -> tp.SentMessage:
+        vid_obj: str | FSInputFile = video if str(video).startswith(("http://", "https://")) else FSInputFile(video)
+        msg: Message = await self._bot.send_video(chat_id, video=vid_obj, caption=caption[:1024], parse_mode="HTML")
+        return tp.SentMessage(chat_id=msg.chat.id, message_id=msg.message_id)
+
     async def send_poll(self, chat_id: int | str, question: str, options: list[str]) -> tp.SentMessage:
         msg: Message = await self._bot.send_poll(
             chat_id,
@@ -268,6 +273,7 @@ def _admin_hub_markup() -> InlineKeyboardMarkup:
                 InlineKeyboardButton(text="🔄 ریست حافظه سلامت", callback_data="api:health_reset"),
             ],
             [
+                InlineKeyboardButton(text="🌐 پلتفرم‌های انتشار", callback_data="omni:status"),
                 InlineKeyboardButton(text="🏠 پنل اصلی", callback_data="nav:home"),
             ],
         ]
@@ -275,35 +281,16 @@ def _admin_hub_markup() -> InlineKeyboardMarkup:
 
 
 def _main_panel_markup() -> InlineKeyboardMarkup:
-    """پنل اینلاین اصلی: دسترسی مستقیم به کارت‌ها و اقدام‌های فوری (متفاوت از هاب‌های کیبورد پایین)."""
+    """پنل اینلاین خلوت و تمیز /start — دکمه «همه کارت‌ها» + دسترسی سریع به ابزارهای کلیدی."""
     return InlineKeyboardMarkup(
         inline_keyboard=[
+            [InlineKeyboardButton(text="🎨 همهٔ کارت‌ها (استودیو)", callback_data="nav:cards")],
             [
-                InlineKeyboardButton(text="📋 پیش‌ازبازی", callback_data="today:list"),
-                InlineKeyboardButton(text="🏁 پس‌ازبازی (۲۴س)", callback_data="post:list"),
-            ],
-            [
-                InlineKeyboardButton(text="🕰 در چنین روزی", callback_data="otd:list"),
-                InlineKeyboardButton(text="📰 خبر فوری و رسمی", callback_data="news:list"),
-            ],
-            [
-                InlineKeyboardButton(text="🎂 تولدهای امروز", callback_data="bday:list:1"),
-                InlineKeyboardButton(text="📡 رادار نقل‌وانتقالات", callback_data="tr:list:1"),
-            ],
-            [
-                InlineKeyboardButton(text="⚔️ این یا اون؟ (دوئل)", callback_data="tot:list:1"),
-                InlineKeyboardButton(text="⭐️ نمرات بازیکنان", callback_data="pr:list:1"),
-            ],
-            [
-                InlineKeyboardButton(text="🏆 جدول رده‌بندی", callback_data="st:list:1"),
-                InlineKeyboardButton(text="🏥 مصدومیت‌ها", callback_data="inj:list:1"),
-            ],
-            [
-                InlineKeyboardButton(text="🧬 پروفایل بازیکن", callback_data="pl:list:1"),
                 InlineKeyboardButton(text="🔄 سینک سریع امروز", callback_data="today:sync"),
+                InlineKeyboardButton(text="📡 مرکز دیتای زنده", callback_data="nav:sync"),
             ],
             [
-                InlineKeyboardButton(text="🎨 همه کارت‌ها", callback_data="nav:cards"),
+                InlineKeyboardButton(text="🩺 سلامت APIها", callback_data="api:health"),
                 InlineKeyboardButton(text="⚙️ تنظیمات AI", callback_data="llm:menu"),
             ],
         ]
@@ -803,9 +790,7 @@ async def _send_home_dashboard(m: Message, *, with_keyboard: bool = True) -> Non
                 logger.warning('telegram home send failed: %s', _net_err)
                 break
     await m.answer(
-        "⚡ <b>دسترسی مستقیم کارت‌ها و عملیات سریع:</b>\n"
-        "• ⚽ مسابقات: پیش‌ازبازی و پس‌ازبازی (۲۴س)\n"
-        "• 🕰 آرشیو و تحریریه: در چنین روزی",
+        "⚡ <b>پنل مدیریت XGPedia</b> — بخش مورد نظر را انتخاب کنید:",
         parse_mode="HTML",
         reply_markup=_main_panel_markup(),
     )
@@ -1079,6 +1064,7 @@ async def on_any_text(m: Message, bot: Bot | None = None) -> None:
                 parse_mode="HTML",
             )
             return
+        await _tb_rep.stop_heartbeat()
         if not res.ok:
             await wait_msg.edit_text(html.escape(res.format_error_fa())[:3800], parse_mode="HTML")
             return
@@ -1707,14 +1693,13 @@ async def on_customizer_action(cb: CallbackQuery, bot: Bot) -> None:
             parse_mode="HTML",
         )
 
+        from src.xgpedia.publishers.progress_utils import LiveProgressReporter
+        async def _raw_tb_edit(full_txt: str) -> None:
+            await wait_msg.edit_text(f"{full_txt}\n⚽ <b>{html.escape(match_lbl)}</b>", parse_mode="HTML")
+        _tb_rep = LiveProgressReporter(_raw_tb_edit, min_interval_sec=2.0, heartbeat_sec=5.0)
+        _tb_rep.start_heartbeat()
         async def _progress(msg_text: str) -> None:
-            try:
-                await wait_msg.edit_text(
-                    f"{msg_text}\n⚽ <b>{html.escape(st['home_fa'])} × {html.escape(st['away_fa'])}</b>",
-                    parse_mode="HTML",
-                )
-            except TelegramBadRequest:
-                pass
+            await _tb_rep.update(msg_text)
 
         try:
             res = await tw.generate_match_post_async(
@@ -1728,6 +1713,7 @@ async def on_customizer_action(cb: CallbackQuery, bot: Bot) -> None:
                 progress_cb=_progress,
             )
         except Exception as e:
+            await _tb_rep.stop_heartbeat()
             log.exception("unexpected error in cz:build")
             retry_kb = InlineKeyboardMarkup(
                 inline_keyboard=[
@@ -3750,6 +3736,24 @@ async def on_api_health_reset(cb: CallbackQuery) -> None:
     await _safe_cb_answer(cb, f"حافظه سلامت پاک شد ({n} مورد).", show_alert=True)
 
 
+@router.message(Command("platforms"))
+async def cmd_omnichannel_status(m: Message) -> None:
+    if not m.from_user or not tp.is_admin(m.from_user.id):
+        return
+    from src.xgpedia.publishers.omnichannel import format_omnichannel_status_fa
+    await m.answer(format_omnichannel_status_fa(), parse_mode="HTML")
+
+
+@router.callback_query(F.data == "omni:status")
+async def on_omnichannel_status(cb: CallbackQuery) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    from src.xgpedia.publishers.omnichannel import format_omnichannel_status_fa
+    await _safe_cb_answer(cb)
+    await cb.message.answer(format_omnichannel_status_fa(), parse_mode="HTML")
+
+
 async def main() -> None:
     import os
     from aiogram.client.session.aiohttp import AiohttpSession
@@ -3789,6 +3793,7 @@ async def main() -> None:
             BotCommand(command="value", description="💎 رادار ارزش بازار و شکار (+EV)"),
             BotCommand(command="lineup", description="📋 ترکیب احتمالی و غایبان"),
             BotCommand(command="health", description="🩺 گزارش سلامت و یادگیری هوشمند APIها"),
+            BotCommand(command="platforms", description="🌐 وضعیت انتشار همزمان (بله، ایتا، ایکس، اینستاگرام)"),
         ])
     except Exception as _cmd_exc:
         log.warning("set_my_commands skipped: %s", _cmd_exc)

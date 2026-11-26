@@ -87,6 +87,14 @@ def lookup_pl_club(name_or_tla: str | int, tla_hint: str = "") -> tuple[str, str
         for k, v in PL_CLUBS_MASTER.items():
             if k in low or (len(low) >= 4 and low in k):
                 return v
+    # پل خودکار به باشگاه‌های لیگ قهرمانان اروپا (UEFA Champions League)
+    try:
+        from src.xgpedia.providers.ucl_badges_free import lookup_ucl_club
+        u = lookup_ucl_club(s, tla_hint=tla_hint)
+        if u:
+            return u
+    except Exception:
+        pass
     return None
 
 
@@ -117,6 +125,15 @@ def get_pl_badge_data_uri(
     code = badge_code
     tla = str(tla_hint or "").strip().upper()[:3]
     hit = lookup_pl_club(name_or_tla, tla_hint)
+    # اگر باشگاه متعلق به چمپیونزلیگ (غیرانگلیسی) بود، مستقیم از پرووایدر رسمی UCL برگردان
+    if hit and hit[1] not in _BY_TLA:
+        try:
+            from src.xgpedia.providers.ucl_badges_free import get_ucl_badge_data_uri
+            u_uri = get_ucl_badge_data_uri(hit[1], tla_hint=hit[1], espn_id=hit[4], fetch_network=fetch_network)
+            if u_uri:
+                return u_uri
+        except Exception:
+            pass
     if hit:
         if code is None:
             code = hit[4]
