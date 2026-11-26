@@ -38,6 +38,7 @@ def test_parse_espn_finished_summary_real_stats_scorers_momentum_and_gk():
                         {"name": "wonCorners", "displayValue": "7"},
                         {"name": "foulsCommitted", "displayValue": "10"},
                         {"name": "saves", "displayValue": "3"},
+                        {"name": "expectedGoals", "displayValue": "2.15"},
                     ],
                 },
                 {
@@ -49,6 +50,7 @@ def test_parse_espn_finished_summary_real_stats_scorers_momentum_and_gk():
                         {"name": "wonCorners", "displayValue": "3"},
                         {"name": "foulsCommitted", "displayValue": "12"},
                         {"name": "saves", "displayValue": "4"},
+                        {"name": "expectedGoals", "displayValue": "1.12"},
                     ],
                 },
             ]

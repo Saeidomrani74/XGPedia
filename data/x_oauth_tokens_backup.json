@@ -1,0 +1,8 @@
+{
+  "access_token": "X0FCTG1LeG1UdDFRQ1VybVBpZ0JMZm13UHp6bkZaUlFuYzh5NmlPRmpSblc5OjE3OTU2NzAzNjI5OTU6MTowOmF0OjE",
+  "refresh_token": "b0dTbTg2c250UUNCZEdReDZiTTBCOG5nbURXYnl1bXVZUVNKUzBaRno3ZVd0OjE3OTU2NzAzNjI5OTU6MTowOnJ0OjE",
+  "token_type": "bearer",
+  "scope": "tweet.write users.read tweet.read offline.access",
+  "expires_at": 1795677563.2,
+  "updated_at": 1795670363.2
+}

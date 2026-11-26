@@ -322,6 +322,138 @@
     },
     "Montpellier": {
       "stadium_fa": "ورزشگاه لا موسون"
+    },
+    "Sabah FK": {
+      "stadium_fa": "بانک رسپوبلیکا آرنا"
+    },
+    "Qarabag": {
+      "stadium_fa": "ورزشگاه توفیق بهراموف"
+    },
+    "Olympiacos": {
+      "stadium_fa": "ورزشگاه کارایسکاکیس"
+    },
+    "PAOK": {
+      "stadium_fa": "ورزشگاه تومبا"
+    },
+    "Panathinaikos": {
+      "stadium_fa": "ورزشگاه المپیک آتن"
+    },
+    "Fenerbahce": {
+      "stadium_fa": "ورزشگاه شکری سراج‌اوغلو"
+    },
+    "Besiktas": {
+      "stadium_fa": "تپراش پارک"
+    },
+    "Slavia Prague": {
+      "stadium_fa": "فورتونا آرنا"
+    },
+    "Sparta Prague": {
+      "stadium_fa": "اپت آرنا"
+    },
+    "Viktoria Plzen": {
+      "stadium_fa": "دوسان آرنا"
+    },
+    "Bodo/Glimt": {
+      "stadium_fa": "ورزشگاه آسپمیرا"
+    },
+    "FC Copenhagen": {
+      "stadium_fa": "ورزشگاه پارکن"
+    },
+    "Midtjylland": {
+      "stadium_fa": "ام‌سی‌اچ آرنا"
+    },
+    "Young Boys": {
+      "stadium_fa": "ورزشگاه وانکدورف"
+    },
+    "FC Basel": {
+      "stadium_fa": "سنت یاکوب پارک"
+    },
+    "Union Saint-Gilloise": {
+      "stadium_fa": "ورزشگاه ژوزف مارین"
+    },
+    "Anderlecht": {
+      "stadium_fa": "لوتو پارک"
+    },
+    "Genk": {
+      "stadium_fa": "سگکا آرنا"
+    },
+    "Dinamo Zagreb": {
+      "stadium_fa": "ورزشگاه ماکسیمیر"
+    },
+    "Red Star Belgrade": {
+      "stadium_fa": "ورزشگاه رایکو میتیچ"
+    },
+    "Rangers": {
+      "stadium_fa": "ورزشگاه آیبروکس"
+    },
+    "Sturm Graz": {
+      "stadium_fa": "مرکور آرنا"
+    },
+    "Slovan Bratislava": {
+      "stadium_fa": "تهلنه پوله"
+    },
+    "Ferencvaros": {
+      "stadium_fa": "گروپاما آرنا"
+    },
+    "Dynamo Kyiv": {
+      "stadium_fa": "ورزشگاه المپیک کیف"
+    },
+    "Pafos": {
+      "stadium_fa": "ورزشگاه استلیوس کیریاکیدس"
+    },
+    "Kairat": {
+      "stadium_fa": "ورزشگاه مرکزی آلماتی"
+    },
+    "FCSB": {
+      "stadium_fa": "ورزشگاه ملی بخارست"
+    },
+    "Malmo FF": {
+      "stadium_fa": "الدا استادیون"
+    },
+    "SC Braga": {
+      "stadium_fa": "ورزشگاه شهری براگا"
+    },
+    "AZ Alkmaar": {
+      "stadium_fa": "ورزشگاه آفاس"
+    },
+    "FC Twente": {
+      "stadium_fa": "ورزشگاه د خرولش فسته"
+    },
+    "Viking FK": {
+      "stadium_fa": "ورزشگاه وایکینگ"
+    },
+    "Lech Poznan": {
+      "stadium_fa": "ورزشگاه انئا پوزنان"
+    },
+    "NK Celje": {
+      "stadium_fa": "ورزشگاه زدیژله"
+    },
+    "Jagiellonia Bialystok": {
+      "stadium_fa": "چورتن آرنا بیالیستوک"
+    },
+    "AC Omonia": {
+      "stadium_fa": "ورزشگاه جی‌اس‌پی نیکوزیا"
+    },
+    "SCU Torreense": {
+      "stadium_fa": "ورزشگاه دکتر ماگالیائس پسوا"
+    },
+    "Hapoel Be'er Sheva": {
+      "stadium_fa": "ورزشگاه ترنر"
+    },
+    "NEC Nijmegen": {
+      "stadium_fa": "ورزشگاه گوفرت"
+    },
+    "OFI Crete": {
+      "stadium_fa": "ورزشگاه پانکریتیو"
+    },
+    "Lillestrom SK": {
+      "stadium_fa": "ورزشگاه آروسن"
+    },
+    "Levski Sofia": {
+      "stadium_fa": "ورزشگاه گئورگی آسپاروخوف"
+    },
+    "Ararat-Armenia": {
+      "stadium_fa": "ورزشگاه آکادمی فوتبال ایروان"
     }
   },
   "coach_translations_fa": {

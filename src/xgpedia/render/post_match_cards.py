@@ -128,7 +128,10 @@ def _valid_shot_list(raw: Any) -> list[list[Any]] | None:
 def _valid_gk(raw: Any) -> dict[str, Any] | None:
     if not isinstance(raw, dict):
         return None
-    name = str(raw.get("name") or "").strip()
+    from src.xgpedia.config import translate_player_fa
+    raw_name = str(raw.get("name") or "").strip()
+    # تبدیل نام دروازه‌بان از انگلیسی (مثلاً S. Pokatilov / J. García) به فارسی روان
+    name = translate_player_fa(raw_name) if raw_name else ""
     saves = raw.get("saves")
     psxg = raw.get("psxg")
     ga = raw.get("ga")
@@ -280,8 +283,18 @@ def build_post_match_context(
     h_inside = home_f.get("insideBox") if home_f.get("insideBox") is not None else hs.get("inside_box")
     a_inside = away_f.get("insideBox") if away_f.get("insideBox") is not None else as_.get("inside_box")
     momentum = _valid_momentum(facts.get("momentum"))
-    h_gk = _valid_gk(home_f.get("gk"))
-    a_gk = _valid_gk(away_f.get("gk"))
+    def _gk_with_opp_xg(raw_gk: Any, opp_xg: float | None, opp_goals: int | None) -> dict[str, Any] | None:
+        if isinstance(raw_gk, dict):
+            patched = dict(raw_gk)
+            if patched.get("psxg") is None and opp_xg is not None:
+                patched["psxg"] = round(float(opp_xg), 2)
+            if patched.get("ga") is None and opp_goals is not None:
+                patched["ga"] = int(opp_goals)
+            raw_gk = patched
+        return _valid_gk(raw_gk)
+
+    h_gk = _gk_with_opp_xg(home_f.get("gk"), axg, ag)
+    a_gk = _gk_with_opp_xg(away_f.get("gk"), hxg, hg)
     top_players = _valid_top_players(facts.get("topPlayers") or facts.get("top_players"))
     motm = _valid_motm(facts.get("motm"))
     stats_rows = _build_post_stats_rows(hs, as_, max_rows=POST_STATS_ROW_CAP.get(fmt, 4))
@@ -316,8 +329,9 @@ def build_post_match_context(
                     shots_list: list | None, inside: Any, gk: dict | None, key: str) -> dict[str, Any]:
         colors = (ident or {}).get("colors") or {}
         code = (ident or {}).get("code") or (f.get("name_en") or "FC")[:3].upper()
-        name_fa = f.get("name_fa", "")
+        from src.xgpedia.config import card_short_team_name_fa
         name_en = f.get("name_en", "")
+        name_fa = card_short_team_name_fa(name_en, f.get("name_fa", ""))
         goal_events = [
             {"player": s[4], "min": s[5]} for s in (shots_list or []) if s[3] == "goal"
         ]
@@ -325,7 +339,7 @@ def build_post_match_context(
             "name": name_fa,
             "name_fa": name_fa,
             "name_en": name_en,
-            "sub": str(f.get("sub") or "").strip(),
+            "sub": str(f.get("sub") or "").strip().replace(" & ", " و ").replace("&", " و "),
             "code": code,
             "color": color,
             "secondary": colors.get("secondary") or "#FFFFFF",

@@ -163,7 +163,8 @@
       "aliases": [
         "رئال",
         "مادرید",
-        "لوس بلانکوس"
+        "لوس بلانکوس",
+        "Real Madrid CF"
       ]
     },
     "Barcelona": {
@@ -174,7 +175,8 @@
       "aliases": [
         "بارسا",
         "کاتالان‌ها",
-        "اف‌سی بارسلونا"
+        "اف‌سی بارسلونا",
+        "FC Barcelona"
       ]
     },
     "Atletico Madrid": {
@@ -185,7 +187,12 @@
       "aliases": [
         "اتلتیکو",
         "اتلتیکو مادرید",
-        "تشک‌دوزها"
+        "تشک‌دوزها",
+        "Club Atlético de Madrid",
+        "Atlético Madrid",
+        "Atlético de Madrid",
+        "Atletico de Madrid",
+        "Ath Madrid"
       ]
     },
     "Girona": {
@@ -195,7 +202,8 @@
       "name_fa": "خیرونا",
       "aliases": [
         "ژیرونا",
-        "خیرونا"
+        "خیرونا",
+        "Girona FC"
       ]
     },
     "Athletic Club": {
@@ -205,7 +213,9 @@
       "name_fa": "اتلتیک بیلبائو",
       "aliases": [
         "بیلبائو",
-        "اتلتیک کلاب"
+        "اتلتیک کلاب",
+        "Ath Bilbao",
+        "Athletic Bilbao"
       ]
     },
     "Villarreal": {
@@ -214,7 +224,8 @@
       "espn_id": 102,
       "name_fa": "ویارئال",
       "aliases": [
-        "ویارئال"
+        "ویارئال",
+        "Villarreal CF"
       ]
     },
     "Bayern Munich": {
@@ -225,14 +236,17 @@
       "aliases": [
         "بایرن",
         "اف‌سی بایرن",
-        "مونیخ"
+        "مونیخ",
+        "FC Bayern München",
+        "Bayern München",
+        "FC Bayern Munich"
       ]
     },
     "Borussia Dortmund": {
       "csv_short": "Borussia Dortmund",
       "fdo_id": 4,
       "espn_id": 124,
-      "name_fa": "بروسیا دورتموند",
+      "name_fa": "بوروسیا دورتموند",
       "aliases": [
         "دورتموند",
         "زردپوشان وستفالن"
@@ -245,7 +259,9 @@
       "name_fa": "بایر لورکوزن",
       "aliases": [
         "لورکوزن",
-        "بایر ۰۴"
+        "بایر ۰۴",
+        "Bayer 04 Leverkusen",
+        "Leverkusen"
       ]
     },
     "RB Leipzig": {
@@ -264,7 +280,9 @@
       "espn_id": 134,
       "name_fa": "اشتوتگارت",
       "aliases": [
-        "اشتوتگارت"
+        "اشتوتگارت",
+        "VfB Stuttgart 1893",
+        "Stuttgart"
       ]
     },
     "Eintracht Frankfurt": {
@@ -274,7 +292,9 @@
       "name_fa": "آینتراخت فرانکفورت",
       "aliases": [
         "فرانکفورت",
-        "آینتراخت"
+        "آینتراخت",
+        "Ein Frankfurt",
+        "Frankfurt"
       ]
     },
     "Inter Milan": {
@@ -285,7 +305,10 @@
       "aliases": [
         "اینتر",
         "افعی‌ها",
-        "اینترناسیوناله"
+        "اینترناسیوناله",
+        "FC Internazionale Milano",
+        "Internazionale",
+        "Inter"
       ]
     },
     "AC Milan": {
@@ -295,7 +318,8 @@
       "name_fa": "آث میلان",
       "aliases": [
         "میلان",
-        "شیاطین سرخ میلان"
+        "شیاطین سرخ میلان",
+        "Milan"
       ]
     },
     "Juventus": {
@@ -305,7 +329,8 @@
       "name_fa": "یوونتوس",
       "aliases": [
         "یووه",
-        "بیانکونری"
+        "بیانکونری",
+        "Juventus FC"
       ]
     },
     "Atalanta": {
@@ -314,7 +339,8 @@
       "espn_id": 105,
       "name_fa": "آتالانتا",
       "aliases": [
-        "آتالانتا برگامو"
+        "آتالانتا برگامو",
+        "Atalanta BC"
       ]
     },
     "Napoli": {
@@ -324,7 +350,8 @@
       "name_fa": "ناپولی",
       "aliases": [
         "ناپولی",
-        "آتزوری"
+        "آتزوری",
+        "SSC Napoli"
       ]
     },
     "Bologna": {
@@ -333,7 +360,8 @@
       "espn_id": 107,
       "name_fa": "بولونیا",
       "aliases": [
-        "بولونیا"
+        "بولونیا",
+        "Bologna FC 1909"
       ]
     },
     "AS Roma": {
@@ -343,18 +371,22 @@
       "name_fa": "آاس رم",
       "aliases": [
         "رم",
-        "گرگ‌های رم"
+        "گرگ‌های رم",
+        "Roma"
       ]
     },
     "Paris Saint-Germain": {
       "csv_short": "Paris Saint-Germain",
       "fdo_id": 524,
       "espn_id": 160,
-      "name_fa": "پاری‌سن‌ژرمن",
+      "name_fa": "پاریس سن‌ژرمن",
       "aliases": [
         "پی‌اس‌جی",
         "پاری سن ژرمن",
-        "PSG"
+        "PSG",
+        "Paris Saint-Germain FC",
+        "پاری‌سن‌ژرمن",
+        "Paris SG"
       ]
     },
     "AS Monaco": {
@@ -364,7 +396,9 @@
       "name_fa": "موناکو",
       "aliases": [
         "آاس موناکو",
-        "موناکو"
+        "موناکو",
+        "AS Monaco FC",
+        "Monaco"
       ]
     },
     "Lille": {
@@ -374,7 +408,9 @@
       "name_fa": "لیل",
       "aliases": [
         "لیل المپیک",
-        "LOSC"
+        "LOSC",
+        "LOSC Lille",
+        "Lille OSC"
       ]
     },
     "Brest": {
@@ -394,7 +430,8 @@
       "name_fa": "مارسی",
       "aliases": [
         "مارسی",
-        "OM"
+        "OM",
+        "Olympique de Marseille"
       ]
     },
     "Benfica": {
@@ -404,7 +441,10 @@
       "name_fa": "بنفیکا",
       "aliases": [
         "اس‌ال بنفیکا",
-        "بنفیکا"
+        "بنفیکا",
+        "Sport Lisboa e Benfica",
+        "SL Benfica",
+        "S.L. Benfica"
       ]
     },
     "Sporting CP": {
@@ -414,7 +454,10 @@
       "name_fa": "اسپورتینگ لیسبون",
       "aliases": [
         "اسپورتینگ",
-        "اسپورتینگ پرتغال"
+        "اسپورتینگ پرتغال",
+        "Sporting Clube de Portugal",
+        "Sporting Lisbon",
+        "Sp Lisbon"
       ]
     },
     "FC Porto": {
@@ -424,7 +467,8 @@
       "name_fa": "پورتو",
       "aliases": [
         "اف‌سی پورتو",
-        "پورتو"
+        "پورتو",
+        "Porto"
       ]
     },
     "PSV Eindhoven": {
@@ -471,7 +515,8 @@
       "name_fa": "کلوب بروژ",
       "aliases": [
         "بروژ",
-        "کلوب بروژ"
+        "کلوب بروژ",
+        "Club Brugge KV"
       ]
     },
     "Shakhtar Donetsk": {
@@ -480,7 +525,9 @@
       "espn_id": 493,
       "name_fa": "شاختار دونتسک",
       "aliases": [
-        "شاختار"
+        "شاختار",
+        "FC Shakhtar Donetsk",
+        "Shakhtar"
       ]
     },
     "Red Bull Salzburg": {
@@ -490,7 +537,11 @@
       "name_fa": "ردبول سالزبورگ",
       "aliases": [
         "سالزبورگ",
-        "زالتسبورگ"
+        "زالتسبورگ",
+        "RB Salzburg",
+        "FC Salzburg",
+        "FC Red Bull Salzburg",
+        "Salzburg"
       ]
     },
     "Galatasaray": {
@@ -510,7 +561,9 @@
       "name_fa": "رئال سوسیداد",
       "aliases": [
         "سوسیداد",
-        "لا رئال"
+        "لا رئال",
+        "Real Sociedad de Fútbol",
+        "Sociedad"
       ]
     },
     "Real Betis": {
@@ -520,7 +573,9 @@
       "name_fa": "رئال بتیس",
       "aliases": [
         "بتیس",
-        "وردی‌بلانکوس"
+        "وردی‌بلانکوس",
+        "Real Betis Balompié",
+        "Betis"
       ]
     },
     "Sevilla": {
@@ -530,7 +585,8 @@
       "name_fa": "سویا",
       "aliases": [
         "سویا اف‌سی",
-        "سویل"
+        "سویل",
+        "Sevilla FC"
       ]
     },
     "Valencia": {
@@ -539,7 +595,8 @@
       "espn_id": 94,
       "name_fa": "والنسیا",
       "aliases": [
-        "والنسیا سی‌اف"
+        "والنسیا سی‌اف",
+        "Valencia CF"
       ]
     },
     "Osasuna": {
@@ -549,7 +606,8 @@
       "name_fa": "اوساسونا",
       "aliases": [
         "پامپلونا",
-        "اوساسونا"
+        "اوساسونا",
+        "CA Osasuna"
       ]
     },
     "Celta Vigo": {
@@ -559,7 +617,10 @@
       "name_fa": "سلتاویگو",
       "aliases": [
         "سلتا",
-        "سلتا ویگو"
+        "سلتا ویگو",
+        "RC Celta de Vigo",
+        "Celta",
+        "Celta de Vigo"
       ]
     },
     "Rayo Vallecano": {
@@ -569,7 +630,8 @@
       "name_fa": "رایو وایکانو",
       "aliases": [
         "رایو",
-        "وایکانو"
+        "وایکانو",
+        "Rayo Vallecano de Madrid"
       ]
     },
     "Mallorca": {
@@ -579,7 +641,8 @@
       "name_fa": "مایورکا",
       "aliases": [
         "رئال مایورکا",
-        "مایورکا"
+        "مایورکا",
+        "RCD Mallorca"
       ]
     },
     "Getafe": {
@@ -588,7 +651,8 @@
       "espn_id": 2922,
       "name_fa": "ختافه",
       "aliases": [
-        "ختافه سی‌اف"
+        "ختافه سی‌اف",
+        "Getafe CF"
       ]
     },
     "Alaves": {
@@ -598,7 +662,8 @@
       "name_fa": "آلاوس",
       "aliases": [
         "دپورتیوو آلاوس",
-        "آلاوس"
+        "آلاوس",
+        "Deportivo Alavés"
       ]
     },
     "Espanyol": {
@@ -607,7 +672,8 @@
       "espn_id": 88,
       "name_fa": "اسپانیول",
       "aliases": [
-        "اسپانیول بارسلون"
+        "اسپانیول بارسلون",
+        "RCD Espanyol de Barcelona"
       ]
     },
     "Las Palmas": {
@@ -616,7 +682,8 @@
       "espn_id": 98,
       "name_fa": "لاس‌پالماس",
       "aliases": [
-        "لاس پالماس"
+        "لاس پالماس",
+        "UD Las Palmas"
       ]
     },
     "Real Valladolid": {
@@ -626,7 +693,8 @@
       "name_fa": "وایادولید",
       "aliases": [
         "رئال وایادولید",
-        "وایادولید"
+        "وایادولید",
+        "Real Valladolid CF"
       ]
     },
     "Leganes": {
@@ -635,7 +703,8 @@
       "espn_id": 17534,
       "name_fa": "لگانس",
       "aliases": [
-        "لگانس سی‌دی"
+        "لگانس سی‌دی",
+        "CD Leganés"
       ]
     },
     "Lazio": {
@@ -683,7 +752,8 @@
       "espn_id": 3263,
       "name_fa": "جنوا",
       "aliases": [
-        "جنوا سی‌اف‌سی"
+        "جنوا سی‌اف‌سی",
+        "Genoa CFC"
       ]
     },
     "Cagliari": {
@@ -738,7 +808,8 @@
       "espn_id": 2572,
       "name_fa": "کومو",
       "aliases": [
-        "کومو ۱۹۰۷"
+        "کومو ۱۹۰۷",
+        "Como 1907"
       ]
     },
     "Monza": {
@@ -766,17 +837,19 @@
       "name_fa": "فرایبورگ",
       "aliases": [
         "اس‌سی فرایبورگ",
-        "فرایبورگ"
+        "فرایبورگ",
+        "Freiburg"
       ]
     },
     "Borussia Monchengladbach": {
       "csv_short": "Borussia Monchengladbach",
       "fdo_id": 18,
       "espn_id": 268,
-      "name_fa": "بروسیا مونشن‌گلادباخ",
+      "name_fa": "بوروسیا مونشن‌گلادباخ",
       "aliases": [
         "گلادباخ",
-        "مونشن‌گلادباخ"
+        "مونشن‌گلادباخ",
+        "Borussia Mönchengladbach"
       ]
     },
     "Werder Bremen": {
@@ -786,7 +859,8 @@
       "name_fa": "وردربرمن",
       "aliases": [
         "برمن",
-        "وردر برمن"
+        "وردر برمن",
+        "SV Werder Bremen"
       ]
     },
     "VfL Wolfsburg": {
@@ -806,14 +880,15 @@
       "name_fa": "ماینتس",
       "aliases": [
         "ماینتس ۰۵",
-        "اف‌اس‌وی ماینتس"
+        "اف‌اس‌وی ماینتس",
+        "1. FSV Mainz 05"
       ]
     },
     "FC Augsburg": {
       "csv_short": "FC Augsburg",
       "fdo_id": 16,
       "espn_id": 3841,
-      "name_fa": "آگسبورگ",
+      "name_fa": "آوگسبورگ",
       "aliases": [
         "آوگسبورگ",
         "اف‌سی آگسبورگ"
@@ -826,7 +901,8 @@
       "name_fa": "یونیون برلین",
       "aliases": [
         "اونیون برلین",
-        "یونیون"
+        "یونیون",
+        "1. FC Union Berlin"
       ]
     },
     "TSG Hoffenheim": {
@@ -835,7 +911,9 @@
       "espn_id": 7911,
       "name_fa": "هوفنهایم",
       "aliases": [
-        "هوفنهایم ۱۸۹۹"
+        "هوفنهایم ۱۸۹۹",
+        "TSG 1899 Hoffenheim",
+        "Hoffenheim"
       ]
     },
     "FC Heidenheim": {
@@ -844,7 +922,9 @@
       "espn_id": 6418,
       "name_fa": "هایدنهایم",
       "aliases": [
-        "هایدنهایم"
+        "هایدنهایم",
+        "1. FC Heidenheim 1846",
+        "1. FC Heidenheim"
       ]
     },
     "FC St. Pauli": {
@@ -883,7 +963,8 @@
       "name_fa": "لیون",
       "aliases": [
         "المپیک لیون",
-        "لیون"
+        "لیون",
+        "Olympique Lyonnais"
       ]
     },
     "Nice": {
@@ -903,7 +984,9 @@
       "name_fa": "لانس",
       "aliases": [
         "آرسی لانس",
-        "لانس"
+        "لانس",
+        "Racing Club de Lens",
+        "RC Lens"
       ]
     },
     "Rennes": {
@@ -913,7 +996,11 @@
       "name_fa": "رن",
       "aliases": [
         "استاد رن",
-        "رن"
+        "رن",
+        "Stade Rennais",
+        "Stade Rennais FC",
+        "Stade Rennais F.C.",
+        "Stade Rennais FC 1901"
       ]
     },
     "Strasbourg": {
@@ -953,7 +1040,8 @@
       "name_fa": "اوسر",
       "aliases": [
         "آی‌جی اوسر",
-        "اوسر"
+        "اوسر",
+        "AJ Auxerre"
       ]
     },
     "Nantes": {
@@ -1003,6 +1091,397 @@
       "aliases": [
         "مونپلیه",
         "مون‌پلیه"
+      ]
+    },
+    "Sabah FK": {
+      "csv_short": "Sabah FK",
+      "name_fa": "صباح باکو",
+      "aliases": [
+        "Sabah",
+        "Sabah Baku",
+        "صباح",
+        "Sabah FC"
+      ]
+    },
+    "Qarabag": {
+      "csv_short": "Qarabag",
+      "name_fa": "قره‌باغ",
+      "aliases": [
+        "Qarabag FK",
+        "Qarabağ",
+        "Qarabağ FK",
+        "قره‌باغ آذربایجان"
+      ]
+    },
+    "Olympiacos": {
+      "csv_short": "Olympiacos",
+      "name_fa": "المپیاکوس",
+      "aliases": [
+        "Olympiacos FC",
+        "Olympiakos",
+        "المپیاکوس یونان",
+        "Olympiacos Piraeus"
+      ]
+    },
+    "PAOK": {
+      "csv_short": "PAOK",
+      "name_fa": "پائوک",
+      "aliases": [
+        "PAOK FC",
+        "PAOK Thessaloniki",
+        "پائوک سالونیک"
+      ]
+    },
+    "Panathinaikos": {
+      "csv_short": "Panathinaikos",
+      "name_fa": "پاناتینایکوس",
+      "aliases": [
+        "Panathinaikos FC"
+      ]
+    },
+    "Fenerbahce": {
+      "csv_short": "Fenerbahce",
+      "name_fa": "فنرباغچه",
+      "aliases": [
+        "Fenerbahçe",
+        "Fenerbahçe SK",
+        "Fenerbahce SK"
+      ]
+    },
+    "Besiktas": {
+      "csv_short": "Besiktas",
+      "name_fa": "بشیکتاش",
+      "aliases": [
+        "Beşiktaş",
+        "Beşiktaş JK",
+        "Besiktas JK"
+      ]
+    },
+    "Slavia Prague": {
+      "csv_short": "Slavia Prague",
+      "name_fa": "اسلاویا پراگ",
+      "aliases": [
+        "SK Slavia Prague",
+        "Slavia Praha",
+        "SK Slavia Praha"
+      ]
+    },
+    "Sparta Prague": {
+      "csv_short": "Sparta Prague",
+      "name_fa": "اسپارتا پراگ",
+      "aliases": [
+        "AC Sparta Prague",
+        "Sparta Praha",
+        "AC Sparta Praha"
+      ]
+    },
+    "Viktoria Plzen": {
+      "csv_short": "Viktoria Plzen",
+      "name_fa": "ویکتوریا پلژن",
+      "aliases": [
+        "FC Viktoria Plzeň",
+        "Viktoria Plzeň",
+        "پلژن",
+        "Plzen"
+      ]
+    },
+    "Bodo/Glimt": {
+      "csv_short": "Bodo/Glimt",
+      "name_fa": "بودو گلیمت",
+      "aliases": [
+        "Bodø/Glimt",
+        "FK Bodø/Glimt",
+        "Bodo Glimt"
+      ]
+    },
+    "FC Copenhagen": {
+      "csv_short": "FC Copenhagen",
+      "name_fa": "کپنهاگ",
+      "aliases": [
+        "Copenhagen",
+        "F.C. Copenhagen"
+      ]
+    },
+    "Midtjylland": {
+      "csv_short": "Midtjylland",
+      "name_fa": "میتیلند",
+      "aliases": [
+        "FC Midtjylland"
+      ]
+    },
+    "Young Boys": {
+      "csv_short": "Young Boys",
+      "name_fa": "یانگ بویز",
+      "aliases": [
+        "BSC Young Boys"
+      ]
+    },
+    "FC Basel": {
+      "csv_short": "FC Basel",
+      "name_fa": "بازل",
+      "aliases": [
+        "Basel",
+        "FC Basel 1893"
+      ]
+    },
+    "Union Saint-Gilloise": {
+      "csv_short": "Union Saint-Gilloise",
+      "name_fa": "یونیون سنت ژیلواز",
+      "aliases": [
+        "Union SG",
+        "Royale Union Saint-Gilloise",
+        "سنت ژیلواز",
+        "Union St.-Gilloise",
+        "St. Gilloise",
+        "St.-Gilloise",
+        "St Gilloise",
+        "Royale Union SG"
+      ]
+    },
+    "Anderlecht": {
+      "csv_short": "Anderlecht",
+      "name_fa": "اندرلشت",
+      "aliases": [
+        "RSC Anderlecht"
+      ]
+    },
+    "Genk": {
+      "csv_short": "Genk",
+      "name_fa": "خنک",
+      "aliases": [
+        "KRC Genk"
+      ]
+    },
+    "Dinamo Zagreb": {
+      "csv_short": "Dinamo Zagreb",
+      "name_fa": "دینامو زاگرب",
+      "aliases": [
+        "GNK Dinamo Zagreb"
+      ]
+    },
+    "Red Star Belgrade": {
+      "csv_short": "Red Star Belgrade",
+      "name_fa": "ستاره سرخ",
+      "aliases": [
+        "Crvena Zvezda",
+        "FK Crvena Zvezda"
+      ]
+    },
+    "Rangers": {
+      "csv_short": "Rangers",
+      "name_fa": "رنجرز",
+      "aliases": [
+        "Rangers FC",
+        "Glasgow Rangers"
+      ]
+    },
+    "Sturm Graz": {
+      "csv_short": "Sturm Graz",
+      "name_fa": "اشتورم گراتس",
+      "aliases": [
+        "SK Sturm Graz"
+      ]
+    },
+    "Slovan Bratislava": {
+      "csv_short": "Slovan Bratislava",
+      "name_fa": "اسلووان براتیسلاوا",
+      "aliases": [
+        "ŠK Slovan Bratislava",
+        "اسلووان"
+      ]
+    },
+    "Ferencvaros": {
+      "csv_short": "Ferencvaros",
+      "name_fa": "فرنتس‌واروش",
+      "aliases": [
+        "Ferencváros",
+        "Ferencvárosi TC",
+        "Ferencvarosi TC"
+      ]
+    },
+    "Dynamo Kyiv": {
+      "csv_short": "Dynamo Kyiv",
+      "name_fa": "دینامو کیف",
+      "aliases": [
+        "FC Dynamo Kyiv"
+      ]
+    },
+    "Pafos": {
+      "csv_short": "Pafos",
+      "name_fa": "پافوس",
+      "aliases": [
+        "Pafos FC"
+      ]
+    },
+    "Kairat": {
+      "csv_short": "Kairat",
+      "name_fa": "کایرات",
+      "aliases": [
+        "FC Kairat",
+        "Kairat Almaty",
+        "کایرات آلماتی"
+      ]
+    },
+    "FCSB": {
+      "csv_short": "FCSB",
+      "name_fa": "استوا بخارست",
+      "aliases": [
+        "Steaua Bucharest",
+        "FC FCSB"
+      ]
+    },
+    "Malmo FF": {
+      "csv_short": "Malmo FF",
+      "name_fa": "مالمو",
+      "aliases": [
+        "Malmö FF",
+        "Malmo"
+      ]
+    },
+    "SC Braga": {
+      "csv_short": "SC Braga",
+      "name_fa": "براگا",
+      "aliases": [
+        "Braga",
+        "Sporting Braga",
+        "Sp Braga"
+      ]
+    },
+    "AZ Alkmaar": {
+      "csv_short": "AZ Alkmaar",
+      "name_fa": "آلکمار",
+      "aliases": [
+        "AZ",
+        "Alkmaar"
+      ]
+    },
+    "FC Twente": {
+      "csv_short": "FC Twente",
+      "name_fa": "توئنته",
+      "aliases": [
+        "Twente"
+      ]
+    },
+    "Viking FK": {
+      "csv_short": "Viking FK",
+      "name_fa": "وایکینگ",
+      "aliases": [
+        "Viking",
+        "Viking FK",
+        "Viking Stavanger"
+      ]
+    },
+    "Lech Poznan": {
+      "csv_short": "Lech Poznan",
+      "name_fa": "لخ پوزنان",
+      "aliases": [
+        "Lech Poznań",
+        "KKS Lech Poznań",
+        "KKS Lech Poznan",
+        "لخ پوزنان"
+      ]
+    },
+    "NK Celje": {
+      "csv_short": "NK Celje",
+      "name_fa": "سلیه",
+      "aliases": [
+        "Celje",
+        "NK Celje",
+        "سلیه اسلوونی"
+      ]
+    },
+    "Jagiellonia Bialystok": {
+      "csv_short": "Jagiellonia Bialystok",
+      "name_fa": "یاگیلونیا بیالیستوک",
+      "aliases": [
+        "Jagiellonia",
+        "Jagiellonia Białystok",
+        "یاگیلونیا"
+      ]
+    },
+    "AC Omonia": {
+      "csv_short": "AC Omonia",
+      "name_fa": "اومونیا نیکوزیا",
+      "aliases": [
+        "Omonia",
+        "Omonoia",
+        "Omonia Nicosia",
+        "Omonoia Nicosia",
+        "AC Omonoia",
+        "اومونیا"
+      ]
+    },
+    "SCU Torreense": {
+      "csv_short": "SCU Torreense",
+      "name_fa": "تورئنزه",
+      "aliases": [
+        "Torreense",
+        "S.C.U. Torreense",
+        "SC Uniao Torreense",
+        "تورئنزه"
+      ]
+    },
+    "Hapoel Be'er Sheva": {
+      "csv_short": "Hapoel Be'er Sheva",
+      "name_fa": "هاپوئل بئرشبع",
+      "aliases": [
+        "Hapoel Beer Sheva",
+        "Hapoel Be'er Sheva F.C.",
+        "Hapoel Beer Sheva FC",
+        "هاپوئل بئرشبع",
+        "Hapoel Be'er",
+        "Hapoel Beer",
+        "H. Beer Sheva",
+        "Hapoel Beer-Sheva"
+      ]
+    },
+    "NEC Nijmegen": {
+      "csv_short": "NEC Nijmegen",
+      "name_fa": "ان.ای.سی نایمخن",
+      "aliases": [
+        "NEC",
+        "N.E.C.",
+        "N.E.C. Nijmegen",
+        "نایمخن",
+        "Nijmegen"
+      ]
+    },
+    "OFI Crete": {
+      "csv_short": "OFI Crete",
+      "name_fa": "او.اف.آی کرت",
+      "aliases": [
+        "OFI",
+        "OFI Crete F.C.",
+        "OFI FC",
+        "او.اف.آی کرت"
+      ]
+    },
+    "Lillestrom SK": {
+      "csv_short": "Lillestrom SK",
+      "name_fa": "لیلستروم",
+      "aliases": [
+        "Lillestrøm",
+        "Lillestrøm SK",
+        "Lillestrom",
+        "لیلستروم"
+      ]
+    },
+    "Levski Sofia": {
+      "csv_short": "Levski Sofia",
+      "name_fa": "لفسکی صوفیه",
+      "aliases": [
+        "PFC Levski Sofia",
+        "Levski",
+        "لفسکی صوفیه"
+      ]
+    },
+    "Ararat-Armenia": {
+      "csv_short": "Ararat-Armenia",
+      "name_fa": "آرارات ارمنستان",
+      "aliases": [
+        "FC Ararat-Armenia",
+        "Ararat Armenia",
+        "آرارات ارمنستان"
       ]
     }
   },

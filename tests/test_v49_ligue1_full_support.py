@@ -20,7 +20,7 @@ def test_ligue1_all_18_clubs_symmetric_in_all_four_configs_and_crests() -> None:
     assert g_codes == i_codes, "Glossary and team_identities must remain 1:1 symmetric"
 
     for code, name_en, name_fa in (
-        ("PSG", "Paris Saint-Germain", "پاری‌سن‌ژرمن"),
+        ("PSG", "Paris Saint-Germain", "پاریس سن‌ژرمن"),
         ("MON", "AS Monaco", "موناکو"),
         ("LIL", "Lille", "لیل"),
         ("MAR", "Marseille", "مارسی"),
@@ -65,7 +65,7 @@ def test_pl_badges_bridge_resolves_ligue1_clubs_and_offline_crests() -> None:
 
 def test_ligue1_live_matchweek_wrapup_builder() -> None:
     fake_rows = [
-        {"rank": 1, "name": "پاری‌سن‌ژرمن", "name_en": "Paris Saint-Germain", "code": "PSG", "color": "#004170", "played": 12, "won": 10, "drawn": 2, "lost": 0, "gf": 36, "ga": 10, "gd": 26, "points": 32},
+        {"rank": 1, "name": "پاریس سن‌ژرمن", "name_en": "Paris Saint-Germain", "code": "PSG", "color": "#004170", "played": 12, "won": 10, "drawn": 2, "lost": 0, "gf": 36, "ga": 10, "gd": 26, "points": 32},
         {"rank": 2, "name": "موناکو", "name_en": "AS Monaco", "code": "MON", "color": "#E51B22", "played": 12, "won": 8, "drawn": 2, "lost": 2, "gf": 21, "ga": 10, "gd": 11, "points": 26},
         {"rank": 3, "name": "مارسی", "name_en": "Marseille", "code": "MAR", "color": "#2FAEE0", "played": 12, "won": 7, "drawn": 2, "lost": 3, "gf": 27, "ga": 16, "gd": 11, "points": 23},
         {"rank": 4, "name": "لیل", "name_en": "Lille", "code": "LIL", "color": "#E01E13", "played": 12, "won": 6, "drawn": 4, "lost": 2, "gf": 19, "ga": 11, "gd": 8, "points": 22},
@@ -76,5 +76,5 @@ def test_ligue1_live_matchweek_wrapup_builder() -> None:
         mw = build_ligue1_matchweek_wrapup()
     assert mw is not None
     assert mw["competition"] == "لیگ ۱ فرانسه"
-    assert mw["bestAttack"]["team"] == "پاری‌سن‌ژرمن"
-    assert mw["bestDefense"]["team"] == "پاری‌سن‌ژرمن"
+    assert mw["bestAttack"]["team"] == "پاریس سن‌ژرمن"
+    assert mw["bestDefense"]["team"] == "پاریس سن‌ژرمن"

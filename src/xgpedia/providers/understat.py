@@ -196,18 +196,21 @@ class UnderstatProvider:
             follow_redirects=True,
         )
 
-    def fetch_epl_league_data(self, season_start: int = CURRENT_SEASON_START) -> dict[str, Any]:
-        """دریافت مهره‌های کلیدی + PPDA/Deep تمام ۲۰ تیم لیگ برتر از XHR API داخلی Understat (با پشتیبان HTML)."""
+    def fetch_epl_league_data(
+        self, season_start: int = CURRENT_SEASON_START, league: str = "EPL"
+    ) -> dict[str, Any]:
+        """دریافت مهره‌های کلیدی + PPDA/Deep برای هر لیگ Understat (`EPL`, `La_liga`, `Serie_A`, `Bundesliga`, `Ligue_1`)."""
+        lg = (league or "EPL").strip()
         players_raw: list[dict[str, Any]] = []
         teams_raw: dict[str, Any] = {}
         dates_raw: list[dict[str, Any]] = []
 
-        # مسیر ۱ (جدید ۲۰۲۶): XHR API مستقیم /getLeagueData/EPL/{season}
+        # مسیر ۱ (جدید ۲۰۲۶): XHR API مستقیم /getLeagueData/{lg}/{season}
         xhr = self._client.get(
-            f"/getLeagueData/EPL/{season_start}",
+            f"/getLeagueData/{lg}/{season_start}",
             headers={
                 "X-Requested-With": "XMLHttpRequest",
-                "Referer": f"{BASE_URL}/league/EPL/{season_start}",
+                "Referer": f"{BASE_URL}/league/{lg}/{season_start}",
                 "Accept": "application/json, text/javascript, */*; q=0.01",
             },
         )
@@ -223,7 +226,7 @@ class UnderstatProvider:
 
         # مسیر ۲ (پشتیبان کلاسیک): استخراج از HTML صفحه
         if not players_raw and not teams_raw:
-            resp = self._client.get(f"/league/EPL/{season_start}")
+            resp = self._client.get(f"/league/{lg}/{season_start}")
             if resp.status_code != 200:
                 raise RuntimeError(f"Understat league page HTTP {resp.status_code}")
             html_text = resp.text
@@ -306,8 +309,21 @@ def fetch_match_shots_understat(
     *,
     season_start: int = CURRENT_SEASON_START,
     timeout: float = 12.0,
+    league: str | None = None,
+    competition: str = "",
 ) -> dict[str, Any] | None:
-    """دریافت شوت‌های دقیقه‌دار و مختصات واقعی (`X, Y, xG`) یک مسابقه از Understat (رایگان، بدون کلید)."""
+    """دریافت شوت‌های دقیقه‌دار و مختصات واقعی (`X, Y, xG`) یک مسابقه از Understat برای ۵ لیگ معتبر اروپا."""
+    from src.xgpedia.core.leagues import league_by_name
+
+    lg_slug = league
+    if not lg_slug and competition:
+        spec = league_by_name(competition)
+        if spec:
+            if not spec.understat_slug:
+                return None  # چمپیونزلیگ در Understat پوشش ندارد
+            lg_slug = spec.understat_slug
+    lg_slug = (lg_slug or "EPL").strip()
+
     h_canon = canonical_team_name(home_en)
     a_canon = canonical_team_name(away_en)
     headers = {
@@ -316,7 +332,7 @@ def fetch_match_shots_understat(
     }
     try:
         with httpx.Client(timeout=timeout, follow_redirects=True, headers=headers) as client:
-            r = client.get(f"{BASE_URL}/league/EPL/{season_start}")
+            r = client.get(f"{BASE_URL}/league/{lg_slug}/{season_start}")
             if r.status_code != 200:
                 return None
             dates_data = _decode_embedded_json(r.text, "datesData")

@@ -25,9 +25,9 @@ def test_ucl_glossary_identities_mapping_and_venues_symmetry() -> None:
         ("RMA", "Real Madrid", "رئال مادرید"),
         ("BAR", "Barcelona", "بارسلونا"),
         ("BAY", "Bayern Munich", "بایرن مونیخ"),
-        ("PSG", "Paris Saint-Germain", "پاری‌سن‌ژرمن"),
+        ("PSG", "Paris Saint-Germain", "پاریس سن‌ژرمن"),
         ("INT", "Inter Milan", "اینتر میلان"),
-        ("BVB", "Borussia Dortmund", "بروسیا دورتموند"),
+        ("BVB", "Borussia Dortmund", "بوروسیا دورتموند"),
     ):
         assert code in g_codes
         assert name_en in ti["teams"]
@@ -60,7 +60,7 @@ def test_ucl_live_matchweek_wrapup_builder() -> None:
         {"rank": 3, "name": "بارسلونا", "name_en": "Barcelona", "code": "BAR", "color": "#A50044", "played": 5, "won": 4, "drawn": 0, "lost": 1, "gf": 18, "ga": 5, "gd": 13, "points": 12},
         {"rank": 4, "name": "بایرن مونیخ", "name_en": "Bayern Munich", "code": "BAY", "color": "#DC052D", "played": 5, "won": 3, "drawn": 1, "lost": 1, "gf": 15, "ga": 6, "gd": 9, "points": 10},
         {"rank": 5, "name": "رئال مادرید", "name_en": "Real Madrid", "code": "RMA", "color": "#F59E0B", "played": 5, "won": 3, "drawn": 0, "lost": 2, "gf": 11, "ga": 8, "gd": 3, "points": 9},
-        {"rank": 6, "name": "پاری‌سن‌ژرمن", "name_en": "Paris Saint-Germain", "code": "PSG", "color": "#004170", "played": 5, "won": 2, "drawn": 2, "lost": 1, "gf": 8, "ga": 6, "gd": 2, "points": 8},
+        {"rank": 6, "name": "پاریس سن‌ژرمن", "name_en": "Paris Saint-Germain", "code": "PSG", "color": "#004170", "played": 5, "won": 2, "drawn": 2, "lost": 1, "gf": 8, "ga": 6, "gd": 2, "points": 8},
     ]
     with patch("src.xgpedia.providers.ucl_live_free.fetch_ucl_standings", return_value=fake_rows):
         mw = build_ucl_matchweek_wrapup()

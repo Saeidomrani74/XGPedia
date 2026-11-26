@@ -25,11 +25,30 @@ from typing import Any
 
 import httpx
 
-from src.xgpedia.config import RAW_PAYLOAD_DIR, TEAM_MAPPING_FILE, load_team_mapping
+from src.xgpedia.config import RAW_PAYLOAD_DIR, TEAM_MAPPING_FILE, canonical_team_name, load_team_mapping
 
 PROVIDER = "football-data-co-uk"
 BASE = "https://www.football-data.co.uk"
 LEAGUE_PL = "E0"  # Premier League
+EUROPEAN_CSV_LEAGUES: tuple[tuple[str, str], ...] = (
+    ("E0", "Premier League"),
+    ("SP1", "La Liga"),
+    ("I1", "Serie A"),
+    ("D1", "Bundesliga"),
+    ("F1", "Ligue 1"),
+)
+# لیگ‌های اروپایی تکمیلی رایگان football-data.co.uk برای پوشش آمار فصلی باشگاه‌های لیگ اروپا و چمپیونزلیگ
+EUROPEAN_EXTRA_CSV_LEAGUES: tuple[tuple[str, str], ...] = (
+    ("P1", "Primeira Liga"),
+    ("N1", "Eredivisie"),
+    ("B1", "Belgian Pro League"),
+    ("T1", "Super Lig"),
+    ("G1", "Super League Greece"),
+    ("SC0", "Scottish Premiership"),
+)
+ALL_EUROPEAN_CSV_LEAGUES: tuple[tuple[str, str], ...] = EUROPEAN_CSV_LEAGUES + EUROPEAN_EXTRA_CSV_LEAGUES
+EUROPEAN_CSV_CODES: frozenset[str] = frozenset(code for code, _ in EUROPEAN_CSV_LEAGUES)
+ALL_EUROPEAN_CSV_CODES: frozenset[str] = frozenset(code for code, _ in ALL_EUROPEAN_CSV_LEAGUES)
 
 # فصل CSV: کلید «سال شروع» فصل → کد پوشهٔ mmz4281/<YY><YY+1>.
 # فصل ۲۰۲۶–۲۰۲۷ (سال شروع ۲۰۲۶) → پوشهٔ 2627.
@@ -103,12 +122,13 @@ class FootballDataCoUk:
 
     # ---------- دریافت و ذخیرهٔ خام ----------
 
-    def download_season_csv(self, start_year: int) -> tuple[str, Path]:
-        """دانلود CSV یک فصل؛ خروجی: (متن خام، مسیر ذخیره). hash از محتوا ساخته می‌شود."""
+    def download_season_csv(self, start_year: int, league_code: str = LEAGUE_PL) -> tuple[str, Path]:
+        """دانلود CSV یک فصل برای لیگ دلخواه (`E0`, `SP1`, `I1`, `D1`, `F1`)؛ خروجی: (متن خام، مسیر ذخیره)."""
         code = SEASON_CSV.get(start_year)
         if code is None:
             raise ValueError(f"season {start_year} is not supported (only {sorted(SEASON_CSV)})")
-        url_path = f"/mmz4281/{code}/{LEAGUE_PL}.csv"
+        lg = (league_code or LEAGUE_PL).strip().upper()
+        url_path = f"/mmz4281/{code}/{lg}.csv"
         resp = self._client.get(url_path)
         if resp.status_code != 200:
             raise RuntimeError(f"CSV download failed: HTTP {resp.status_code} - check network/VPN and retry")
@@ -121,7 +141,7 @@ class FootballDataCoUk:
         day = time.strftime("%Y-%m-%d", time.gmtime())
         out_dir = self.data_dir / day
         out_dir.mkdir(parents=True, exist_ok=True)
-        out_file = out_dir / f"{LEAGUE_PL}_{code}_{payload_hash[:12]}.csv"
+        out_file = out_dir / f"{lg}_{code}_{payload_hash[:12]}.csv"
         if not out_file.exists():  # idempotent
             meta = {
                 "provider": PROVIDER,
@@ -159,8 +179,8 @@ class FootballDataCoUk:
 
             home_csv = (r.get("HomeTeam") or "").strip()
             away_csv = (r.get("AwayTeam") or "").strip()
-            home = csv_to_canonical.get(home_csv, home_csv)
-            away = csv_to_canonical.get(away_csv, away_csv)
+            home = csv_to_canonical.get(home_csv) or canonical_team_name(home_csv)
+            away = csv_to_canonical.get(away_csv) or canonical_team_name(away_csv)
 
             # تاریخ dd/mm/yyyy → yyyy-mm-dd (تاریخ محلی انگلیس، بدون تبدید timezone)
             d = (r.get("Date") or "").strip()
@@ -204,9 +224,11 @@ class FootballDataCoUk:
 
     # ---------- دسترسی راحت ----------
 
-    def fetch_season_rows(self, start_year: int) -> tuple[list[CsvMatchRow], str, Path]:
-        """دانلود + نرمال‌سازی در یک فراخوانی — خروجی: (ردیف‌ها، hash، مسیر خام)."""
-        text, path = self.download_season_csv(start_year)
+    def fetch_season_rows(
+        self, start_year: int, league_code: str = LEAGUE_PL
+    ) -> tuple[list[CsvMatchRow], str, Path]:
+        """دانلود + نرمال‌سازی در یک فراخوانی برای لیگ دلخواه (`E0`, `SP1`, `I1`, `D1`, `F1`)."""
+        text, path = self.download_season_csv(start_year, league_code=league_code)
         rows = self.parse_season(text)
         payload_hash = hashlib.sha256(text.encode("utf-8")).hexdigest()
         return rows, payload_hash, path
@@ -224,7 +246,7 @@ class FootballDataCoUk:
         reader = csv.DictReader(io.StringIO(csv_text))
         out: list[dict[str, Any]] = []
         for r in reader:
-            if (r.get("Div") or "").strip() != LEAGUE_PL:
+            if (r.get("Div") or "").strip().upper() not in EUROPEAN_CSV_CODES:
                 continue
             d = (r.get("Date") or "").strip()
             match_date = None

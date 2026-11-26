@@ -710,6 +710,23 @@ def hydrate_players_rating_match(item: dict[str, Any]) -> dict[str, Any]:
             event_id=ev_id,
         )
         if parsed:
+            try:
+                from src.xgpedia.providers.opta_hub import lookup_db_match_opta
+                h_n = str(((parsed.get("home") or {}).get("name_en") or (parsed.get("home") or {}).get("name") or ""))
+                a_n = str(((parsed.get("away") or {}).get("name_en") or (parsed.get("away") or {}).get("name") or ""))
+                opta = lookup_db_match_opta(h_n, a_n)
+                if opta and opta.get("top_players"):
+                    opta_map = {str(p["name"]).strip(): float(p["rating"]) for p in opta["top_players"] if p.get("name") and p.get("rating")}
+                    for side_k in ("home", "away"):
+                        for pl in ((parsed.get(side_k) or {}).get("players") or []):
+                            pnm = str(pl.get("name") or "").strip()
+                            if pnm in opta_map:
+                                pl["rating"] = opta_map[pnm]
+                    if opta.get("motm") and opta["motm"].get("name"):
+                        parsed["motm_name"] = opta["motm"]["name"]
+                    parsed["source"] = f"{parsed.get('source', 'ESPN')} + FotMob Opta"
+            except Exception:
+                pass
             return parsed
     except Exception:
         pass

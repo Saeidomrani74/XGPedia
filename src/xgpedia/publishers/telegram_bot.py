@@ -465,7 +465,7 @@ def _format_matches_message(
     ineligible = [m for m in matches if not m.eligible]
 
     if not matches:
-        lines.append("⚽ هیچ بازی شروع‌نشده‌ای برای امروز در دیتابیس ثبت نشده است.")
+        lines.append("⚽ هیچ بازی شروع‌نشده‌ای برای امروز در ۶ لیگ معتبر اروپا ثبت نشده است.")
     else:
         if eligible:
             lines.append(f"🟢 <b>بازی‌های آماده برای تولید کارت پیش‌ازبازی ({len(eligible)} بازی):</b>")
@@ -491,7 +491,9 @@ def _format_matches_message(
             badge = f" ⏰{m.scheduled_time}"
         elif m.existing_post_id:
             badge = " 📝"
-        btn_text = f"⚽ {m.home_fa} × {m.away_fa} | {m.kickoff_tehran}{badge}"
+        from src.xgpedia.core.leagues import competition_badge_fa
+        lg_b = competition_badge_fa(m.competition)
+        btn_text = f"{lg_b} | {m.home_fa} × {m.away_fa} ({m.kickoff_tehran}){badge}"
         rows.append([InlineKeyboardButton(text=btn_text, callback_data=_cb_for_fixture("cust", m.fixture_id))])
 
     rows.append([
@@ -515,7 +517,7 @@ def _format_finished_matches_message(
         lines.append(header)
         lines.append("")
     if not matches:
-        lines.append("ℹ️ در ۲۴ ساعت گذشته (از ۱ ثانیه پیش تا ۲۴ ساعت پیش) هیچ بازی پایان‌یافته‌ای در لیگ برتر ثبت نشده است.")
+        lines.append("ℹ️ در ۲۴ ساعت گذشته (از ۱ ثانیه پیش تا ۲۴ ساعت پیش) هیچ بازی پایان‌یافته‌ای در ۶ لیگ معتبر اروپا ثبت نشده است.")
     else:
         lines.append(f"🏁 <b>بازی‌های پایان‌یافتهٔ ۲۴ ساعت اخیر ({len(matches)} بازی):</b>")
         lines.append("روی هر بازی بزنید تا ماژول‌ها و چیدمان کارت پس‌ازبازی را انتخاب کنید:")
@@ -527,7 +529,9 @@ def _format_finished_matches_message(
             badge = " ✅"
         elif m.existing_post_id:
             badge = " 📝"
-        btn_text = f"🏁 {m.home_fa} {m.home_goals}-{m.away_goals} {m.away_fa} | {m.elapsed_fa}{badge}"
+        from src.xgpedia.core.leagues import competition_badge_fa
+        lg_b = competition_badge_fa(getattr(m, "competition", "Premier League"))
+        btn_text = f"{lg_b} | {m.home_fa} {m.home_goals}-{m.away_goals} {m.away_fa} ({m.elapsed_fa}){badge}"
         rows.append([InlineKeyboardButton(text=btn_text, callback_data=_cb_for_fixture("pcust", m.fixture_id))])
 
     rows.append([
@@ -900,7 +904,13 @@ async def on_any_text(m: Message, bot: Bot | None = None) -> None:
         mode_lbl = "اجباری از API" if force_flag else "هوشمند (با کش دیتابیس)"
         status_msg = await m.answer(f"⏳ در حال بررسی بازی‌های امروز ({mode_lbl}) + ESPN/Understat + پخش زنده...")
         try:
-            report = await asyncio.wait_for(asyncio.to_thread(tw.sync_today_matches, force=force_flag), timeout=90.0)
+            report = await _run_sync_with_heartbeat(status_msg, mode_lbl, force=force_flag, timeout_sec=240.0)
+        except asyncio.TimeoutError:
+            await status_msg.edit_text(
+                "⏳ همگام‌سازی بیش از ۴ دقیقه طول کشید و ممکن است هنوز در پس‌زمینه در حال تکمیل باشد؛ چند لحظه بعد «📋 بازی‌های امروز» را بزنید.",
+                parse_mode="HTML",
+            )
+            return
         except Exception as e:
             await status_msg.edit_text(f"❌ خطا در همگام‌سازی:\n{html.escape(type(e).__name__)}: {html.escape(str(e)[:400])}", parse_mode="HTML")
             return
@@ -1109,6 +1119,29 @@ async def on_any_text(m: Message, bot: Bot | None = None) -> None:
 
 # ─── هندلرهای دریافت و لیست بازی‌های امروز ───
 
+
+async def _run_sync_with_heartbeat(status_msg: Message, mode_lbl: str, *, force: bool, timeout_sec: float = 240.0):
+    """اجرای sync_today_matches در ترد پس‌زمینه همراه با به‌روزرسانی زندهٔ زمان سپری‌شده تا پیام تایم‌اوت کاذب نمایش داده نشود."""
+    import time as _time
+    task = asyncio.create_task(asyncio.to_thread(tw.sync_today_matches, force=force))
+    t0 = _time.monotonic()
+    while True:
+        elapsed = _time.monotonic() - t0
+        remaining = timeout_sec - elapsed
+        if remaining <= 0:
+            raise asyncio.TimeoutError(f"sync exceeded {int(timeout_sec)}s")
+        try:
+            return await asyncio.wait_for(asyncio.shield(task), timeout=min(20.0, remaining))
+        except asyncio.TimeoutError:
+            sec = int(_time.monotonic() - t0)
+            try:
+                await status_msg.edit_text(
+                    f"⏳ همچنان در حال دریافت بازی‌های امروز ({mode_lbl})... ({sec} ثانیه گذشته)",
+                )
+            except Exception:
+                pass
+
+
 async def _run_sync_flow(cb: CallbackQuery, *, force: bool) -> None:
     if not tp.is_admin(cb.from_user.id):
         await _safe_cb_answer(cb, "شما مجاز نیستید.", show_alert=True)
@@ -1119,10 +1152,13 @@ async def _run_sync_flow(cb: CallbackQuery, *, force: bool) -> None:
         f"⏳ در حال بررسی بازی‌های امروز ({mode_lbl}) + جدول پخش شبکه سه و ورزش..."
     )
     try:
-        report = await asyncio.wait_for(
-            asyncio.to_thread(tw.sync_today_matches, force=force),
-            timeout=90.0,
+        report = await _run_sync_with_heartbeat(status_msg, mode_lbl, force=force, timeout_sec=240.0)
+    except asyncio.TimeoutError:
+        await status_msg.edit_text(
+            "⏳ همگام‌سازی بیش از ۴ دقیقه طول کشید و ممکن است هنوز در پس‌زمینه در حال تکمیل باشد؛ چند لحظه بعد «📋 بازی‌های امروز» را بزنید.",
+            parse_mode="HTML",
         )
+        return
     except Exception as e:
         await status_msg.edit_text(
             f"❌ خطا در همگام‌سازی بازی‌های امروز:\n{html.escape(type(e).__name__)}: {html.escape(str(e)[:400])}",

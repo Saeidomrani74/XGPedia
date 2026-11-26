@@ -471,6 +471,34 @@ def cmd_daily(args: argparse.Namespace) -> None:
 
 
 
+def cmd_ig_auth(_args: argparse.Namespace) -> None:
+    """ورود یک‌باره به اینستاگرام با instagrapi (بدون نیاز به Meta for Developers) و ذخیره session."""
+    from src.xgpedia.publishers.omnichannel import run_interactive_ig_login
+
+    run_interactive_ig_login()
+
+
+def cmd_x_auth(_args: argparse.Namespace) -> None:
+    """دریافت اولیهٔ Access Token و Refresh Token ایکس (OAuth 2.0 PKCE) و ذخیره در data/x_oauth_tokens.json."""
+    from src.xgpedia.publishers.x_oauth import run_interactive_x_oauth_login
+
+    run_interactive_x_oauth_login()
+
+
+def cmd_test_platforms(_args: argparse.Namespace) -> None:
+    """تست اتصال پلتفرم‌های انتشار همزمان (بله، ایتا، ایکس، اینستاگرام) بدون ارسال پست."""
+    from src.xgpedia.publishers.omnichannel import verify_omnichannel_connections
+
+    print("Checking Omnichannel publishing platforms from .env...")
+    rows = verify_omnichannel_connections()
+    for r in rows:
+        if not r["configured"]:
+            tag = "SKIP"
+        else:
+            tag = OK if r["ok"] else FAIL
+        print(f"  [{tag}] {r['platform']:10s} -> {r['detail']}")
+
+
 def cmd_bot(_args: argparse.Namespace) -> None:
     """اجرای ربات تلگرام ادمین + زمان‌بند خودکار پس‌زمینه."""
     import asyncio
@@ -737,6 +765,15 @@ def main(argv: list[str] | None = None) -> int:
 
     sub.add_parser("bot", help="run interactive Telegram admin bot + automatic publish scheduler")
     sub.add_parser("llm-status", help="show prioritized free LLM + image/video fallback chain")
+    sub.add_parser("test-platforms", help="Test configured Omnichannel platforms (Bale, Eitaa, X, Instagram)")
+    p_txg = sub.add_parser("test-xg", help="Test real Opta xG fetch (SofaScore / FotMob / Playwright / Understat)")
+    p_txg.add_argument("home", help="Home team English name (e.g. Lille)")
+    p_txg.add_argument("away", help="Away team English name (e.g. Bayern Munich)")
+    p_txg.add_argument("date", help="Match date YYYY-MM-DD (e.g. 2026-11-25)")
+    p_dc = sub.add_parser("data-chains", help="List all 23 cards, required fields, and credibility-ranked data source chains")
+    p_dc.add_argument("--card", default=None, help="Filter by card ID (e.g. post_match, pre_match, player_profile)")
+    sub.add_parser("x-auth", help="X (Twitter) OAuth 2.0 PKCE one-time login & auto-refresh setup")
+    sub.add_parser("ig-auth", help="Instagram direct login via instagrapi (no Meta Developer Portal needed)")
     sub.add_parser("diagnose-modules", help="inspect DB counts for keyduel, signals (+EV), wave, and coaches")
 
     p_img = sub.add_parser("gen-image", help="generate a high-quality free image using multi-provider fallback")
@@ -783,6 +820,37 @@ def main(argv: list[str] | None = None) -> int:
         cmd_publish(args)
     elif args.cmd == "check-telegram":
         cmd_check_telegram(args)
+    elif args.cmd == "test-xg":
+        from src.xgpedia.providers.xg_engine import fetch_real_match_xg
+        diag: list[str] = []
+        res = fetch_real_match_xg(args.home, args.away, args.date, timeout=20.0, diag=diag)
+        for line in diag:
+            print("  •", line)
+        if not res:
+            print(f"❌ xG واقعی برای {args.home} vs {args.away} ({args.date}) پیدا نشد.")
+        else:
+            print(f"✅ منبع: {res.get('provider')} | {args.home} {res.get('home_xg')} - {res.get('away_xg')} {args.away}")
+            if res.get("home_big_chances") is not None:
+                print(f"   Big Chances: {res.get('home_big_chances')} - {res.get('away_big_chances')}")
+            if res.get("home_shots"):
+                print(f"   ShotMap: {len(res['home_shots'])} home shots, {len(res.get('away_shots') or [])} away shots | InsideBox: {res.get('home_inside_box')}-{res.get('away_inside_box')}")
+            if res.get("momentum"):
+                print(f"   Momentum: {len(res['momentum'])} buckets (5-min)")
+            if res.get("top_players"):
+                print(f"   Top Rated ({len(res['top_players'])}): " + ", ".join(f"{p['name']} ({p['rating']})" for p in res["top_players"][:3]))
+            if res.get("motm"):
+                print(f"   MOTM: {res['motm']['name']} ({res['motm']['rating']})")
+            if res.get("home_gk") or res.get("away_gk"):
+                print(f"   GKs: {(res.get('home_gk') or {}).get('name', '-')} vs {(res.get('away_gk') or {}).get('name', '-')}")
+    elif args.cmd == "data-chains":
+        from src.xgpedia.core.source_chain import format_chains_report_fa
+        print(format_chains_report_fa(args.card))
+    elif args.cmd == "test-platforms":
+        cmd_test_platforms(args)
+    elif args.cmd == "x-auth":
+        cmd_x_auth(args)
+    elif args.cmd == "ig-auth":
+        cmd_ig_auth(args)
     elif args.cmd == "weekly-report":
         cmd_weekly_report(args)
     elif args.cmd == "daily":

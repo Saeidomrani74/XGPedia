@@ -250,7 +250,12 @@ def fetch_live_h2h_players_items(*, force_refresh: bool = False, limit: int = 12
         bootstrap = _http_get_json(FPL_BOOTSTRAP_URL, timeout=9.0)
     except Exception:
         return []
-    items = parse_fpl_h2h_duels(bootstrap, limit=limit)
+    try:
+        from src.xgpedia.providers.opta_hub import merge_fpl_and_european_bootstrap
+        bootstrap = merge_fpl_and_european_bootstrap(bootstrap, force_refresh=force_refresh)
+    except Exception:
+        pass
+    items = parse_fpl_h2h_duels(bootstrap, limit=max(limit, 18))
     _LIVE_CACHE["ts"] = now_ts
     _LIVE_CACHE["items"] = items
     return list(items)

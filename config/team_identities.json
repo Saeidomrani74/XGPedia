@@ -857,6 +857,358 @@
         "secondary": "#F36E21"
       },
       "crest": "brand/crests/MTP.svg"
+    },
+    "Sabah FK": {
+      "code": "SAB",
+      "colors": {
+        "primary": "#00A3E0",
+        "secondary": "#102A43"
+      },
+      "crest": "brand/crests/SAB.svg"
+    },
+    "Qarabag": {
+      "code": "QAR",
+      "colors": {
+        "primary": "#111111",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/QAR.svg"
+    },
+    "Olympiacos": {
+      "code": "OLY",
+      "colors": {
+        "primary": "#D71920",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/OLY.svg"
+    },
+    "PAOK": {
+      "code": "PAO",
+      "colors": {
+        "primary": "#111111",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/PAO.svg"
+    },
+    "Panathinaikos": {
+      "code": "PAN",
+      "colors": {
+        "primary": "#007A33",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/PAN.svg"
+    },
+    "Fenerbahce": {
+      "code": "FEN",
+      "colors": {
+        "primary": "#FFED00",
+        "secondary": "#00235B"
+      },
+      "crest": "brand/crests/FEN.svg"
+    },
+    "Besiktas": {
+      "code": "BSK",
+      "colors": {
+        "primary": "#111111",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/BSK.svg"
+    },
+    "Slavia Prague": {
+      "code": "SLA",
+      "colors": {
+        "primary": "#E30613",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/SLA.svg"
+    },
+    "Sparta Prague": {
+      "code": "SPA",
+      "colors": {
+        "primary": "#8B0018",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/SPA.svg"
+    },
+    "Viktoria Plzen": {
+      "code": "PLZ",
+      "colors": {
+        "primary": "#004B93",
+        "secondary": "#D71920"
+      },
+      "crest": "brand/crests/PLZ.svg"
+    },
+    "Bodo/Glimt": {
+      "code": "BOD",
+      "colors": {
+        "primary": "#FFD100",
+        "secondary": "#111111"
+      },
+      "crest": "brand/crests/BOD.svg"
+    },
+    "FC Copenhagen": {
+      "code": "FCK",
+      "colors": {
+        "primary": "#003DA5",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/FCK.svg"
+    },
+    "Midtjylland": {
+      "code": "MID",
+      "colors": {
+        "primary": "#E30613",
+        "secondary": "#111111"
+      },
+      "crest": "brand/crests/MID.svg"
+    },
+    "Young Boys": {
+      "code": "YBB",
+      "colors": {
+        "primary": "#FFD100",
+        "secondary": "#111111"
+      },
+      "crest": "brand/crests/YBB.svg"
+    },
+    "FC Basel": {
+      "code": "BSL",
+      "colors": {
+        "primary": "#E30613",
+        "secondary": "#004B93"
+      },
+      "crest": "brand/crests/BSL.svg"
+    },
+    "Union Saint-Gilloise": {
+      "code": "USG",
+      "colors": {
+        "primary": "#FFD100",
+        "secondary": "#003DA5"
+      },
+      "crest": "brand/crests/USG.svg"
+    },
+    "Anderlecht": {
+      "code": "AND",
+      "colors": {
+        "primary": "#512D6D",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/AND.svg"
+    },
+    "Genk": {
+      "code": "GNK",
+      "colors": {
+        "primary": "#0055A4",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/GNK.svg"
+    },
+    "Dinamo Zagreb": {
+      "code": "DZG",
+      "colors": {
+        "primary": "#004B93",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/DZG.svg"
+    },
+    "Red Star Belgrade": {
+      "code": "CZV",
+      "colors": {
+        "primary": "#D71920",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/CZV.svg"
+    },
+    "Rangers": {
+      "code": "RFC",
+      "colors": {
+        "primary": "#003DA5",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/RFC.svg"
+    },
+    "Sturm Graz": {
+      "code": "STG",
+      "colors": {
+        "primary": "#111111",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/STG.svg"
+    },
+    "Slovan Bratislava": {
+      "code": "SLB",
+      "colors": {
+        "primary": "#009FE3",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/SLB.svg"
+    },
+    "Ferencvaros": {
+      "code": "FTC",
+      "colors": {
+        "primary": "#00843D",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/FTC.svg"
+    },
+    "Dynamo Kyiv": {
+      "code": "DYK",
+      "colors": {
+        "primary": "#0055A4",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/DYK.svg"
+    },
+    "Pafos": {
+      "code": "PAF",
+      "colors": {
+        "primary": "#0055A4",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/PAF.svg"
+    },
+    "Kairat": {
+      "code": "KRT",
+      "colors": {
+        "primary": "#FFD100",
+        "secondary": "#111111"
+      },
+      "crest": "brand/crests/KRT.svg"
+    },
+    "FCSB": {
+      "code": "FCS",
+      "colors": {
+        "primary": "#D71920",
+        "secondary": "#003DA5"
+      },
+      "crest": "brand/crests/FCS.svg"
+    },
+    "Malmo FF": {
+      "code": "MFF",
+      "colors": {
+        "primary": "#5BC2E7",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/MFF.svg"
+    },
+    "SC Braga": {
+      "code": "BRG",
+      "colors": {
+        "primary": "#D71920",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/BRG.svg"
+    },
+    "AZ Alkmaar": {
+      "code": "AZA",
+      "colors": {
+        "primary": "#D71920",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/AZA.svg"
+    },
+    "FC Twente": {
+      "code": "TWE",
+      "colors": {
+        "primary": "#D71920",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/TWE.svg"
+    },
+    "Viking FK": {
+      "code": "VIK",
+      "colors": {
+        "primary": "#003B73",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/VIK.svg"
+    },
+    "Lech Poznan": {
+      "code": "LPO",
+      "colors": {
+        "primary": "#004C97",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/LPO.svg"
+    },
+    "NK Celje": {
+      "code": "NKC",
+      "colors": {
+        "primary": "#0072CE",
+        "secondary": "#FFCD00"
+      },
+      "crest": "brand/crests/NKC.svg"
+    },
+    "Jagiellonia Bialystok": {
+      "code": "JAG",
+      "colors": {
+        "primary": "#FCD116",
+        "secondary": "#D21034"
+      },
+      "crest": "brand/crests/JAG.svg"
+    },
+    "AC Omonia": {
+      "code": "OMO",
+      "colors": {
+        "primary": "#00843D",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/OMO.svg"
+    },
+    "SCU Torreense": {
+      "code": "TRR",
+      "colors": {
+        "primary": "#00529B",
+        "secondary": "#E30613"
+      },
+      "crest": "brand/crests/TRR.svg"
+    },
+    "Hapoel Be'er Sheva": {
+      "code": "HBS",
+      "colors": {
+        "primary": "#D71920",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/HBS.svg"
+    },
+    "NEC Nijmegen": {
+      "code": "NEC",
+      "colors": {
+        "primary": "#E30613",
+        "secondary": "#00843D"
+      },
+      "crest": "brand/crests/NEC.svg"
+    },
+    "OFI Crete": {
+      "code": "OFI",
+      "colors": {
+        "primary": "#E2E8F0",
+        "secondary": "#111827"
+      },
+      "crest": "brand/crests/OFI.svg"
+    },
+    "Lillestrom SK": {
+      "code": "LSK",
+      "colors": {
+        "primary": "#FFD100",
+        "secondary": "#111827"
+      },
+      "crest": "brand/crests/LSK.svg"
+    },
+    "Levski Sofia": {
+      "code": "LVS",
+      "colors": {
+        "primary": "#0052B4",
+        "secondary": "#FFFFFF"
+      },
+      "crest": "brand/crests/LVS.svg"
+    },
+    "Ararat-Armenia": {
+      "code": "ARA",
+      "colors": {
+        "primary": "#F58220",
+        "secondary": "#111827"
+      },
+      "crest": "brand/crests/ARA.svg"
     }
   },
   "display_color_rule": "میزبان همیشه رنگ اصلی رسمی. میهمان هم رنگ اصلی رسمی؛ فقط اگر با رنگ میزبان بیش‌ازحد نزدیک بود (فاصلهٔ رنگی زیر آستانه) رنگ ثانویهٔ میهمان به‌کار می‌رود و اگر آن هم نزدیک بود، رنگ ذخیرهٔ contrast یعنی matchday_palette.sky_bright — تا دو تیم روی کارت هرگز یک‌شکل دیده نشوند.",

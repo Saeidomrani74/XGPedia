@@ -49,7 +49,11 @@ _DEBATE_RSS_FEEDS: list[tuple[str, str]] = [
 _DEBATE_ESPN_FEEDS: list[tuple[str, str]] = [
     ("eng.1", "لیگ برتر انگلیس"),
     ("uefa.champions", "لیگ قهرمانان اروپا"),
+    ("uefa.europa", "لیگ اروپا"),
     ("esp.1", "لالیگا اسپانیا"),
+    ("ita.1", "سری آ ایتالیا"),
+    ("ger.1", "بوندس‌لیگا آلمان"),
+    ("fra.1", "لیگ ۱ فرانسه"),
 ]
 
 _CLUB_MAP: list[tuple[str, str, str, str]] = [

@@ -29,6 +29,7 @@ from typing import Any
 from src.xgpedia.config import (
     ROOT,
     load_brand,
+    card_short_team_name_fa,
     team_crest_path,
     team_identity,
 )
@@ -57,7 +58,18 @@ FA_DIGITS = str.maketrans("0123456789", "۰۱۲۳۴۵۶۷۸۹")
 TEHRAN = timezone(timedelta(hours=3, minutes=30))
 NO_DATA = "داده در دسترس نیست"
 
-COMPETITION_FA = {"Premier League": "لیگ برتر انگلیس"}
+COMPETITION_FA = {
+    "Premier League": "لیگ برتر انگلیس",
+    "UEFA Champions League": "لیگ قهرمانان اروپا",
+    "Champions League": "لیگ قهرمانان اروپا",
+    "UEFA Europa League": "لیگ اروپا",
+    "Europa League": "لیگ اروپا",
+    "La Liga": "لالیگا اسپانیا",
+    "Primera Division": "لالیگا اسپانیا",
+    "Serie A": "سری آ ایتالیا",
+    "Bundesliga": "بوندس‌لیگا آلمان",
+    "Ligue 1": "لیگ ۱ فرانسه",
+}
 FORM_LABELS = {"W": "ب", "D": "م", "L": "ش"}
 
 MODULE_DEFS = [
@@ -270,13 +282,41 @@ def _brand_lockup_svg(mono: bool = False) -> str:
 
 
 def _crest_data_uri(name_en: str) -> str | None:
-    """data URI لوگوی واقعی تیم از brand/crests/{CODE}.svg|png برای فیلد logoUrl استودیو."""
+    """data URI لوگوی رسمی و واقعی تیم برای همهٔ ۱۰۷ باشگاه ۶ لیگ اروپا.
+
+    اولویت ۱: فایل لوگوی واقعی محلی در `brand/crests/` (SVG رسمی >= 2.5KB یا PNG).
+    اولویت ۲: دریافت و کش محلی لوگوی رسمی PNG از ESPN (`pl_badges_free` / `ucl_badges_free`).
+    اولویت ۳ (آفلاین): سپر SVG محلی برای جلوگیری از شکست رندر.
+    """
     path = team_crest_path(name_en)
-    if path is None:
-        return None
-    mime = "image/svg+xml" if path.suffix == ".svg" else "image/png"
-    b64 = base64.b64encode(path.read_bytes()).decode("ascii")
-    return f"data:{mime};base64,{b64}"
+    if path is not None and path.exists():
+        is_placeholder_svg = path.suffix.lower() == ".svg" and path.stat().st_size < 2500
+        if not is_placeholder_svg:
+            mime = "image/svg+xml" if path.suffix.lower() == ".svg" else "image/png"
+            b64 = base64.b64encode(path.read_bytes()).decode("ascii")
+            return f"data:{mime};base64,{b64}"
+
+    # دریافت و کش لوگوی رسمی ۵۰۰×۵۰۰ باشگاه از ESPN (تمام ۶ لیگ اروپایی + کشف پویای چمپیونزلیگ)
+    try:
+        from src.xgpedia.providers.pl_badges_free import get_pl_badge_data_uri
+        live_uri = get_pl_badge_data_uri(name_en)
+        if live_uri and live_uri.startswith("data:image/"):
+            return live_uri
+    except Exception:
+        pass
+    try:
+        from src.xgpedia.providers.dynamic_crests import fetch_and_cache_crest_data_uri
+        dyn_uri = fetch_and_cache_crest_data_uri(name_en)
+        if dyn_uri and dyn_uri.startswith("data:image/"):
+            return dyn_uri
+    except Exception:
+        pass
+
+    if path is not None and path.exists():
+        mime = "image/svg+xml" if path.suffix.lower() == ".svg" else "image/png"
+        b64 = base64.b64encode(path.read_bytes()).decode("ascii")
+        return f"data:{mime};base64,{b64}"
+    return None
 
 
 def _crest_html(name_en: str, team: dict, side: str) -> str:
@@ -506,7 +546,7 @@ def _team_side_ctx(side: dict, ident: dict | None, display_color: str, side_key:
         return None
 
     return {
-        "name_fa": side.get("name_fa", ""),
+        "name_fa": card_short_team_name_fa(side.get("name_en", ""), side.get("name_fa", "")),
         "name_en": side.get("name_en", ""),
         "code": (ident or {}).get("code") or (side.get("name_en") or "FC")[:3].upper(),
         "primary": colors.get("primary") or display_color,
@@ -519,7 +559,7 @@ def _team_side_ctx(side: dict, ident: dict | None, display_color: str, side_key:
         "sot": _val("sot_avg"),
         "corners": _val("corners_avg"),
         "xg_series": series,
-        "sub": str(side.get("sub") or "").strip(),
+        "sub": str(side.get("sub") or "").strip().replace(" & ", " و ").replace("&", " و "),
         "kp": kp,
         "watchout": str(side.get("watchout") or "").strip() or None,
         "radar": radar,

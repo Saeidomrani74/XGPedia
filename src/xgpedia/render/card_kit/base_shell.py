@@ -115,7 +115,7 @@ def _render_pre_hero(payload: dict[str, Any], fmt: str, header_mode: str) -> str
     xg_hub = (
         f'<div class="hx-box">'
         f'<div class="hx-top"><span class="hx-val" style="color:{hc}">{fa(f2(h_xg))}</span>'
-        f'<div class="hx-mid"><span class="hx-lbl fm">xG</span><span class="hx-tot fm">{fa(f2(h_xg + a_xg))}</span></div>'
+        f'<div class="hx-mid"><span class="hx-lbl fm">xG</span><span class="hx-tot">{fa(f2(h_xg + a_xg))}</span></div>'
         f'<span class="hx-val" style="color:{ac}">{fa(f2(a_xg))}</span></div>'
         f'<div class="hx-bot"><span class="hx-xp">{fa(f2(xh))}</span><span class="hx-xpl fm">xPts</span><span class="hx-xp">{fa(f2(xa))}</span></div>'
         f'</div>'
@@ -190,7 +190,7 @@ def _render_post_hero(payload: dict[str, Any], fmt: str, header_mode: str) -> st
     xg_hub = (
         f'<div class="hx-box">'
         f'<div class="hx-top"><span class="hx-val" style="color:{hc}">{fa(f2(h_xg))}</span>'
-        f'<div class="hx-mid"><span class="hx-lbl fm">xG</span><span class="hx-tot fm">{fa(f2(h_xg + a_xg))}</span></div>'
+        f'<div class="hx-mid"><span class="hx-lbl fm">xG</span><span class="hx-tot">{fa(f2(h_xg + a_xg))}</span></div>'
         f'<span class="hx-val" style="color:{ac}">{fa(f2(a_xg))}</span></div>'
         f'<div class="hx-bot"><span class="hx-xp">{fa(f2(xh))}</span><span class="hx-xpl fm">xPts</span><span class="hx-xp">{fa(f2(xa))}</span></div>'
         f'</div>'
@@ -471,8 +471,9 @@ html,body{{width:{w}px;height:{h}px;overflow:hidden;background:#0D1730;color:#F8
 .mod-half .tr-rk{{width:20px;height:20px;font-size:13px}}
 .tr-rk1{{color:#FBBF24}}.tr-bar{{width:4px;height:16px;border-radius:99px;flex-shrink:0}}.tr-nm{{font-size:19px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
 .mod-half .tr-nm{{font-size:15px}}
-.tr-st{{font-size:16px;color:#CBD5E1;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px}}
-.mod-half .tr-st{{max-width:115px;font-size:13px}}.tr-rt{{padding:2px 9px;border-radius:7px;background:rgba(16,185,129,0.16);border:1px solid rgba(52,211,153,0.45);color:#34D399;font-size:18px;font-weight:900;flex-shrink:0}}
+.tr-r{{flex-shrink:0}}
+.tr-st{{font-size:16px;color:#CBD5E1;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:340px}}
+.mod-half .tr-st{{max-width:225px;font-size:13px}}.tr-rt{{padding:2px 9px;border-radius:7px;background:rgba(16,185,129,0.16);border:1px solid rgba(52,211,153,0.45);color:#34D399;font-size:18px;font-weight:900;flex-shrink:0}}
 .mod-half .tr-rt{{padding:1px 6px;font-size:15px}}
 .tr-rt1{{background:rgba(245,158,11,0.2);border-color:rgba(251,191,36,0.65);color:#FBBF24}}
 .mt-wrap{{flex:1 1 0%;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;gap:5px}}

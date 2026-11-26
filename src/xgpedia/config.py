@@ -9,6 +9,7 @@ API-Football فقط fallback پولی می‌ماند (تصمیم D4 بازنگ�
 from __future__ import annotations
 
 import json
+import re
 import os
 from datetime import date
 from functools import lru_cache
@@ -98,8 +99,15 @@ def load_team_identities() -> dict:
         return json.load(f)
 
 
+def _ascii_fold(text: str) -> str:
+    import unicodedata
+    tr = str.maketrans({"ø": "o", "Ø": "O", "ł": "l", "Ł": "L", "đ": "d", "Đ": "D", "ß": "ss", "æ": "ae", "Æ": "AE", "œ": "oe", "Œ": "OE"})
+    s = unicodedata.normalize("NFKD", str(text or "").translate(tr))
+    return "".join(ch for ch in s if not unicodedata.combining(ch)).strip().lower()
+
+
 def canonical_team_name(raw_name: str, fdo_id: int | None = None) -> str:
-    """تبدیل نام خام هر provider (مثل 'Liverpool FC' یا 'Hull City AFC') به نام canonical در team_mapping.json."""
+    """تبدیل نام خام هر provider (FDO/ESPN/SofaScore/CSV) به نام canonical یکتا در team_mapping.json."""
     if not raw_name:
         return raw_name
     cleaned = raw_name.strip()
@@ -109,27 +117,41 @@ def canonical_team_name(raw_name: str, fdo_id: int | None = None) -> str:
     all_teams.update(m.get("teams", {}))
 
     low = cleaned.lower()
-    for canonical, info in all_teams.items():
-        if canonical.lower() == low or str(info.get("csv_short", "")).lower() == low:
-            return canonical
+    fold = _ascii_fold(cleaned)
 
-    norm = low
-    for prefix in ("afc ", "fc "):
+    # ۱) تطبیق دقیق با نام canonical، csv_short و aliases (با و بدون اعراب لاتین)
+    for canonical, info in all_teams.items():
+        if canonical.lower() == low or _ascii_fold(canonical) == fold:
+            return canonical
+        cs = str(info.get("csv_short", "") or "")
+        if cs and (cs.lower() == low or _ascii_fold(cs) == fold):
+            return canonical
+        for al in info.get("aliases") or []:
+            al_s = str(al or "")
+            if al_s and (al_s.lower() == low or _ascii_fold(al_s) == fold):
+                return canonical
+
+    # ۲) حذف پیشوند/پسوندهای رایج باشگاهی (FC, FK, CF, SK, SC, AC, ...)
+    norm = fold
+    for prefix in ("afc ", "fc ", "fk ", "sk ", "sc ", "ac ", "as ", "rc ", "rcd ", "cd ", "ud ", "ca ", "sv ", "vfb ", "vfl ", "ssc ", "us ", "ogc ", "club "):
         if norm.startswith(prefix):
             norm = norm[len(prefix):].strip()
-    for suffix in (" & hove albion fc", " & hove albion", " hotspur fc", " hotspur", " afc", " fc"):
+    for suffix in (" & hove albion fc", " & hove albion", " hotspur fc", " hotspur", " afc", " fc", " fk", " cf", " sk", " sc", " kv", " 1909", " 1893", " 1846"):
         if norm.endswith(suffix):
             norm = norm[:-len(suffix)].strip()
 
     for canonical, info in all_teams.items():
-        if canonical.lower() == norm or str(info.get("csv_short", "")).lower() == norm:
+        if _ascii_fold(canonical) == norm or _ascii_fold(str(info.get("csv_short", "") or "")) == norm:
             return canonical
+        for al in info.get("aliases") or []:
+            if _ascii_fold(str(al or "")) == norm:
+                return canonical
 
     for suffix in (" united", " city", " town", " albion", " wanderers"):
         if norm.endswith(suffix):
             cand = norm[:-len(suffix)].strip()
             for canonical in all_teams:
-                if canonical.lower() == cand:
+                if _ascii_fold(canonical) == cand:
                     return canonical
 
     if fdo_id is not None:
@@ -191,9 +213,21 @@ def team_name_fa(name_en: str) -> str:
             if canon == canonical or name_en in (canonical, t.get("csv_short", ""), *t.get("aliases", [])):
                 return t["name_fa"]
     g = load_glossary()
+    low_en = (name_en or "").strip().lower()
+    low_cn = (canon or "").strip().lower()
     for team in g.get("teams", []):
-        if name_en in (team["name_en"], team["id"], *team.get("aliases", [])):
+        cands = [team["name_en"], team["id"], *team.get("aliases", [])]
+        if name_en in cands or canon in cands or low_en in (c.lower() for c in cands) or low_cn in (c.lower() for c in cands):
             return team["name_fa"]
+    # پشتیبان هوشمند آوانویسی فارسی برای باشگاه‌های جدید اروپایی تا نام انگلیسی روی کارت نیاید
+    cleaned = re.sub(r"\b(?:F\.?C\.?|F\.?K\.?|C\.?F\.?|S\.?C\.?|A\.?C\.?|S\.?K\.?|B\.?K\.?|N\.?K\.?|P\.?F\.?K\.?)\b", "", name_en or "", flags=re.IGNORECASE).strip()
+    if cleaned and any("a" <= ch.lower() <= "z" for ch in cleaned):
+        try:
+            fa_auto = translate_player_fa(cleaned)
+            if fa_auto and fa_auto != cleaned:
+                return fa_auto
+        except Exception:
+            pass
     return name_en
 
 
@@ -264,12 +298,17 @@ def _transliterate_latin_to_fa(name: str) -> str:
 
 
 def translate_coach_fa(coach_en: str | None, *, allow_transliterate: bool = True) -> str | None:
-    """ترجمهٔ فارسی نام سرمربیِ دریافت‌شدهٔ زنده از API (دیکشنری دقیق → ویکی‌پدیا/آوانویسی خودکار)."""
+    """ترجمهٔ فارسی نام سرمربیِ دریافت‌شدهٔ زنده از API (دیکشنری دقیق → ویکی‌پدیا/آوانویسی خودکار + تبدیل `&` به `و`)."""
     name = str(coach_en or "").strip()
     if not name:
         return None
+    if "&" in name or re.search(r"\s+and\s+", name, flags=re.IGNORECASE):
+        parts = [p.strip() for p in re.split(r"\s*(?:&|\band\b)\s*", name, flags=re.IGNORECASE) if p.strip()]
+        if len(parts) >= 2:
+            tr_parts = [translate_coach_fa(p, allow_transliterate=allow_transliterate) or p for p in parts]
+            return " و ".join(tr_parts)
     if any("\u0600" <= ch <= "\u06FF" for ch in name):
-        return name
+        return re.sub(r"\s*&\s*", " و ", name)
     mapping = load_team_venues().get("coach_translations_fa", {})
     if name in mapping:
         return mapping[name]
@@ -305,34 +344,140 @@ _PLAYER_NAMES_FA: dict[str, str] = {
     "muñoz": "مونیوز", "ekitike": "اکیتیکه", "frimpong": "فریمپونگ", "kerkez": "کرکز",
     "alisson": "آلیسون", "a.becker": "آلیسون", "lammens": "لامنس", "onana": "اونانا",
     "raya": "رایا", "vicario": "ویکاریو", "pope": "پوپ", "pickford": "پیکفورد",
+    # ستاره‌ها و دروازه‌بان‌های ۶ لیگ معتبر اروپا و چمپیونزلیگ
+    "oblak": "اوبلاک", "jan oblak": "یان اوبلاک",
+    "sorloth": "سورلوت", "alexander sorloth": "الکساندر سورلوت",
+    "alvarez": "آلوارز", "julian alvarez": "خولیان آلوارز",
+    "griezmann": "گریزمان", "antoine griezmann": "آنتوان گریزمان",
+    "mbappe": "امباپه", "kylian mbappe": "کیلیان امباپه",
+    "vinicius": "وینیسیوس", "vinicius junior": "وینیسیوس جونیور",
+    "bellingham": "بلینگام", "jude bellingham": "جود بلینگام",
+    "rodrygo": "رودریگو", "valverde": "والورده", "courtois": "کورتوا",
+    "yamal": "یامال", "lamine yamal": "لامین یامال",
+    "raphinha": "رافینیا", "lewandowski": "لواندوفسکی", "pedri": "پدری", "olmo": "اولمو",
+    "garcia": "گارسیا", "joan garcia": "خوان گارسیا", "ter stegen": "تراشتگن", "szczesny": "شزنی",
+    "kane": "کین", "harry kane": "هری کین", "musiala": "موسیالا", "olise": "اولیسه",
+    "neuer": "نویر", "kimmich": "کیمیش", "sane": "سانه",
+    "lautaro": "لائوتارو", "martinez": "مارتینز", "thuram": "تورام", "barella": "بارلا",
+    "calhanoglu": "چالهان‌اوغلو", "sommer": "زومر", "bastoni": "باستونی",
+    "leao": "لیائو", "pulisic": "پولیشیچ", "maignan": "منیان",
+    "vlahovic": "ولاهوویچ", "yildiz": "ییلدیز", "lukaku": "لوکاکو", "mctominay": "مک‌تومینای",
+    "dembele": "دمبله", "barcola": "بارکولا", "kvaratskhelia": "کواراتسخلیا",
+    "vitinha": "ویتینیا", "hakimi": "حکیمی", "donnarumma": "دوناروما", "chevalier": "شوالیه",
+    "gyokeres": "یوکرش", "suarez": "سوارز", "luis suarez": "لوئیس سوارز",
+    "osimhen": "اوسیمن", "icardi": "ایکاردی", "guirassy": "گیراسی", "adeyemi": "آدیمی",
+    "jesus": "ژسوس", "gabriel jesus": "گابریل ژسوس",
+    "pokatilov": "پوکاتیلوف", "belko": "بلکو", "kobel": "کوبل", "di gregorio": "دی گرگوریو",
+    "trubin": "تروبین", "costa": "کاستا", "diogo costa": "دیوگو کاستا",
+    "mignolet": "مینیوله", "riznyk": "ریزنیک", "livakovic": "لیواکوویچ",
+    "luiz junior": "لوییز جونیور", "luiz jr": "لوییز جونیور",
+    "vini jr": "وینیسیوس جونیور", "vinicius jr": "وینیسیوس جونیور",
+    "ayoze perez": "آیوزه پرز", "pape gueye": "پاپه گویه",
+    "tajon buchanan": "بوچانان", "buchanan": "بوچانان",
+    # ستاره‌ها و دروازه‌بان‌های لیگ اروپا (UEFA Europa League)
+    "vangelis pavlidis": "پاولیدیس", "pavlidis": "پاولیدیس",
+    "angel di maria": "دی‌ماریا", "di maria": "دی‌ماریا",
+    "mikel oyarzabal": "اویارزابال", "oyarzabal": "اویارزابال",
+    "takefusa kubo": "کوبو", "kubo": "کوبو",
+    "alex remiro": "رمیرو", "remiro": "رمیرو",
+    "iago aspas": "آسپاس", "aspas": "آسپاس",
+    "mason greenwood": "گرین‌وود", "greenwood": "گرین‌وود",
+    "geronimo rulli": "رولی", "rulli": "رولی",
+    "alexandre lacazette": "لاکازت", "lacazette": "لاکازت",
+    "rayan cherki": "شرکی", "cherki": "شرکی",
+    "jean-philippe mateta": "ماتتا", "mateta": "ماتتا",
+    "eberechi eze": "ازه", "eze": "ازه",
+    "dean henderson": "دین هندرسون",
+    "evanilson": "اوانیلسون", "justin kluivert": "کلایورت", "kluivert": "کلایورت",
+    "oliver baumann": "بائومان", "baumann": "بائومان",
+    "andrej kramaric": "کراماریچ", "kramaric": "کراماریچ",
+    "ciro immobile": "ایموبیله", "immobile": "ایموبیله",
+    "rafa silva": "رافا سیلوا",
+    "ayoub el kaabi": "ال‌کعبی", "el kaabi": "ال‌کعبی",
+    "konstantinos tzolakis": "تزولاکیس", "tzolakis": "تزولاکیس",
+    "daizen maeda": "مائدا", "maeda": "مائدا",
+    "kasper schmeichel": "اشمایکل", "schmeichel": "اشمایکل",
+    "barnabas varga": "وارگا", "varga": "وارگا",
+    "denes dibusz": "دیبوش", "dibusz": "دیبوش",
+    "martin baturina": "باتورینا", "baturina": "باتورینا",
+    "bruno petkovic": "پتکوویچ", "petkovic": "پتکوویچ",
+    "kasper dolberg": "دولبرگ", "dolberg": "دولبرگ",
+    "mikael ishak": "اسحاق", "ishak": "اسحاق",
+    "bartosz mrozek": "مروژک", "mrozek": "مروژک",
+    "jesus imaz": "ایماز", "imaz": "ایماز",
+    "afimico pululu": "پولولو", "pululu": "پولولو",
+    "stevan jovetic": "یووتیچ", "jovetic": "یووتیچ",
+    "koki ogawa": "اوگاوا", "ogawa": "اوگاوا",
+}
+
+# پسوندهای نسلی/عمومی که هرگز به‌تنهایی نام‌خانوادگی یکتا محسوب نمی‌شوند
+_NON_SURNAME_SUFFIXES: set[str] = {
+    "junior", "jr", "sr", "senior", "filho", "neto", "ii", "iii",
+    "de", "da", "do", "dos", "das", "del", "van", "von", "al", "el",
 }
 
 
 def translate_player_fa(name: str | None) -> str:
-    """تبدیل نام بازیکن/گلزن به فارسی روان (دیکشنری + glossary + آوانویسی خودکار)."""
+    """تبدیل دقیق نام بازیکن/گلزن/دروازه‌بان به فارسی روان بدون تداخل هویت بین بازیکنان همنام."""
     s = str(name or "").strip()
     if not s:
         return ""
     if any("\u0600" <= ch <= "\u06FF" for ch in s):
         return s
-    low = s.lower().strip()
-    if low in _PLAYER_NAMES_FA:
-        return _PLAYER_NAMES_FA[low]
-    # بررسی نام خانوادگی (بخش آخر)
-    parts = low.split()
-    if len(parts) > 1 and parts[-1] in _PLAYER_NAMES_FA:
-        return _PLAYER_NAMES_FA[parts[-1]]
-    # بررسی glossary_fa.json
+
+    fold_full = _ascii_fold(s)
+    # ۱) تطبیق دقیق نام کامل (اولویت اول — بدون حذف هیچ بخشی از نام)
+    if fold_full in _PLAYER_NAMES_FA:
+        return _PLAYER_NAMES_FA[fold_full]
+
     try:
-        for p in load_glossary().get("players", []):
-            en = str(p.get("name_en") or "").strip().lower()
-            fa_n = str(p.get("name_fa") or "").strip()
-            if fa_n and en and (en == low or (parts and en.endswith(" " + parts[-1]))):
-                return fa_n
+        glossary_players = load_glossary().get("players", [])
     except Exception:
-        pass
-    # آوانویسی خودکار نام خانوادگی یا نام کامل (کوتاه و خوانا)
-    target = s.split()[-1] if len(s.split()) >= 2 and len(s) > 12 else s
+        glossary_players = []
+
+    for p in glossary_players:
+        en = _ascii_fold(str(p.get("name_en") or ""))
+        fa_n = str(p.get("name_fa") or "").strip()
+        if fa_n and en and en == fold_full:
+            return fa_n
+
+    # تشخیص فرم مخفف حرف اول (مثل "J. Oblak" یا "L. Júnior")
+    m_init = re.match(r"^([A-Za-zÀ-ÿ])\.\s+(.+)$", s)
+    first_initial = _ascii_fold(m_init.group(1)) if m_init else ""
+    s_clean = m_init.group(2).strip() if m_init else s
+    fold_clean = _ascii_fold(s_clean)
+
+    # ۲) فقط اگر ورودی حرف اول مخفف داشت (J. Oblak)، تطبیق روی بخش دوم (به‌شرطی که پسوند عمومی مثل junior نباشد)
+    if m_init and fold_clean not in _NON_SURNAME_SUFFIXES:
+        if fold_clean in _PLAYER_NAMES_FA:
+            return _PLAYER_NAMES_FA[fold_clean]
+        # تطبیق یکتا در glossary فقط با شرط یکسان‌بودن حرف اول و نام‌خانوادگی دقیق
+        matches_init: list[str] = []
+        for p in glossary_players:
+            en = _ascii_fold(str(p.get("name_en") or ""))
+            fa_n = str(p.get("name_fa") or "").strip()
+            ep = en.split()
+            if fa_n and len(ep) >= 2 and ep[0].startswith(first_initial) and ep[-1] == fold_clean:
+                matches_init.append(fa_n)
+        if len(matches_init) == 1:
+            return matches_init[0]
+
+    # ۳) تطبیق نام‌خانوادگی در دیکشنری داخلی (فقط نام‌خانوادگی تک‌کلمه‌ای، هرگز پسوند عمومی مانند junior)
+    parts = fold_clean.split()
+    if len(parts) > 1 and parts[-1] not in _NON_SURNAME_SUFFIXES and parts[-1] in _PLAYER_NAMES_FA:
+        cand_fa = _PLAYER_NAMES_FA[parts[-1]]
+        # تنها زمانی نام‌خانوادگی کوتاه جایگزین می‌شود که خودش نام کامل بازیکن دیگری نباشد
+        if " " not in cand_fa.strip():
+            return cand_fa
+
+    # ۴) آوانویسی مستقیم فارسی (برای نام‌های دارای پسوند مثل Luiz Júnior هر دو بخش حفظ می‌شود)
+    raw_words = s_clean.split()
+    if len(raw_words) >= 2 and _ascii_fold(raw_words[-1]) in _NON_SURNAME_SUFFIXES:
+        target = " ".join(raw_words[-2:])
+    elif len(raw_words) >= 2 and len(s_clean) > 12:
+        target = raw_words[-1]
+    else:
+        target = s_clean
     return _transliterate_latin_to_fa(target)
 
 
@@ -357,3 +502,97 @@ def format_scorers_fa(raw_scorers: str | None) -> str:
         else:
             out.append(translate_player_fa(it))
     return "، ".join(out)
+
+
+# نام کوتاه و مصطلح تیم‌ها برای جلوگیری از برش با «...» در هدر کارت‌های گرافیکی
+CARD_SHORT_TEAM_NAMES_FA: dict[str, str] = {
+    "Borussia Monchengladbach": "گلادباخ",
+    "Eintracht Frankfurt": "فرانکفورت",
+    "PSV Eindhoven": "آیندهوون",
+    "Sporting CP": "اسپورتینگ",
+    "Nottingham Forest": "ناتینگهام",
+    "Borussia Dortmund": "دورتموند",
+    "Atletico Madrid": "اتلتیکو",
+    "Athletic Club": "بیلبائو",
+    "Red Bull Salzburg": "سالزبورگ",
+    "Crystal Palace": "پالاس",
+    "RB Leipzig": "لایپزیگ",
+    "Shakhtar Donetsk": "شاختار",
+    "Bayer Leverkusen": "لورکوزن",
+    "Olympique Marseille": "مارسی",
+    "Olympique Lyon": "لیون",
+    "Real Sociedad": "سوسیداد",
+    "Wolverhampton": "ولوز",
+    "Sheffield United": "شفیلد",
+    "West Ham United": "وستهم",
+    "West Ham": "وستهم",
+    "Newcastle United": "نیوکاسل",
+    "Tottenham Hotspur": "تاتنهام",
+    "Brighton & Hove Albion": "برایتون",
+    "Red Star Belgrade": "ستاره سرخ",
+    "Slovan Bratislava": "اسلووان",
+    "Sturm Graz": "اشتورم گراتس",
+    "Union Saint-Gilloise": "سنت ژیلواز",
+    "Sabah FK": "صباح باکو",
+    "Viktoria Plzen": "ویکتوریا پلژن",
+    "Jagiellonia Bialystok": "یاگیلونیا",
+    "AC Omonia": "اومونیا",
+    "Hapoel Be'er Sheva": "بئرشبع",
+    "NEC Nijmegen": "نایمخن",
+    "OFI Crete": "او.اف.آی",
+    "Levski Sofia": "لفسکی",
+    "Ararat-Armenia": "آرارات",
+}
+
+
+CARD_SHORT_TEAM_NAMES_BY_FA: dict[str, str] = {
+    "اتلتیکو مادرید": "اتلتیکو",
+    "پاریس سن‌ژرمن": "پاریس سن‌ژرمن",
+    "اتلتیک بیلبائو": "بیلبائو",
+    "بروسیا دورتموند": "دورتموند",
+    "بوروسیا دورتموند": "دورتموند",
+    "بروسیا مونشن‌گلادباخ": "گلادباخ",
+    "بوروسیا مونشن‌گلادباخ": "گلادباخ",
+    "آینتراخت فرانکفورت": "فرانکفورت",
+    "اسپورتینگ لیسبون": "اسپورتینگ",
+    "ناتینگهام فارست": "ناتینگهام",
+    "پی‌اس‌وی آیندهوون": "آیندهوون",
+    "ردبول سالزبورگ": "سالزبورگ",
+    "کریستال پالاس": "پالاس",
+    "آر بی لایپزیگ": "لایپزیگ",
+    "شاختار دونتسک": "شاختار",
+    "یونیون سنت ژیلواز": "سنت ژیلواز",
+    "اسلووان براتیسلاوا": "اسلووان",
+    "المپیک مارسی": "مارسی",
+    "المپیک لیون": "لیون",
+    "بایر لورکوزن": "لورکوزن",
+    "رئال سوسیداد": "سوسیداد",
+}
+
+
+def card_short_team_name_fa(name_en: str, name_fa: str = "", max_chars: int = 13) -> str:
+    """برگرداندن نام کوتاه و مصطلح فارسی تیم برای هدر کارت (به‌جای برش با سه‌نقطه)."""
+    import unicodedata
+
+    canon = canonical_team_name(name_en) if name_en else ""
+    canon_ascii = "".join(
+        ch for ch in unicodedata.normalize("NFKD", canon) if not unicodedata.combining(ch)
+    ).strip()
+    fa = (name_fa or (team_name_fa(name_en) if name_en else "")).strip()
+    if fa in CARD_SHORT_TEAM_NAMES_BY_FA:
+        return CARD_SHORT_TEAM_NAMES_BY_FA[fa]
+    if canon in CARD_SHORT_TEAM_NAMES_FA:
+        return CARD_SHORT_TEAM_NAMES_FA[canon]
+    if canon_ascii in CARD_SHORT_TEAM_NAMES_FA:
+        return CARD_SHORT_TEAM_NAMES_FA[canon_ascii]
+    if len(fa) <= max_chars:
+        return fa
+    parts = fa.split()
+    if len(parts) >= 2:
+        if parts[0] in ("بروسیا", "بوروسیا", "آینتراخت", "المپیک", "آر", "ردبول", "بایر", "اتلتیک"):
+            cand = parts[-1]
+        else:
+            cand = parts[0]
+        if 3 <= len(cand) <= max_chars:
+            return cand
+    return fa

@@ -154,12 +154,35 @@ def select_studio_modules(
                 if mod_id not in caption_only and has.get(mod_id, False):
                     selected.append({"id": mod_id, "enabled": True, "span": span})
                     used.add(mod_id)
+            def _grid_rows(mods_list: list[dict[str, Any]]) -> int:
+                rows_n = 0
+                idx = 0
+                while idx < len(mods_list):
+                    if (
+                        mods_list[idx].get("span") == "half"
+                        and idx + 1 < len(mods_list)
+                        and mods_list[idx + 1].get("span") == "half"
+                    ):
+                        rows_n += 1
+                        idx += 2
+                    else:
+                        rows_n += 1
+                        idx += 1
+                return rows_n
+
             if len(selected) < 2:
                 for mod_id in priority:
                     if mod_id not in caption_only and mod_id not in used and has.get(mod_id, False):
                         selected.append({"id": mod_id, "enabled": True, "span": "full"})
                         used.add(mod_id)
                         if len(selected) >= capacity:
+                            break
+            elif _grid_rows(selected) < min(2, capacity):
+                for mod_id in priority:
+                    if mod_id not in caption_only and mod_id not in used and has.get(mod_id, False):
+                        selected.append({"id": mod_id, "enabled": True, "span": "full"})
+                        used.add(mod_id)
+                        if _grid_rows(selected) >= min(2, capacity):
                             break
             return _fix_orphan_halves(selected)
         # قالب پیش‌فرض قفل‌شدهٔ پس‌ازبازی (D44): موج فشار ½ + آمار مسابقه ½ | برترین‌های زمین ½ + دقت شوت و دروازه‌بان ½

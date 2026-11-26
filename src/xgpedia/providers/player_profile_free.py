@@ -294,7 +294,12 @@ def fetch_live_top_players(force_refresh: bool = False) -> list[dict[str, Any]]:
         return list(_LIVE_CACHE["items"])
     try:
         bs = _http_get_json(FPL_BOOTSTRAP_URL, timeout=8.0)
-        items = parse_fpl_top_players(bs, limit=24)
+        try:
+            from src.xgpedia.providers.opta_hub import merge_fpl_and_european_bootstrap
+            bs = merge_fpl_and_european_bootstrap(bs, force_refresh=force_refresh)
+        except Exception:
+            pass
+        items = parse_fpl_top_players(bs, limit=36)
         _LIVE_CACHE["ts"] = now
         _LIVE_CACHE["items"] = items
         _LIVE_CACHE["bootstrap"] = bs

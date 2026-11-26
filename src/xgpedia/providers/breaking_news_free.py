@@ -32,7 +32,11 @@ USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 ESPN_NEWS_FEEDS: list[tuple[str, str, str]] = [
     ("eng.1", "لیگ برتر انگلیس", "PREMIER LEAGUE | LIVE WIRE"),
     ("uefa.champions", "لیگ قهرمانان اروپا", "CHAMPIONS LEAGUE | LIVE WIRE"),
+    ("uefa.europa", "لیگ اروپا", "EUROPA LEAGUE | LIVE WIRE"),
     ("esp.1", "لالیگا اسپانیا", "LA LIGA | LIVE WIRE"),
+    ("ita.1", "سری آ ایتالیا", "SERIE A | LIVE WIRE"),
+    ("ger.1", "بوندس‌لیگا آلمان", "BUNDESLIGA | LIVE WIRE"),
+    ("fra.1", "لیگ ۱ فرانسه", "LIGUE 1 | LIVE WIRE"),
 ]
 
 RSS_FEEDS: list[tuple[str, str, str, str]] = [

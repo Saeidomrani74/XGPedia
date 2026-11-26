@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from src.xgpedia.config import translate_player_fa
 from src.xgpedia.render.card_kit.helpers import esc, fa, module_header
 
 
@@ -19,7 +20,7 @@ def render_keyduel(payload: dict[str, Any], span: str = "full", fmt: str = "4:5"
         return (
             f'<div class="kd-card" style="border-right:5px solid {col};">'
             f'<div class="kd-top">'
-            f'<span class="kd-name">{esc(kp["name"])}</span>'
+            f'<span class="kd-name">{esc(translate_player_fa(kp.get("name")) or kp["name"])}</span>'
             f'<span class="kd-pos">{esc(kp["pos"])}</span>'
             f'</div>'
             f'<div class="kd-stats">'

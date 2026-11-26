@@ -51,9 +51,18 @@ def _flame_svg(size: int = 15) -> str:
 
 def _crest_svg(p: dict[str, Any], size: int = 34, uid: str = "c") -> str:
     from src.xgpedia.providers.pl_badges_free import get_pl_badge_data_uri
+    from src.xgpedia.render.cards import _crest_data_uri
+
     logo_uri = p.get("logoUrl") or get_pl_badge_data_uri(
-        str(p.get("club") or ""), tla_hint=str(p.get("code") or ""), fetch_network=False
+        str(p.get("club_en") or p.get("club") or ""), tla_hint=str(p.get("code") or ""), fetch_network=False
     )
+    if not logo_uri:
+        for cand_club in (p.get("club_en"), p.get("club")):
+            if cand_club:
+                uri = _crest_data_uri(str(cand_club))
+                if uri:
+                    logo_uri = uri
+                    break
     if logo_uri:
         return (
             f'<div style="width:{size}px;height:{size}px;flex-shrink:0;display:flex;align-items:center;justify-content:center;'
@@ -708,7 +717,7 @@ body{{width:{w}px;height:{h_px}px;overflow:hidden;background:#0D1730;color:#F8FA
 .hdr-sub{{font-size:20px;font-weight:800;color:#E2E8F0;margin-top:5px;}}
 .hdr-logo{{height:42px;width:auto;}}
 .stage{{position:relative;z-index:5;flex:1;padding:8px 40px;display:flex;flex-direction:column;justify-content:space-between;gap:12px;overflow:hidden;min-height:0;}}
-.xh{{position:relative;border-radius:24px;overflow:hidden;padding:16px 22px;background:linear-gradient(145deg,#152344eb,#091024f5 62%,#161c34f0);border:1.5px solid #fbbf2461;box-shadow:0 20px 48px -12px #000000b3,0 0 36px -10px #fbbf242e,inset 0 1px 0 #fde68a47;flex-shrink:0;}}
+.xh{{position:relative;border-radius:24px;overflow:hidden;padding:12px 20px;background:linear-gradient(145deg,#152344eb,#091024f5 62%,#161c34f0);border:1.5px solid #fbbf2461;box-shadow:0 20px 48px -12px #000000b3,0 0 36px -10px #fbbf242e,inset 0 1px 0 #fde68a47;flex-shrink:0;}}
 .xh.cl{{border-color:#e62e457a;box-shadow:0 20px 48px -12px #000000b3,0 0 36px -10px #e62e4538;}}
 .xh-wm{{position:absolute;left:16px;top:-22px;font-size:185px;font-weight:900;line-height:1;opacity:.06;pointer-events:none;}}
 .xh-glow{{position:absolute;right:-50px;top:-50px;width:260px;height:260px;border-radius:999px;pointer-events:none;}}
@@ -752,16 +761,16 @@ body{{width:{w}px;height:{h_px}px;overflow:hidden;background:#0D1730;color:#F8FA
 .sw-pen{{width:12px;height:8px;border-radius:2px;background:#64748b99;border:1px solid #ffffff4d;display:inline-block;}}
 .sw-xg{{width:3px;height:13px;border-radius:99px;background:#fff;box-shadow:0 0 8px #38BDF8;display:inline-block;}}
 .ps{{background-image:repeating-linear-gradient(-45deg,#ffffff52 0 4px,#ffffff0f 4px 8px);}}
-.lr-list{{display:flex;flex-direction:column;gap:6px;flex:1;justify-content:space-between;}}
-.lr{{position:relative;display:grid;grid-template-columns:42px minmax(235px,1.22fr) minmax(0,1.25fr) 172px;align-items:center;gap:10px;padding:8px 13px;border-radius:13px;background:linear-gradient(135deg,#16213ed6,#0b1224eb);border:1px solid #ffffff1c;overflow:hidden;}}
+.lr-list{{display:flex;flex-direction:column;gap:4px;flex:1;min-height:0;justify-content:space-between;}}
+.lr{{position:relative;display:grid;grid-template-columns:40px minmax(235px,1.22fr) minmax(0,1.25fr) 172px;align-items:center;gap:9px;padding:5px 12px;border-radius:12px;background:linear-gradient(135deg,#16213ed6,#0b1224eb);border:1px solid #ffffff1c;overflow:hidden;}}
 .lr-strip{{position:absolute;right:0;top:5px;bottom:5px;width:4px;border-radius:99px 0 0 99px;}}
 .rk-b{{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;}}
 .r2{{background:linear-gradient(145deg,#E2E8F0,#94A3B8);color:#091023;}}
 .r3{{background:linear-gradient(145deg,#FDBA74,#C2410C);color:#091023;}}
 .rn{{background:#ffffff14;border:1px solid #ffffff29;color:#CBD5E1;}}
 .lr-pl{{display:flex;align-items:center;gap:9px;min-width:0;}}
-.lr-name{{display:flex;align-items:center;gap:6px;font-size:26px;font-weight:900;color:#FFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}}
-.lr-club{{font-size:18px;font-weight:700;color:#CBD5E1;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}}
+.lr-name{{display:flex;align-items:center;gap:6px;font-size:23px;font-weight:900;color:#FFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}}
+.lr-club{{font-size:16px;font-weight:700;color:#CBD5E1;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}}
 .lr-pen{{color:#FDE047;font-weight:800;font-size:16px;}}
 .lr-bar-wrap{{position:relative;height:13px;width:100%;border-radius:99px;background:#060C1E;border:1px solid #ffffff1a;display:flex;align-items:center;}}
 .lr-track{{height:100%;width:100%;border-radius:99px;overflow:hidden;display:flex;}}

@@ -13,6 +13,15 @@ import pytest
 
 @pytest.fixture(autouse=True)
 def _block_accidental_live_http_and_llm(monkeypatch):
+    # ۰) ایزوله‌سازی فایل‌های توکن واقعی کاربر (X / Instagram) تا در تست‌های واحد نشت نکنند
+    try:
+        from pathlib import Path as _P
+        from src.xgpedia.publishers import x_oauth, omnichannel
+        monkeypatch.setattr(x_oauth, "X_TOKEN_STORE", _P("__nonexistent_test_x_tokens__.json"))
+        monkeypatch.setattr(omnichannel, "IG_SESSION_FILE", _P("__nonexistent_test_ig_session__.json"))
+    except Exception:
+        pass
+
     # ۱) ایزوله‌سازی حافظهٔ سلامت APIها برای هر تست
     try:
         from src.xgpedia.core import api_health

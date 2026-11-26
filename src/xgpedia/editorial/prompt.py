@@ -68,12 +68,12 @@ SYSTEM_PROMPT = """تو تحریریهٔ داده‌محور XGPedia هستی و
 
 
 def derived_numbers(match: MatchFacts) -> set[float]:
-    """اعداد مشتق مجاز — فقط عملیات از پیش تعریف‌شده و ثبت‌شده در این تابع.
+    """اعداد مشتق مجاز — فقط عملیات قطعی و ثبت‌شده روی فکت‌های واقعی ورودی.
 
-    validator فقط اعداد ورودی و این مجموعه را قبول می‌کند؛ هر عدد دیگر رد می‌شود.
-    فعلاً فقط اختلاف xG دو طرف (که «کد» آن را می‌سازد، نه مدل): 1.82-1.20 → 0.62؛
-    هم مقدار علامت‌دار و هم قدرمطلق مجازند تا «اختلاف xG برابر 0.62» در متن بشود.
+    شامل: اختلاف/مجموع xG، مجموع/اختلاف گل‌ها، مجموع شوت‌ها و شوت در چارچوب،
+    سهم شوت (٪) و دقت شوت‌زنی (٪)، کارایی گل (Goals - xG) و دقایق گلزنان ثبت‌شده.
     """
+    import re
     from src.xgpedia.analytics.metrics import xg_diff
 
     nums: set[float] = set()
@@ -81,4 +81,62 @@ def derived_numbers(match: MatchFacts) -> set[float]:
     if d is not None:
         nums.add(d)
         nums.add(abs(d))
+
+    # مجموع و اختلاف گل‌ها در پس‌ازبازی
+    res = getattr(match, "result", None)
+    if res is not None and res.home_goals is not None and res.away_goals is not None:
+        hg, ag = float(res.home_goals), float(res.away_goals)
+        nums.update({hg + ag, abs(hg - ag)})
+
+    # مشتقات قطعی آمار مسابقه (مجموع شوت‌ها، سهم شوت ٪، دقت شوت ٪، مجموع/اختلاف xG، کارایی گل)
+    hms = getattr(match.home, "match_stats", None)
+    ams = getattr(match.away, "match_stats", None)
+
+    def _mv(ms, attr: str) -> float | None:
+        if ms is None:
+            return None
+        sv = getattr(ms, attr, None)
+        return float(sv.value) if (sv is not None and getattr(sv, "value", None) is not None) else None
+
+    h_sh, a_sh = _mv(hms, "total_shots"), _mv(ams, "total_shots")
+    h_sot, a_sot = _mv(hms, "shots_on_target"), _mv(ams, "shots_on_target")
+    h_cor, a_cor = _mv(hms, "corners"), _mv(ams, "corners")
+    h_xg, a_xg = _mv(hms, "expected_goals"), _mv(ams, "expected_goals")
+
+    if h_sh is not None and a_sh is not None:
+        tot_sh = h_sh + a_sh
+        nums.update({tot_sh, abs(h_sh - a_sh)})
+        if tot_sh > 0:
+            for sh in (h_sh, a_sh):
+                pct = sh / tot_sh * 100.0
+                nums.update({float(round(pct)), round(pct, 1)})
+    if h_sot is not None and a_sot is not None:
+        nums.update({h_sot + a_sot, abs(h_sot - a_sot)})
+    if h_cor is not None and a_cor is not None:
+        nums.update({h_cor + a_cor, abs(h_cor - a_cor)})
+    for sh, sot in ((h_sh, h_sot), (a_sh, a_sot)):
+        if sh and sot is not None and sh > 0:
+            acc = sot / sh * 100.0
+            nums.update({float(round(acc)), round(acc, 1)})
+    if h_xg is not None and a_xg is not None:
+        nums.update({round(h_xg + a_xg, 2), round(h_xg - a_xg, 2), round(abs(h_xg - a_xg), 2)})
+        if h_sh and h_sh > 0:
+            nums.add(round(h_xg / h_sh, 2))
+        if a_sh and a_sh > 0:
+            nums.add(round(a_xg / a_sh, 2))
+    if res is not None:
+        if h_xg is not None and res.home_goals is not None:
+            eff = round(float(res.home_goals) - h_xg, 2)
+            nums.update({eff, abs(eff)})
+        if a_xg is not None and res.away_goals is not None:
+            eff = round(float(res.away_goals) - a_xg, 2)
+            nums.update({eff, abs(eff)})
+
+    # دقایق گلزنان ثبت‌شده در جزئیات پس‌ازبازی
+    for side in (match.home, match.away):
+        stxt = getattr(side, "scorersText", None) or getattr(side, "scorers_text", None) or ""
+        if stxt:
+            for raw_n in re.findall(r"\d+", str(stxt)):
+                nums.add(float(raw_n))
+
     return nums

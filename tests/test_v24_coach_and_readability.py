@@ -250,7 +250,7 @@ def test_espn_parser_handles_null_entries_without_nonetype_error():
         ]
     }
     res = parse_espn_upcoming(weird_payload)
-    assert res == {"odds_rows": [], "key_players": {}}
+    assert res == {"odds_rows": [], "key_players": {}, "upcoming_fixtures": []}
     assert parse_espn_timing_wave(weird_payload) == {}
 
 

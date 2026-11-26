@@ -55,6 +55,8 @@ PL_CLUBS_MASTER: dict[str, tuple[str, str, str, str, int]] = {
     "sunderland": ("ساندرلند", "SUN", "#EB172B", "#FFFFFF", 56),
     "west ham": ("وستهام", "WHU", "#9F1239", "#38BDF8", 21),
     "west ham united": ("وستهام", "WHU", "#9F1239", "#38BDF8", 21),
+    "coventry": ("کاونتری سیتی", "COV", "#58B9E7", "#FFFFFF", 9),
+    "hull": ("هال سیتی", "HUL", "#F5A12D", "#111111", 88),
     "wolves": ("ولورهمپتون", "WOL", "#FDB913", "#231F20", 39),
     "wolverhampton": ("ولورهمپتون", "WOL", "#FDB913", "#231F20", 39),
     "wolverhampton wanderers": ("ولورهمپتون", "WOL", "#FDB913", "#231F20", 39),

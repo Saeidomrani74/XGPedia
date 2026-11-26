@@ -158,6 +158,12 @@ def fetch_live_shotmap_xg_items(*, force_refresh: bool = False, max_items: int =
     now = datetime.now(timezone.utc)
     cur_yr = now.year if now.month >= 7 else now.year - 1
     out: list[dict[str, Any]] = []
+    # اولویت ۱: بازی‌های دارای ShotMap واقعی Opta (FotMob/SofaScore — شامل چمپیونزلیگ) در دیتابیس
+    try:
+        from src.xgpedia.providers.opta_hub import list_db_shotmap_matches
+        out.extend(list_db_shotmap_matches(limit=6))
+    except Exception:
+        pass
 
     for u_slug, lg_fa, lg_en in _LEAGUES:
         dates = None

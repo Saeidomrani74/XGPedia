@@ -15,8 +15,19 @@ import httpx
 from src.xgpedia.config import canonical_team_name
 
 PROVIDER = "espn-public"
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from src.xgpedia.core.leagues import EUROPEAN_LEAGUES, LeagueSpec, league_by_espn_slug
+
 ESPN_EPL_SCOREBOARD = "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard"
 ESPN_EPL_SUMMARY = "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/summary"
+
+
+def espn_scoreboard_url(slug: str = "eng.1") -> str:
+    return f"https://site.api.espn.com/apis/site/v2/sports/soccer/{slug}/scoreboard"
+
+
+def espn_summary_url(slug: str = "eng.1") -> str:
+    return f"https://site.api.espn.com/apis/site/v2/sports/soccer/{slug}/summary"
 
 ESPN_TEAM_ALIASES: dict[str, str] = {
     "AFC Bournemouth": "Bournemouth",
@@ -57,13 +68,14 @@ def american_to_decimal_odds(ml: Any) -> float | None:
     return round(1.0 + 100.0 / abs(v), 2)
 
 
-def parse_espn_upcoming(payload: dict[str, Any]) -> dict[str, Any]:
+def parse_espn_upcoming(payload: dict[str, Any], *, competition_name: str = "Premier League", league_slug: str = "eng.1") -> dict[str, Any]:
     """استخراج ضرایب زنده و مهره‌های کلیدی از JSON بازی‌های پیش‌رو در ESPN."""
     odds_rows: list[dict[str, Any]] = []
     key_players: dict[str, dict[str, str]] = {}
+    upcoming_fixtures: list[dict[str, Any]] = []
 
     if not isinstance(payload, dict):
-        return {"odds_rows": odds_rows, "key_players": key_players}
+        return {"odds_rows": odds_rows, "key_players": key_players, "upcoming_fixtures": upcoming_fixtures}
     for ev in payload.get("events") or []:
         if not isinstance(ev, dict):
             continue
@@ -78,8 +90,34 @@ def parse_espn_upcoming(payload: dict[str, Any]) -> dict[str, Any]:
         if not (home_c and away_c):
             continue
 
-        h_name = _norm_espn_team((home_c.get("team") or {}).get("displayName") or "")
-        a_name = _norm_espn_team((away_c.get("team") or {}).get("displayName") or "")
+        h_tm_u = home_c.get("team") or {}
+        a_tm_u = away_c.get("team") or {}
+        h_name = _norm_espn_team(h_tm_u.get("displayName") or "")
+        a_name = _norm_espn_team(a_tm_u.get("displayName") or "")
+        try:
+            from src.xgpedia.providers.dynamic_crests import register_team_logo
+            if h_name and h_tm_u.get("logo"):
+                register_team_logo(h_name, str(h_tm_u["logo"]))
+            if a_name and a_tm_u.get("logo"):
+                register_team_logo(a_name, str(a_tm_u["logo"]))
+        except Exception:
+            pass
+
+        # ۰) بازی‌های شروع‌نشده برای همگام‌سازی خودکار همهٔ ۶ لیگ حتی در صورت محدودیت FDO
+        st_obj = comp.get("status") if isinstance(comp.get("status"), dict) else {}
+        st_type = st_obj.get("type") if isinstance(st_obj.get("type"), dict) else {}
+        st_state = str(st_type.get("state") or "").lower()
+        ko_full = str(comp.get("date") or ev.get("date") or "")
+        eid_u = str(ev.get("id") or "")
+        if h_name and a_name and st_state == "pre" and ko_full and eid_u:
+            upcoming_fixtures.append({
+                "event_id": eid_u,
+                "home_team": h_name,
+                "away_team": a_name,
+                "kickoff_utc": ko_full,
+                "competition": competition_name,
+                "league_slug": league_slug,
+            })
 
         # ۱) ضرایب زنده
         odds_list = [o for o in (comp.get("odds") or []) if isinstance(o, dict)]
@@ -138,7 +176,7 @@ def parse_espn_upcoming(payload: dict[str, Any]) -> dict[str, Any]:
                         "s2": s2,
                     }
 
-    return {"odds_rows": odds_rows, "key_players": key_players}
+    return {"odds_rows": odds_rows, "key_players": key_players, "upcoming_fixtures": upcoming_fixtures}
 
 
 def parse_espn_timing_wave(payload: dict[str, Any]) -> dict[str, list[float]]:
@@ -196,7 +234,7 @@ def parse_espn_timing_wave(payload: dict[str, Any]) -> dict[str, list[float]]:
         n_m = matches_by_team.get(team, 0)
         if n_m >= 2 and sum(b) > 0:
             # افزودن پس‌زمینهٔ بسیار جزئی ۰.۰۶ برای هموارسازی منحنی بدون صفر مطلق
-            out[team] = [round((v / n_m) + 0.06, 2) for v in b]
+            out[team] = [round(v / n_m, 2) for v in b]
     return out
 
 
@@ -215,6 +253,9 @@ def _parse_espn_float(val: Any) -> float | None:
 def parse_espn_finished_summary(
     summary: dict[str, Any],
     scoreboard_event: dict[str, Any] | None = None,
+    *,
+    competition_name: str = "Premier League",
+    league_slug: str = "eng.1",
 ) -> dict[str, Any] | None:
     """استخراج آمار واقعی و کامل یک بازی پایان‌یافته از ESPN `/summary?event={id}` (کاملاً رایگان).
 
@@ -246,6 +287,16 @@ def parse_espn_finished_summary(
     a_tm = away_c.get("team") if isinstance(away_c.get("team"), dict) else {}
     h_name = _norm_espn_team(str(h_tm.get("displayName") or h_tm.get("name") or ""))
     a_name = _norm_espn_team(str(a_tm.get("displayName") or a_tm.get("name") or ""))
+    try:
+        from src.xgpedia.providers.dynamic_crests import register_team_logo
+        for _tn, _to in ((h_name, h_tm), (a_name, a_tm)):
+            _lurl = str(_to.get("logo") or "").strip()
+            if not _lurl and isinstance(_to.get("logos"), list) and _to["logos"]:
+                _lurl = str((_to["logos"][0] or {}).get("href") or "").strip()
+            if _tn and _lurl:
+                register_team_logo(_tn, _lurl)
+    except Exception:
+        pass
     h_id = str(h_tm.get("id") or "")
     a_id = str(a_tm.get("id") or "")
     if not (h_name and a_name):
@@ -274,6 +325,7 @@ def parse_espn_finished_summary(
         "foulscommitted": "fouls",
         "expectedgoals": "expected_goals",
         "saves": "saves",
+        "goalkeepersaves": "saves",
     }
     team_stats: dict[str, dict[str, float]] = {"home": {}, "away": {}}
     for bt in box.get("teams") or []:
@@ -291,20 +343,17 @@ def parse_espn_finished_summary(
             if not isinstance(st_item, dict):
                 continue
             k_raw = str(st_item.get("name") or "").strip().lower()
-            mapped = stat_map.get(k_raw)
+            lbl_raw = str(st_item.get("label") or "").strip().lower()
+            mapped = stat_map.get(k_raw) or stat_map.get(lbl_raw)
+            if not mapped and ("expected goal" in lbl_raw or "expectedgoal" in k_raw or k_raw == "xg"):
+                mapped = "expected_goals"
             if mapped:
                 val = _parse_espn_float(st_item.get("displayValue"))
                 if val is not None:
                     team_stats[side_key][mapped] = val
 
-    # اگر ESPN خودش expectedGoals نداد اما شوت کل و در چارچوب واقعی داشت، برآورد قطعی از شوت واقعی (همان فرمول sync.py)
-    for sk, goals_val in (("home", hg), ("away", ag)):
-        st_d = team_stats[sk]
-        if "expected_goals" not in st_d and "total_shots" in st_d and "shots_on_target" in st_d:
-            sh = st_d["total_shots"]
-            sot = st_d["shots_on_target"]
-            off = max(0.0, sh - sot)
-            st_d["expected_goals"] = round(sot * 0.31 + off * 0.06, 2)
+    # قاعدهٔ هویتی XGPedia (null ≠ 0): هرگز xG ساختگی از تعداد شوت تولید نمی‌شود؛
+    # xG واقعی Opta از موتور `xg_engine` (SofaScore → FotMob → Understat) تامین می‌شود.
 
     # استخراج گلزنان واقعی با دقیقه (مرتب زمانی) + موج فشار ۵ دقیقه‌ای از کل commentary + keyEvents
     import re as _re
@@ -438,17 +487,30 @@ def parse_espn_finished_summary(
             if pos_abbr in ("G", "GK") and pl.get("starter"):
                 ath = pl.get("athlete") if isinstance(pl.get("athlete"), dict) else {}
                 gk_name = str(ath.get("shortName") or ath.get("displayName") or "").strip()
-                if gk_name and saves_val is not None and opp_xg is not None:
+                eff_saves = saves_val
+                if eff_saves is None:
+                    for pst in pl.get("stats") or []:
+                        if not isinstance(pst, dict):
+                            continue
+                        pk = str(pst.get("name") or pst.get("abbreviation") or "").strip().lower()
+                        if pk in ("saves", "sv", "goalkeepersaves"):
+                            sv = _parse_espn_float(pst.get("value") if pst.get("value") is not None else pst.get("displayValue"))
+                            if sv is not None:
+                                eff_saves = sv
+                                break
+                if gk_name and eff_saves is not None:
                     gk_info[sk] = {
                         "name": gk_name,
-                        "saves": int(round(saves_val)),
-                        "psxg": round(float(opp_xg), 2),
+                        "saves": int(round(eff_saves)),
+                        "psxg": round(float(opp_xg), 2) if opp_xg is not None else None,
                         "ga": int(ga_val),
                     }
                 break
 
     return {
         "event_id": event_id,
+        "competition": competition_name,
+        "league_slug": league_slug,
         "home_team": h_name,
         "away_team": a_name,
         "kickoff_utc": kickoff_utc,
@@ -466,10 +528,85 @@ def parse_espn_finished_summary(
     }
 
 
+
+
+def parse_espn_scoreboard_finished(
+    payload: dict[str, Any],
+    *,
+    competition_name: str = "UEFA Europa League",
+    league_slug: str = "uefa.europa",
+) -> list[dict[str, Any]]:
+    """استخراج بازی‌های پایان‌یافته و آمار واقعی آن‌ها از پاسخ scoreboard ESPN (برای تاریخچهٔ فصل لیگ اروپا و چمپیونزلیگ)."""
+    out: list[dict[str, Any]] = []
+    if not isinstance(payload, dict):
+        return out
+    stat_map = {
+        "possessionpct": "possession",
+        "totalshots": "total_shots",
+        "shotsontarget": "shots_on_target",
+        "woncorners": "corner_kicks",
+        "foulscommitted": "fouls",
+    }
+    for ev in payload.get("events") or []:
+        if not isinstance(ev, dict):
+            continue
+        comps = ev.get("competitions") or []
+        comp = comps[0] if comps and isinstance(comps[0], dict) else {}
+        st_type = ((comp.get("status") or ev.get("status") or {}).get("type") or {})
+        if not st_type.get("completed") and str(st_type.get("state") or "").lower() != "post":
+            continue
+        competitors = comp.get("competitors") or []
+        home_c = next((c for c in competitors if c.get("homeAway") == "home"), None)
+        away_c = next((c for c in competitors if c.get("homeAway") == "away"), None)
+        if not (home_c and away_c):
+            continue
+        h_name = _norm_espn_team(str(((home_c.get("team") or {}).get("displayName")) or ""))
+        a_name = _norm_espn_team(str(((away_c.get("team") or {}).get("displayName")) or ""))
+        if not (h_name and a_name):
+            continue
+        try:
+            hg = int(float(home_c.get("score")))
+            ag = int(float(away_c.get("score")))
+        except (TypeError, ValueError):
+            continue
+        kickoff_utc = str(comp.get("date") or ev.get("date") or "")
+        if kickoff_utc and not kickoff_utc.endswith("Z") and "+" not in kickoff_utc:
+            kickoff_utc = kickoff_utc + "Z"
+
+        def _extract_side_stats(c_obj: dict[str, Any]) -> dict[str, float]:
+            res_s: dict[str, float] = {}
+            for st_item in c_obj.get("statistics") or []:
+                if not isinstance(st_item, dict):
+                    continue
+                k_raw = str(st_item.get("name") or "").strip().lower()
+                mapped = stat_map.get(k_raw)
+                if mapped:
+                    val = _parse_espn_float(st_item.get("displayValue"))
+                    if val is not None:
+                        res_s[mapped] = val
+            return res_s
+
+        out.append({
+            "event_id": str(ev.get("id") or ""),
+            "competition": competition_name,
+            "league_slug": league_slug,
+            "home_team": h_name,
+            "away_team": a_name,
+            "kickoff_utc": kickoff_utc,
+            "home_goals": hg,
+            "away_goals": ag,
+            "home_stats": _extract_side_stats(home_c),
+            "away_stats": _extract_side_stats(away_c),
+            "details": {},
+        })
+    return out
+
+
 class ESPNFreeProvider:
-    """کلاینت رایگان و بدون کلید API برای داده‌های زندهٔ لیگ برتر از ESPN."""
+    """کلاینت رایگان و بدون کلید API برای داده‌های زندهٔ ۶ لیگ معتبر اروپا از ESPN."""
 
     def __init__(self, timeout: float = 15.0) -> None:
+        self._timeout = timeout
         self._client = httpx.Client(
             timeout=timeout,
             follow_redirects=True,
@@ -479,17 +616,31 @@ class ESPNFreeProvider:
     def close(self) -> None:
         self._client.close()
 
-    def fetch_epl_enrichments(
-        self, now_utc: datetime | None = None, match_dates: list[str] | None = None
-    ) -> dict[str, Any]:
-        """دریافت ضرایب زنده + مهره‌های کلیدی + موج زمانی ۱۵ دقیقه‌ای (فقط تک‌تاریخ معتبر برای جلوگیری از 400)."""
-        now = now_utc or datetime.now(timezone.utc)
-        # ۱) هفتهٔ جاری بدون پارامتر dates (همیشه HTTP 200)
-        r_up = self._client.get(ESPN_EPL_SCOREBOARD)
-        r_up.raise_for_status()
-        up = parse_espn_upcoming(r_up.json())
+    def _resolve_leagues(self, leagues: list[str] | tuple[str, ...] | None) -> list[LeagueSpec]:
+        if not leagues:
+            return list(EUROPEAN_LEAGUES)
+        out: list[LeagueSpec] = []
+        for item in leagues:
+            spec = league_by_espn_slug(str(item))
+            if spec:
+                out.append(spec)
+        return out or list(EUROPEAN_LEAGUES)
 
-        # ۲) تاریخچهٔ بازی‌های اخیر با تک‌تاریخ YYYYMMDD (از تاریخ بازی‌های واقعی ثبت‌شده در DB)
+    def fetch_epl_enrichments(
+        self,
+        now_utc: datetime | None = None,
+        match_dates: list[str] | None = None,
+        leagues: list[str] | tuple[str, ...] | None = None,
+    ) -> dict[str, Any]:
+        """دریافت ضرایب زنده + مهره‌های کلیدی + بازی‌های پیش‌رو + موج زمانی ۱۵ دقیقه‌ای برای همهٔ ۶ لیگ اروپا."""
+        now = now_utc or datetime.now(timezone.utc)
+        target_leagues = self._resolve_leagues(leagues)
+
+        all_odds: list[dict[str, Any]] = []
+        all_kp: dict[str, dict[str, str]] = {}
+        all_upcoming: list[dict[str, Any]] = []
+        all_waves: dict[str, list[float]] = {}
+
         dates_to_check: list[str] = []
         if match_dates:
             for d in match_dates[:12]:
@@ -497,84 +648,227 @@ class ESPNFreeProvider:
                 if len(clean) == 8 and clean.isdigit() and clean not in dates_to_check:
                     dates_to_check.append(clean)
         else:
-            for delta in range(1, 22, 2):
+            for delta in range(1, 15, 2):
                 dates_to_check.append((now - timedelta(days=delta)).strftime("%Y%m%d"))
 
-        merged_events: list[dict[str, Any]] = []
-        for ymd in dates_to_check:
+        def _fetch_one_league(spec: LeagueSpec) -> tuple[dict[str, Any], dict[str, list[float]]]:
+            sb_url = espn_scoreboard_url(spec.espn_slug)
+            up_local: dict[str, Any] = {"odds_rows": [], "key_players": {}, "upcoming_fixtures": []}
+            merged_events: list[dict[str, Any]] = []
             try:
-                r_h = self._client.get(ESPN_EPL_SCOREBOARD, params={"dates": ymd})
-                if r_h.status_code == 200:
-                    merged_events.extend(r_h.json().get("events") or [])
+                r_up = self._client.get(sb_url)
+                if r_up.status_code == 200:
+                    up_local = parse_espn_upcoming(
+                        r_up.json(), competition_name=spec.name_en, league_slug=spec.espn_slug
+                    )
             except Exception:
-                continue
+                pass
+            for ymd in dates_to_check[:6]:
+                try:
+                    r_h = self._client.get(sb_url, params={"dates": ymd})
+                    if r_h.status_code == 200:
+                        merged_events.extend(r_h.json().get("events") or [])
+                except Exception:
+                    continue
+            wmap = parse_espn_timing_wave({"events": merged_events})
+            if len(up_local["key_players"]) < 10 and merged_events:
+                hist_up = parse_espn_upcoming(
+                    {"events": merged_events}, competition_name=spec.name_en, league_slug=spec.espn_slug
+                )
+                for t, kp in hist_up["key_players"].items():
+                    up_local["key_players"].setdefault(t, kp)
+            return up_local, wmap
 
-        wave_map = parse_espn_timing_wave({"events": merged_events})
-        if len(up["key_players"]) < 10 and merged_events:
-            hist_up = parse_espn_upcoming({"events": merged_events})
-            for t, kp in hist_up["key_players"].items():
-                up["key_players"].setdefault(t, kp)
+        with ThreadPoolExecutor(max_workers=min(6, len(target_leagues))) as ex:
+            futs = [ex.submit(_fetch_one_league, spec) for spec in target_leagues]
+            for fut in as_completed(futs):
+                try:
+                    up_l, w_l = fut.result()
+                    all_odds.extend(up_l.get("odds_rows") or [])
+                    all_upcoming.extend(up_l.get("upcoming_fixtures") or [])
+                    for t, kp in (up_l.get("key_players") or {}).items():
+                        all_kp.setdefault(t, kp)
+                    for t, wv in (w_l or {}).items():
+                        all_waves.setdefault(t, wv)
+                except Exception:
+                    continue
 
         return {
-            "odds_rows": up["odds_rows"],
-            "key_players": up["key_players"],
-            "wave_map": wave_map,
+            "odds_rows": all_odds,
+            "key_players": all_kp,
+            "wave_map": all_waves,
+            "upcoming_fixtures": all_upcoming,
         }
 
     def fetch_recent_finished_matches(
-        self, now_utc: datetime | None = None, hours: float = 24.0
+        self,
+        now_utc: datetime | None = None,
+        hours: float = 24.0,
+        leagues: list[str] | tuple[str, ...] | None = None,
     ) -> list[dict[str, Any]]:
-        """دریافت زندهٔ بازی‌های پایان‌یافته از ۱ ثانیه پیش تا `hours` ساعت پیش همراه با آمار واقعی `/summary`."""
+        """دریافت زندهٔ بازی‌های پایان‌یافته از ۱ ثانیه پیش تا `hours` ساعت پیش در همهٔ ۶ لیگ معتبر اروپا همراه با آمار واقعی `/summary`."""
         now = now_utc or datetime.now(timezone.utc)
+        target_leagues = self._resolve_leagues(leagues)
         dates = [
             now.strftime("%Y%m%d"),
             (now - timedelta(days=1)).strftime("%Y%m%d"),
         ]
+
+        def _fetch_league_finished(spec: LeagueSpec) -> list[dict[str, Any]]:
+            sb_url = espn_scoreboard_url(spec.espn_slug)
+            sum_url = espn_summary_url(spec.espn_slug)
+            seen_local: set[str] = set()
+            out_local: list[dict[str, Any]] = []
+            for ymd in dates:
+                try:
+                    r = self._client.get(sb_url, params={"dates": ymd})
+                    if r.status_code != 200:
+                        continue
+                    payload = r.json()
+                except Exception:
+                    continue
+                for ev in (payload.get("events") or []):
+                    if not isinstance(ev, dict):
+                        continue
+                    eid = str(ev.get("id") or "")
+                    if not eid or eid in seen_local:
+                        continue
+                    comps = [c for c in (ev.get("competitions") or []) if isinstance(c, dict)]
+                    if not comps:
+                        continue
+                    st_obj = comps[0].get("status") if isinstance(comps[0].get("status"), dict) else {}
+                    st_type = st_obj.get("type") if isinstance(st_obj.get("type"), dict) else {}
+                    if str(st_type.get("state") or "").lower() != "post":
+                        continue
+                    ko_raw = str(comps[0].get("date") or ev.get("date") or "")
+                    try:
+                        ko_dt = datetime.fromisoformat(ko_raw.replace("Z", "+00:00"))
+                        est_end = ko_dt + timedelta(minutes=115)
+                        if ko_dt > now:
+                            continue
+                        elapsed_from_end = (now - min(est_end, now)).total_seconds()
+                        if (now - ko_dt).total_seconds() > (hours + 2.5) * 3600.0:
+                            continue
+                        if elapsed_from_end > hours * 3600.0:
+                            continue
+                    except Exception:
+                        pass
+                    seen_local.add(eid)
+                    try:
+                        rs = self._client.get(sum_url, params={"event": eid})
+                        if rs.status_code == 200:
+                            parsed = parse_espn_finished_summary(
+                                rs.json(),
+                                scoreboard_event=ev,
+                                competition_name=spec.name_en,
+                                league_slug=spec.espn_slug,
+                            )
+                            if parsed:
+                                out_local.append(parsed)
+                    except Exception:
+                        continue
+            return out_local
+
         seen_ids: set[str] = set()
         results: list[dict[str, Any]] = []
-        for ymd in dates:
+        with ThreadPoolExecutor(max_workers=min(6, len(target_leagues))) as ex:
+            futs = [ex.submit(_fetch_league_finished, spec) for spec in target_leagues]
+            for fut in as_completed(futs):
+                try:
+                    for item in fut.result():
+                        eid = str(item.get("event_id") or "")
+                        if eid and eid in seen_ids:
+                            continue
+                        if eid:
+                            seen_ids.add(eid)
+                        results.append(item)
+                except Exception:
+                    continue
+        return results
+
+    def fetch_competition_season_finished_matches(
+        self,
+        league_slug: str = "uefa.europa",
+        *,
+        competition_name: str = "UEFA Europa League",
+        now_utc: datetime | None = None,
+        days_back: int = 95,
+    ) -> list[dict[str, Any]]:
+        """دریافت تمام بازی‌های پایان‌یافتهٔ فصل جاری یک رقابت (مانند لیگ اروپا/چمپیونزلیگ) از تقویم رسمی ESPN."""
+        from concurrent.futures import ThreadPoolExecutor
+
+        now = now_utc or datetime.now(timezone.utc)
+        min_day = (now - timedelta(days=days_back)).strftime("%Y-%m-%d")
+        today_day = now.strftime("%Y-%m-%d")
+        base_url = espn_scoreboard_url(league_slug)
+
+        import logging as _logging
+        _log = _logging.getLogger(__name__)
+
+        # ۱) خواندن لیست دقیق روزهای برگزاری فصل جاری از leagues[0].calendar در ESPN (پشتیبانی از str و dict)
+        cal_ymds: list[str] = []
+
+        def _collect_cal_dates(node: Any) -> None:
+            if isinstance(node, str):
+                d_str = node[:10]
+                if len(d_str) == 10 and d_str[4] == "-" and min_day <= d_str <= today_day:
+                    ymd = d_str.replace("-", "")
+                    if ymd not in cal_ymds:
+                        cal_ymds.append(ymd)
+            elif isinstance(node, dict):
+                for k in ("startDate", "endDate", "date", "value"):
+                    if isinstance(node.get(k), str):
+                        _collect_cal_dates(node[k])
+                for k in ("entries", "calendar"):
+                    if isinstance(node.get(k), list):
+                        for sub in node[k]:
+                            _collect_cal_dates(sub)
+            elif isinstance(node, list):
+                for sub in node:
+                    _collect_cal_dates(sub)
+
+        try:
+            r0 = self._client.get(base_url)
+            if r0.status_code == 200:
+                p0 = r0.json()
+                for lg in p0.get("leagues") or []:
+                    if isinstance(lg, dict):
+                        _collect_cal_dates(lg.get("calendar"))
+        except Exception as e_cal:
+            _log.warning("espn_free calendar fetch failed for %s: %s", league_slug, e_cal)
+
+        # ۲) اگر تقویم در پاسخ نبود، بازه را به پنجره‌های ۷ روزه تقسیم می‌کنیم تا ESPN محدودیت بازه نزند
+        query_tokens: list[str] = cal_ymds[-16:] if cal_ymds else []
+        if not query_tokens:
+            cur_end = now
+            while (now - cur_end).days < days_back:
+                cur_start = max(now - timedelta(days=days_back), cur_end - timedelta(days=6))
+                query_tokens.append(f"{cur_start.strftime('%Y%m%d')}-{cur_end.strftime('%Y%m%d')}")
+                cur_end = cur_start - timedelta(days=1)
+
+        def _fetch_token(tok: str) -> list[dict[str, Any]]:
             try:
-                r = self._client.get(ESPN_EPL_SCOREBOARD, params={"dates": ymd})
-                if r.status_code != 200:
-                    continue
-                payload = r.json()
+                with httpx.Client(
+                    timeout=self._timeout,
+                    follow_redirects=True,
+                    headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/126.0"},
+                ) as cl:
+                    r = cl.get(base_url, params={"dates": tok})
+                    if r.status_code != 200:
+                        return []
+                    return parse_espn_scoreboard_finished(
+                        r.json(), competition_name=competition_name, league_slug=league_slug
+                    )
             except Exception:
-                continue
-            for ev in (payload.get("events") or []):
-                if not isinstance(ev, dict):
-                    continue
-                eid = str(ev.get("id") or "")
-                if not eid or eid in seen_ids:
-                    continue
-                comps = [c for c in (ev.get("competitions") or []) if isinstance(c, dict)]
-                if not comps:
-                    continue
-                st_obj = comps[0].get("status") if isinstance(comps[0].get("status"), dict) else {}
-                st_type = st_obj.get("type") if isinstance(st_obj.get("type"), dict) else {}
-                if str(st_type.get("state") or "").lower() != "post":
-                    continue
-                # بررسی بازهٔ ۱ ثانیه پیش تا ۲۴ ساعت پیش (برآورد پایان بازی: kickoff + 115 دقیقه)
-                ko_raw = str(comps[0].get("date") or ev.get("date") or "")
-                try:
-                    ko_dt = datetime.fromisoformat(ko_raw.replace("Z", "+00:00"))
-                    est_end = ko_dt + timedelta(minutes=115)
-                    # اگر بازی تازه تمام شده (مثلاً دقیقه ۹۴) est_end ممکن است چند دقیقه جلوتر از now باشد
-                    if ko_dt > now:
-                        continue
-                    elapsed_from_end = (now - min(est_end, now)).total_seconds()
-                    if (now - ko_dt).total_seconds() > (hours + 2.5) * 3600.0:
-                        continue
-                    if elapsed_from_end > hours * 3600.0:
-                        continue
-                except Exception:
-                    pass
-                seen_ids.add(eid)
-                try:
-                    rs = self._client.get(ESPN_EPL_SUMMARY, params={"event": eid})
-                    if rs.status_code == 200:
-                        parsed = parse_espn_finished_summary(rs.json(), scoreboard_event=ev)
-                        if parsed:
-                            results.append(parsed)
-                except Exception:
-                    continue
+                return []
+
+        results: list[dict[str, Any]] = []
+        seen_ids: set[str] = set()
+        with ThreadPoolExecutor(max_workers=6) as pool:
+            for chunk in pool.map(_fetch_token, query_tokens):
+                for item in chunk:
+                    key = item.get("event_id") or f"{item.get('kickoff_utc')}:{item.get('home_team')}:{item.get('away_team')}"
+                    if key not in seen_ids:
+                        seen_ids.add(key)
+                        results.append(item)
         return results

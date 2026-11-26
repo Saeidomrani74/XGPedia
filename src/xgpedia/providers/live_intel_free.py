@@ -24,6 +24,7 @@ BBC_FOOTBALL_RSS = "https://feeds.bbci.co.uk/sport/football/rss.xml"
 
 # نگاشت نام canonical تیم‌های لیگ برتر (و تیم‌های اخیر چمپیونشیپ) به عنوان دقیق مقالهٔ ویکی‌پدیای انگلیسی
 TEAM_WIKI_TITLES: dict[str, str] = {
+    # Premier League & English clubs
     "Arsenal": "Arsenal F.C.",
     "Aston Villa": "Aston Villa F.C.",
     "Bournemouth": "AFC Bournemouth",
@@ -32,23 +33,164 @@ TEAM_WIKI_TITLES: dict[str, str] = {
     "Burnley": "Burnley F.C.",
     "Chelsea": "Chelsea F.C.",
     "Coventry": "Coventry City F.C.",
+    "Coventry City": "Coventry City F.C.",
     "Crystal Palace": "Crystal Palace F.C.",
     "Everton": "Everton F.C.",
     "Fulham": "Fulham F.C.",
     "Hull": "Hull City A.F.C.",
+    "Hull City": "Hull City A.F.C.",
     "Ipswich": "Ipswich Town F.C.",
+    "Ipswich Town": "Ipswich Town F.C.",
     "Leeds": "Leeds United F.C.",
+    "Leeds United": "Leeds United F.C.",
     "Leicester": "Leicester City F.C.",
     "Liverpool": "Liverpool F.C.",
     "Manchester City": "Manchester City F.C.",
     "Manchester United": "Manchester United F.C.",
     "Newcastle": "Newcastle United F.C.",
+    "Newcastle United": "Newcastle United F.C.",
     "Nottingham Forest": "Nottingham Forest F.C.",
     "Southampton": "Southampton F.C.",
     "Sunderland": "Sunderland A.F.C.",
     "Tottenham": "Tottenham Hotspur F.C.",
     "West Ham": "West Ham United F.C.",
     "Wolverhampton": "Wolverhampton Wanderers F.C.",
+    # La Liga
+    "Real Madrid": "Real Madrid CF",
+    "Barcelona": "FC Barcelona",
+    "Atletico Madrid": "Atlético Madrid",
+    "Girona": "Girona FC",
+    "Athletic Club": "Athletic Bilbao",
+    "Villarreal": "Villarreal CF",
+    "Real Sociedad": "Real Sociedad",
+    "Real Betis": "Real Betis",
+    "Sevilla": "Sevilla FC",
+    "Valencia": "Valencia CF",
+    "Osasuna": "CA Osasuna",
+    "Celta Vigo": "RC Celta de Vigo",
+    "Rayo Vallecano": "Rayo Vallecano",
+    "Mallorca": "RCD Mallorca",
+    "Getafe": "Getafe CF",
+    "Alaves": "Deportivo Alavés",
+    "Espanyol": "RCD Espanyol",
+    "Las Palmas": "UD Las Palmas",
+    "Real Valladolid": "Real Valladolid",
+    "Leganes": "CD Leganés",
+    # Bundesliga
+    "Bayern Munich": "FC Bayern Munich",
+    "Borussia Dortmund": "Borussia Dortmund",
+    "Bayer Leverkusen": "Bayer 04 Leverkusen",
+    "RB Leipzig": "RB Leipzig",
+    "VfB Stuttgart": "VfB Stuttgart",
+    "Eintracht Frankfurt": "Eintracht Frankfurt",
+    "SC Freiburg": "SC Freiburg",
+    "Borussia Monchengladbach": "Borussia Mönchengladbach",
+    "Werder Bremen": "SV Werder Bremen",
+    "VfL Wolfsburg": "VfL Wolfsburg",
+    "Mainz 05": "1. FSV Mainz 05",
+    "FC Augsburg": "FC Augsburg",
+    "Union Berlin": "1. FC Union Berlin",
+    "TSG Hoffenheim": "TSG 1899 Hoffenheim",
+    "FC Heidenheim": "1. FC Heidenheim",
+    "FC St. Pauli": "FC St. Pauli",
+    "Holstein Kiel": "Holstein Kiel",
+    "VfL Bochum": "VfL Bochum",
+    # Serie A
+    "Inter Milan": "Inter Milan",
+    "AC Milan": "AC Milan",
+    "Juventus": "Juventus FC",
+    "Atalanta": "Atalanta BC",
+    "Napoli": "SSC Napoli",
+    "Bologna": "Bologna FC 1909",
+    "AS Roma": "AS Roma",
+    "Lazio": "SS Lazio",
+    "Fiorentina": "ACF Fiorentina",
+    "Torino": "Torino FC",
+    "Udinese": "Udinese Calcio",
+    "Genoa": "Genoa CFC",
+    "Cagliari": "Cagliari Calcio",
+    "Hellas Verona": "Hellas Verona FC",
+    "Empoli": "Empoli FC",
+    "Lecce": "US Lecce",
+    "Parma": "Parma Calcio 1913",
+    "Como": "Como 1907",
+    "Monza": "AC Monza",
+    "Venezia": "Venezia FC",
+    # Ligue 1
+    "Paris Saint-Germain": "Paris Saint-Germain F.C.",
+    "AS Monaco": "AS Monaco FC",
+    "Lille": "Lille OSC",
+    "Brest": "Stade Brestois 29",
+    "Marseille": "Olympique de Marseille",
+    "Lyon": "Olympique Lyonnais",
+    "Nice": "OGC Nice",
+    "Lens": "RC Lens",
+    "Rennes": "Stade Rennais F.C.",
+    "Strasbourg": "RC Strasbourg Alsace",
+    "Reims": "Stade de Reims",
+    "Toulouse": "Toulouse FC",
+    "Auxerre": "AJ Auxerre",
+    "Nantes": "FC Nantes",
+    "Angers": "Angers SCO",
+    "Saint-Etienne": "AS Saint-Étienne",
+    "Le Havre": "Le Havre AC",
+    "Montpellier": "Montpellier HSC",
+    # UCL European Clubs
+    "Benfica": "S.L. Benfica",
+    "Sporting CP": "Sporting CP",
+    "FC Porto": "FC Porto",
+    "PSV Eindhoven": "PSV Eindhoven",
+    "Feyenoord": "Feyenoord",
+    "Ajax": "AFC Ajax",
+    "Celtic": "Celtic F.C.",
+    "Club Brugge": "Club Brugge KV",
+    "Shakhtar Donetsk": "FC Shakhtar Donetsk",
+    "Red Bull Salzburg": "FC Red Bull Salzburg",
+    "Galatasaray": "Galatasaray S.K. (football)",
+    "Sabah FK": "Sabah FC",
+    "Qarabag": "Qarabağ FK",
+    "Olympiacos": "Olympiacos F.C.",
+    "PAOK": "PAOK FC",
+    "Panathinaikos": "Panathinaikos F.C.",
+    "Fenerbahce": "Fenerbahçe S.K. (football)",
+    "Besiktas": "Beşiktaş J.K.",
+    "Slavia Prague": "SK Slavia Prague",
+    "Sparta Prague": "AC Sparta Prague",
+    "Viktoria Plzen": "FC Viktoria Plzeň",
+    "Bodo/Glimt": "FK Bodø/Glimt",
+    "FC Copenhagen": "F.C. Copenhagen",
+    "Midtjylland": "FC Midtjylland",
+    "Young Boys": "BSC Young Boys",
+    "FC Basel": "FC Basel",
+    "Union Saint-Gilloise": "Royale Union Saint-Gilloise",
+    "Anderlecht": "R.S.C. Anderlecht",
+    "Genk": "K.R.C. Genk",
+    "Dinamo Zagreb": "GNK Dinamo Zagreb",
+    "Red Star Belgrade": "Red Star Belgrade",
+    "Rangers": "Rangers F.C.",
+    "Sturm Graz": "SK Sturm Graz",
+    "Slovan Bratislava": "ŠK Slovan Bratislava",
+    "Ferencvaros": "Ferencvárosi TC",
+    "Dynamo Kyiv": "FC Dynamo Kyiv",
+    "Pafos": "Pafos FC",
+    "Kairat": "FC Kairat",
+    "FCSB": "FCSB",
+    "Malmo FF": "Malmö FF",
+    "SC Braga": "S.C. Braga",
+    "AZ Alkmaar": "AZ Alkmaar",
+    "FC Twente": "FC Twente",
+    "Viking FK": "Viking FK",
+    "Lech Poznan": "Lech Poznań",
+    "NK Celje": "NK Celje",
+    "Jagiellonia Bialystok": "Jagiellonia Białystok",
+    "AC Omonia": "AC Omonia",
+    "SCU Torreense": "S.C.U. Torreense",
+    "Hapoel Be'er Sheva": "Hapoel Be'er Sheva F.C.",
+    "NEC Nijmegen": "NEC Nijmegen",
+    "OFI Crete": "OFI Crete F.C.",
+    "Lillestrom SK": "Lillestrøm SK",
+    "Levski Sofia": "PFC Levski Sofia",
+    "Ararat-Armenia": "FC Ararat-Armenia",
 }
 
 _HIGH_SIGNAL_NEWS_KEYWORDS = (
@@ -220,39 +362,65 @@ def fetch_live_coach_wikipedia(team_en: str, *, timeout: float = 10.0) -> tuple[
     در غیر این صورت `translate_coach_fa(coach_en)` (دیکشنری + آوانویسی خودکار) استفاده می‌شود.
     """
     canon = canonical_team_name(team_en)
-    wiki_title = TEAM_WIKI_TITLES.get(canon) or f"{canon} F.C."
+    candidates: list[str] = []
+    for cand in (TEAM_WIKI_TITLES.get(canon), TEAM_WIKI_TITLES.get(team_en), canon, f"{canon} F.C."):
+        if cand and cand not in candidates:
+            candidates.append(cand)
     headers = {"User-Agent": "XGPediaBot/0.24 (https://xgpedia.local; football-analytics)"}
+
+    def _query_title(client: httpx.Client, title: str) -> tuple[str, str | None]:
+        r = client.get(
+            WIKI_API_EN,
+            params={
+                "action": "query",
+                "prop": "revisions|pageprops",
+                "rvprop": "content",
+                "rvslots": "main",
+                "rvsection": "0",
+                "ppprop": "wikibase_item",
+                "redirects": "1",
+                "format": "json",
+                "titles": title,
+            },
+        )
+        r.raise_for_status()
+        pages = (r.json().get("query") or {}).get("pages") or {}
+        for p in pages.values():
+            if "missing" in p:
+                continue
+            wt = ""
+            revs = p.get("revisions") or []
+            if revs:
+                slots = revs[0].get("slots") or {}
+                wt = (slots.get("main") or {}).get("*") or revs[0].get("*") or ""
+            pp = p.get("pageprops") or {}
+            qid = pp.get("wikibase_item") if isinstance(pp.get("wikibase_item"), str) else None
+            if wt or qid:
+                return wt, qid
+        return "", None
 
     try:
         with httpx.Client(timeout=timeout, follow_redirects=True, headers=headers) as client:
-            r = client.get(
-                WIKI_API_EN,
-                params={
-                    "action": "query",
-                    "prop": "revisions|pageprops",
-                    "rvprop": "content",
-                    "rvslots": "main",
-                    "rvsection": "0",
-                    "ppprop": "wikibase_item",
-                    "redirects": "1",
-                    "format": "json",
-                    "titles": wiki_title,
-                },
-            )
-            r.raise_for_status()
-            pages = (r.json().get("query") or {}).get("pages") or {}
             wikitext = ""
             club_qid: str | None = None
-            for p in pages.values():
-                revs = p.get("revisions") or []
-                if revs:
-                    slots = revs[0].get("slots") or {}
-                    wikitext = (slots.get("main") or {}).get("*") or revs[0].get("*") or ""
-                pp = p.get("pageprops") or {}
-                if isinstance(pp.get("wikibase_item"), str):
-                    club_qid = pp["wikibase_item"]
-                if wikitext or club_qid:
+            for cand in candidates:
+                wt, qid = _query_title(client, cand)
+                if wt or qid:
+                    wikitext, club_qid = wt, qid
                     break
+            # پشتیبان هوشمند opensearch اگر عنوان دقیق باشگاه در جدول نبود
+            if not wikitext and not club_qid:
+                try:
+                    rs = client.get(
+                        WIKI_API_EN,
+                        params={"action": "opensearch", "search": f"{canon} football club", "limit": "2", "format": "json"},
+                    )
+                    if rs.status_code == 200:
+                        arr = rs.json()
+                        if isinstance(arr, list) and len(arr) >= 2 and arr[1]:
+                            wikitext, club_qid = _query_title(client, str(arr[1][0]))
+                except Exception:
+                    pass
 
             coach_en = parse_coach_from_wikitext(wikitext)
             if not coach_en:

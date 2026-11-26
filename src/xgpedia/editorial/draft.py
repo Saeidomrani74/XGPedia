@@ -62,7 +62,7 @@ def generate_draft(
     """
     from dataclasses import replace
 
-    match = MatchFacts.model_validate(facts)
+    match = MatchFacts.model_validate(facts) if hasattr(MatchFacts, 'model_validate') else MatchFacts.parse_obj(facts)
     hooks = extract_narrative_hooks(match)
     sys_prompt = build_system_prompt(normalize_tone(tone), hooks)
     attempts: list[str] = []
@@ -94,6 +94,13 @@ def generate_draft(
             except TypeError:
                 # providerهای ساده (مثل FakeLLM تست) آرگومان اصلاحی نمی‌گیرند
                 draft = provider.generate(sys_prompt, match)
+        # اگر مدل متن معتبر ساخت ولی فیلد title را خالی گذاشت، تیتر واقعی از فکت بساز
+        if draft.status == "ok" and not (draft.title or "").strip() and ((draft.caption or "").strip() or draft.bullets):
+            if getattr(match, "result", None) is not None and match.result.home_goals is not None and match.result.away_goals is not None:
+                auto_title = f"{match.home.name_fa} {match.result.home_goals}-{match.result.away_goals} {match.away.name_fa}"
+            else:
+                auto_title = f"{match.home.name_fa} × {match.away.name_fa}"
+            draft = replace(draft, title=auto_title)
         rep = _validate_draft(draft, match)
         if rep.passed:
             # source_note را همیشه از کد بازنویسی می‌کنیم — عدد/نام/زمان از کد است

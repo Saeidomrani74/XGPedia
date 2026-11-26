@@ -1,12 +1,10 @@
-"""آداپتر football-data.org — منبع بازی‌های پیش‌رو، کیک‌آف و جدول (نسخهٔ ۸).
+"""آداپتر football-data.org — منبع بازی‌های پیش‌رو، کیک‌آف و جدول برای ۶ لیگ معتبر اروپا.
 
-راستی‌آزمایی ۱۵ نوامبر ۲۰۲۶:
-  - لیگ برتر انگلیس (کد PL) در فهرست ۱۲ مسابقهٔ رایگان همیشگی.
+پشتیبانی کامل از ۶ رقابت رایگان رسمی football-data.org v4:
+  - `PL` (لیگ برتر انگلیس)، `CL` (لیگ قهرمانان اروپا)، `PD` (لالیگا اسپانیا)،
+    `SA` (سری آ ایتالیا)، `BL1` (بوندس‌لیگا آلمان)، `FL1` (لیگ ۱ فرانسه).
   - پلن رایگان: ۱۰ درخواست بر دقیقه؛ توکن از ثبت‌نام رایگان.
-  - هیچ endpoint برای xG ندارد — xG فقط از football-data.co.uk می‌آید (تفکیک provider).
-
-قواعد لایهٔ Ingestion: پاسخ خام JSON با sha256 ذخیره، idempotent،
-timeout/backoff و احترام به rate limit با RateLimitBudget مشترک.
+  - هیچ endpoint برای xG ندارد — xG فقط از football-data.co.uk / Understat می‌آید.
 """
 from __future__ import annotations
 
@@ -16,6 +14,7 @@ from typing import Any
 import httpx
 
 from src.xgpedia.config import CURRENT_SEASON_START
+from src.xgpedia.core.leagues import EUROPEAN_FDO_CODES
 from src.xgpedia.providers.base import ProviderError, RateLimitBudget, RawResponse, with_backoff
 
 PROVIDER = "football-data-org"
@@ -24,7 +23,7 @@ PL_CODE = "PL"
 
 
 class FootballDataOrg:
-    """API رسمی v4 — fixtures پیش‌رو، نتایج، جدول. بدون xG (طراحی سرویس)."""
+    """API رسمی v4 — fixtures پیش‌رو، نتایج، جدول و گلزنان برای همهٔ ۶ لیگ معتبر اروپا."""
 
     def __init__(
         self,
@@ -71,15 +70,21 @@ class FootballDataOrg:
         raw.save()
         return raw
 
-    # ---------- endpointهای مصرفی MVP ----------
+    # ---------- endpointهای مصرفی چندلیگی ----------
 
-    def upcoming_fixtures(self, days: int = 7, season_start: int = CURRENT_SEASON_START) -> RawResponse:
-        """بازی‌های N روز آیندهٔ لیگ برتر — مبنای Workflow A."""
+    def upcoming_fixtures(
+        self,
+        days: int = 7,
+        season_start: int = CURRENT_SEASON_START,
+        competition: str = PL_CODE,
+    ) -> RawResponse:
+        """بازی‌های N روز آیندهٔ یک رقابت (پیش‌فرض: PL؛ پشتیبانی از PL/CL/PD/SA/BL1/FL1)."""
         from datetime import datetime, timedelta, timezone
 
         today = datetime.now(timezone.utc).date()
+        comp = (competition or PL_CODE).strip().upper()
         return self._get(
-            f"/competitions/{PL_CODE}/matches",
+            f"/competitions/{comp}/matches",
             {
                 "dateFrom": today.isoformat(),
                 "dateTo": (today + timedelta(days=days)).isoformat(),
@@ -88,13 +93,19 @@ class FootballDataOrg:
             },
         )
 
-    def played_fixtures(self, days_back: int = 10, season_start: int = CURRENT_SEASON_START) -> RawResponse:
-        """بازی‌های N روز گذشته (FINISHED) — صحت‌سنجی متقابل با CSV."""
+    def played_fixtures(
+        self,
+        days_back: int = 10,
+        season_start: int = CURRENT_SEASON_START,
+        competition: str = PL_CODE,
+    ) -> RawResponse:
+        """بازی‌های N روز گذشته (FINISHED) یک رقابت."""
         from datetime import datetime, timedelta, timezone
 
         today = datetime.now(timezone.utc).date()
+        comp = (competition or PL_CODE).strip().upper()
         return self._get(
-            f"/competitions/{PL_CODE}/matches",
+            f"/competitions/{comp}/matches",
             {
                 "dateFrom": (today - timedelta(days=days_back)).isoformat(),
                 "dateTo": today.isoformat(),
@@ -103,17 +114,28 @@ class FootballDataOrg:
             },
         )
 
-    def standings(self, season_start: int = CURRENT_SEASON_START) -> RawResponse:
+    def standings(self, season_start: int = CURRENT_SEASON_START, competition: str = PL_CODE) -> RawResponse:
         """جدول لیگ (TOTAL/HOME/AWAY) — مبنای فرم و جایگاه."""
-        return self._get(f"/competitions/{PL_CODE}/standings", {"season": season_start})
+        comp = (competition or PL_CODE).strip().upper()
+        return self._get(f"/competitions/{comp}/standings", {"season": season_start})
 
-    def teams(self, season_start: int = CURRENT_SEASON_START) -> RawResponse:
-        """اطلاعات زندهٔ تیم‌های فصل (ورزشگاه و سرمربی فعلی) — رایگان با ۱ درخواست."""
-        return self._get(f"/competitions/{PL_CODE}/teams", {"season": season_start})
+    def teams(self, season_start: int = CURRENT_SEASON_START, competition: str = PL_CODE) -> RawResponse:
+        """اطلاعات زندهٔ تیم‌های فصل (ورزشگاه و سرمربی فعلی)."""
+        comp = (competition or PL_CODE).strip().upper()
+        return self._get(f"/competitions/{comp}/teams", {"season": season_start})
 
-    def scorers(self, limit: int = 50, season_start: int = CURRENT_SEASON_START) -> RawResponse:
-        """برترین گلزنان و پاسورهای فصل لیگ برتر (رایگان) — منبع مطمئن ماژول مهرهٔ کلیدی."""
-        return self._get(f"/competitions/{PL_CODE}/scorers", {"season": season_start, "limit": limit})
+    def scorers(
+        self,
+        limit: int = 50,
+        season_start: int = CURRENT_SEASON_START,
+        competition: str = PL_CODE,
+    ) -> RawResponse:
+        """برترین گلزنان و پاسورهای فصل (رایگان) — منبع مطمئن ماژول مهرهٔ کلیدی."""
+        comp = (competition or PL_CODE).strip().upper()
+        return self._get(f"/competitions/{comp}/scorers", {"season": season_start, "limit": limit})
 
     def close(self) -> None:
         self._client.close()
+
+
+__all__ = ["PROVIDER", "BASE", "PL_CODE", "EUROPEAN_FDO_CODES", "FootballDataOrg"]

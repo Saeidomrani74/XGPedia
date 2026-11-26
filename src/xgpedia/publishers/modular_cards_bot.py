@@ -70,6 +70,7 @@ MODULAR_ITEMS_MAP: dict[str, dict[str, dict[str, Any]]] = {
     "value_radar": {},
     "lineup_injuries": {},
 }
+REEL_PREVIEW_CACHE: dict[str, dict[str, Any]] = {}
 MODULAR_PICKER_STATE: dict[tuple[str, int], dict[str, Any]] = {}
 
 MODULAR_LAST_DATA: dict[str, dict[str, list[dict[str, Any]]]] = {
@@ -1464,7 +1465,21 @@ def _register_card_handlers(card_kind: str) -> None:
                 await wait_msg.edit_text(f"❌ خطا در ساخت ریلز:\n<code>{html.escape(reel_res.error[:400])}</code>", parse_mode="HTML")
                 return
             cap_reel = f"🎬 ریلز آمادهٔ انتشار | {spec['title']}\n📌 {_item_label(card_kind, st['item'])}\n⏱ مدت: {reel_res.duration_sec:.1f} ثانیه ({reel_res.slides_count} اسلاید)\n@XGPedia"
-            await bot.send_video(cb.from_user.id, video=FSInputFile(str(reel_res.video_path)), caption=cap_reel)
+            import uuid as _uuid
+            _rid = _uuid.uuid4().hex[:10]
+            REEL_PREVIEW_CACHE[_rid] = {
+                "video_path": str(reel_res.video_path),
+                "caption": cap_reel,
+                "title": f"{spec['title']} | {_item_label(card_kind, st['item'])}",
+            }
+            _reel_kb = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="✅ انتشار ریلز در کانال + پلتفرم‌ها", callback_data=f"reel:pub:{_rid}")],
+                [
+                    InlineKeyboardButton(text="🌐 فقط پلتفرم‌های دیگر", callback_data=f"reel:omni:{_rid}"),
+                    InlineKeyboardButton(text="🗑 بستن", callback_data=f"reel:del:{_rid}"),
+                ],
+            ])
+            await bot.send_video(cb.from_user.id, video=FSInputFile(str(reel_res.video_path)), caption=cap_reel, reply_markup=_reel_kb)
             try:
                 await wait_msg.edit_text(f"✅ ریلز ویدیویی آماده و ارسال شد ({reel_res.duration_sec:.1f} ثانیه).")
             except Exception:
@@ -1480,3 +1495,65 @@ def _register_card_handlers(card_kind: str) -> None:
 
 for _ck in CARD_SPECS:
     _register_card_handlers(_ck)
+
+
+@modular_router.callback_query(F.data.startswith("reel:"))
+async def _on_reel_publish_action(cb: CallbackQuery, bot: Bot) -> None:
+    if not tp.is_admin(cb.from_user.id):
+        await _safe_answer(cb, "شما مجاز نیستید.", show_alert=True)
+        return
+    parts = (cb.data or "").split(":", 2)
+    if len(parts) < 3:
+        await _safe_answer(cb)
+        return
+    act, rid = parts[1], parts[2]
+    entry = REEL_PREVIEW_CACHE.get(rid)
+    if act == "del":
+        REEL_PREVIEW_CACHE.pop(rid, None)
+        await _safe_answer(cb, "بسته شد.")
+        try:
+            await cb.message.edit_reply_markup(reply_markup=None)
+        except Exception:
+            pass
+        return
+    from pathlib import Path as _Path
+    if not entry or not _Path(entry["video_path"]).exists():
+        await _safe_answer(cb, "فایل ریلز منقضی شده یا یافت نشد؛ دوباره بسازید.", show_alert=True)
+        return
+
+    from aiogram.types import FSInputFile
+    from src.xgpedia.config import TELEGRAM_CHANNEL_ID
+    from src.xgpedia.publishers.omnichannel import broadcast_video
+
+    await _safe_answer(cb, "در حال انتشار ریلز...")
+    status_lines: list[str] = []
+
+    if act == "pub":
+        if not TELEGRAM_CHANNEL_ID:
+            status_lines.append("❌ تلگرام: TELEGRAM_CHANNEL_ID در .env تنظیم نشده است.")
+        else:
+            try:
+                ch = int(TELEGRAM_CHANNEL_ID) if str(TELEGRAM_CHANNEL_ID).lstrip("-").isdigit() else str(TELEGRAM_CHANNEL_ID)
+                msg = await bot.send_video(ch, video=FSInputFile(entry["video_path"]), caption=entry["caption"])
+                status_lines.append(f"✅ تلگرام: منتشر شد (پیام #{msg.message_id})")
+            except Exception as exc:
+                status_lines.append(f"❌ تلگرام: {type(exc).__name__}: {str(exc)[:140]}")
+
+    try:
+        outs = await broadcast_video(entry["video_path"], entry["caption"], title=entry["title"])
+        for o in outs:
+            if o.ok:
+                status_lines.append(f"✅ {o.label_fa}: منتشر شد")
+            else:
+                status_lines.append(f"❌ {o.label_fa}: {o.error[:120]}")
+        if not outs and act == "omni":
+            status_lines.append("ℹ️ هیچ پلتفرم فرعی فعالی در .env تنظیم نشده است (/platforms).")
+    except Exception as exc:
+        status_lines.append(f"❌ انتشار چندپلتفرمی: {type(exc).__name__}: {str(exc)[:140]}")
+
+    REEL_PREVIEW_CACHE.pop(rid, None)
+    try:
+        await cb.message.edit_reply_markup(reply_markup=None)
+    except Exception:
+        pass
+    await cb.message.answer("🎬 <b>گزارش انتشار ریلز:</b>\n" + "\n".join(status_lines), parse_mode="HTML")

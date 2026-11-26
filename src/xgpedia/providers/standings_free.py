@@ -96,6 +96,17 @@ STANDINGS_LEAGUE_SPECS: list[dict[str, Any]] = [
         "zones": {"ucl": [1, 8], "uel": [9, 16], "uecl": [17, 24], "rel": [25, 36]},
         "zoneLabels": {"ucl": "صعود مستقیم یک‌هشتم", "uel": "پلی‌آف (سید)", "uecl": "پلی‌آف (غیرسید)", "rel": "حذف از اروپا"},
     },
+    {
+        "id": "live_uel",
+        "espn_slug": "uefa.europa",
+        "understat_slug": None,
+        "fd_code": "EL",
+        "name": "لیگ اروپا",
+        "leagueEn": "UEFA EUROPA LEAGUE",
+        "total_games": 8,
+        "zones": {"ucl": [1, 8], "uel": [9, 16], "uecl": [17, 24], "rel": [25, 36]},
+        "zoneLabels": {"ucl": "صعود مستقیم یک‌هشتم", "uel": "پلی‌آف (سید)", "uecl": "پلی‌آف (غیرسید)", "rel": "حذف از اروپا"},
+    },
 ]
 
 _TEAM_FA_MAP: dict[str, tuple[str, str, str, str]] = {

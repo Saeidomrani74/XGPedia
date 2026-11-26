@@ -42,7 +42,7 @@ def test_parse_upcoming_odds_from_fixtures_csv():
         rows = api.parse_upcoming_odds(csv_text)
     finally:
         api.close()
-    assert len(rows) == 2  # فقط لیگ برتر انگلیس E0
+    assert len(rows) == 3  # هر ۵ لیگ معتبر اروپا (E0 + D1 و ...)
     assert rows[0]["home_team"] == "Liverpool"
     assert rows[0]["away_team"] == "Manchester United"
     assert rows[0]["home_odds"] == 1.88

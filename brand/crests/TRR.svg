@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" fill="none">
+  <defs><linearGradient id="g_TRR" x1="20" y1="15" x2="160" y2="165" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#00529B"/><stop offset="100%" stop-color="#00529B" stop-opacity="0.72"/></linearGradient></defs>
+  <path d="M90 12 L152 36 V92 C152 132 124 157 90 168 C56 157 28 132 28 92 V36 L90 12 Z" fill="url(#g_TRR)" stroke="#E30613" stroke-width="6"/>
+  <text x="90" y="102" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="38" fill="#E30613">TRR</text>
+</svg>

@@ -56,6 +56,8 @@ def test_modular_cards_bot_and_telegram_bot_wired_for_reels() -> None:
     assert "ساخت ریلز (MP4)" in mb_src
     assert 'action == "reel"' in mb_src
     assert "render_modular_card_reel_async" in mb_src
+    assert "reel:pub:" in mb_src
+    assert "broadcast_video" in mb_src
 
     tb_src = Path("src/xgpedia/publishers/telegram_bot.py").read_text(encoding="utf-8")
     assert "async def send_video(" in tb_src

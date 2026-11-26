@@ -84,7 +84,7 @@ def _num(val: Any) -> float | None:
 def extract_narrative_hooks(match: MatchFacts | dict[str, Any]) -> list[str]:
     """استخراج خودکار زوایای داستانی/تحلیلی (Narrative Hooks) فقط از داده‌های واقعی MatchFacts."""
     if isinstance(match, MatchFacts):
-        data = match.model_dump(mode="json")
+        data = match.model_dump(mode="json") if hasattr(match, "model_dump") else match.dict()
     elif isinstance(match, dict):
         data = match
     else:

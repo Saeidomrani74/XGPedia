@@ -1,0 +1,62 @@
+{
+    "uuids": {
+        "phone_id": "fc19efca-b903-4fb5-b9dc-435d63070553",
+        "uuid": "92f9e361-0e77-4753-baff-9ce528ded960",
+        "client_session_id": "6a692e06-53f5-4068-8dd8-68780bdc3b6d",
+        "advertising_id": "6dc1a932-9c39-419f-a4e4-eb3d9354c3bd",
+        "android_device_id": "android-5351095eac83f338",
+        "request_id": "36ff0d68-d371-40d3-8fa9-ee8615354c9f",
+        "tray_session_id": "a1b2a23c-e95b-42d4-8ecc-6c3fa1335ad8"
+    },
+    "mid": null,
+    "ig_u_rur": null,
+    "ig_www_claim": null,
+    "authorization_data": {
+        "ds_user_id": "4736776005",
+        "sessionid": "4736776005:ccUG0Q8CwpKhCy:16:AYmBNvnBN_60uVdJF8d8k2zIZSfr-0DpGV7wIk1l5Q",
+        "should_use_header_over_cookies": true
+    },
+    "cookies": {
+        "sessionid": "4736776005:ccUG0Q8CwpKhCy:16:AYmBNvnBN_60uVdJF8d8k2zIZSfr-0DpGV7wIk1l5Q",
+        "ds_user_id": "4736776005",
+        "rur": "CLN%2C17841404560172097%2C1796904049%3A01ff82d814c39054dc5772a8f6b4376a106daffb0c06139f7e4a8b256c7162102933f0d9"
+    },
+    "last_login": null,
+    "device_settings": {
+        "android_version": 34,
+        "android_release": "14",
+        "dpi": "420dpi",
+        "resolution": "1080x2400",
+        "manufacturer": "Google",
+        "device": "shiba",
+        "model": "Pixel 8",
+        "cpu": "tensor",
+        "app_version": "361.0.0.46.88",
+        "version_code": "676531961"
+    },
+    "user_agent": "Instagram 361.0.0.46.88 Android (34/14; 420dpi; 1080x2400; Google; Pixel 8; shiba; tensor; en_US; 676531961)",
+    "country": "US",
+    "country_code": 1,
+    "locale": "en_US",
+    "timezone_offset": -14400,
+    "timezone_name": "GMT-04:00",
+    "push_disabled": true,
+    "request_timeout": 1,
+    "public_request_retries_count": 3,
+    "public_request_retries_timeout": 2,
+    "session_retry_total": 3,
+    "session_retry_backoff_factor": 2,
+    "session_retry_statuses": [
+        429,
+        500,
+        502,
+        503,
+        504
+    ],
+    "public_transport": "requests",
+    "public_user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/11.1.2 Safari/605.1.15",
+    "public_graphql_user_agent": "Instagram 273.0.0.16.70 (iPhone15,2; iOS 17_5_1; en_US; en-US; scale=3.00; 1290x2796; 470085518)",
+    "private_transport": "curl",
+    "public_transport_impersonate": "chrome136",
+    "tls_verify": true
+}

@@ -133,10 +133,55 @@ def _input_numbers(match: MatchFacts) -> set[float]:
                 nums.add(float(v))
         ms = getattr(side, "match_stats", None)
         if ms is not None:
-            for attr in ("expected_goals", "total_shots", "shots_on_target", "corners", "possession"):
+            for attr in (
+                "goals",
+                "expected_goals",
+                "total_shots",
+                "shots_on_target",
+                "corner_kicks",
+                "corners",
+                "fouls",
+                "possession",
+                "big_chances",
+                "yellow_cards",
+                "red_cards",
+            ):
                 sv = getattr(ms, attr, None)
                 if sv and getattr(sv, "value", None) is not None:
                     nums.add(float(sv.value))
+        if getattr(side, "insideBox", None) is not None:
+            try:
+                nums.add(float(side.insideBox))
+            except (TypeError, ValueError):
+                pass
+        gk = getattr(side, "gk", None)
+        if isinstance(gk, dict):
+            for gk_k in ("saves", "psxg", "ga"):
+                if gk.get(gk_k) is not None:
+                    try:
+                        nums.add(float(gk[gk_k]))
+                    except (TypeError, ValueError):
+                        pass
+            if gk.get("psxg") is not None and gk.get("ga") is not None:
+                try:
+                    diff_gk = round(float(gk["psxg"]) - float(gk["ga"]), 2)
+                    nums.add(diff_gk)
+                    nums.add(abs(diff_gk))
+                except (TypeError, ValueError):
+                    pass
+        if getattr(side, "scorersText", None):
+            for raw_n in re.findall(r"\d+(?:\.\d+)?", str(side.scorersText)):
+                try:
+                    nums.add(float(raw_n))
+                except ValueError:
+                    pass
+        for sh in getattr(side, "shotList", None) or []:
+            if isinstance(sh, (list, tuple)) and len(sh) >= 6:
+                for idx in (2, 5):
+                    try:
+                        nums.add(round(float(sh[idx]), 2))
+                    except (TypeError, ValueError):
+                        pass
         kp = getattr(side, "kp", None)
         if isinstance(kp, dict):
             for k in ("s1", "s2"):
@@ -145,6 +190,45 @@ def _input_numbers(match: MatchFacts) -> set[float]:
                         nums.add(float(raw_n))
                     except ValueError:
                         pass
+    for tp in getattr(match, "topPlayers", None) or []:
+        if isinstance(tp, dict):
+            if tp.get("rating") is not None:
+                try:
+                    nums.add(float(tp["rating"]))
+                except (TypeError, ValueError):
+                    pass
+            for raw_n in re.findall(r"\d+(?:\.\d+)?", str(tp.get("stat") or "")):
+                try:
+                    nums.add(float(raw_n))
+                except ValueError:
+                    pass
+    motm = getattr(match, "motm", None)
+    if isinstance(motm, dict):
+        for mk in ("rating", "number"):
+            if motm.get(mk) is not None:
+                try:
+                    nums.add(float(motm[mk]))
+                except (TypeError, ValueError):
+                    pass
+        for ch in motm.get("chips") or []:
+            if isinstance(ch, dict):
+                for raw_n in re.findall(r"\d+(?:\.\d+)?", str(ch.get("val") or "")):
+                    try:
+                        nums.add(float(raw_n))
+                    except ValueError:
+                        pass
+        ru = motm.get("runnerUp") or motm.get("runner_up")
+        if isinstance(ru, dict):
+            if ru.get("rating") is not None:
+                try:
+                    nums.add(float(ru["rating"]))
+                except (TypeError, ValueError):
+                    pass
+            for raw_n in re.findall(r"\d+(?:\.\d+)?", str(ru.get("stat") or "")):
+                try:
+                    nums.add(float(raw_n))
+                except ValueError:
+                    pass
     for item in getattr(match, "recent_news", None) or []:
         title = str(item.get("title") or "") if isinstance(item, dict) else ""
         for raw_n in re.findall(r"\d+(?:\.\d+)?", title):
@@ -173,7 +257,18 @@ def _null_distortion(text: str, match: MatchFacts) -> list[str]:
     zero_claim = bool(re.search(r"(?:^|[\s:(])(?:0(?:\.0+)?|۰|صفر)(?=$|[\s،؛,.:)]|\b)", t))
     if not zero_claim:
         return issues
-    if match.away.xg_for_avg is None and re.search(r"xg|امید گل", t):
+    away_has_match_xg = (
+        match.away.match_stats is not None
+        and match.away.match_stats.expected_goals is not None
+        and match.away.match_stats.expected_goals.value is not None
+    )
+    home_has_match_xg = (
+        match.home.match_stats is not None
+        and match.home.match_stats.expected_goals is not None
+        and match.home.match_stats.expected_goals.value is not None
+    )
+    # در کارت پس‌ازبازی اگر xG واقعی خود بازی موجود باشد، نبود میانگین فصلی (xg_for_avg) به معنای null بودن xG نیست
+    if match.away.xg_for_avg is None and not (home_has_match_xg and away_has_match_xg) and re.search(r"xg|امید گل", t):
         issues.append("xG ناموجود (null) است؛ ادعای مقدار (صفر) = تحریف null")
     return issues
 

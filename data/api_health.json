@@ -1,1 +1,236 @@
-{}
+{
+  "quote_rss:BBC Sport": {
+    "ok": 2,
+    "fail": 0,
+    "streak_fail": 0,
+    "avg_ms": 1466.8,
+    "cooldown_until": 0.0,
+    "last_ok": 1795665566.5,
+    "last_err": ""
+  },
+  "quote_rss:The Guardian": {
+    "ok": 2,
+    "fail": 0,
+    "streak_fail": 0,
+    "avg_ms": 2349.3,
+    "cooldown_until": 0.0,
+    "last_ok": 1795665568.7,
+    "last_err": ""
+  },
+  "quote_rss:Sky Sports": {
+    "ok": 2,
+    "fail": 0,
+    "streak_fail": 0,
+    "avg_ms": 1221.2,
+    "cooldown_until": 0.0,
+    "last_ok": 1795665565.1,
+    "last_err": ""
+  },
+  "quote_espn:eng.1": {
+    "ok": 2,
+    "fail": 0,
+    "streak_fail": 0,
+    "avg_ms": 1973.6,
+    "cooldown_until": 0.0,
+    "last_ok": 1795665574.3,
+    "last_err": ""
+  },
+  "quote_espn:uefa.champions": {
+    "ok": 2,
+    "fail": 0,
+    "streak_fail": 0,
+    "avg_ms": 1785.0,
+    "cooldown_until": 0.0,
+    "last_ok": 1795665572.1,
+    "last_err": ""
+  },
+  "quote_espn:esp.1": {
+    "ok": 2,
+    "fail": 0,
+    "streak_fail": 0,
+    "avg_ms": 1741.0,
+    "cooldown_until": 0.0,
+    "last_ok": 1795665570.4,
+    "last_err": ""
+  },
+  "llm:OpenRouter (google/gemma-4-31b-it:free)": {
+    "ok": 0,
+    "fail": 1,
+    "streak_fail": 1,
+    "avg_ms": 2000.0,
+    "cooldown_until": 1795665765.3,
+    "last_ok": 0.0,
+    "last_err": "HTTPStatusError: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check:"
+  },
+  "llm:OpenRouter (google/gemma-4-26b-a4b-it:free)": {
+    "ok": 0,
+    "fail": 1,
+    "streak_fail": 1,
+    "avg_ms": 2000.0,
+    "cooldown_until": 1795665765.8,
+    "last_ok": 0.0,
+    "last_err": "HTTPStatusError: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check:"
+  },
+  "llm:OpenRouter (nvidia/nemotron-3-ultra-550b-a55b:free)": {
+    "ok": 7,
+    "fail": 0,
+    "streak_fail": 0,
+    "avg_ms": 41717.4,
+    "cooldown_until": 0.0,
+    "last_ok": 1795691882.4,
+    "last_err": ""
+  },
+  "llm:OpenRouter (openrouter/free)": {
+    "ok": 1,
+    "fail": 0,
+    "streak_fail": 0,
+    "avg_ms": 29146.7,
+    "cooldown_until": 0.0,
+    "last_ok": 1795667442.6,
+    "last_err": ""
+  },
+  "omni:x": {
+    "ok": 0,
+    "fail": 3,
+    "streak_fail": 3,
+    "avg_ms": 2000.0,
+    "cooldown_until": 1795674554.7,
+    "last_ok": 0.0,
+    "last_err": "HTTPStatusError: Client error '401 Unauthorized' for url 'https://api.x.com/2/tweets'\nFor more information check: https://developer.mozilla."
+  },
+  "omni:eitaa": {
+    "ok": 0,
+    "fail": 2,
+    "streak_fail": 2,
+    "avg_ms": 2000.0,
+    "cooldown_until": 1795672261.9,
+    "last_ok": 0.0,
+    "last_err": "Bad Request: peer not found"
+  },
+  "omni:instagram": {
+    "ok": 2,
+    "fail": 1,
+    "streak_fail": 0,
+    "avg_ms": 50593.6,
+    "cooldown_until": 0.0,
+    "last_ok": 1795672809.0,
+    "last_err": "RuntimeError: Could not generate video thumbnail. Pass thumbnail=... or install MoviePy 2.2.1. Install video dependencies with pip install \""
+  },
+  "llm:Cohere (command-a-03-2025)": {
+    "ok": 8,
+    "fail": 1,
+    "streak_fail": 1,
+    "avg_ms": 4886.9,
+    "cooldown_until": 1795678594.4,
+    "last_ok": 1795678392.1,
+    "last_err": "ReadTimeout: The read operation timed out"
+  },
+  "llm:Cohere (c4ai-aya-expanse-32b)": {
+    "ok": 13,
+    "fail": 1,
+    "streak_fail": 1,
+    "avg_ms": 8064.5,
+    "cooldown_until": 1795687962.6,
+    "last_ok": 1795687775.0,
+    "last_err": "JSONDecodeError: Extra data: line 3 column 1 (char 663)"
+  },
+  "llm:Mistral (mistral-medium-3-5-128b)": {
+    "ok": 0,
+    "fail": 1,
+    "streak_fail": 1,
+    "avg_ms": 2000.0,
+    "cooldown_until": 1795675002.3,
+    "last_ok": 0.0,
+    "last_err": "HTTPStatusError: Client error '400 Bad Request' for url 'https://api.mistral.ai/v1/chat/completions'\nFor more information check: https://"
+  },
+  "llm:Mistral (mistral-small-latest)": {
+    "ok": 0,
+    "fail": 1,
+    "streak_fail": 1,
+    "avg_ms": 2000.0,
+    "cooldown_until": 1795675002.8,
+    "last_ok": 0.0,
+    "last_err": "HTTPStatusError: Client error '402 Payment Required' for url 'https://api.mistral.ai/v1/chat/completions'\nFor more information check: htt"
+  },
+  "llm:NVIDIA NIM (z-ai/glm-5.3-flash)": {
+    "ok": 0,
+    "fail": 1,
+    "streak_fail": 1,
+    "avg_ms": 2000.0,
+    "cooldown_until": 1795675025.4,
+    "last_ok": 0.0,
+    "last_err": "ReadTimeout: The read operation timed out"
+  },
+  "llm:NVIDIA NIM (nvidia/nemotron-3-ultra-550b-a55b)": {
+    "ok": 0,
+    "fail": 1,
+    "streak_fail": 1,
+    "avg_ms": 2000.0,
+    "cooldown_until": 1795675047.8,
+    "last_ok": 0.0,
+    "last_err": "ReadTimeout: The read operation timed out"
+  },
+  "llm:Cloudflare AI (@cf/google/gemma-4-26b-a4b-it)": {
+    "ok": 0,
+    "fail": 1,
+    "streak_fail": 1,
+    "avg_ms": 2000.0,
+    "cooldown_until": 1795675070.2,
+    "last_ok": 0.0,
+    "last_err": "ReadTimeout: The read operation timed out"
+  },
+  "llm:Cloudflare AI (@cf/meta/llama-3.3-70b-instruct-fp8-fast)": {
+    "ok": 3,
+    "fail": 1,
+    "streak_fail": 1,
+    "avg_ms": 4190.4,
+    "cooldown_until": 1795675920.1,
+    "last_ok": 1795675573.5,
+    "last_err": "JSONDecodeError: Unterminated string starting at: line 11 column 3 (char 626)"
+  },
+  "llm:Z.ai (glm-4.7-flash)": {
+    "ok": 0,
+    "fail": 1,
+    "streak_fail": 1,
+    "avg_ms": 2000.0,
+    "cooldown_until": 1795675074.8,
+    "last_ok": 0.0,
+    "last_err": "HTTPStatusError: Client error '429 Too Many Requests' for url 'https://api.z.ai/api/paas/v4/chat/completions'\nFor more information check:"
+  },
+  "llm:OVHcloud Free (Qwen3.5-397B-A17B)": {
+    "ok": 2,
+    "fail": 1,
+    "streak_fail": 1,
+    "avg_ms": 7254.2,
+    "cooldown_until": 1795678963.3,
+    "last_ok": 1795678419.4,
+    "last_err": "ReadTimeout: The read operation timed out"
+  },
+  "llm:OVHcloud Free (Qwen3.8-27B)": {
+    "ok": 0,
+    "fail": 1,
+    "streak_fail": 1,
+    "avg_ms": 2000.0,
+    "cooldown_until": 1795675715.6,
+    "last_ok": 0.0,
+    "last_err": "ReadTimeout: The read operation timed out"
+  },
+  "llm:Kilo Code Free (kilo-auto/free)": {
+    "ok": 0,
+    "fail": 1,
+    "streak_fail": 1,
+    "avg_ms": 2000.0,
+    "cooldown_until": 1795675740.4,
+    "last_ok": 0.0,
+    "last_err": "ReadTimeout: The read operation timed out"
+  },
+  "llm:LLM7.io Free (gpt-oss:20b)": {
+    "ok": 0,
+    "fail": 1,
+    "streak_fail": 1,
+    "avg_ms": 2000.0,
+    "cooldown_until": 1795675743.0,
+    "last_ok": 0.0,
+    "last_err": "HTTPStatusError: Client error '429 Too Many Requests' for url 'https://api.llm7.io/v1/chat/completions'\nFor more information check: https"
+  }
+}

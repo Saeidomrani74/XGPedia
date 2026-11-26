@@ -51,6 +51,7 @@ RSS_QUOTE_FEEDS: list[tuple[str, str, str]] = [
 ESPN_QUOTE_FEEDS: list[tuple[str, str, str]] = [
     ("eng.1", "لیگ برتر انگلیس", "PREMIER LEAGUE • LIVE QUOTE"),
     ("uefa.champions", "لیگ قهرمانان اروپا", "CHAMPIONS LEAGUE • LIVE QUOTE"),
+    ("uefa.europa", "لیگ اروپا", "EUROPA LEAGUE • LIVE QUOTE"),
     ("esp.1", "لالیگا اسپانیا", "LALIGA • LIVE QUOTE"),
 ]
 

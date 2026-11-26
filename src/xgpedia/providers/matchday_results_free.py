@@ -207,7 +207,15 @@ def enrich_matches_with_real_xg(
         h_en = str(h.get("name_en") or h.get("name") or "")
         a_en = str(a.get("name_en") or a.get("name") or "")
         hit: tuple[float, float] | None = None
-        if ul and u_cache.get(ul):
+        # اولویت ۱: xG واقعی Opta (FotMob/SofaScore) ذخیره‌شده در DB (پوشش کامل چمپیونزلیگ و ۶ لیگ)
+        try:
+            from src.xgpedia.providers.opta_hub import lookup_db_match_opta
+            opta = lookup_db_match_opta(h_en, a_en)
+            if opta and opta.get("home_xg") is not None and opta.get("away_xg") is not None:
+                hit = (round(float(opta["home_xg"]), 2), round(float(opta["away_xg"]), 2))
+        except Exception:
+            pass
+        if hit is None and ul and u_cache.get(ul):
             hit = _match_understat_xg(u_cache[ul], h_en, a_en, hs, as_)
         if hit is not None:
             h["xg"], a["xg"] = hit[0], hit[1]
@@ -710,13 +718,8 @@ def _fetch_fpl_finished_24h_matches(now_utc: datetime) -> tuple[list[dict[str, A
                         pname = transliterate_player_name_fa(raw_p)
                         sc_list.append(f"{pname} ({cnt}×)" if cnt > 1 else pname)
                         for _ in range(cnt):
-                            if team_flag == "h":
-                                h_g_idx += 1
-                                est_m = min(89, 18 + h_g_idx * 17)
-                            else:
-                                a_g_idx += 1
-                                est_m = min(89, 24 + a_g_idx * 19)
-                            goals.append({"min": est_m, "team": team_flag, "scorer": pname})
+                            # قاعدهٔ null ≠ 0: FPL دقیقهٔ دقیق گل نمی‌دهد، پس دقیقهٔ ساختگی تولید نمی‌کنیم
+                            goals.append({"min": None, "team": team_flag, "scorer": pname})
 
         tot = hs + as_
         diff = abs(hs - as_)

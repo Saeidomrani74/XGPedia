@@ -42,7 +42,7 @@ def fixture_id_for_csv(row_date: str, home: str, away: str) -> str:
 
 # ─── ۱) sync-results: CSV → DB ───
 
-def sync_csv_results(rows, payload_hash: str, season_start: int = CURRENT_SEASON_START) -> dict:
+def sync_csv_results(rows, payload_hash: str, season_start: int = CURRENT_SEASON_START, *, competition: str = "Premier League") -> dict:
     """درج ردیف‌های نرمال‌شدهٔ CSV در DB — idempotent.
 
     rows: خروجی FootballDataCoUk.parse_season (لیست CsvMatchRow)
@@ -70,12 +70,13 @@ def sync_csv_results(rows, payload_hash: str, season_start: int = CURRENT_SEASON
                 """
                 INSERT INTO fixtures (fixture_id, provider, competition, season, kickoff_utc,
                                       home_team, away_team, status, raw_payload_hash, collected_at)
-                VALUES (?, ?, 'Premier League', ?, ?, ?, ?, 'finished', ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'finished', ?, ?)
                 ON CONFLICT(fixture_id) DO UPDATE SET
+                  competition=excluded.competition,
                   status='finished', raw_payload_hash=excluded.raw_payload_hash,
                   collected_at=excluded.collected_at
                 """,
-                (fid, PRIMARY_STATS_PROVIDER, season, r.date_utc, r.home_team, r.away_team,
+                (fid, PRIMARY_STATS_PROVIDER, competition, season, r.date_utc, r.home_team, r.away_team,
                  payload_hash, now),
             )
             if existed:
@@ -118,7 +119,20 @@ def sync_csv_results(rows, payload_hash: str, season_start: int = CURRENT_SEASON
 
 # ─── ۲) fixtures از football-data.org → DB ───
 
-def sync_upcoming_fixtures(raw, season_start: int = CURRENT_SEASON_START) -> dict:
+def _fdo_competition_name(payload: dict[str, Any], fallback: str | None = None) -> str:
+    from src.xgpedia.core.leagues import canonical_competition_name, league_by_code
+
+    comp_obj = (payload or {}).get("competition") or {}
+    if isinstance(comp_obj, dict):
+        spec = league_by_code(comp_obj.get("code"))
+        if spec:
+            return spec.name_en
+        if comp_obj.get("name"):
+            return canonical_competition_name(comp_obj.get("name"))
+    return canonical_competition_name(fallback, default="Premier League")
+
+
+def sync_upcoming_fixtures(raw, season_start: int = CURRENT_SEASON_START, *, competition: str | None = None) -> dict:
     """بازی‌های پیش‌رو از API v4 → جدول fixtures — idempotent."""
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     season = season_label(season_start)
@@ -137,14 +151,15 @@ def sync_upcoming_fixtures(raw, season_start: int = CURRENT_SEASON_START) -> dic
                 """
                 INSERT INTO fixtures (fixture_id, provider, competition, season, kickoff_utc,
                                       home_team, away_team, status, matchday, raw_payload_hash, collected_at)
-                VALUES (?, ?, 'Premier League', ?, ?, ?, ?, 'scheduled', ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'scheduled', ?, ?, ?)
                 ON CONFLICT(fixture_id) DO UPDATE SET
+                  competition=excluded.competition,
                   home_team=excluded.home_team, away_team=excluded.away_team,
                   kickoff_utc=excluded.kickoff_utc, status='scheduled',
                   matchday=COALESCE(excluded.matchday, fixtures.matchday),
                   raw_payload_hash=excluded.raw_payload_hash, collected_at=excluded.collected_at
                 """,
-                (fid, PRIMARY_FIXTURES_PROVIDER, season, kickoff, home, away,
+                (fid, PRIMARY_FIXTURES_PROVIDER, _fdo_competition_name(raw.payload, competition), season, kickoff, home, away,
                  int(matchday) if matchday is not None else None, raw.payload_hash, now),
             )
             if not existed:
@@ -373,8 +388,12 @@ def _compute_league_radar_percentiles(
 
 # ─── ۳) ساخت MatchFacts از DB ───
 
-def last5_from_db(conn: sqlite3.Connection, team: str, before_date: str) -> dict | None:
-    """۵ بازی اخیر تیم قبل از تاریخ داده‌شده — برای فرم."""
+_FALLBACK_GOAL_PROVIDERS = ("espn-public", "football-data-org", "fotmob", "sofascore")
+_FALLBACK_REAL_XG_PROVIDERS = ("fotmob", "sofascore", "understat", "api-football")
+
+
+def _query_team_goal_rows(conn: sqlite3.Connection, team: str, before_date: str, limit: int = 5) -> list:
+    """خواندن نتایج واقعی اخیر یک تیم؛ اولویت با CSV اصلی و در نبود آن، ESPN/FDO/FotMob/SofaScore (بدون داده جعلی)."""
     rows = conn.execute(
         """
         SELECT kickoff_utc, home_team, away_team,
@@ -387,10 +406,35 @@ def last5_from_db(conn: sqlite3.Connection, team: str, before_date: str) -> dict
           AND (f.home_team = ? OR f.away_team = ?)
         GROUP BY f.fixture_id
         ORDER BY f.kickoff_utc DESC
-        LIMIT 5
+        LIMIT ?
         """,
-        (PRIMARY_STATS_PROVIDER, before_date, team, team),
+        (PRIMARY_STATS_PROVIDER, before_date, team, team, limit),
     ).fetchall()
+    if rows:
+        return rows
+    ph = ",".join("?" for _ in _FALLBACK_GOAL_PROVIDERS)
+    raw = conn.execute(
+        f"""
+        SELECT kickoff_utc, home_team, away_team,
+               MAX(CASE WHEN team=home_team THEN value END) AS hg,
+               MAX(CASE WHEN team=away_team THEN value END) AS ag
+        FROM fixtures f
+        JOIN fixture_statistics s
+          ON s.fixture_id = f.fixture_id AND s.metric = 'goals' AND s.provider IN ({ph})
+        WHERE f.status = 'finished' AND f.kickoff_utc < ?
+          AND (f.home_team = ? OR f.away_team = ?)
+        GROUP BY substr(f.kickoff_utc, 1, 10), f.home_team, f.away_team
+        ORDER BY f.kickoff_utc DESC
+        LIMIT ?
+        """,
+        (*_FALLBACK_GOAL_PROVIDERS, before_date, team, team, limit),
+    ).fetchall()
+    return raw
+
+
+def last5_from_db(conn: sqlite3.Connection, team: str, before_date: str) -> dict | None:
+    """۵ بازی اخیر تیم قبل از تاریخ داده‌شده — برای فرم."""
+    rows = _query_team_goal_rows(conn, team, before_date, limit=5)
     if not rows:
         return None
     points = 0
@@ -422,6 +466,21 @@ def _team_xg_avg(conn: sqlite3.Connection, team: str, before_date: str) -> dict 
         (PRIMARY_STATS_PROVIDER, team, before_date),
     ).fetchall()
     if not rows:
+        ph = ",".join("?" for _ in _FALLBACK_REAL_XG_PROVIDERS)
+        rows = conn.execute(
+            f"""
+            SELECT s.value
+            FROM fixture_statistics s
+            JOIN fixtures f ON f.fixture_id = s.fixture_id
+            WHERE s.metric = 'expected_goals' AND s.provider IN ({ph}) AND s.team = ?
+              AND f.status = 'finished' AND f.kickoff_utc < ?
+            GROUP BY substr(f.kickoff_utc, 1, 10), f.home_team, f.away_team
+            ORDER BY f.kickoff_utc DESC
+            LIMIT 10
+            """,
+            (*_FALLBACK_REAL_XG_PROVIDERS, team, before_date),
+        ).fetchall()
+    if not rows:
         return None
     return {"n": len(rows), "avg": sum(r["value"] for r in rows) / len(rows)}
 
@@ -439,6 +498,21 @@ def _team_corners_avg(conn: sqlite3.Connection, team: str, before_date: str) -> 
         """,
         (PRIMARY_STATS_PROVIDER, team, before_date),
     ).fetchall()
+    if not rows:
+        ph = ",".join("?" for _ in _FALLBACK_GOAL_PROVIDERS)
+        rows = conn.execute(
+            f"""
+            SELECT s.value
+            FROM fixture_statistics s
+            JOIN fixtures f ON f.fixture_id = s.fixture_id
+            WHERE s.metric = 'corner_kicks' AND s.provider IN ({ph}) AND s.team = ?
+              AND f.status = 'finished' AND f.kickoff_utc < ?
+            GROUP BY substr(f.kickoff_utc, 1, 10), f.home_team, f.away_team
+            ORDER BY f.kickoff_utc DESC
+            LIMIT 10
+            """,
+            (*_FALLBACK_GOAL_PROVIDERS, team, before_date),
+        ).fetchall()
     if not rows:
         return None
     return {"n": len(rows), "avg": sum(r["value"] for r in rows) / len(rows)}
@@ -461,12 +535,29 @@ def _team_xga_avg(conn: sqlite3.Connection, team: str, before_date: str) -> dict
         (PRIMARY_STATS_PROVIDER, before_date, team, team, team),
     ).fetchall()
     if not rows:
+        ph = ",".join("?" for _ in _FALLBACK_REAL_XG_PROVIDERS)
+        rows = conn.execute(
+            f"""
+            SELECT s.value
+            FROM fixture_statistics s
+            JOIN fixtures f ON f.fixture_id = s.fixture_id
+            WHERE s.metric = 'expected_goals' AND s.provider IN ({ph})
+              AND f.status = 'finished' AND f.kickoff_utc < ?
+              AND s.team = CASE WHEN f.home_team = ? THEN f.away_team ELSE f.home_team END
+              AND (f.home_team = ? OR f.away_team = ?)
+            GROUP BY substr(f.kickoff_utc, 1, 10), f.home_team, f.away_team
+            ORDER BY f.kickoff_utc DESC
+            LIMIT 10
+            """,
+            (*_FALLBACK_REAL_XG_PROVIDERS, before_date, team, team, team),
+        ).fetchall()
+    if not rows:
         return None
     return {"n": len(rows), "avg": sum(r["value"] for r in rows) / len(rows)}
 
 
 def _team_sot_avg(conn: sqlite3.Connection, team: str, before_date: str) -> dict | None:
-    """میانگین شوت در چارچوب — CSV football-data.co.uk ستون HST/AST."""
+    """میانگین شوت در چارچوب — CSV football-data.co.uk و در نبود آن، ESPN/FotMob/SofaScore."""
     rows = conn.execute(
         """
         SELECT s.value
@@ -479,6 +570,21 @@ def _team_sot_avg(conn: sqlite3.Connection, team: str, before_date: str) -> dict
         """,
         (PRIMARY_STATS_PROVIDER, team, before_date),
     ).fetchall()
+    if not rows:
+        ph = ",".join("?" for _ in _FALLBACK_GOAL_PROVIDERS)
+        rows = conn.execute(
+            f"""
+            SELECT s.value
+            FROM fixture_statistics s
+            JOIN fixtures f ON f.fixture_id = s.fixture_id
+            WHERE s.metric = 'shots_on_target' AND s.provider IN ({ph}) AND s.team = ?
+              AND f.status = 'finished' AND f.kickoff_utc < ?
+            GROUP BY substr(f.kickoff_utc, 1, 10), f.home_team, f.away_team
+            ORDER BY f.kickoff_utc DESC
+            LIMIT 10
+            """,
+            (*_FALLBACK_GOAL_PROVIDERS, team, before_date),
+        ).fetchall()
     if not rows:
         return None
     return {"n": len(rows), "avg": sum(r["value"] for r in rows) / len(rows)}
@@ -522,22 +628,7 @@ def _team_xg_series(
 
 def _team_form_sequence(conn: sqlite3.Connection, team: str, before_date: str, limit: int = 5) -> dict | None:
     """توالی ب/م/ش آخرین بازی‌ها (W/D/L؛ قدیمی‌ترین → جدیدترین) — دایره‌های فرم کارت."""
-    rows = conn.execute(
-        """
-        SELECT kickoff_utc, home_team, away_team,
-               MAX(CASE WHEN team=home_team THEN value END) AS hg,
-               MAX(CASE WHEN team=away_team THEN value END) AS ag
-        FROM fixtures f
-        JOIN fixture_statistics s
-          ON s.fixture_id = f.fixture_id AND s.metric = 'goals' AND s.provider = ?
-        WHERE f.status = 'finished' AND f.kickoff_utc < ?
-          AND (f.home_team = ? OR f.away_team = ?)
-        GROUP BY f.fixture_id
-        ORDER BY f.kickoff_utc DESC
-        LIMIT ?
-        """,
-        (PRIMARY_STATS_PROVIDER, before_date, team, team, limit),
-    ).fetchall()
+    rows = _query_team_goal_rows(conn, team, before_date, limit=limit)
     if not rows:
         return None
     letters = []
@@ -554,23 +645,30 @@ def _team_form_sequence(conn: sqlite3.Connection, team: str, before_date: str, l
 
 
 def _match_metrics(conn: sqlite3.Connection, fixture_id: str, team: str) -> dict[str, float]:
-    """آمار خودِ یک بازی برای یک تیم از همهٔ منابع معتبر با اولویت کیفیت (Understat/API-Football/ESPN/CSV)."""
+    """آمار خودِ یک بازی برای یک تیم از همهٔ منابع معتبر با اولویت کیفیت و تطبیق هوشمند نام تیم."""
+    from src.xgpedia.providers.xg_engine import _teams_match
+
+    from src.xgpedia.core.source_chain import provider_priority_rank
+
     rows = conn.execute(
         """
-        SELECT metric, value, provider FROM fixture_statistics
-        WHERE fixture_id = ? AND team = ? AND value IS NOT NULL
-        ORDER BY CASE provider
-          WHEN 'understat' THEN 1
-          WHEN 'api-football' THEN 2
-          WHEN 'espn-public' THEN 3
-          WHEN 'football-data-co-uk' THEN 4
-          ELSE 5
-        END, collected_at DESC
+        SELECT team, metric, value, provider, collected_at FROM fixture_statistics
+        WHERE fixture_id = ? AND value IS NOT NULL
+        ORDER BY collected_at DESC
         """,
-        (fixture_id, team),
+        (fixture_id,),
     ).fetchall()
+    rows = sorted(
+        rows,
+        key=lambda r: (provider_priority_rank(r["provider"], "match_xg_and_shotmap"), str(r["collected_at"] or "")),
+        reverse=True,
+    )
+    t_canon = canonical_team_name(team)
     out: dict[str, float] = {}
     for r in rows:
+        rt = str(r["team"] or "")
+        if not (rt == team or rt == t_canon or canonical_team_name(rt) == t_canon or _teams_match(rt, t_canon)):
+            continue
         if r["metric"] not in out:
             out[r["metric"]] = float(r["value"])
     return out
@@ -1071,7 +1169,52 @@ def sync_espn_enrichments(data: dict[str, Any], season_start: int = CURRENT_SEAS
                 """,
                 (team, season_label, kp_json, wave_json, now),
             )
-    return {"odds_saved": odds_saved, "key_players": len(kp_map), "waves": len(wave_map)}
+    upcoming_saved = 0
+    up_rows = data.get("upcoming_fixtures") or []
+    if up_rows:
+        with db() as conn:
+            for m in up_rows:
+                h_c = canonical_team_name(m.get("home_team") or "")
+                a_c = canonical_team_name(m.get("away_team") or "")
+                ko = str(m.get("kickoff_utc") or "")
+                eid = str(m.get("event_id") or "")
+                comp_name = str(m.get("competition") or "Premier League")
+                if not (h_c and a_c and ko and eid):
+                    continue
+                ko_day = ko[:10]
+                dup = conn.execute(
+                    """
+                    SELECT fixture_id FROM fixtures
+                    WHERE home_team = ? AND away_team = ?
+                      AND substr(kickoff_utc, 1, 10) >= date(?, '-1 day')
+                      AND substr(kickoff_utc, 1, 10) <= date(?, '+1 day')
+                    LIMIT 1
+                    """,
+                    (h_c, a_c, ko_day, ko_day),
+                ).fetchone()
+                if dup:
+                    continue
+                fid = f"espn:{eid}"
+                conn.execute(
+                    """
+                    INSERT INTO fixtures
+                      (fixture_id, provider, competition, season, kickoff_utc, home_team, away_team,
+                       status, raw_payload_hash, collected_at)
+                    VALUES (?, 'espn-public', ?, ?, ?, ?, ?, 'scheduled', NULL, ?)
+                    ON CONFLICT(fixture_id) DO UPDATE SET
+                      competition=excluded.competition,
+                      kickoff_utc=excluded.kickoff_utc,
+                      collected_at=excluded.collected_at
+                    """,
+                    (fid, comp_name, season_label, ko, h_c, a_c, now),
+                )
+                upcoming_saved += 1
+    return {
+        "odds_saved": odds_saved,
+        "key_players": len(kp_map),
+        "waves": len(wave_map),
+        "upcoming_saved": upcoming_saved,
+    }
 
 def sync_fpl_key_players(kp_map: dict[str, dict[str, str]], season_start: int = CURRENT_SEASON_START) -> dict[str, int]:
     """ذخیرهٔ مهرهٔ کلیدی رسمی FPL (Opta xG+xA) برای همهٔ ۲۰ تیم لیگ برتر."""
@@ -1221,7 +1364,7 @@ def ensure_live_coaches_fresh(
     return {"coaches_updated": updated, "coaches_fa": coaches_fa}
 
 
-def sync_finished_matches_from_fdo(raw: RawResponse, season_start: int = CURRENT_SEASON_START) -> dict[str, int]:
+def sync_finished_matches_from_fdo(raw: RawResponse, season_start: int = CURRENT_SEASON_START, *, competition: str | None = None) -> dict[str, int]:
     """ذخیرهٔ بازی‌های پایان‌یافتهٔ ۲۴-۴۸ ساعت اخیر از football-data.org (وضعیت FINISHED + نتیجهٔ نهایی)."""
     matches = (raw.payload or {}).get("matches") or []
     s_label = f"{season_start}-{str(season_start + 1)[-2:]}"
@@ -1239,6 +1382,14 @@ def sync_finished_matches_from_fdo(raw: RawResponse, season_start: int = CURRENT
                 continue
             h_canon = canonical_team_name(h_raw, h_obj.get("id"))
             a_canon = canonical_team_name(a_raw, a_obj.get("id"))
+            try:
+                from src.xgpedia.providers.dynamic_crests import register_team_logo
+                if h_obj.get("crest"):
+                    register_team_logo(h_canon, str(h_obj["crest"]))
+                if a_obj.get("crest"):
+                    register_team_logo(a_canon, str(a_obj["crest"]))
+            except Exception:
+                pass
             ft = (m.get("score") or {}).get("fullTime") or {}
             hg, ag = ft.get("home"), ft.get("away")
             if hg is None or ag is None:
@@ -1251,13 +1402,14 @@ def sync_finished_matches_from_fdo(raw: RawResponse, season_start: int = CURRENT
                 INSERT INTO fixtures
                   (fixture_id, provider, competition, season, kickoff_utc, home_team, away_team,
                    status, matchday, raw_payload_hash, collected_at)
-                VALUES (?, ?, 'Premier League', ?, ?, ?, ?, 'finished', ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'finished', ?, ?, ?)
                 ON CONFLICT(fixture_id) DO UPDATE SET
+                  competition=excluded.competition,
                   status='finished',
                   matchday=COALESCE(excluded.matchday, fixtures.matchday),
                   collected_at=excluded.collected_at
                 """,
-                (fid, raw.provider, s_label, ko, h_canon, a_canon, md, raw.payload_hash, raw.collected_at),
+                (fid, raw.provider, _fdo_competition_name(raw.payload, competition), s_label, ko, h_canon, a_canon, md, raw.payload_hash, raw.collected_at),
             )
             for tm_g, g_val in ((h_canon, hg), (a_canon, ag)):
                 conn.execute(
@@ -1296,18 +1448,38 @@ def sync_espn_finished_matches(
             hg = int(m["home_goals"])
             ag = int(m["away_goals"])
 
-            # اگر همین بازی قبلاً از football-data.org در fixtures ثبت شده، روی همان fixture_id ادغام می‌کنیم
-            existing = conn.execute(
-                """
-                SELECT fixture_id FROM fixtures
-                WHERE home_team = ? AND away_team = ?
-                  AND substr(kickoff_utc, 1, 10) >= date(?, '-1 day')
-                  AND substr(kickoff_utc, 1, 10) <= date(?, '+1 day')
-                ORDER BY CASE provider WHEN 'football-data-org' THEN 1 ELSE 2 END
-                LIMIT 1
-                """,
-                (h_canon, a_canon, ko_day, ko_day),
-            ).fetchone() if ko_day else None
+            # اگر همین بازی قبلاً از football-data.org در fixtures ثبت شده (حتی با اختلاف نام مثل Atlético/Atletico یا Viking/Viking FK)، روی همان fixture_id ادغام می‌کنیم
+            existing = None
+            if ko_day:
+                existing = conn.execute(
+                    """
+                    SELECT fixture_id FROM fixtures
+                    WHERE home_team = ? AND away_team = ?
+                      AND substr(kickoff_utc, 1, 10) >= date(?, '-1 day')
+                      AND substr(kickoff_utc, 1, 10) <= date(?, '+1 day')
+                    ORDER BY CASE provider WHEN 'football-data-org' THEN 1 ELSE 2 END
+                    LIMIT 1
+                    """,
+                    (h_canon, a_canon, ko_day, ko_day),
+                ).fetchone()
+                if not existing:
+                    from src.xgpedia.providers.xg_engine import _teams_match
+                    cands = conn.execute(
+                        """
+                        SELECT fixture_id, home_team, away_team FROM fixtures
+                        WHERE substr(kickoff_utc, 1, 10) >= date(?, '-1 day')
+                          AND substr(kickoff_utc, 1, 10) <= date(?, '+1 day')
+                        ORDER BY CASE provider WHEN 'football-data-org' THEN 1 ELSE 2 END
+                        """,
+                        (ko_day, ko_day),
+                    ).fetchall()
+                    for c_row in cands:
+                        if _teams_match(h_canon, c_row["home_team"]) and _teams_match(a_canon, c_row["away_team"]):
+                            existing = c_row
+                            # برای آمارهای fixture_statistics از نام دقیق ثبت‌شده در fixtures استفاده می‌کنیم
+                            h_canon = c_row["home_team"]
+                            a_canon = c_row["away_team"]
+                            break
 
             if existing:
                 fid = existing["fixture_id"]
@@ -1317,17 +1489,19 @@ def sync_espn_finished_matches(
                 )
             else:
                 fid = f"espn:{m.get('event_id') or f'{ko_day}:{h_canon}:{a_canon}'}"
+                comp_name = str(m.get("competition") or "Premier League")
                 conn.execute(
                     """
                     INSERT INTO fixtures
                       (fixture_id, provider, competition, season, kickoff_utc, home_team, away_team,
                        status, raw_payload_hash, collected_at)
-                    VALUES (?, 'espn-public', 'Premier League', ?, ?, ?, ?, 'finished', NULL, ?)
+                    VALUES (?, 'espn-public', ?, ?, ?, ?, ?, 'finished', NULL, ?)
                     ON CONFLICT(fixture_id) DO UPDATE SET
+                      competition=excluded.competition,
                       status='finished',
                       collected_at=excluded.collected_at
                     """,
-                    (fid, s_label, ko, h_canon, a_canon, now_iso),
+                    (fid, comp_name, s_label, ko, h_canon, a_canon, now_iso),
                 )
 
             # ذخیرهٔ آمار واقعی مسابقه در fixture_statistics
@@ -1337,6 +1511,12 @@ def sync_espn_finished_matches(
             ):
                 all_m = dict(st_dict)
                 all_m["goals"] = float(g_val)
+                # پاک‌سازی xG تقریبی قدیمی (قبل از v0.54.0) اگر ESPN خودش expectedGoals واقعی نداد
+                if "expected_goals" not in all_m:
+                    conn.execute(
+                        "DELETE FROM fixture_statistics WHERE fixture_id=? AND team=? AND metric='expected_goals' AND provider='espn-public'",
+                        (fid, side_team),
+                    )
                 for metric, val in all_m.items():
                     if val is None or metric == "saves":
                         continue
@@ -1353,19 +1533,31 @@ def sync_espn_finished_matches(
                     )
                     stats_rows += 1
 
-            # ذخیرهٔ جزئیات پس‌ازبازی (گلزنان، مومنتوم ۵ دقیقه‌ای، دروازه‌بان)
-            det = dict(m.get("details") or {})
-            det["synced_at_utc"] = now_iso
+            # ادغام امن جزئیات ESPN با حفظ داده‌های غنی‌شدهٔ قبلی (FotMob/SofaScore ShotMap, TopRated, MOTM)
+            existing_pm = conn.execute(
+                "SELECT details_json FROM fixture_post_match WHERE fixture_id = ?", (fid,)
+            ).fetchone()
+            merged_det: dict[str, Any] = {}
+            if existing_pm and existing_pm["details_json"]:
+                try:
+                    loaded_pm = json.loads(existing_pm["details_json"])
+                    if isinstance(loaded_pm, dict):
+                        merged_det.update(loaded_pm)
+                except Exception:
+                    pass
+            for k_d, v_d in (m.get("details") or {}).items():
+                if v_d is not None and v_d != "" and (k_d not in merged_det or not merged_det[k_d]):
+                    merged_det[k_d] = v_d
+            merged_det["synced_at_utc"] = now_iso
             conn.execute(
                 """
                 INSERT INTO fixture_post_match (fixture_id, details_json, provider, collected_at)
                 VALUES (?, ?, 'espn-public', ?)
                 ON CONFLICT(fixture_id) DO UPDATE SET
                   details_json=excluded.details_json,
-                  provider=excluded.provider,
                   collected_at=excluded.collected_at
                 """,
-                (fid, json.dumps(det, ensure_ascii=False), now_iso),
+                (fid, json.dumps(merged_det, ensure_ascii=False), now_iso),
             )
             saved += 1
 

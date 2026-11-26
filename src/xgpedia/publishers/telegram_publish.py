@@ -146,7 +146,7 @@ _COMP_HASHTAGS: list[tuple[tuple[str, ...], str]] = [
     (("لیگ یک فرانسه", "ligue 1", "fra.1", "fl1"), "#لیگ_یک_فرانسه"),
     (("جام جهانی", "world cup"), "#جام_جهانی"),
     (("یورو", "euro 20", "uefa euro"), "#یورو"),
-    (("لیگ اروپا", "europa league"), "#لیگ_اروپا"),
+    (("لیگ اروپا", "europa league", "uel", "uefa.europa", "el"), "#لیگ_اروپا"),
 ]
 
 _NEWS_MODE_HASHTAGS: dict[str, str] = {

@@ -176,12 +176,14 @@ def _check_match_eligibility(fixture_id: str) -> tuple[bool, str]:
     if not (home.get("last5") and away.get("last5")):
         missing.append("فرم ۵ بازی اخیر")
 
-    # حداقل یکی از xG یا آمار مقایسه‌ای باید برای هر دو تیم موجود باشد
+    # حداقل یکی از xG، شوت در چارچوب، کرنر یا فرم ۵ بازی واقعی باید برای هر دو تیم موجود باشد (null ≠ 0)
     has_xg = bool(home.get("xg_for_avg") and away.get("xg_for_avg"))
     has_xga = bool(home.get("xg_against_avg") and away.get("xg_against_avg"))
     has_sot = bool(home.get("sot_avg") and away.get("sot_avg"))
     has_series = bool(home.get("xg_series") and away.get("xg_series"))
-    if not (has_xg or has_xga or has_sot or has_series):
+    has_corners = bool(home.get("corners_avg") and away.get("corners_avg"))
+    has_last5 = bool(home.get("last5") and away.get("last5"))
+    if not (has_xg or has_xga or has_sot or has_series or has_corners or has_last5):
         reason = "دادهٔ آماری کافی برای هر دو تیم در دیتابیس نیست"
         if missing:
             reason += f" (فقدان: {'، '.join(missing)})"
@@ -233,7 +235,11 @@ def list_today_matches(
         ).fetchall():
             pending_sched[sr["post_id"]] = sr["scheduled_time_tehran"]
 
+    from src.xgpedia.config import canonical_team_name
+    from src.xgpedia.providers.xg_engine import _teams_match
+
     result: list[TodayMatchInfo] = []
+    seen_today: list[tuple[str, str, datetime]] = []
     for r in rows:
         try:
             ko_utc = _parse_utc(r["kickoff_utc"])
@@ -245,6 +251,16 @@ def list_today_matches(
         if ko_utc <= now:
             continue  # بازی قبلاً شروع شده است
 
+        h_tc = canonical_team_name(r["home_team"])
+        a_tc = canonical_team_name(r["away_team"])
+        if any(
+            abs((ko_utc - s_ko).total_seconds()) <= 7200
+            and _teams_match(h_tc, sh)
+            and _teams_match(a_tc, sa)
+            for sh, sa, s_ko in seen_today
+        ):
+            continue
+        seen_today.append((h_tc, a_tc, ko_utc))
         fid = r["fixture_id"]
         eligible, reason = _check_match_eligibility(fid)
         post_info = latest_posts.get(fid)
@@ -339,62 +355,114 @@ def sync_today_matches(
 
     if sync_results_fn is None:
         def _default_sync_results() -> str:
-            from src.xgpedia.providers.football_data_couk import FootballDataCoUk
-            from src.xgpedia.sync import sync_csv_results
+            from concurrent.futures import ThreadPoolExecutor
+            from src.xgpedia.providers.espn_free import ESPNFreeProvider
+            from src.xgpedia.providers.football_data_couk import (
+                ALL_EUROPEAN_CSV_LEAGUES,
+                FootballDataCoUk,
+                compute_wave_from_csv,
+            )
+            from src.xgpedia.sync import sync_csv_results, sync_csv_waves, sync_espn_finished_matches
 
-            api = FootballDataCoUk()
-            try:
-                rows, payload_hash, saved_csv_path = api.fetch_season_rows(CURRENT_SEASON_START)
-            finally:
-                api.close()
-            if not rows:
-                return "0 بازی پایان‌یافته در CSV"
-            s = sync_csv_results(rows, payload_hash, season_start=CURRENT_SEASON_START)
+            def _fetch_one_csv(pair: tuple[str, str]):
+                csv_code, comp_name = pair
+                c_api = FootballDataCoUk()
+                try:
+                    c_api._client.timeout = 14.0
+                    rows, payload_hash, saved_csv_path = c_api.fetch_season_rows(
+                        CURRENT_SEASON_START, league_code=csv_code
+                    )
+                    return comp_name, rows, payload_hash, saved_csv_path
+                except Exception:
+                    return comp_name, [], "", None
+                finally:
+                    c_api.close()
+
+            def _fetch_uefa_espn(pair: tuple[str, str]):
+                u_slug, u_name = pair
+                e_api = ESPNFreeProvider(timeout=12.0)
+                try:
+                    return e_api.fetch_competition_season_finished_matches(
+                        u_slug, competition_name=u_name, now_utc=now, days_back=95
+                    )
+                except Exception:
+                    return []
+                finally:
+                    e_api.close()
+
+            # دانلود موازی ۱۱ فایل CSV + تاریخچه فصل لیگ اروپا و چمپیونزلیگ از ESPN (۵ برابر سریع‌تر)
+            with ThreadPoolExecutor(max_workers=6) as pool:
+                csv_futs = [pool.submit(_fetch_one_csv, pair) for pair in ALL_EUROPEAN_CSV_LEAGUES]
+                uefa_futs = [
+                    pool.submit(_fetch_uefa_espn, pair)
+                    for pair in (("uefa.europa", "UEFA Europa League"), ("uefa.champions", "UEFA Champions League"))
+                ]
+                csv_results = [f.result() for f in csv_futs]
+                uefa_results = [f.result() for f in uefa_futs]
+
+            total_rows = 0
+            total_new = 0
+            total_stats = 0
             wave_cnt = 0
-            try:
-                from src.xgpedia.providers.football_data_couk import compute_wave_from_csv
-                from src.xgpedia.sync import sync_csv_waves
-
+            leagues_ok = 0
+            for comp_name, rows, payload_hash, saved_csv_path in csv_results:
+                if not rows:
+                    continue
+                leagues_ok += 1
+                total_rows += len(rows)
+                sr = sync_csv_results(
+                    rows, payload_hash, season_start=CURRENT_SEASON_START, competition=comp_name
+                )
+                total_new += sr["fixtures_new"]
+                total_stats += sr["stats_rows"]
                 if saved_csv_path and saved_csv_path.exists():
-                    wmap = compute_wave_from_csv(saved_csv_path.read_text(encoding="utf-8", errors="ignore"))
-                    ws = sync_csv_waves(wmap, season_start=CURRENT_SEASON_START)
-                    wave_cnt = ws.get("waves", 0)
-            except Exception:
-                pass
+                    try:
+                        wmap = compute_wave_from_csv(saved_csv_path.read_text(encoding="utf-8", errors="ignore"))
+                        ws = sync_csv_waves(wmap, season_start=CURRENT_SEASON_START)
+                        wave_cnt += ws.get("waves", 0)
+                    except Exception:
+                        pass
+
+            uefa_saved = 0
+            for u_rows in uefa_results:
+                if u_rows:
+                    try:
+                        u_res = sync_espn_finished_matches(u_rows, season_start=CURRENT_SEASON_START)
+                        uefa_saved += u_res.get("finished_saved", 0)
+                        total_stats += u_res.get("stats_rows", 0)
+                    except Exception as e_uefa:
+                        import logging as _logging
+                        _logging.getLogger(__name__).warning("sync_espn_finished_matches failed: %s", e_uefa)
+
+            if not total_rows and not uefa_saved:
+                return "0 بازی پایان‌یافته در CSV"
             wave_note = f"، موج زمانی: {wave_cnt} تیم" if wave_cnt else ""
-            return f"{len(rows)} بازی بررسی شد (جدید: {s['fixtures_new']}، آمار جدید: {s['stats_rows']}{wave_note})"
+            uefa_note = f" + {uefa_saved} بازی یوفا (ESPN)" if uefa_saved else ""
+            return f"{total_rows} بازی در {leagues_ok} لیگ بررسی شد (جدید: {total_new}، آمار جدید: {total_stats}{wave_note}){uefa_note}"
 
         sync_results_fn = _default_sync_results
 
     if sync_fixtures_fn is None:
         def _default_sync_fixtures() -> str:
+            from src.xgpedia.core.leagues import EUROPEAN_LEAGUES
             from src.xgpedia.providers.football_data_org import FootballDataOrg
-            from src.xgpedia.sync import sync_team_metadata, sync_upcoming_fixtures
+            from src.xgpedia.sync import sync_fdo_scorers, sync_team_metadata, sync_upcoming_fixtures
 
             api = FootballDataOrg()
+            total_in = 0
+            total_new = 0
+            leagues_ok = 0
+            upcoming_teams: list[str] = []
             try:
-                raw = api.upcoming_fixtures(days=2)
-                s = sync_upcoming_fixtures(raw)
-                # همگام‌سازی زندهٔ سرمربی و ورزشگاه تیم‌ها (حداکثر روزی ۱ بار با کش ۲۴ ساعته)
-                if force or _cache_fresh_summary("teams", tehran_date, 24.0, now) is None:
+                for lg in EUROPEAN_LEAGUES:
+                    if lg.code == "EL":
+                        continue  # لیگ اروپا در پلن رایگان football-data.org نیست و از ESPN دریافت می‌شود
                     try:
-                        t_raw = api.teams(CURRENT_SEASON_START)
-                        ts = sync_team_metadata(t_raw, season_start=CURRENT_SEASON_START)
-                        try:
-                            from src.xgpedia.sync import sync_fdo_scorers
-                            sc_raw = api.scorers(limit=100, season_start=CURRENT_SEASON_START)
-                            sync_fdo_scorers(sc_raw, season_start=CURRENT_SEASON_START)
-                        except Exception:
-                            pass
-                        _save_sync_cache("teams", tehran_date, now, f"{ts['teams_saved']} تیم")
-                    except Exception:
-                        pass
-                # همگام‌سازی مستقل و ۴ ساعتهٔ سرمربی زنده (جدا از کش ۲۴ ساعتهٔ teams؛ فقط در صورت موفقیت کش می‌شود)
-                if force or _cache_fresh_summary("coaches", tehran_date, 4.0, now) is None:
-                    try:
-                        from src.xgpedia.sync import sync_live_coaches_for_teams
-
-                        upcoming_teams = []
+                        raw = api.upcoming_fixtures(days=2, competition=lg.code)
+                        sf = sync_upcoming_fixtures(raw, competition=lg.name_en)
+                        total_in += sf["total_in_payload"]
+                        total_new += sf["upcoming_new"]
+                        leagues_ok += 1
                         for _m in (raw.payload or {}).get("matches") or []:
                             ht = ((_m.get("homeTeam") or {}).get("name") or "").strip()
                             at = ((_m.get("awayTeam") or {}).get("name") or "").strip()
@@ -402,13 +470,34 @@ def sync_today_matches(
                                 upcoming_teams.append(ht)
                             if at:
                                 upcoming_teams.append(at)
+                    except Exception:
+                        continue
+                # همگام‌سازی زندهٔ سرمربی و ورزشگاه تیم‌ها (حداکثر روزی ۱ بار با کش ۲۴ ساعته)
+                if force or _cache_fresh_summary("teams", tehran_date, 24.0, now) is None:
+                    teams_total = 0
+                    for lg in EUROPEAN_LEAGUES:
+                        if lg.code == "EL":
+                            continue
+                        try:
+                            t_raw = api.teams(CURRENT_SEASON_START, competition=lg.code)
+                            ts = sync_team_metadata(t_raw, season_start=CURRENT_SEASON_START)
+                            teams_total += ts.get("teams_saved", 0)
+                        except Exception:
+                            continue
+                    if teams_total:
+                        _save_sync_cache("teams", tehran_date, now, f"{teams_total} تیم")
+                # همگام‌سازی مستقل و ۴ ساعتهٔ سرمربی زنده برای تیم‌های بازی‌های پیش‌رو
+                if force or _cache_fresh_summary("coaches", tehran_date, 4.0, now) is None:
+                    try:
+                        from src.xgpedia.sync import sync_live_coaches_for_teams
+
                         if upcoming_teams:
                             c_res = sync_live_coaches_for_teams(upcoming_teams, season_start=CURRENT_SEASON_START)
                             if c_res.get("coaches_updated", 0) > 0:
                                 _save_sync_cache("coaches", tehran_date, now, f"{c_res['coaches_updated']} مربی")
                     except Exception:
                         pass
-                return f"{s['total_in_payload']} بازی پیش‌رو دریافت شد (جدید: {s['upcoming_new']})"
+                return f"{total_in} بازی پیش‌رو در {leagues_ok} لیگ دریافت شد (جدید: {total_new})"
             finally:
                 api.close()
 
@@ -463,7 +552,7 @@ def sync_today_matches(
             try:
                 oapi = TheOddsAPIProvider()
                 try:
-                    orows = oapi.fetch_epl_odds()
+                    orows = oapi.fetch_all_european_odds()
                 finally:
                     oapi.close()
                 if orows:
@@ -481,14 +570,23 @@ def sync_today_matches(
         def _default_sync_understat() -> str:
             parts: list[str] = []
             try:
+                from src.xgpedia.core.leagues import EUROPEAN_LEAGUES
                 from src.xgpedia.providers.football_data_org import FootballDataOrg
                 from src.xgpedia.sync import sync_fdo_scorers
 
                 fdo_api = FootballDataOrg()
+                fdo_kp_total = 0
                 try:
-                    sc_raw = fdo_api.scorers(limit=100, season_start=CURRENT_SEASON_START)
-                    fdo_s = sync_fdo_scorers(sc_raw, season_start=CURRENT_SEASON_START)
-                    parts.append(f"FDO-Scorers ({fdo_s['key_players']} ستاره)")
+                    for lg in EUROPEAN_LEAGUES:
+                        if lg.code == "EL":
+                            continue
+                        try:
+                            sc_raw = fdo_api.scorers(limit=50, season_start=CURRENT_SEASON_START, competition=lg.code)
+                            fdo_kp_total += sync_fdo_scorers(sc_raw, season_start=CURRENT_SEASON_START).get("key_players", 0)
+                        except Exception:
+                            continue
+                    if fdo_kp_total:
+                        parts.append(f"FDO-Scorers ({fdo_kp_total} ستاره)")
                 finally:
                     fdo_api.close()
             except Exception as e_fdo_sc:
@@ -524,16 +622,25 @@ def sync_today_matches(
             except Exception as e_espn:
                 parts.append(f"ESPN خطا ({type(e_espn).__name__}: {str(e_espn)[:60]})")
             try:
+                from src.xgpedia.core.leagues import DOMESTIC_LEAGUES
                 from src.xgpedia.providers.understat import UnderstatProvider
                 from src.xgpedia.sync import sync_understat_league
 
                 api = UnderstatProvider()
+                us_kp = 0
                 try:
-                    data = api.fetch_epl_league_data(CURRENT_SEASON_START)
+                    for lg in DOMESTIC_LEAGUES:
+                        if not lg.understat_slug:
+                            continue
+                        try:
+                            data = api.fetch_epl_league_data(CURRENT_SEASON_START, league=lg.understat_slug)
+                            us_kp += sync_understat_league(data, season_start=CURRENT_SEASON_START).get("key_players", 0)
+                        except Exception:
+                            continue
                 finally:
                     api.close()
-                s = sync_understat_league(data, season_start=CURRENT_SEASON_START)
-                parts.append(f"Understat ({s['key_players']} ستاره)")
+                if us_kp:
+                    parts.append(f"Understat ({us_kp} ستاره)")
             except Exception as e_us:
                 parts.append(f"Understat خطا ({type(e_us).__name__}: {str(e_us)[:60]})")
             if not parts:
@@ -629,8 +736,18 @@ def get_match_card_options(
     dummy_draft = {"title": "", "bullets": [], "caption": ""}
     if post_type == "post_match":
         ctx = build_post_match_context(dummy_draft, facts, fmt=fmt)
-        # اگر ماژول‌های پس‌ازبازی هنوز کامل غنی‌سازی نشده بودند، همان‌لحظه از FPL/Understat تکمیل می‌کنیم
-        if sum(1 for k, v in ctx["has"].items() if v and k != "autopsy") <= 2:
+        # اگر ماژول‌های پیشرفته (ShotMap/xG Race/Top Rated/MOTM) هنوز از FotMob/SofaScore غنی‌سازی نشده‌اند، همان‌لحظه تکمیل می‌کنیم
+        _enriched_v = 0
+        try:
+            with db() as _ce:
+                _pmr = _ce.execute("SELECT details_json FROM fixture_post_match WHERE fixture_id = ?", (fixture_id,)).fetchone()
+                if _pmr and _pmr["details_json"]:
+                    _det_j = json.loads(_pmr["details_json"])
+                    _enriched_v = int(_det_j.get("xg_enriched_v") or (1 if _det_j.get("xg_enriched") else 0))
+        except Exception:
+            pass
+        _all_core_ready = bool(ctx["has"].get("xgrace") and ctx["has"].get("toprated") and ctx["has"].get("efficiency"))
+        if (_enriched_v < 3) and (not _all_core_ready):
             try:
                 enrich_post_match_fixture(fixture_id)
                 facts = build_match_facts(fixture_id, post_match=True)
@@ -751,6 +868,17 @@ def generate_match_post(
 
     # گام ۱: استخراج فکت‌ها
     try:
+        if post_type == "post_match":
+            try:
+                with db() as _c:
+                    _has_real_xg = _c.execute(
+                        "SELECT 1 FROM fixture_statistics WHERE fixture_id=? AND metric='expected_goals' AND provider IN ('sofascore','fotmob','understat','api-football') LIMIT 1",
+                        (fixture_id,),
+                    ).fetchone()
+                if not _has_real_xg:
+                    enrich_post_match_fixture(fixture_id)
+            except Exception:
+                pass
         facts = build_match_facts(fixture_id, post_match=(post_type == "post_match"))
         _refresh_live_coaches_on_facts(facts)
         _attach_live_breaking_news(facts)
@@ -1019,6 +1147,7 @@ async def generate_match_post_async(
     header_mode: str = "full",
     custom_modules: list[dict[str, Any]] | None = None,
     broadcast_override: str | None = None,
+    tone: str = "analytical",
     out_dir: Path | None = None,
     llm_provider: Any = None,
     progress_cb: Callable[[str], Awaitable[None]] | None = None,
@@ -1245,6 +1374,7 @@ class RecentFinishedMatchInfo:
     finished_seconds_ago: float
     existing_post_id: int | None = None
     existing_post_status: str | None = None
+    competition: str = "Premier League"
 
 
 def _format_elapsed_fa(seconds: float) -> str:
@@ -1262,7 +1392,7 @@ def _format_elapsed_fa(seconds: float) -> str:
 
 
 def sync_recent_finished_matches(
-    *, now_utc: datetime | None = None, hours: float = 24.0
+    *, now_utc: datetime | None = None, hours: float = 24.0, enrich_optaxg: bool = False
 ) -> dict[str, Any]:
     """دریافت زندهٔ بازی‌های پایان‌یافته از ۱ ثانیه تا ۲۴ ساعت پیش از ESPN (/summary) + football-data.org."""
     from src.xgpedia.providers.espn_free import ESPNFreeProvider
@@ -1275,14 +1405,21 @@ def sync_recent_finished_matches(
     espn_stats = 0
     errors: list[str] = []
 
-    # ۱) football-data.org (بازی‌های FINISHED ۲ روز اخیر برای matchday و شناسهٔ استاندارد fdo:)
+    # ۱) football-data.org (بازی‌های FINISHED ۲ روز اخیر برای همهٔ ۶ لیگ معتبر اروپا)
     try:
+        from src.xgpedia.core.leagues import EUROPEAN_LEAGUES
         from src.xgpedia.providers.football_data_org import FootballDataOrg
 
         fdo = FootballDataOrg()
         try:
-            raw_fin = fdo.played_fixtures(days_back=2, season_start=CURRENT_SEASON_START)
-            fdo_saved = sync_finished_matches_from_fdo(raw_fin, season_start=CURRENT_SEASON_START).get("finished_saved", 0)
+            for lg in EUROPEAN_LEAGUES:
+                try:
+                    raw_fin = fdo.played_fixtures(days_back=2, season_start=CURRENT_SEASON_START, competition=lg.code)
+                    fdo_saved += sync_finished_matches_from_fdo(
+                        raw_fin, season_start=CURRENT_SEASON_START, competition=lg.name_en
+                    ).get("finished_saved", 0)
+                except Exception:
+                    continue
         finally:
             fdo.close()
     except Exception as e:
@@ -1302,16 +1439,18 @@ def sync_recent_finished_matches(
     except Exception as e:
         errors.append(f"ESPN: {type(e).__name__}")
 
-    # ۳) تکمیل خودکار ماژول‌های پیشرفته (FPL: TopRated/MOTM/GK + Understat: xG Race/ShotMap) برای بازی‌های ۲۴ ساعت اخیر
+    # ۳) غنی‌سازی سنگین Opta/Playwright دیگر در صفحهٔ لیست اجرا نمی‌شود تا دریافت لیست در چند ثانیه تمام شود؛
+    #    در صورت نیاز صریح (`enrich_optaxg=True`) یا هنگام بازکردن کارت هر بازی (`get_match_card_options`) انجام می‌شود.
     enriched_cnt = 0
-    try:
-        recent = list_recent_finished_fixtures(now_utc=now, hours=hours)
-        for item in recent[:8]:
-            er = enrich_post_match_fixture(item.fixture_id)
-            if er.get("fpl") or er.get("understat"):
-                enriched_cnt += 1
-    except Exception:
-        pass
+    if enrich_optaxg:
+        try:
+            recent = list_recent_finished_fixtures(now_utc=now, hours=hours)
+            for item in recent[:8]:
+                er = enrich_post_match_fixture(item.fixture_id)
+                if er.get("fpl") or er.get("understat"):
+                    enriched_cnt += 1
+        except Exception:
+            pass
 
     return {
         "fdo_saved": fdo_saved,
@@ -1333,17 +1472,20 @@ def list_recent_finished_fixtures(
     with db() as conn:
         rows = conn.execute(
             """
-            SELECT fixture_id, provider, kickoff_utc, home_team, away_team
+            SELECT fixture_id, provider, competition, kickoff_utc, home_team, away_team
             FROM fixtures
             WHERE status = 'finished'
               AND kickoff_utc >= ?
-            ORDER BY kickoff_utc DESC
+            ORDER BY (SELECT COUNT(*) FROM fixture_statistics fs WHERE fs.fixture_id = fixtures.fixture_id) DESC, kickoff_utc DESC
             """,
             (min_ko,),
         ).fetchall()
 
         out: list[RecentFinishedMatchInfo] = []
-        seen_pair_day: set[tuple[str, str, str]] = set()
+        from src.xgpedia.config import canonical_team_name
+        from src.xgpedia.providers.xg_engine import _teams_match
+
+        seen_matches: list[tuple[str, str, str]] = []
         for r in rows:
             ko_raw = str(r["kickoff_utc"] or "")
             try:
@@ -1367,10 +1509,16 @@ def list_recent_finished_fixtures(
             if elapsed_sec > hours * 3600.0:
                 continue
 
-            pair_key = (r["home_team"], r["away_team"], ko_raw[:10])
-            if pair_key in seen_pair_day:
+            h_c = canonical_team_name(r["home_team"])
+            a_c = canonical_team_name(r["away_team"])
+            day_s = ko_raw[:10]
+            is_dup = any(
+                sd == day_s and _teams_match(h_c, sh) and _teams_match(a_c, sa)
+                for sh, sa, sd in seen_matches
+            )
+            if is_dup:
                 continue
-            seen_pair_day.add(pair_key)
+            seen_matches.append((h_c, a_c, day_s))
 
             post_row = conn.execute(
                 """
@@ -1407,6 +1555,7 @@ def list_recent_finished_fixtures(
                     finished_seconds_ago=elapsed_sec,
                     existing_post_id=post_row["post_id"] if post_row else None,
                     existing_post_status=post_row["status"] if post_row else None,
+                    competition=str(r["competition"] or "Premier League"),
                 )
             )
 
@@ -1414,56 +1563,117 @@ def list_recent_finished_fixtures(
     return out
 
 
-def enrich_post_match_fixture(fixture_id: str) -> dict[str, bool]:
-    """تکمیل خودکار دیتای پس‌ازبازی یک مسابقه از منابع رایگان FPL Official (TopRated/MOTM/GK) + Understat (xG Race/ShotMap)."""
+def enrich_post_match_fixture(
+    fixture_id: str, *, allow_playwright: bool = True, force: bool = False
+) -> dict[str, bool]:
+    """تکمیل خودکار دیتای پس‌ازبازی یک مسابقه از منابع رایگان FPL Official و موتور Opta (`xg_engine`) با کش دیتابیس."""
     from src.xgpedia.providers.fpl_free import FPLFreeProvider
-    from src.xgpedia.providers.understat import fetch_match_shots_understat
     from src.xgpedia.sync import merge_post_match_details
 
     init_db()
     with db() as conn:
         fx = conn.execute(
-            "SELECT home_team, away_team, kickoff_utc FROM fixtures WHERE fixture_id = ?",
+            "SELECT home_team, away_team, kickoff_utc, competition FROM fixtures WHERE fixture_id = ?",
             (fixture_id,),
         ).fetchone()
-    if not fx:
-        return {"fpl": False, "understat": False}
+        if not fx:
+            return {"fpl": False, "understat": False}
+        if not force:
+            pm_row = conn.execute(
+                "SELECT details_json FROM fixture_post_match WHERE fixture_id = ?",
+                (fixture_id,),
+            ).fetchone()
+            has_xg_row = conn.execute(
+                "SELECT 1 FROM fixture_statistics WHERE fixture_id=? AND metric='expected_goals' AND provider IN ('sofascore','fotmob','understat','api-football') LIMIT 1",
+                (fixture_id,),
+            ).fetchone()
+            if pm_row and pm_row["details_json"] and has_xg_row:
+                try:
+                    _d = json.loads(pm_row["details_json"])
+                    if int(_d.get("xg_enriched_v") or 0) >= 3 and _d.get("home_gk") and _d.get("away_gk") and _d.get("top_players"):
+                        return {"fpl": False, "understat": False, "cached": True}
+                except Exception:
+                    pass
 
     h_en, a_en = fx["home_team"], fx["away_team"]
     m_date = str(fx["kickoff_utc"] or "")[:10]
+    comp = str(fx["competition"] or "Premier League")
     fpl_ok = False
     us_ok = False
 
-    # ۱) FPL Official Live GW -> toprated, motm, gk (PSxG/Saves Opta)
-    try:
-        fpl = FPLFreeProvider(timeout=12.0)
+    # ۱) FPL Official Live GW -> فقط برای مسابقات لیگ برتر انگلیس
+    if comp.lower() in ("premier league", "pl", "epl", "eng.1"):
         try:
-            fpl_det = fpl.fetch_match_post_details(h_en, a_en, m_date)
-        finally:
-            fpl.close()
-        if fpl_det:
-            fpl_ok = merge_post_match_details(fixture_id, fpl_det, provider="fpl-official")
-    except Exception:
-        pass
+            fpl = FPLFreeProvider(timeout=12.0)
+            try:
+                fpl_det = fpl.fetch_match_post_details(h_en, a_en, m_date)
+            finally:
+                fpl.close()
+            if fpl_det:
+                fpl_ok = merge_post_match_details(fixture_id, fpl_det, provider="fpl-official")
+        except Exception:
+            pass
 
-    # ۲) Understat -> shotList + insideBox + real shot-level xG (xgrace + shotmap)
+    # ۲) موتور xG واقعی (SofaScore Opta → FotMob Opta → Understat) برای همهٔ ۶ لیگ + چمپیونزلیگ
     try:
-        us_det = fetch_match_shots_understat(h_en, a_en, m_date, season_start=CURRENT_SEASON_START, timeout=10.0)
-        if us_det:
-            extra_st = {}
-            if us_det.get("home_xg") is not None:
-                extra_st[h_en] = {"expected_goals": float(us_det["home_xg"])}
-            if us_det.get("away_xg") is not None:
-                extra_st[a_en] = {"expected_goals": float(us_det["away_xg"])}
+        from src.xgpedia.providers.xg_engine import fetch_real_match_xg
+
+        # پاک‌سازی هر xG تقریبی قدیمی espn-public پیش از ثبت xG واقعی Opta
+        with db() as _c_purge:
+            _c_purge.execute(
+                "DELETE FROM fixture_statistics WHERE fixture_id=? AND metric='expected_goals' AND provider='espn-public'",
+                (fixture_id,),
+            )
+        xg_det = fetch_real_match_xg(
+            h_en,
+            a_en,
+            m_date,
+            competition=comp,
+            season_start=CURRENT_SEASON_START,
+            timeout=12.0,
+            allow_playwright=allow_playwright,
+        )
+        if xg_det:
+            xg_prov = str(xg_det.get("provider") or "sofascore")
+            extra_st: dict[str, dict[str, float]] = {}
+            if xg_det.get("home_xg") is not None:
+                extra_st.setdefault(h_en, {})["expected_goals"] = float(xg_det["home_xg"])
+            if xg_det.get("away_xg") is not None:
+                extra_st.setdefault(a_en, {})["expected_goals"] = float(xg_det["away_xg"])
+            if xg_det.get("home_big_chances") is not None:
+                extra_st.setdefault(h_en, {})["big_chances"] = float(xg_det["home_big_chances"])
+            if xg_det.get("away_big_chances") is not None:
+                extra_st.setdefault(a_en, {})["big_chances"] = float(xg_det["away_big_chances"])
+            for _src_k, _dst_k, _tm in (
+                ("home_possession", "possession", h_en),
+                ("away_possession", "possession", a_en),
+                ("home_total_shots", "total_shots", h_en),
+                ("away_total_shots", "total_shots", a_en),
+                ("home_shots_on_target", "shots_on_target", h_en),
+                ("away_shots_on_target", "shots_on_target", a_en),
+                ("home_corners", "corner_kicks", h_en),
+                ("away_corners", "corner_kicks", a_en),
+            ):
+                if xg_det.get(_src_k) is not None:
+                    extra_st.setdefault(_tm, {})[_dst_k] = float(xg_det[_src_k])
+            patch_det: dict[str, Any] = {"xg_provider": xg_prov, "xg_enriched": True, "xg_enriched_v": 3}
+            for k in (
+                "home_shots",
+                "away_shots",
+                "home_inside_box",
+                "away_inside_box",
+                "momentum",
+                "top_players",
+                "motm",
+                "home_gk",
+                "away_gk",
+            ):
+                if xg_det.get(k) is not None:
+                    patch_det[k] = xg_det[k]
             us_ok = merge_post_match_details(
                 fixture_id,
-                {
-                    "home_shots": us_det["home_shots"],
-                    "away_shots": us_det["away_shots"],
-                    "home_inside_box": us_det["home_inside_box"],
-                    "away_inside_box": us_det["away_inside_box"],
-                },
-                provider="understat",
+                patch_det,
+                provider=xg_prov,
                 extra_stats=extra_st,
             )
     except Exception:

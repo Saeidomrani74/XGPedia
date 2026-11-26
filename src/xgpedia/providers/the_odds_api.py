@@ -1,8 +1,7 @@
-"""پرووایدر رایگان The Odds API برای ضرایب زندهٔ بازار لیگ برتر (+EV / signals).
+"""پرووایدر رایگان The Odds API برای ضرایب زندهٔ بازار ۶ لیگ معتبر اروپا (+EV / signals).
 
 پلن رایگان رسمی (بدون کارت بانکی، ۵۰۰ درخواست در ماه):
   https://the-odds-api.com  →  کلید را در `.env` با نام `ODDS_API_KEY=...` بگذارید.
-با هر ۱ درخواست، ضرایب زندهٔ 1X2 و Over/Under 2.5 همهٔ بازی‌های پیش‌رو لیگ برتر دریافت می‌شود.
 """
 from __future__ import annotations
 
@@ -12,9 +11,14 @@ from typing import Any
 import httpx
 
 from src.xgpedia.config import canonical_team_name
+from src.xgpedia.core.leagues import EUROPEAN_LEAGUES
 
 PROVIDER = "the-odds-api"
 BASE_URL = "https://api.the-odds-api.com/v4/sports/soccer_epl/odds"
+
+
+def _odds_url_for_sport(sport_key: str) -> str:
+    return f"https://api.the-odds-api.com/v4/sports/{sport_key}/odds"
 
 
 def parse_odds_api_events(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -70,7 +74,7 @@ def parse_odds_api_events(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 class TheOddsAPIProvider:
-    """دریافت ضرایب زندهٔ لیگ برتر از The Odds API (در صورت تنظیم ODDS_API_KEY در .env)."""
+    """دریافت ضرایب زندهٔ ۶ لیگ معتبر اروپا از The Odds API (در صورت تنظیم ODDS_API_KEY در .env)."""
 
     def __init__(self, api_key: str | None = None, timeout: float = 15.0) -> None:
         self.api_key = (api_key or os.environ.get("ODDS_API_KEY") or "").strip()
@@ -79,11 +83,12 @@ class TheOddsAPIProvider:
     def close(self) -> None:
         self._client.close()
 
-    def fetch_epl_odds(self) -> list[dict[str, Any]]:
+    def fetch_epl_odds(self, sport_key: str = "soccer_epl") -> list[dict[str, Any]]:
         if not self.api_key:
             return []
+        url = BASE_URL if sport_key == "soccer_epl" else _odds_url_for_sport(sport_key)
         r = self._client.get(
-            BASE_URL,
+            url,
             params={
                 "apiKey": self.api_key,
                 "regions": "uk,eu",
@@ -93,3 +98,14 @@ class TheOddsAPIProvider:
         )
         r.raise_for_status()
         return parse_odds_api_events(r.json())
+
+    def fetch_all_european_odds(self) -> list[dict[str, Any]]:
+        if not self.api_key:
+            return []
+        out: list[dict[str, Any]] = []
+        for lg in EUROPEAN_LEAGUES:
+            try:
+                out.extend(self.fetch_epl_odds(sport_key=lg.odds_sport_key))
+            except Exception:
+                continue
+        return out
