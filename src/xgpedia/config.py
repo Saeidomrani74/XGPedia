@@ -325,7 +325,7 @@ _PLAYER_NAMES_FA: dict[str, str] = {
     "szoboszlai": "سوبوسلای", "dominik szoboszlai": "سوبوسلای",
     "ngumoha": "انگوموها", "rio ngumoha": "انگوموها",
     "diaz": "دیاز", "luis diaz": "لوئیس دیاز", "luis díaz": "لوئیس دیاز",
-    "gakpo": "خاکپو", "cody gakpo": "کودی خاکپو",
+    "gakpo": "گاکپو", "cody gakpo": "کودی گاکپو",
     "nunez": "نونیز", "darwin nunez": "نونیز",
     "jota": "ژوتا", "diogo jota": "دیوگو ژوتا",
     "mac allister": "مک‌آلیستر", "van dijk": "فن دایک",
@@ -334,7 +334,8 @@ _PLAYER_NAMES_FA: dict[str, str] = {
     "saka": "ساکا", "bukayo saka": "بوکایو ساکا",
     "odegaard": "اودگارد", "martin odegaard": "اودگارد",
     "havertz": "هاورتز", "palmer": "پالمر", "cole palmer": "کول پالمر",
-    "fernandes": "فرناندز", "bruno fernandes": "برونو فرناندز", "b.fernandes": "فرناندز",
+    "fernandes": "فرناندز", "bruno fernandes": "برونو فرناندز", "b.fernandes": "برونو فرناندز",
+    "bruno borges fernandes": "برونو فرناندز",
     "rashford": "رشفورد", "hojlund": "هویلوند", "garnacho": "گارناچو",
     "isak": "ایساک", "alexander isak": "ایساک", "gordon": "گوردون",
     "son": "سون", "heung-min son": "سون", "maddison": "مدیسون", "solanke": "سولانکه",
@@ -360,11 +361,11 @@ _PLAYER_NAMES_FA: dict[str, str] = {
     "neuer": "نویر", "kimmich": "کیمیش", "sane": "سانه",
     "lautaro": "لائوتارو", "martinez": "مارتینز", "thuram": "تورام", "barella": "بارلا",
     "calhanoglu": "چالهان‌اوغلو", "sommer": "زومر", "bastoni": "باستونی",
-    "leao": "لیائو", "pulisic": "پولیشیچ", "maignan": "منیان",
-    "vlahovic": "ولاهوویچ", "yildiz": "ییلدیز", "lukaku": "لوکاکو", "mctominay": "مک‌تومینای",
+    "leao": "لیائو", "pulisic": "پولیسیچ", "maignan": "منیان",
+    "vlahovic": "ولاهوویچ", "yildiz": "ییلدیز", "lukaku": "لوکاکو", "mctominay": "مک‌تامینی",
     "dembele": "دمبله", "barcola": "بارکولا", "kvaratskhelia": "کواراتسخلیا",
     "vitinha": "ویتینیا", "hakimi": "حکیمی", "donnarumma": "دوناروما", "chevalier": "شوالیه",
-    "gyokeres": "یوکرش", "suarez": "سوارز", "luis suarez": "لوئیس سوارز",
+    "gyokeres": "گیوکرش", "suarez": "سوارز", "luis suarez": "لوئیس سوارز",
     "osimhen": "اوسیمن", "icardi": "ایکاردی", "guirassy": "گیراسی", "adeyemi": "آدیمی",
     "jesus": "ژسوس", "gabriel jesus": "گابریل ژسوس",
     "pokatilov": "پوکاتیلوف", "belko": "بلکو", "kobel": "کوبل", "di gregorio": "دی گرگوریو",
@@ -442,7 +443,7 @@ def translate_player_fa(name: str | None) -> str:
             return fa_n
 
     # تشخیص فرم مخفف حرف اول (مثل "J. Oblak" یا "L. Júnior")
-    m_init = re.match(r"^([A-Za-zÀ-ÿ])\.\s+(.+)$", s)
+    m_init = re.match(r"^([A-Za-zÀ-ÿ])\.\s*(.+)$", s)
     first_initial = _ascii_fold(m_init.group(1)) if m_init else ""
     s_clean = m_init.group(2).strip() if m_init else s
     fold_clean = _ascii_fold(s_clean)

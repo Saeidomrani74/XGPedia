@@ -31,7 +31,48 @@ from src.xgpedia.providers.player_profile_free import (
 )
 
 PRESETS_PATH = ROOT / "config" / "player_fc27_presets.json"
-_LIVE_CACHE: dict[str, Any] = {"ts": 0.0, "items": []}
+_LIVE_CACHE: dict[str, Any] = {"ts": 0.0, "items": [], "teams_by_id": {}}
+
+_SHORT_CLUB_FA: dict[str, str] = {
+    "منچسترسیتی": "سیتی",
+    "منچستریونایتد": "یونایتد",
+    "کریستال پالاس": "پالاس",
+    "ناتینگهام فارست": "فارست",
+    "استون‌ویلا": "ویلا",
+    "استون ویلا": "ویلا",
+    "ولورهمپتون": "ولوز",
+    "هال‌سیتی": "هال",
+    "هال سیتی": "هال",
+    "ساوتهمپتون": "سنتز",
+    "تاتنهام هاتسپر": "تاتنهام",
+    "نیوکاسل یونایتد": "نیوکاسل",
+    "وستهم یونایتد": "وستهم",
+    "لستر سیتی": "لستر",
+    "لسترسیتی": "لستر",
+    "لیدز یونایتد": "لیدز",
+    "ایپسویچ تاون": "ایپسویچ",
+    "کاونتری سیتی": "کاونتری",
+    "شفیلد یونایتد": "شفیلد",
+}
+
+
+def _short_opp_label_fa(raw_team_name: str, short_fallback: str = "") -> str:
+    """برچسب کوتاه و خوانای فارسی تیم حریف برای نمایش زیر ۵ نقطه روند فرم."""
+    club_fa = _FPL_CLUBS.get(raw_team_name, (raw_team_name,))[0]
+    if club_fa in _SHORT_CLUB_FA:
+        return _SHORT_CLUB_FA[club_fa]
+    if any("\u0600" <= c <= "\u06ff" for c in club_fa):
+        return club_fa
+    try:
+        from src.xgpedia.config import translate_team_fa
+        tr = translate_team_fa(raw_team_name)
+        if tr in _SHORT_CLUB_FA:
+            return _SHORT_CLUB_FA[tr]
+        if any("\u0600" <= c <= "\u06ff" for c in tr):
+            return tr
+    except Exception:
+        pass
+    return short_fallback or club_fa[:6]
 _CACHE_TTL_SEC = 900.0
 
 _POS_FC27: dict[int, tuple[str, str]] = {
@@ -113,6 +154,15 @@ def parse_fpl_fc27_players(bootstrap: dict[str, Any], *, limit: int = 24) -> lis
     if not isinstance(bootstrap, dict):
         return []
     teams_by_id = {int(t["id"]): t for t in (bootstrap.get("teams") or []) if isinstance(t, dict) and t.get("id") is not None}
+    if teams_by_id:
+        _LIVE_CACHE["teams_by_id"] = {
+            tid: {
+                "name": str(tobj.get("name") or ""),
+                "short": str(tobj.get("short_name") or ""),
+                "label_fa": _short_opp_label_fa(str(tobj.get("name") or ""), str(tobj.get("short_name") or "")),
+            }
+            for tid, tobj in teams_by_id.items()
+        }
     elements = [e for e in (bootstrap.get("elements") or []) if isinstance(e, dict)]
 
     peers_by_pos: dict[int, list[dict[str, Any]]] = {}
@@ -168,8 +218,13 @@ def parse_fpl_fc27_players(bootstrap: dict[str, Any], *, limit: int = 24) -> lis
         from src.xgpedia.providers.injury_free import transliterate_player_name_fa
         web_n = str(el.get("web_name") or "").strip()
         full_en = f"{first_n} {second_n}".strip() or web_n or "Player"
-        disp_en = web_n if (len(full_en.split()) >= 3 and web_n) else full_en
-        name_fa = transliterate_player_name_fa(disp_en)
+        sec_words = second_n.split()
+        compact_full = f"{first_n} {sec_words[-1]}".strip() if (first_n and len(sec_words) >= 2) else full_en
+        # اولویت با نام کامل یا اول+آخر (مثلاً Bruno Fernandes)، سپس web_name (مثل B.Fernandes)
+        cand_en = compact_full if len(full_en.split()) >= 3 else full_en
+        name_fa = transliterate_player_name_fa(cand_en)
+        if not name_fa or name_fa == "بازیکن":
+            name_fa = transliterate_player_name_fa(web_n or full_en)
         goals = int(el.get("goals_scored") or 0)
         assists = int(el.get("assists") or 0)
         squad_num = el.get("squad_number")
@@ -219,6 +274,7 @@ def parse_fpl_fc27_players(bootstrap: dict[str, Any], *, limit: int = 24) -> lis
             },
             "radar": [p_xg, p_xa, p_crea, p_threat, p_infl, p_bps],
             "form": [],
+            "form_opponents": [],
             "heat": [],
             "verdictTitle": f"عملکرد فصل {name_fa} در ترکیب {club_fa}",
             "verdictBody": _clean_fa_text(
@@ -271,21 +327,50 @@ def hydrate_player_fc27_item(item: dict[str, Any]) -> dict[str, Any]:
             summ = _http_get_json(FPL_ELEMENT_SUMMARY_URL.format(pid=pid), timeout=6.5)
             hist = [h for h in (summ.get("history") or []) if isinstance(h, dict) and int(h.get("minutes") or 0) > 0]
             last5 = hist[-5:]
+            teams_map = _LIVE_CACHE.get("teams_by_id") or {}
+            if not teams_map:
+                try:
+                    bs = _http_get_json(FPL_BOOTSTRAP_URL, timeout=6.0)
+                    if isinstance(bs, dict) and bs.get("teams"):
+                        teams_map = {
+                            int(t["id"]): {
+                                "name": str(t.get("name") or ""),
+                                "short": str(t.get("short_name") or ""),
+                                "label_fa": _short_opp_label_fa(str(t.get("name") or ""), str(t.get("short_name") or "")),
+                            }
+                            for t in bs["teams"]
+                            if isinstance(t, dict) and t.get("id") is not None
+                        }
+                        _LIVE_CACHE["teams_by_id"] = teams_map
+                except Exception:
+                    teams_map = {}
             form_vals: list[float] = []
+            form_opps: list[str] = []
             for h in last5:
                 bps = float(h.get("bps") or 0)
                 g = int(h.get("goals_scored") or 0)
                 a = int(h.get("assists") or 0)
                 rt = round(min(9.8, max(5.2, 5.7 + bps / 11.0 + g * 0.25 + a * 0.15)), 1)
                 form_vals.append(rt)
+                opp_id = h.get("opponent_team")
+                opp_lbl = ""
+                if opp_id is not None:
+                    try:
+                        tinfo = teams_map.get(int(opp_id)) or {}
+                        opp_lbl = str(tinfo.get("label_fa") or "")
+                    except (TypeError, ValueError):
+                        opp_lbl = ""
+                form_opps.append(opp_lbl)
             if form_vals:
                 item["form"] = form_vals
+                if any(form_opps):
+                    item["form_opponents"] = form_opps
         except Exception:
             pass
 
     # 3. شماره پیراهن و پای تخصصی واقعی از TheSportsDB (منحصراً Soccer)
     if item.get("num") is None or not item.get("foot"):
-        q = urllib.parse.quote(str(item.get("name") or ""))
+        q = urllib.parse.quote(str(item.get("en") or item.get("name") or "").title())
         if q:
             try:
                 tsdb = _http_get_json(f"https://www.thesportsdb.com/api/v1/json/3/searchplayers.php?p={q}", timeout=6.0)

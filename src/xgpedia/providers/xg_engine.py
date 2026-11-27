@@ -1218,6 +1218,13 @@ def fetch_sofascore_via_playwright(
 
 # ─── ۴) آبشار یکپارچهٔ xG واقعی ─────────────────────────────────────────────
 
+def is_sofascore_enabled() -> bool:
+    """کنترل فعال/غیرفعال‌بودن SofaScore در زنجیرهٔ زنده (پیش‌فرض خاموش برای جلوگیری از 403 و افزایش سرعت).
+    برای فعال‌سازی مجدد در آینده کافی است در .env مقدار XGPEDIA_ENABLE_SOFASCORE=1 تنظیم شود.
+    """
+    return os.environ.get("XGPEDIA_ENABLE_SOFASCORE", "0").strip().lower() in ("1", "true", "yes", "on")
+
+
 def fetch_real_match_xg(
     home_en: str,
     away_en: str,
@@ -1229,20 +1236,8 @@ def fetch_real_match_xg(
     allow_playwright: bool = True,
     diag: list[str] | None = None,
 ) -> dict[str, Any] | None:
-    """دریافت xG واقعی Opta یک مسابقه: SofaScore → FotMob → FotMob Playwright → SofaScore Playwright → Understat."""
-    # ۱) SofaScore (curl_cffi)
-    try:
-        res = fetch_sofascore_match_xg(home_en, away_en, match_date, timeout=timeout)
-        if res and res.get("home_xg") is not None and res.get("away_xg") is not None:
-            return res
-        if diag is not None:
-            diag.append("sofascore-http: no result (likely 403/Cloudflare)")
-    except Exception as e:
-        api_health.record_failure("xg:sofascore", f"{type(e).__name__}: {e}")
-        if diag is not None:
-            diag.append(f"sofascore-http error: {type(e).__name__}: {e}")
-
-    # ۲) FotMob (HTTP API + __NEXT_DATA__)
+    """دریافت xG واقعی Opta یک مسابقه: FotMob → FotMob Playwright → Understat → (اختیاری: SofaScore با XGPEDIA_ENABLE_SOFASCORE=1)."""
+    # ۱) FotMob (HTTP API + __NEXT_DATA__)
     try:
         res = fetch_fotmob_match_xg(home_en, away_en, match_date, timeout=timeout)
         if res and res.get("home_xg") is not None and res.get("away_xg") is not None:
@@ -1254,7 +1249,7 @@ def fetch_real_match_xg(
         if diag is not None:
             diag.append(f"fotmob-http error: {type(e).__name__}: {e}")
 
-    # ۳) FotMob از طریق مرورگر واقعی Playwright (رهگیری JSON رسمی Opta امضاشده توسط خود سایت)
+    # ۲) FotMob از طریق مرورگر واقعی Playwright (رهگیری JSON رسمی Opta امضاشده توسط خود سایت)
     if allow_playwright:
         try:
             res = fetch_fotmob_via_playwright(home_en, away_en, match_date, timeout=max(22.0, timeout), diag=diag)
@@ -1265,8 +1260,33 @@ def fetch_real_match_xg(
             if diag is not None:
                 diag.append(f"fotmob-pw error: {type(e).__name__}: {e}")
 
-        # ۴) SofaScore از طریق مرورگر واقعی Playwright (با مدارقطع‌کن api_health)
-        if not api_health.is_cooling("xg:sofascore-pw"):
+    # ۳) Understat (۵ لیگ داخلی اروپا)
+    try:
+        from src.xgpedia.providers.understat import fetch_match_shots_understat
+
+        us = fetch_match_shots_understat(
+            home_en, away_en, match_date, season_start=season_start, timeout=timeout, competition=competition
+        )
+        if us and us.get("home_xg") is not None and us.get("away_xg") is not None:
+            us["provider"] = "understat"
+            return us
+    except Exception:
+        pass
+
+    # ۴) SofaScore (حفظ‌شده بدون حذف — فقط در صورت فعال‌سازی XGPEDIA_ENABLE_SOFASCORE=1 به‌عنوان آخرین پشتیبان)
+    if is_sofascore_enabled():
+        try:
+            res = fetch_sofascore_match_xg(home_en, away_en, match_date, timeout=timeout)
+            if res and res.get("home_xg") is not None and res.get("away_xg") is not None:
+                return res
+            if diag is not None:
+                diag.append("sofascore-http: no result (likely 403/Cloudflare)")
+        except Exception as e:
+            api_health.record_failure("xg:sofascore", f"{type(e).__name__}: {e}")
+            if diag is not None:
+                diag.append(f"sofascore-http error: {type(e).__name__}: {e}")
+
+        if allow_playwright and not api_health.is_cooling("xg:sofascore-pw"):
             try:
                 res = fetch_sofascore_via_playwright(home_en, away_en, match_date, timeout=max(20.0, timeout))
                 if res and res.get("home_xg") is not None and res.get("away_xg") is not None:
@@ -1279,19 +1299,8 @@ def fetch_real_match_xg(
                 api_health.record_failure("xg:sofascore-pw", f"{type(e).__name__}: {e}")
                 if diag is not None:
                     diag.append(f"sofascore-pw error: {type(e).__name__}: {e}")
-
-    # ۴) Understat (۵ لیگ داخلی اروپا)
-    try:
-        from src.xgpedia.providers.understat import fetch_match_shots_understat
-
-        us = fetch_match_shots_understat(
-            home_en, away_en, match_date, season_start=season_start, timeout=timeout, competition=competition
-        )
-        if us and us.get("home_xg") is not None and us.get("away_xg") is not None:
-            us["provider"] = "understat"
-            return us
-    except Exception:
-        pass
+    elif diag is not None:
+        diag.append("sofascore: skipped (XGPEDIA_ENABLE_SOFASCORE=0)")
 
     log.warning("xg_engine: real xG not found for %s vs %s (%s)", home_en, away_en, match_date)
     return None

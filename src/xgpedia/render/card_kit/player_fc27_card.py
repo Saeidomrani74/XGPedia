@@ -463,16 +463,29 @@ def _mini_sparkline_hud(p: dict[str, Any], t: dict[str, str]) -> str:
         y = 84.0 - ((max(6.8, min(10.0, v)) - 6.8) / 3.2) * 50.0
         pts.append((x, y, v, col))
     path = " ".join(f"{'L' if i else 'M'}{x:.1f} {y:.1f}" for i, (x, y, _, _) in enumerate(pts))
+    raw_opps = list(p.get("form_opponents") or [])[-len(vals):]
+    has_opps = len(raw_opps) == len(vals) and any(str(o or "").strip() for o in raw_opps)
     dots = "".join(
-        f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{"5.2" if i == len(pts) - 1 else "4"}" fill="{col}" stroke="#070D1D" stroke-width="2"/>'
-        f'<rect x="{x - 17:.1f}" y="{y - 26:.1f}" width="34" height="17" rx="5" fill="#070D1D" stroke="{col}" stroke-opacity=".6"/>'
-        f'<text x="{x:.1f}" y="{y - 14:.1f}" text-anchor="middle" fill="{col}" font-family="Space Grotesk" font-size="11.5" font-weight="800">{f1(v)}</text>'
+        (
+            f'<line x1="{x:.1f}" y1="{y + 5:.1f}" x2="{x:.1f}" y2="96" stroke="#ffffff1f" stroke-width="1" stroke-dasharray="2 2"/>'
+            if has_opps
+            else ""
+        )
+        + f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{"5.2" if i == len(pts) - 1 else "4"}" fill="{col}" stroke="#070D1D" stroke-width="2"/>'
+        + f'<rect x="{x - 17:.1f}" y="{y - 26:.1f}" width="34" height="17" rx="5" fill="#070D1D" stroke="{col}" stroke-opacity=".6"/>'
+        + f'<text x="{x:.1f}" y="{y - 14:.1f}" text-anchor="middle" fill="{col}" font-family="Space Grotesk" font-size="11.5" font-weight="800">{f1(v)}</text>'
+        + (
+            f'<text x="{x:.1f}" y="114" text-anchor="middle" fill="#E2E8F0" font-family="Vazirmatn" font-size="9.5" font-weight="800">{esc(str(raw_opps[i]))}</text>'
+            if (has_opps and str(raw_opps[i] or "").strip())
+            else ""
+        )
         for i, (x, y, v, col) in enumerate(pts)
     )
+    svg_h = 124 if has_opps else 104
     return (
         '<div class="hud-box"><div class="hud-h"><span>روند فرم ۵ بازی</span>'
         f'<span class="avg-pill fd">AVG {f1(avg)}</span></div>'
-        f'<svg viewBox="0 0 240 104" style="width:100%;height:auto" fill="none" dir="ltr">'
+        f'<svg viewBox="0 0 240 {svg_h}" style="width:100%;height:auto" fill="none" dir="ltr">'
         f'<defs><linearGradient id="spg_{t["id"]}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="{t["b1"]}" stop-opacity=".32"/><stop offset="100%" stop-color="{t["b1"]}" stop-opacity="0"/></linearGradient></defs>'
         '<g stroke="#ffffff14" stroke-dasharray="4 4"><line x1="12" y1="34" x2="228" y2="34"/><line x1="12" y1="62" x2="228" y2="62"/><line x1="12" y1="90" x2="228" y2="90"/></g>'
         f'<path d="{path} L {pts[-1][0]:.1f} 94 L {pts[0][0]:.1f} 94 Z" fill="url(#spg_{t["id"]})"/>'

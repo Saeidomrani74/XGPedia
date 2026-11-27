@@ -1,56 +1,56 @@
 {
   "quote_rss:BBC Sport": {
-    "ok": 2,
+    "ok": 3,
     "fail": 0,
     "streak_fail": 0,
-    "avg_ms": 1466.8,
+    "avg_ms": 1672.7,
     "cooldown_until": 0.0,
-    "last_ok": 1795665566.5,
+    "last_ok": 1795755880.0,
     "last_err": ""
   },
   "quote_rss:The Guardian": {
-    "ok": 2,
+    "ok": 3,
     "fail": 0,
     "streak_fail": 0,
-    "avg_ms": 2349.3,
+    "avg_ms": 2378.6,
     "cooldown_until": 0.0,
-    "last_ok": 1795665568.7,
+    "last_ok": 1795755882.5,
     "last_err": ""
   },
   "quote_rss:Sky Sports": {
-    "ok": 2,
+    "ok": 3,
     "fail": 0,
     "streak_fail": 0,
-    "avg_ms": 1221.2,
+    "avg_ms": 1339.9,
     "cooldown_until": 0.0,
-    "last_ok": 1795665565.1,
+    "last_ok": 1795755877.9,
     "last_err": ""
   },
   "quote_espn:eng.1": {
-    "ok": 2,
+    "ok": 3,
     "fail": 0,
     "streak_fail": 0,
-    "avg_ms": 1973.6,
+    "avg_ms": 1872.1,
     "cooldown_until": 0.0,
-    "last_ok": 1795665574.3,
+    "last_ok": 1795755887.9,
     "last_err": ""
   },
   "quote_espn:uefa.champions": {
-    "ok": 2,
+    "ok": 3,
     "fail": 0,
     "streak_fail": 0,
-    "avg_ms": 1785.0,
+    "avg_ms": 1758.8,
     "cooldown_until": 0.0,
-    "last_ok": 1795665572.1,
+    "last_ok": 1795755886.2,
     "last_err": ""
   },
   "quote_espn:esp.1": {
-    "ok": 2,
+    "ok": 3,
     "fail": 0,
     "streak_fail": 0,
-    "avg_ms": 1741.0,
+    "avg_ms": 1839.9,
     "cooldown_until": 0.0,
-    "last_ok": 1795665570.4,
+    "last_ok": 1795755884.5,
     "last_err": ""
   },
   "llm:OpenRouter (google/gemma-4-31b-it:free)": {
@@ -72,12 +72,12 @@
     "last_err": "HTTPStatusError: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check:"
   },
   "llm:OpenRouter (nvidia/nemotron-3-ultra-550b-a55b:free)": {
-    "ok": 7,
+    "ok": 8,
     "fail": 0,
     "streak_fail": 0,
-    "avg_ms": 41717.4,
+    "avg_ms": 47202.2,
     "cooldown_until": 0.0,
-    "last_ok": 1795691882.4,
+    "last_ok": 1795753557.1,
     "last_err": ""
   },
   "llm:OpenRouter (openrouter/free)": {
@@ -232,5 +232,23 @@
     "cooldown_until": 1795675743.0,
     "last_ok": 0.0,
     "last_err": "HTTPStatusError: Client error '429 Too Many Requests' for url 'https://api.llm7.io/v1/chat/completions'\nFor more information check: https"
+  },
+  "xg:sofascore": {
+    "ok": 0,
+    "fail": 1,
+    "streak_fail": 1,
+    "avg_ms": 2000.0,
+    "cooldown_until": 1795755255.7,
+    "last_ok": 0.0,
+    "last_err": "HTTP 403"
+  },
+  "quote_espn:uefa.europa": {
+    "ok": 1,
+    "fail": 0,
+    "streak_fail": 0,
+    "avg_ms": 2072.3,
+    "cooldown_until": 0.0,
+    "last_ok": 1795755890.0,
+    "last_err": ""
   }
 }

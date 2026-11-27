@@ -185,11 +185,71 @@ _PLAYER_FA_MAP: dict[str, str] = {
     "erling haaland": "ارلینگ هالند", "mohamed salah": "محمد صلاح", "cole palmer": "کول پالمر",
     "phil foden": "فیل فودن", "rodri": "رودری", "rodrigo hernandez": "رودری",
     "kevin de bruyne": "کوین دی‌بروینه", "declan rice": "دکلان رایس", "william saliba": "ویلیام سالیبا",
-    "gabriel magalhaes": "گابریل ماگالاش", "gabriel": "گابریل", "alisson becker": "آلیسون بکر",
-    "alisson": "آلیسون بکر", "virgil van dijk": "ویرجیل فن‌دایک", "trent alexander-arnold": "ترنت الکساندر-آرنولد",
+    "gabriel magalhaes": "گابریل ماگالائس", "gabriel": "گابریل", "alisson becker": "آلیسون بکر",
+    "alisson": "آلیسون بکر", "virgil van dijk": "ویرجیل فن دایک", "trent alexander-arnold": "ترنت الکساندر-آرنولد",
     "diogo jota": "دیوگو ژوتا", "luis diaz": "لوئیس دیاز", "darwin nunez": "داروین نونیز",
     "alexis mac allister": "الکسیس مک‌آلیستر", "dominik szoboszlai": "دومینیک سوبوسلای",
-    "bruno fernandes": "برونو فرناندز", "marcus rashford": "مارکوس رشفورد", "kobbie mainoo": "کوبی ماینو",
+    "bruno fernandes": "برونو فرناندز",
+    "bruno borges fernandes": "برونو فرناندز",
+    "b.fernandes": "برونو فرناندز",
+    "b. fernandes": "برونو فرناندز",
+    "a.becker": "آلیسون بکر",
+    "e.martinez": "امیلیانو مارتینز",
+    "l.martinez": "لیساندرو مارتینز",
+    "g.jesus": "گابریل ژسوس",
+    "g.martinelli": "گابریل مارتینلی",
+    "gabriel martinelli": "گابریل مارتینلی",
+    "b.silva": "برناردو سیلوا",
+    "r.dias": "روبن دیاس",
+    "m.salah": "محمد صلاح",
+    "c.palmer": "کول پالمر",
+    "e.haaland": "ارلینگ هالند",
+    "a.isak": "الکساندر ایساک",
+    "b.saka": "بوکایو ساکا",
+    "p.foden": "فیل فودن",
+    "d.rice": "دکلان رایس",
+    "m.odegaard": "مارتین اودگارد",
+    "d.szoboszlai": "دومینیک سوبوسلای",
+    "l.diaz": "لوئیس دیاز",
+    "d.nunez": "داروین نونیز",
+    "j.pedro": "ژائو پدرو",
+    "m.cunha": "ماتئوس کونیا",
+    "b.mbeumo": "برایان امبومو",
+    "m.rashford": "مارکوس رشفورد",
+    "m.kudus": "محمد کودوس",
+    "m.rogers": "مورگان راجرز",
+    "j.bowen": "جرد بوون",
+    "o.watkins": "اولی واتکینز",
+    "n.jackson": "نیکلاس جکسون",
+    "c.gakpo": "کودی گاکپو",
+    "cody gakpo": "کودی گاکپو",
+    "r.hojlund": "راسموس هویلوند",
+    "a.garnacho": "آلخاندرو گارناچو",
+    "e.fernandez": "انزو فرناندز",
+    "m.caicedo": "مویسس کایسدو",
+    "p.neto": "پدرو نتو",
+    "j.gvardiol": "یوشکو گواردیول",
+    "j.doku": "جرمی دوکو",
+    "a.gordon": "آنتونی گوردون",
+    "k.mitoma": "کائورو میتوما",
+    "d.solanke": "دومینیک سولانکه",
+    "j.maddison": "جیمز مدیسون",
+    "k.mainoo": "کوبی ماینو",
+    "t.barry": "تیرنو بری",
+    "v.gyokeres": "ویکتور گیوکرش",
+    "f.wirtz": "فلوریان ویرتز",
+    "r.cherki": "رایان شرکی",
+    "h.ekitike": "هوگو اکیتیکه",
+    "o.marmoush": "عمر مرموش",
+    "a.semenyo": "آنتوان سمنیو",
+    "s.tonali": "ساندرو تونالی",
+    "r.calafiori": "ریکاردو کالافیوری",
+    "j.timber": "یورین تیمبر",
+    "w.saliba": "ویلیام سالیبا",
+    "g.magalhaes": "گابریل ماگالائس",
+    "j.pickford": "جردن پیکفورد",
+    "n.pope": "نیک پوپ",
+    "d.raya": "داوید رایا", "marcus rashford": "مارکوس رشفورد", "kobbie mainoo": "کوبی ماینو",
     "rasmus hojlund": "راسموس هویلوند", "lisandro martinez": "لیساندرو مارتینز", "luke shaw": "لوک شاو",
     "leny yoro": "لنی یورو", "mason mount": "میسون مانت", "alejandro garnacho": "آلخاندرو گارناچو",
     "heung-min son": "سون هیونگ‌مین", "son heung-min": "سون هیونگ‌مین", "james maddison": "جیمز مدیسون",
@@ -202,15 +262,15 @@ _PLAYER_FA_MAP: dict[str, str] = {
     "kai havertz": "کای هاورتز", "gabriel jesus": "گابریل ژسوس", "ben white": "بن وایت",
     "riccardo calafiori": "ریکاردو کالافیوری", "jurrien timber": "یورین تیمبر", "david raya": "داوید رایا",
     "jeremy doku": "جرمی دوکو", "jack grealish": "جک گریلیش", "john stones": "جان استونز",
-    "ruben dias": "روبن دیاش", "nathan ake": "ناتان آکه", "josko gvardiol": "یوشکو گواردیول",
+    "ruben dias": "روبن دیاس", "nathan ake": "ناتان آکه", "josko gvardiol": "یوشکو گواردیول",
     "mateo kovacic": "متئو کواچیچ", "bernardo silva": "برناردو سیلوا", "savinho": "ساوینیو",
     "bryan mbeumo": "برایان امبومو", "yoane wissa": "یوان ویسا", "matheus cunha": "ماتئوس کونیا",
     "jarrod bowen": "جرد بوون", "mohammed kudus": "محمد کودوس", "lucas paqueta": "لوکاس پاکتا",
-    "chris wood": "کریس وود", "morgan gibbs-white": "مورگان گیبس-وایت", "eberechi eze": "ابرچی ازه",
+    "chris wood": "کریس وود", "morgan gibbs-white": "مورگان گیبز-وایت", "eberechi eze": "ابرچی ازه",
     "jean-philippe mateta": "ژان فیلیپ ماتتا", "joao pedro": "ژائو پدرو", "kaoru mitoma": "کائورو میتوما",
     "danny welbeck": "دنی ولبک", "jordan pickford": "جردن پیکفورد", "jarrad branthwaite": "جرد برنتویت",
-    "viktor gyokeres": "ویکتور گیوکرش", "florian wirtz": "فلوریان ویرتس", "hugo ekitike": "هوگو اکیتیکه",
-    "benjamin sesko": "بنجامین ششکو", "rayan cherki": "رایان شرکی", "tijjani reijnders": "تیجانی ریندرس",
+    "viktor gyokeres": "ویکتور گیوکرش", "florian wirtz": "فلوریان ویرتز", "hugo ekitike": "هوگو اکیتیکه",
+    "benjamin sesko": "بنجامین ششکو", "rayan cherki": "رایان شرکی", "tijjani reijnders": "تیجانی ریندرز",
     "omar marmoush": "عمر مرموش", "antoine semenyo": "آنتوان سمنیو", "liam delap": "لیام دلاپ",
     "evanilson": "اوانیلسون", "francisco evanilson": "اوانیلسون", "thierno barry": "تیرنو بری",
     "barry": "تیرنو بری", "cherki": "رایان شرکی", "haaland": "ارلینگ هالند", "isak": "الکساندر ایساک",
@@ -219,7 +279,7 @@ _PLAYER_FA_MAP: dict[str, str] = {
     "cunha": "ماتئوس کونیا", "wood": "کریس وود", "bowen": "جرد بوون", "solanke": "دومینیک سولانکه",
     "havertz": "کای هاورتز", "foden": "فیل فودن", "mateta": "ژان فیلیپ ماتتا", "welbeck": "دنی ولبک",
     "delap": "لیام دلاپ", "semenyo": "آنتوان سمنیو", "marmoush": "عمر مرموش", "gyokeres": "ویکتور گیوکرش",
-    "ekitike": "هوگو اکیتیکه", "sesko": "بنجامین ششکو", "wirtz": "فلوریان ویرتس",
+    "ekitike": "هوگو اکیتیکه", "sesko": "بنجامین ششکو", "wirtz": "فلوریان ویرتز",
 }
 
 _MONTH_FA_MAP = {
@@ -244,8 +304,43 @@ _PHONETIC_CHARS = {
 }
 
 
+_GLOSSARY_PLAYERS_CACHE: dict[str, str] | None = None
+
+
+def _get_glossary_player_index() -> dict[str, str]:
+    global _GLOSSARY_PLAYERS_CACHE
+    if _GLOSSARY_PLAYERS_CACHE is not None:
+        return _GLOSSARY_PLAYERS_CACHE
+    import unicodedata
+    idx: dict[str, str] = {}
+    try:
+        from src.xgpedia.config import load_glossary
+        for p in (load_glossary().get("players") or []):
+            en = str(p.get("name_en") or "").strip().lower()
+            fa_n = str(p.get("name_fa") or "").strip()
+            if not en or not fa_n:
+                continue
+            norm_en = "".join(c for c in unicodedata.normalize("NFKD", en) if not unicodedata.combining(c))
+            idx[norm_en] = fa_n
+            words = norm_en.split()
+            if len(words) >= 2:
+                # فرم اول+آخر (مثلاً Bruno Borges Fernandes -> bruno fernandes)
+                short_full = f"{words[0]} {words[-1]}"
+                idx.setdefault(short_full, fa_n)
+                # فرم مخفف حرف اول (مثلاً b.fernandes و b. fernandes)
+                init_key = f"{words[0][0]}.{words[-1]}"
+                if init_key in idx and idx[init_key] != fa_n:
+                    idx[init_key] = ""  # مبهم — تداخل هویت
+                else:
+                    idx[init_key] = fa_n
+    except Exception:
+        pass
+    _GLOSSARY_PLAYERS_CACHE = {k: v for k, v in idx.items() if v}
+    return _GLOSSARY_PLAYERS_CACHE
+
+
 def transliterate_player_name_fa(name: str) -> str:
-    """ترجمه یا آوانگاری تمیز نام بازیکن فوتبال از انگلیسی به فارسی."""
+    """ترجمه یا آوانگاری تمیز نام بازیکن فوتبال از انگلیسی به فارسی (همگام با glossary_fa)."""
     s = str(name or "").strip()
     if not s:
         return "بازیکن"
@@ -254,12 +349,35 @@ def transliterate_player_name_fa(name: str) -> str:
     low = s.lower()
     if low in _PLAYER_FA_MAP:
         return _PLAYER_FA_MAP[low]
-    # Try matching last name or full name stripped of diacritics
     import unicodedata
     norm = "".join(c for c in unicodedata.normalize("NFKD", low) if not unicodedata.combining(c))
     if norm in _PLAYER_FA_MAP:
         return _PLAYER_FA_MAP[norm]
-    parts = [p for p in re.split(r"[\s\-]+", norm) if p]
+    # فرم مخفف حرف اول با یا بدون فاصله (مثل B.Fernandes یا B. Fernandes)
+    m_init = re.match(r"^([a-z])\.\s*(.+)$", norm)
+    if m_init:
+        compact_init = f"{m_init.group(1)}.{m_init.group(2).strip()}"
+        if compact_init in _PLAYER_FA_MAP:
+            return _PLAYER_FA_MAP[compact_init]
+        g_idx = _get_glossary_player_index()
+        if compact_init in g_idx:
+            return g_idx[compact_init]
+    g_idx = _get_glossary_player_index()
+    if norm in g_idx:
+        return g_idx[norm]
+    norm_words = norm.split()
+    if len(norm_words) >= 3:
+        first_last = f"{norm_words[0]} {norm_words[-1]}"
+        if first_last in _PLAYER_FA_MAP:
+            return _PLAYER_FA_MAP[first_last]
+        if first_last in g_idx:
+            return g_idx[first_last]
+    # اگر ورودی مخفف حرف اول بود (مثلاً B.Fernandes) و در دیکشنری نبود، حرف اول را به نام‌خانوادگی نچسبان
+    if m_init:
+        norm_for_parts = m_init.group(2).strip()
+        parts = [p for p in re.split(r"[\s\-\.]+", norm_for_parts) if p]
+    else:
+        parts = [p for p in re.split(r"[\s\-\.]+", norm) if p]
     out_parts = []
     for p in parts:
         if p in _PLAYER_FA_MAP:

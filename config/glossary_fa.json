@@ -1,7 +1,7 @@
 {
   "competition": "Top 5 European Leagues & UEFA Champions League",
   "season": "2026-27",
-  "updated": "2026-11-15",
+  "updated": "2026-11-27",
   "teams": [
     {
       "id": "ARS",
@@ -1765,7 +1765,7 @@
     {
       "id": "leno-ful",
       "name_en": "Bernd Leno",
-      "name_fa": "برنت لنو",
+      "name_fa": "برند لنو",
       "team": "FUL",
       "position": "GK",
       "aliases": [
@@ -1785,11 +1785,11 @@
     {
       "id": "tzolakis-hul",
       "name_en": "Konstantinos Tzolakis",
-      "name_fa": "کونستانتینوس تسولاکیس",
+      "name_fa": "کونستانتینوس تزولاکیس",
       "team": "HUL",
       "position": "GK",
       "aliases": [
-        "تسولاکیس"
+        "تزولاکیس"
       ]
     },
     {
@@ -1869,7 +1869,7 @@
       "team": "LIV",
       "position": "DEF",
       "aliases": [
-        "دایک"
+        "فن دایک"
       ],
       "nickname_fa": "ژنرال دفاعی"
     },
@@ -1896,11 +1896,11 @@
     {
       "id": "lammens-mun",
       "name_en": "Senne Lammens",
-      "name_fa": "سنه لمنس",
+      "name_fa": "سنه لامنس",
       "team": "MUN",
       "position": "GK",
       "aliases": [
-        "لمنس"
+        "لامنس"
       ]
     },
     {
@@ -2174,7 +2174,7 @@
     {
       "id": "calvert-lewin-lee",
       "name_en": "Dominic Calvert-Lewin",
-      "name_fa": "دامینیک کالورت-لوین",
+      "name_fa": "دومینیک کالورت-لوین",
       "team": "LEE",
       "position": "FWD",
       "aliases": [
@@ -2184,11 +2184,11 @@
     {
       "id": "e-le-f-e-sun",
       "name_en": "Enzo Le Fée",
-      "name_fa": "انزو لی فی",
+      "name_fa": "انزو لو فه",
       "team": "SUN",
       "position": "MID",
       "aliases": [
-        "فی"
+        "لو فه"
       ]
     },
     {
@@ -2234,11 +2234,11 @@
     {
       "id": "barry-eve",
       "name_en": "Thierno Barry",
-      "name_fa": "تیرنو باری",
+      "name_fa": "تیرنو بری",
       "team": "EVE",
       "position": "FWD",
       "aliases": [
-        "باری"
+        "بری"
       ]
     },
     {
@@ -2413,11 +2413,11 @@
     {
       "id": "janelt-bre",
       "name_en": "Vitaly Janelt",
-      "name_fa": "ویتالی جانلت",
+      "name_fa": "ویتالی یانلت",
       "team": "BRE",
       "position": "MID",
       "aliases": [
-        "جانلت"
+        "یانلت"
       ]
     },
     {
@@ -2447,18 +2447,19 @@
       "team": "MUN",
       "position": "MID",
       "aliases": [
-        "فرناندز"
+        "فرناندز",
+        "B.Fernandes"
       ],
       "nickname_fa": "برونوی زخمی"
     },
     {
       "id": "gibbs-white-nfo",
       "name_en": "Morgan Gibbs-White",
-      "name_fa": "مورگان گیبز وایت",
+      "name_fa": "مورگان گیبز-وایت",
       "team": "NFO",
       "position": "MID",
       "aliases": [
-        "وایت"
+        "گیبز-وایت"
       ]
     },
     {
@@ -2474,11 +2475,11 @@
     {
       "id": "branthwaite-eve",
       "name_en": "Jarrad Branthwaite",
-      "name_fa": "جارد برنثویت",
+      "name_fa": "جرد برنتویت",
       "team": "EVE",
       "position": "DEF",
       "aliases": [
-        "برنثویت"
+        "برنتویت"
       ]
     },
     {
@@ -2605,17 +2606,17 @@
     {
       "id": "mac-allister-liv",
       "name_en": "Alexis Mac Allister",
-      "name_fa": "الکسیس مک آلیستر",
+      "name_fa": "الکسیس مک‌آلیستر",
       "team": "LIV",
       "position": "MID",
       "aliases": [
-        "آلیستر"
+        "مک‌آلیستر"
       ]
     },
     {
       "id": "schlager-nfo",
       "name_en": "Xaver Schlager",
-      "name_fa": "خاور اشلاگر",
+      "name_fa": "زاور اشلاگر",
       "team": "NFO",
       "position": "MID",
       "aliases": [
@@ -2826,11 +2827,11 @@
     {
       "id": "gu-hi-mci",
       "name_en": "Marc Guéhi",
-      "name_fa": "مارک گی‌هی",
+      "name_fa": "مارک گهی",
       "team": "MCI",
       "position": "DEF",
       "aliases": [
-        "گی‌هی"
+        "گهی"
       ]
     },
     {
@@ -2886,7 +2887,7 @@
     {
       "id": "wissa-new",
       "name_en": "Yoane Wissa",
-      "name_fa": "یوآن ویسا",
+      "name_fa": "یوان ویسا",
       "team": "NEW",
       "position": "FWD",
       "aliases": [
@@ -2896,7 +2897,7 @@
     {
       "id": "cunha-mun",
       "name_en": "Matheus Cunha",
-      "name_fa": "متئوس کونیا",
+      "name_fa": "ماتئوس کونیا",
       "team": "MUN",
       "position": "MID",
       "aliases": [
@@ -2976,11 +2977,11 @@
     {
       "id": "delap-nfo",
       "name_en": "Liam Delap",
-      "name_fa": "لیام دلپ",
+      "name_fa": "لیام دلاپ",
       "team": "NFO",
       "position": "FWD",
       "aliases": [
-        "دلپ"
+        "دلاپ"
       ]
     },
     {
@@ -3254,7 +3255,7 @@
     {
       "id": "buend-a-avl",
       "name_en": "Emiliano Buendía Stati",
-      "name_fa": "امی بوئندیا",
+      "name_fa": "امیلیانو بوئندیا",
       "team": "AVL",
       "position": "MID",
       "aliases": [
@@ -3324,21 +3325,21 @@
     {
       "id": "mainoo-mun",
       "name_en": "Kobbie Mainoo",
-      "name_fa": "کوبی مینو",
+      "name_fa": "کوبی ماینو",
       "team": "MUN",
       "position": "MID",
       "aliases": [
-        "مینو"
+        "ماینو"
       ]
     },
     {
       "id": "willock-new",
       "name_en": "Joe Willock",
-      "name_fa": "جو ویلک",
+      "name_fa": "جو ویلوک",
       "team": "NEW",
       "position": "MID",
       "aliases": [
-        "ویلک"
+        "ویلوک"
       ]
     },
     {
@@ -3414,11 +3415,11 @@
     {
       "id": "kudus-tot",
       "name_en": "Mohammed Kudus",
-      "name_fa": "محمد قدوس",
+      "name_fa": "محمد کودوس",
       "team": "TOT",
       "position": "MID",
       "aliases": [
-        "قدوس"
+        "کودوس"
       ]
     },
     {
@@ -3434,7 +3435,7 @@
     {
       "id": "white-ars",
       "name_en": "Benjamin White",
-      "name_fa": "بنجامین وایت",
+      "name_fa": "بن وایت",
       "team": "ARS",
       "position": "DEF",
       "aliases": [
@@ -3544,11 +3545,11 @@
     {
       "id": "bruno-g-ars",
       "name_en": "Bruno Guimarães",
-      "name_fa": "برونو گیمارائش",
+      "name_fa": "برونو گیمارش",
       "team": "ARS",
       "position": "MID",
       "aliases": [
-        "گیمارائش"
+        "گیمارش"
       ]
     },
     {
@@ -3604,7 +3605,7 @@
     {
       "id": "eze-ars",
       "name_en": "Eberechi Eze",
-      "name_fa": "ابره‌چی ازه",
+      "name_fa": "ابرچی ازه",
       "team": "ARS",
       "position": "MID",
       "aliases": [
@@ -3614,11 +3615,11 @@
     {
       "id": "gy-keres-ars",
       "name_en": "Viktor Gyökeres",
-      "name_fa": "ویکتور گیوکرس",
+      "name_fa": "ویکتور گیوکرش",
       "team": "ARS",
       "position": "FWD",
       "aliases": [
-        "گیوکرس"
+        "گیوکرش"
       ],
       "nickname_fa": "ماشین گلزنی سوئدی"
     },
@@ -3965,11 +3966,11 @@
     {
       "id": "oyarzabal-rso",
       "name_en": "Mikel Oyarzabal",
-      "name_fa": "میکل اویارسابال",
+      "name_fa": "میکل اویارزابال",
       "team": "RSO",
       "position": "FWD",
       "aliases": [
-        "اویارسابال"
+        "اویارزابال"
       ]
     },
     {
@@ -4315,7 +4316,7 @@
     {
       "id": "joaoneves-psg",
       "name_en": "João Neves",
-      "name_fa": "ژوائو نوس",
+      "name_fa": "ژائو نوس",
       "team": "PSG",
       "position": "MID",
       "aliases": [
@@ -4365,11 +4366,11 @@
     {
       "id": "cherki-lyo",
       "name_en": "Rayan Cherki",
-      "name_fa": "رایان شرقی",
+      "name_fa": "رایان شرکی",
       "team": "LYO",
       "position": "MID",
       "aliases": [
-        "شرقی"
+        "شرکی"
       ]
     },
     {
