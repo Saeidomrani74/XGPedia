@@ -121,8 +121,12 @@ def build_value_radar_editions_from_bootstrap(boot: dict[str, Any], *, min_minut
         price = round(float(el.get("now_cost") or 0) / 10.0, 1)
         if price <= 0:
             continue
-        xg = float(el.get("expected_goals") or 0.0)
-        xa = float(el.get("expected_assists") or 0.0)
+        _raw_xg = el.get("expected_goals")
+        _raw_xa = el.get("expected_assists")
+        if _raw_xg in (None, "") and _raw_xa in (None, ""):
+            continue  # قانون null≠0: بازیکن بدون دادهٔ واقعی xG/xA وارد رادار نشود
+        xg = float(_raw_xg) if _raw_xg not in (None, "") else 0.0
+        xa = float(_raw_xa) if _raw_xa not in (None, "") else 0.0
         xgi_raw = el.get("expected_goal_involvements")
         xgi = float(xgi_raw) if xgi_raw is not None else (xg + xa)
         if xgi <= 0.05 and pos_id in (3, 4):

@@ -79,14 +79,18 @@ def _parse_understat_players_list(data: Any) -> dict[str, dict[str, Any]]:
         norm = "".join(c for c in _ud.normalize("NFKD", pname) if not _ud.combining(c))
         if not norm:
             continue
+        def _opt_int(val):
+            return int(val) if val not in (None, "") else None
+        def _opt_float(val, ndigits=2):
+            return round(float(val), ndigits) if val not in (None, "") else None
         g = int(rec.get("goals") or 0)
-        npg = int(rec.get("npg") or 0)
-        sh = int(rec.get("shots") or 0)
-        mins = int(rec.get("time") or 0)
-        xg_v = round(float(rec.get("xG") or 0.0), 2)
-        xa_v = round(float(rec.get("xA") or 0.0), 2)
-        kp_v = int(rec.get("key_passes") or 0)
-        pen = max(0, g - npg)
+        npg = _opt_int(rec.get("npg"))
+        sh = _opt_int(rec.get("shots"))
+        mins = _opt_int(rec.get("time"))
+        xg_v = _opt_float(rec.get("xG"), 2)
+        xa_v = _opt_float(rec.get("xA"), 2)
+        kp_v = _opt_int(rec.get("key_passes"))
+        pen = max(0, g - npg) if npg is not None else None
         entry = {"goals": g, "pen": pen, "shots": sh, "xg": xg_v, "xa": xa_v, "kp": kp_v, "mins": mins}
         out[norm] = entry
         parts = norm.split()
@@ -107,7 +111,12 @@ def _fetch_understat_league_player_stats(league_slug: str, season_years: list[in
         if y not in years_to_try:
             years_to_try.append(y)
 
+    from src.xgpedia.core import hydration_cache as _hc
     for season_yr in years_to_try[:2]:
+        _us_ck = f"understat_league_xhr:{league_slug}:{season_yr}"
+        _hit, _cached_us, _is_stale = _hc.get_cached(_us_ck, allow_stale_sec=0)
+        if _hit and isinstance(_cached_us, dict) and _cached_us:
+            return _cached_us
         # مسیر ۱ (جدید ۲۰۲۶): XHR API مستقیم JSON
         xhr_url = f"https://understat.com/getLeagueData/{league_slug}/{season_yr}"
         try:
@@ -126,8 +135,9 @@ def _fetch_understat_league_player_stats(league_slug: str, season_years: list[in
                 parsed = _parse_understat_players_list(j["players"])
                 if parsed:
                     return parsed
-        except Exception:
-            pass
+        except Exception as _em_exc:
+            from src.xgpedia.core.error_metrics import record_error as _rec_err
+            _rec_err("provider.top_scorers", _em_exc)
 
         # مسیر ۲ (پشتیبان کلاسیک HTML)
         url = f"https://understat.com/league/{league_slug}/{season_yr}"
@@ -142,7 +152,9 @@ def _fetch_understat_league_player_stats(league_slug: str, season_years: list[in
             parsed = _parse_understat_players_list(json.loads(decoded))
             if parsed:
                 return parsed
-        except Exception:
+        except Exception as _em_exc:
+            from src.xgpedia.core.error_metrics import record_error as _rec_err
+            _rec_err("provider.top_scorers", _em_exc)
             continue
     return {}
 
@@ -153,7 +165,9 @@ def load_top_scorers_presets() -> list[dict[str, Any]]:
     try:
         data = json.loads(PRESETS_PATH.read_text(encoding="utf-8"))
         return data if isinstance(data, list) else []
-    except Exception:
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.top_scorers", _em_exc)
         return []
 
 
@@ -196,7 +210,9 @@ def _fetch_bbc_epl_penalties_and_shots() -> dict[str, dict[str, int]]:
                     if len(parts) >= 2:
                         out[parts[-1]] = ent
         return out
-    except Exception:
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.top_scorers", _em_exc)
         return {}
 
 
@@ -256,7 +272,9 @@ def _fetch_fd_pl_penalties(api_key: str) -> dict[str, dict[str, int]]:
             if len(parts) >= 2:
                 out[parts[-1]] = ent
         return out
-    except Exception:
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.top_scorers", _em_exc)
         return {}
 
 
@@ -301,8 +319,9 @@ def _fetch_epl_penalties_and_shots_map(bootstrap: dict[str, Any] | None = None) 
                 parts = norm.split()
                 if len(parts) >= 2 and parts[-1] not in merged:
                     merged[parts[-1]] = ent
-    except Exception:
-        pass
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.top_scorers", _em_exc)
     return merged
 
 
@@ -351,7 +370,7 @@ def parse_fpl_top_scorers(bootstrap: dict[str, Any], *, top_n: int = 8, understa
         short_fa = transliterate_player_name_fa(web_n or second_n or display_en)
         u_hit = _match_understat_player(understat_map or {}, full_en, web_n)
         real_pen = u_hit["pen"] if u_hit else None
-        real_shots = u_hit["shots"] if (u_hit and u_hit["shots"] > 0) else None
+        real_shots = u_hit["shots"] if (u_hit and (u_hit.get("shots") or 0) > 0) else None
         squad_num = el.get("squad_number")
         try:
             real_num = int(squad_num) if squad_num not in (None, "", 0, "0") else None
@@ -394,7 +413,7 @@ def parse_fpl_top_scorers(bootstrap: dict[str, Any], *, top_n: int = 8, understa
 
     leader = players[0]
     runner = players[1] if len(players) > 1 else None
-    g90_l = leader["goals"] * 90.0 / max(1, leader["mins"])
+    g90_l = leader["goals"] * 90.0 / max(1, leader.get("mins") or 0)
     delta_l = leader["goals"] - (leader["xg"] or 0.0)
     insight = (
         f"{leader['name']} با {leader['goals']} گل در {leader['mins']} دقیقه (میانگین {g90_l:.2f} گل در ۹۰ دقیقه "
@@ -489,7 +508,9 @@ def _fetch_fd_scorers(
     try:
         with urllib.request.urlopen(req, timeout=8.0) as resp:
             payload = json.loads(resp.read().decode("utf-8", errors="replace"))
-    except Exception:
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.top_scorers", _em_exc)
         return None
     raw_scorers = payload.get("scorers") or []
     if not raw_scorers:
@@ -582,8 +603,9 @@ def fetch_live_top_scorers_items(*, force_refresh: bool = False) -> list[dict[st
         epl = parse_fpl_top_scorers(bootstrap, top_n=8, understat_map=pen_map)
         if epl:
             items.append(epl)
-    except Exception:
-        pass
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.top_scorers", _em_exc)
 
     fd_key = _get_fdo_token()
     covered_codes: set[str] = set()
@@ -602,8 +624,9 @@ def fetch_live_top_scorers_items(*, force_refresh: bool = False) -> list[dict[st
             bl_sc = fetch_openligadb_bundesliga_top_scorers()
             if bl_sc:
                 items.append(bl_sc)
-        except Exception:
-            pass
+        except Exception as _em_exc:
+            from src.xgpedia.core.error_metrics import record_error as _rec_err
+            _rec_err("provider.top_scorers", _em_exc)
 
     _LIVE_CACHE["ts"] = now_ts
     _LIVE_CACHE["items"] = items
@@ -632,7 +655,12 @@ def hydrate_top_scorers_item(item: dict[str, Any]) -> dict[str, Any]:
             if not fid:
                 continue
             try:
-                es = _http_get_json(f"https://fantasy.premierleague.com/api/element-summary/{fid}/", timeout=6.0)
+                from src.xgpedia.core.hydration_cache import get_or_fetch as _hc_get_or_fetch
+                es = _hc_get_or_fetch(
+                    f"fpl_element_summary:{fid}",
+                    "fpl_element_summary",
+                    lambda _fid=fid: _http_get_json(f"https://fantasy.premierleague.com/api/element-summary/{_fid}/", timeout=6.0),
+                )
                 if isinstance(es, dict) and isinstance(es.get("history"), list):
                     per_r: dict[int, int] = {}
                     for h in es["history"]:
@@ -644,7 +672,9 @@ def hydrate_top_scorers_item(item: dict[str, Any]) -> dict[str, Any]:
                             all_rounds.add(rnd)
                     if per_r:
                         hist_by_idx[idx] = per_r
-            except Exception:
+            except Exception as _em_exc:
+                from src.xgpedia.core.error_metrics import record_error as _rec_err
+                _rec_err("provider.top_scorers", _em_exc)
                 continue
         if len(all_rounds) >= 3 and hist_by_idx:
             sorted_all = sorted(all_rounds)

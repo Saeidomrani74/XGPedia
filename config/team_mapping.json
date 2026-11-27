@@ -48,12 +48,13 @@
         "چلسیا"
       ]
     },
-    "Coventry": {
+    "Coventry City": {
       "csv_short": "Coventry",
       "fdo_id": 351,
       "name_fa": "کاونتری",
       "aliases": [
-        "کاونتری سیتی"
+        "کاونتری سیتی",
+        "Coventry"
       ]
     },
     "Crystal Palace": {
@@ -76,26 +77,30 @@
       "name_fa": "فولام",
       "aliases": []
     },
-    "Hull": {
+    "Hull City": {
       "csv_short": "Hull",
       "fdo_id": 395,
       "name_fa": "هال سیتی",
       "aliases": [
-        "هال"
+        "هال",
+        "Hull"
       ]
     },
-    "Ipswich": {
+    "Ipswich Town": {
       "csv_short": "Ipswich",
       "fdo_id": 349,
       "name_fa": "ایپسویچ",
-      "aliases": []
+      "aliases": [
+        "Ipswich"
+      ]
     },
-    "Leeds": {
+    "Leeds United": {
       "csv_short": "Leeds",
       "fdo_id": 63,
       "name_fa": "لیدز",
       "aliases": [
-        "لیدز یونایتد"
+        "لیدز یونایتد",
+        "Leeds"
       ]
     },
     "Liverpool": {
@@ -124,12 +129,13 @@
         "من یونایتد"
       ]
     },
-    "Newcastle": {
+    "Newcastle United": {
       "csv_short": "Newcastle",
       "fdo_id": 67,
       "name_fa": "نیوکاسل",
       "aliases": [
-        "نیوکاسل یونایتد"
+        "نیوکاسل یونایتد",
+        "Newcastle"
       ]
     },
     "Nottingham Forest": {

@@ -207,6 +207,11 @@ def reset_health(prefix: str | None = None) -> int:
             n = len(_STATE)
             _STATE.clear()
             _save_locked()
+            try:
+                from src.xgpedia.core.error_metrics import reset_error_counts
+                reset_error_counts()
+            except Exception:
+                pass
             return n
         keys = [k for k in list(_STATE.keys()) if k.startswith(prefix)]
         for k in keys:
@@ -243,4 +248,22 @@ def format_health_report_fa(max_rows: int = 12) -> str:
         cd_txt = f" | ⏳ کول‌داون {cool_left // 60}د" if cool_left > 0 else ""
         short_k = k if len(k) <= 44 else k[:41] + "..."
         lines.append(f"{icon} <code>{short_k}</code>\n   امتیاز: <b>{sc:.0f}</b> | ✅ {ok} / ❌ {fail} | ⚡ {ms}ms{cd_txt}")
+    try:
+        from src.xgpedia.core.error_metrics import get_error_counts
+        ec = get_error_counts()
+        if ec:
+            lines.append("")
+            lines.append("⚠️ <b>خطاهای مهارشده (Error Metrics):</b>")
+            for ek, cnt in sorted(ec.items(), key=lambda kv: kv[1], reverse=True)[:8]:
+                lines.append(f"• <code>{ek}</code>: <b>{cnt}</b>")
+    except Exception:
+        pass
+    try:
+        from src.xgpedia.core.hydration_cache import get_cache_stats
+        cs = get_cache_stats()
+        if cs.get("total", 0) > 0:
+            lines.append("")
+            lines.append(f"🗄 <b>کش پایدار SQLite:</b> {cs['fresh']}/{cs['total']} کلید تازه")
+    except Exception:
+        pass
     return "\n".join(lines)

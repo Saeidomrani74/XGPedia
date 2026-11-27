@@ -184,9 +184,12 @@ def parse_fpl_match_post_details(
         goals = int(st.get("goals_scored") or 0)
         assists = int(st.get("assists") or 0)
         saves = int(st.get("saves") or 0)
-        xg = float(st.get("expected_goals") or 0.0)
-        xa = float(st.get("expected_assists") or 0.0)
-        xgc = float(st.get("expected_goals_conceded") or 0.0)
+        _raw_xg = st.get("expected_goals")
+        _raw_xa = st.get("expected_assists")
+        _raw_xgc = st.get("expected_goals_conceded")
+        xg = float(_raw_xg) if _raw_xg not in (None, "") else None
+        xa = float(_raw_xa) if _raw_xa not in (None, "") else None
+        xgc = float(_raw_xgc) if _raw_xgc not in (None, "") else None
         gc = int(st.get("goals_conceded") or 0)
         threat = float(st.get("threat") or 0.0)
         creativity = float(st.get("creativity") or 0.0)
@@ -205,7 +208,7 @@ def parse_fpl_match_post_details(
         if et == 1 and saves:
             stat_parts.append(f"{saves} مهار")
         if not stat_parts:
-            if (xg + xa) >= 0.25:
+            if xg is not None and xa is not None and (xg + xa) >= 0.25:
                 stat_parts.append(f"{xg + xa:.2f} xG+xA")
             else:
                 stat_parts.append(f"{mins} دقیقه، BPS {int(bps)}")
@@ -235,7 +238,7 @@ def parse_fpl_match_post_details(
             gk_obj = {
                 "name": name,
                 "saves": saves,
-                "psxg": round(xgc, 2),
+                "psxg": round(xgc, 2) if xgc is not None else None,
                 "ga": a_goals if side == "home" else h_goals,
             }
             if side == "home":
@@ -275,7 +278,7 @@ def parse_fpl_match_post_details(
             if best["creativity"] > 0
             else (
                 {"label": "امید پاس گل (xA)", "val": f"{best['xa']:.2f}"}
-                if best["xa"] > 0
+                if best.get("xa") is not None and best["xa"] > 0
                 else {"label": "دقیقه حضور", "val": f"{best['mins']}′"}
             )
         )

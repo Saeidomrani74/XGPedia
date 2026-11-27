@@ -40,10 +40,15 @@ def test_short_team_names_eliminate_ellipsis_truncation() -> None:
     assert card_short_team_name_fa("Arsenal", "آرسنال") == "آرسنال"
 
 
-def test_crest_data_uri_prefers_live_espn_png_over_placeholder_svg() -> None:
+def test_crest_data_uri_prefers_live_espn_png_over_placeholder_svg(tmp_path) -> None:
     fake_png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB"
-    with patch("src.xgpedia.providers.pl_badges_free.get_pl_badge_data_uri", return_value=fake_png) as mk:
-        # Sporting CP has a <2.5KB placeholder SVG -> must fetch official PNG
+    tiny_svg = tmp_path / "TINY.svg"
+    tiny_svg.write_text("<svg>SCP</svg>", encoding="utf-8")
+    with (
+        patch("src.xgpedia.render.cards.team_crest_path", return_value=tiny_svg),
+        patch("src.xgpedia.providers.pl_badges_free.get_pl_badge_data_uri", return_value=fake_png) as mk,
+    ):
+        # When local crest is a <2.5KB placeholder SVG -> must fetch official PNG
         uri = _crest_data_uri("Sporting CP")
         assert uri == fake_png
         mk.assert_called_once_with("Sporting CP")

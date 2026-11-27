@@ -678,7 +678,9 @@ def _download_image_data_uri(url: str | None, timeout: float = 6.0) -> str:
             if not ctype.startswith("image/"):
                 ctype = "image/jpeg"
             return f"data:{ctype};base64,{base64.b64encode(raw).decode('ascii')}"
-    except Exception:
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.quote", _em_exc)
         return ""
 
 
@@ -743,8 +745,9 @@ def _attach_real_fpl_stats(item: dict[str, Any]) -> None:
                             {"label": "کلین‌شیت", "val": str(t_cs)},
                         ]
                         return
-    except Exception:
-        pass
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.quote", _em_exc)
 
     # 2. باشگاه‌های سایر لیگ‌های معتبر اروپا (لالیگا، بوندسلیگا، سری‌آ، لیگ ۱) از جدول زنده ESPN/OpenLigaDB
     if code in _CLUB_CODE_TO_LEAGUE_HINT:
@@ -776,8 +779,9 @@ def _attach_real_fpl_stats(item: dict[str, Any]) -> None:
                     if len(stats_out) >= 2:
                         item["stats"] = stats_out[:3]
                         return
-        except Exception:
-            pass
+        except Exception as _em_exc:
+            from src.xgpedia.core.error_metrics import record_error as _rec_err
+            _rec_err("provider.quote", _em_exc)
 
 
 def _try_translate_quote_and_header_fa(
@@ -830,8 +834,9 @@ def _try_translate_quote_and_header_fa(
         res = generate_text(prompt, max_tokens=180)
         if res and not _looks_mostly_english(res) and not _is_incomplete_fragment(res):
             return _auto_highlight_quote(res.strip().strip("\"'«»")), ""
-    except Exception:
-        pass
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.quote", _em_exc)
     return _auto_highlight_quote(raw), ""
 
 
@@ -855,8 +860,9 @@ def _try_translate_header_fa(text: str, fallback: str) -> str:
         cand = str(getattr(draft, "title", "") or getattr(draft, "caption", "") or "").strip().strip("\"'«»").replace("*", "")
         if cand and 5 <= len(cand) <= 72 and not _looks_mostly_english(cand):
             return cand
-    except Exception:
-        pass
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.quote", _em_exc)
     try:
         from src.xgpedia.editorial.llm_provider import generate_text
         prompt = (
@@ -867,8 +873,9 @@ def _try_translate_header_fa(text: str, fallback: str) -> str:
         res = generate_text(prompt, max_tokens=60)
         if res and len(res.strip()) >= 6 and not _looks_mostly_english(res):
             return res.strip().strip("\"'«»")
-    except Exception:
-        pass
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.quote", _em_exc)
     return fallback
 
 
@@ -891,8 +898,9 @@ def _fetch_og_image_from_article(url: str, timeout: float = 5.5) -> str:
                 found = _html.unescape(m.group(1).strip())
                 if found.startswith(("http://", "https://")):
                     return found
-    except Exception:
-        pass
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.quote", _em_exc)
     return ""
 
 
@@ -911,7 +919,9 @@ def _fetch_wikipedia_portrait(person_en: str, timeout: float = 5.0) -> str:
             data = json.loads(resp.read().decode("utf-8", errors="replace"))
         th = (data.get("originalimage") or data.get("thumbnail") or {}).get("source")
         return str(th or "")
-    except Exception:
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.quote", _em_exc)
         return ""
 
 

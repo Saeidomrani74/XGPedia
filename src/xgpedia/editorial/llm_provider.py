@@ -17,6 +17,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
+
+log = logging.getLogger(__name__)
 import os
 import re
 import threading
@@ -489,7 +492,7 @@ def build_free_llm_chain_from_env() -> list[LLMEndpoint]:
     )
 
     # ۴) پشتیبان‌های اضطراری بدون نیاز به کلید/ثبت‌نام (قابل غیرفعال‌سازی با LLM_ENABLE_ANONYMOUS_FALLBACK=0)
-    anon_flag = (os.environ.get("LLM_ENABLE_ANONYMOUS_FALLBACK", "1") or "1").strip().lower()
+    anon_flag = (os.environ.get("LLM_ENABLE_ANONYMOUS_FALLBACK", "0") or "0").strip().lower()
     if anon_flag not in {"0", "false", "no", "off"}:
         _add(LLMEndpoint(
             label="OVHcloud Free (Qwen3.5-397B-A17B)",
@@ -570,8 +573,9 @@ def get_llm_start_index() -> int:
                 val = int(str(row["summary"]).strip())
                 if val >= 1:
                     return val
-    except Exception:
-        pass
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("editorial.llm", _em_exc)
     raw = (os.environ.get("LLM_START_INDEX") or "1").strip()
     try:
         return max(1, int(raw))
@@ -689,7 +693,7 @@ class MultiProviderLLM:
 
         for idx, ep in self._ordered_endpoints():
             if ev is not None and ev.is_set():
-                print("[llm-router] cancelled by timeout/caller - stopping model switch loop")
+                log.info("%s", "[llm-router] cancelled by timeout/caller - stopping model switch loop")
                 raise TimeoutError("درخواست تولید متن به دلیل اتمام زمان مجاز متوقف شد.")
 
             b = ep.base_url.rstrip("/")
@@ -722,7 +726,7 @@ class MultiProviderLLM:
                     current_draft_json=current_draft_json,
                 )
                 if ev is not None and ev.is_set():
-                    print("[llm-router] cancelled right after response - discarding late output")
+                    log.info("%s", "[llm-router] cancelled right after response - discarding late output")
                     raise TimeoutError("درخواست تولید متن به دلیل اتمام زمان مجاز متوقف شد.")
                 _ENDPOINT_COOLDOWN_UNTIL.pop(k_spec, None)
                 _ENDPOINT_COOLDOWN_UNTIL.pop(k_wide, None)
@@ -730,7 +734,7 @@ class MultiProviderLLM:
                     from src.xgpedia.core import api_health
                     api_health.record_success(hk, (time.perf_counter() - _t0) * 1000.0)
                 self.last_used_label = ep.label
-                print(f"[llm-router] success via #{idx} {ep.label}")
+                log.info("%s", f"[llm-router] success via #{idx} {ep.label}")
                 return out
             except TimeoutError:
                 if ev is not None and ev.is_set():
@@ -741,11 +745,11 @@ class MultiProviderLLM:
                     _ENDPOINT_COOLDOWN_UNTIL[k_spec] = time.monotonic() + self.cooldown_seconds
                     api_health.record_failure(hk, short_err, base_cooldown=min(self.cooldown_seconds, 180.0))
                 errors.append(f"{ep.label} -> {short_err}")
-                print(f"[llm-router] #{idx} {ep.label} failed ({short_err}) - switching to next")
+                log.info("%s", f"[llm-router] #{idx} {ep.label} failed ({short_err}) - switching to next")
                 continue
             except Exception as e:
                 if ev is not None and ev.is_set():
-                    print("[llm-router] cancelled during failover - stopping immediately")
+                    log.info("%s", "[llm-router] cancelled during failover - stopping immediately")
                     raise TimeoutError("درخواست تولید متن به دلیل اتمام زمان مجاز متوقف شد.") from e
                 short_err = f"{type(e).__name__}: {str(e)[:120]}"
                 if self.cooldown_seconds > 0:
@@ -759,7 +763,7 @@ class MultiProviderLLM:
                     from src.xgpedia.core import api_health
                     api_health.record_failure(hk, short_err, base_cooldown=min(self.cooldown_seconds, 180.0))
                 errors.append(f"{ep.label} -> {short_err}")
-                print(f"[llm-router] #{idx} {ep.label} failed ({short_err}) - switching to next")
+                log.info("%s", f"[llm-router] #{idx} {ep.label} failed ({short_err}) - switching to next")
                 continue
 
         raise RuntimeError(
@@ -819,7 +823,9 @@ def generate_text(
             client = OpenAICompatibleLLM(supports_json_mode=False, max_attempts=1, timeout=18.0)
             out = client._chat(messages)
             return out.strip() if out else None
-        except Exception:
+        except Exception as _em_exc:
+            from src.xgpedia.core.error_metrics import record_error as _rec_err
+            _rec_err("editorial.llm", _em_exc)
             return None
 
     now = time.monotonic()

@@ -46,13 +46,18 @@ def test_build_free_llm_chain_from_env_priority_and_backups(monkeypatch):
     assert models[2] == "gemini-3.8-flash"
     assert chain[0].base_url == GEMINI_OPENAI_BASE
 
-    # پشتیبان‌های فارسی‌دان رایگان و پشتیبان‌های بدون کلید در ادامهٔ زنجیره
+    # پشتیبان‌های فارسی‌دان رایگان در ادامهٔ زنجیره؛ مسیرهای ناشناس از v0.72.0 به‌صورت پیش‌فرض غیرفعال‌اند
     assert "qwen/qwen3.8-27b" in models
     assert "google/gemma-4-31b-it:free" in models
     assert "c4ai-aya-expanse-32b" in models
-    assert "Qwen3.5-397B-A17B" in models
+    assert "Qwen3.5-397B-A17B" not in models
     assert models.index("gemini-3.8-flash") < models.index("qwen/qwen3.8-27b")
-    assert models.index("qwen/qwen3.8-27b") < models.index("Qwen3.5-397B-A17B")
+
+    # با فعال‌سازی صریح LLM_ENABLE_ANONYMOUS_FALLBACK=1، پشتیبان‌های بدون کلید در انتها اضافه می‌شوند
+    monkeypatch.setenv("LLM_ENABLE_ANONYMOUS_FALLBACK", "1")
+    models_anon = [ep.model for ep in build_free_llm_chain_from_env()]
+    assert "Qwen3.5-397B-A17B" in models_anon
+    assert models_anon.index("qwen/qwen3.8-27b") < models_anon.index("Qwen3.5-397B-A17B")
 
 
 def test_multi_provider_router_fails_over_on_429_and_503(monkeypatch):

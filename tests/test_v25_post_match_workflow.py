@@ -78,7 +78,7 @@ def test_parse_espn_finished_summary_real_stats_scorers_momentum_and_gk():
     parsed = parse_espn_finished_summary(summary)
     assert parsed is not None
     assert parsed["home_team"] == "Tottenham"
-    assert parsed["away_team"] == "Newcastle"
+    assert parsed["away_team"] == "Newcastle United"
     assert parsed["home_goals"] == 2 and parsed["away_goals"] == 1
     assert parsed["home_stats"]["possession"] == 58.0
     assert parsed["home_stats"]["total_shots"] == 15.0

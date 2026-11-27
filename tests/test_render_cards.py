@@ -307,7 +307,8 @@ def test_identity_codes_match_glossary():
 # ─── رندر واقعی Playwright (در صورت نصب) ───
 
 def test_render_real_png(tmp_path):
-    pytest.importorskip("playwright", reason="playwright not installed")
+    from tests.conftest import require_chromium
+    require_chromium()
     from src.xgpedia.render.cards import render_preview_card
 
     html_path, img_path, cap_path = render_preview_card(

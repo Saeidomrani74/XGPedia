@@ -34,6 +34,9 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
+OK = "OK"
+FAIL = "FAIL"
+
 # سازگاری ویندوز: اگر خروجی به فایل/لاگ می‌رود UTF-8 باشد؛ کنسول تعاملی خودش یونیکد است
 if sys.platform == "win32":
     for stream in (sys.stdout, sys.stderr):
@@ -770,6 +773,9 @@ def main(argv: list[str] | None = None) -> int:
     p_txg.add_argument("home", help="Home team English name (e.g. Lille)")
     p_txg.add_argument("away", help="Away team English name (e.g. Bayern Munich)")
     p_txg.add_argument("date", help="Match date YYYY-MM-DD (e.g. 2026-11-25)")
+    sp_vqa = sub.add_parser("visual-qa", help="آزمون رگرسیون بصری خودکار ۴ کارت کلیدی با Playwright (ابعاد/لوگو/سرریز متن)")
+    sp_vqa.add_argument("--out", default=None, help="پوشه خروجی تصاویر QA (پیش‌فرض: output/visual_qa)")
+
     p_dc = sub.add_parser("data-chains", help="List all 23 cards, required fields, and credibility-ranked data source chains")
     p_dc.add_argument("--card", default=None, help="Filter by card ID (e.g. post_match, pre_match, player_profile)")
     sub.add_parser("x-auth", help="X (Twitter) OAuth 2.0 PKCE one-time login & auto-refresh setup")
@@ -842,6 +848,24 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"   MOTM: {res['motm']['name']} ({res['motm']['rating']})")
             if res.get("home_gk") or res.get("away_gk"):
                 print(f"   GKs: {(res.get('home_gk') or {}).get('name', '-')} vs {(res.get('away_gk') or {}).get('name', '-')}")
+    elif args.cmd == "visual-qa":
+        from src.xgpedia.render.visual_qa import run_visual_smoke_suite
+        out_p = Path(args.out) if args.out else None
+        results = run_visual_smoke_suite(out_p, include_instagram_jpeg=True)
+        failed = 0
+        for r in results:
+            tag = OK if r.ok else FAIL
+            print(
+                f"  [{tag}] {r.card_name:18s} {r.fmt.upper():4s} "
+                f"{r.actual_width}x{r.actual_height} ({r.file_bytes // 1024} KB) | "
+                f"imgs={r.total_images} broken={len(r.broken_images)} clipped={len(r.clipped_texts)}"
+            )
+            for iss in r.issues:
+                print(f"       ! {iss}")
+            if not r.ok:
+                failed += 1
+        print(f"Visual QA summary: {len(results) - failed}/{len(results)} passed")
+        return 1 if failed else 0
     elif args.cmd == "data-chains":
         from src.xgpedia.core.source_chain import format_chains_report_fa
         print(format_chains_report_fa(args.card))

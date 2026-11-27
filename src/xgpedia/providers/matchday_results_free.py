@@ -54,7 +54,9 @@ def _resolve_pl_logo_fast(name_en: str, tla: str) -> str | None:
     try:
         from src.xgpedia.providers.pl_badges_free import get_pl_badge_data_uri
         return get_pl_badge_data_uri(name_en, tla_hint=tla, fetch_network=False)
-    except Exception:
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.matchday_results", _em_exc)
         return None
 
 
@@ -83,7 +85,9 @@ def _fetch_understat_league_xg_matches(u_league: str, *, timeout: float = 7.0) -
             dates = json.loads(m.group(1).encode("utf-8").decode("unicode_escape"))
             if isinstance(dates, list) and dates:
                 return [d for d in dates if isinstance(d, dict) and d.get("isResult")]
-        except Exception:
+        except Exception as _em_exc:
+            from src.xgpedia.core.error_metrics import record_error as _rec_err
+            _rec_err("provider.matchday_results", _em_exc)
             continue
     return []
 
@@ -148,7 +152,9 @@ def _fetch_espn_event_xg(slug: str, event_id: str, *, timeout: float = 6.0) -> t
     url = f"https://site.api.espn.com/apis/site/v2/sports/soccer/{s_path}/summary?event={event_id}"
     try:
         data = _http_get_json(url, timeout=timeout)
-    except Exception:
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.matchday_results", _em_exc)
         return None
     teams = ((data.get("boxscore") or {}).get("teams") or []) if isinstance(data, dict) else []
     xg_by_ha: dict[str, float] = {}
@@ -213,8 +219,9 @@ def enrich_matches_with_real_xg(
             opta = lookup_db_match_opta(h_en, a_en)
             if opta and opta.get("home_xg") is not None and opta.get("away_xg") is not None:
                 hit = (round(float(opta["home_xg"]), 2), round(float(opta["away_xg"]), 2))
-        except Exception:
-            pass
+        except Exception as _em_exc:
+            from src.xgpedia.core.error_metrics import record_error as _rec_err
+            _rec_err("provider.matchday_results", _em_exc)
         if hit is None and ul and u_cache.get(ul):
             hit = _match_understat_xg(u_cache[ul], h_en, a_en, hs, as_)
         if hit is not None:
@@ -249,7 +256,9 @@ def load_matchday_results_presets() -> list[dict[str, Any]]:
     try:
         data = json.loads(PRESETS_PATH.read_text(encoding="utf-8"))
         return data if isinstance(data, list) else []
-    except Exception:
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.matchday_results", _em_exc)
         return []
 
 
@@ -380,7 +389,9 @@ def _fetch_league_24h(slug: str, league_fa: str, league_en: str, dates_param: st
     url = f"https://site.api.espn.com/apis/site/v2/sports/soccer/{slug}/scoreboard?dates={dates_param}"
     try:
         payload = _http_get_json(url, timeout=10.0)
-    except Exception:
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.matchday_results", _em_exc)
         return []
     return parse_espn_finished_24h_matches(payload, slug=slug, league_fa=league_fa, league_en=league_en, now_utc=now_utc)
 
@@ -519,8 +530,9 @@ def _fetch_thesportsdb_pl_goals_and_ht(
             if goals_out or (h_score == 0 and a_score == 0):
                 goals_out.sort(key=lambda g: g["min"])
                 return f"{ht_h}-{ht_a}", goals_out
-    except Exception:
-        pass
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.matchday_results", _em_exc)
     return None, []
 
 
@@ -808,7 +820,9 @@ def fetch_live_matchday_results_items(*, force_refresh: bool = False) -> list[di
             slug, fa_name, en_name = futs[fut]
             try:
                 ms = fut.result()
-            except Exception:
+            except Exception as _em_exc:
+                from src.xgpedia.core.error_metrics import record_error as _rec_err
+                _rec_err("provider.matchday_results", _em_exc)
                 continue
             uniq = []
             for m in ms:
@@ -848,8 +862,9 @@ def fetch_live_matchday_results_items(*, force_refresh: bool = False) -> list[di
                 by_league["ger.1"] = ("بوندس‌لیگا آلمان", "BUNDESLIGA", bl_ms)
                 if len(all_matches) < 4:
                     all_matches.extend(bl_ms[:4])
-        except Exception:
-            pass
+        except Exception as _em_exc:
+            from src.xgpedia.core.error_metrics import record_error as _rec_err
+            _rec_err("provider.matchday_results", _em_exc)
 
     _u_xg_cache: dict[str, list[dict[str, Any]]] = {}
     enrich_matches_with_real_xg(all_matches, understat_cache=_u_xg_cache)

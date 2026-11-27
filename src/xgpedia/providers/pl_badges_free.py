@@ -105,13 +105,14 @@ def _load_local_crest_svg_uri(tla: str) -> str | None:
     t = str(tla or "").strip().upper()[:3]
     if not t:
         return None
-    svg_path = LOCAL_CRESTS_DIR / f"{t}.svg"
-    if svg_path.exists() and svg_path.stat().st_size > 100:
-        try:
-            raw = svg_path.read_bytes()
-            return f"data:image/svg+xml;base64,{base64.b64encode(raw).decode('ascii')}"
-        except Exception:
-            return None
+    for ext, mime in ((".svg", "image/svg+xml"), (".png", "image/png")):
+        crest_path = LOCAL_CRESTS_DIR / f"{t}{ext}"
+        if crest_path.exists() and crest_path.stat().st_size > 100:
+            try:
+                raw = crest_path.read_bytes()
+                return f"data:{mime};base64,{base64.b64encode(raw).decode('ascii')}"
+            except Exception:
+                continue
     return None
 
 

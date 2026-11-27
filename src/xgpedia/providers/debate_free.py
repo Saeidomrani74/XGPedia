@@ -169,8 +169,12 @@ def build_fpl_live_debates(boot: dict[str, Any] | None = None, fixtures: list[di
             c2_info[2] if c2_info else "#E62E45",
         )
         g1, g2 = int(p1.get("goals_scored") or 0), int(p2.get("goals_scored") or 0)
-        xg1, xg2 = float(p1.get("expected_goals") or 0.0), float(p2.get("expected_goals") or 0.0)
-        xa1, xa2 = float(p1.get("expected_assists") or 0.0), float(p2.get("expected_assists") or 0.0)
+        _xg1_raw, _xg2_raw = p1.get("expected_goals"), p2.get("expected_goals")
+        _xa1_raw, _xa2_raw = p1.get("expected_assists"), p2.get("expected_assists")
+        xg1 = float(_xg1_raw) if _xg1_raw not in (None, "") else 0.0
+        xg2 = float(_xg2_raw) if _xg2_raw not in (None, "") else 0.0
+        xa1 = float(_xa1_raw) if _xa1_raw not in (None, "") else 0.0
+        xa2 = float(_xa2_raw) if _xa2_raw not in (None, "") else 0.0
         m1, m2 = max(1, int(p1.get("minutes") or 1)), max(1, int(p2.get("minutes") or 1))
         g90_1, g90_2 = g1 * 90.0 / m1, g2 * 90.0 / m2
         th1, th2 = float(p1.get("threat") or 0.0), float(p2.get("threat") or 0.0)

@@ -47,7 +47,7 @@ def test_parse_upcoming_odds_from_fixtures_csv():
     assert rows[0]["away_team"] == "Manchester United"
     assert rows[0]["home_odds"] == 1.88
     assert rows[0]["over25_odds"] == 1.72
-    assert rows[1]["home_team"] == "Hull"
+    assert rows[1]["home_team"] == "Hull City"
     assert rows[1]["away_team"] == "Brighton"
 
 
@@ -108,7 +108,7 @@ def test_full_free_enrichment_unlocks_radar_keyduel_and_signals(tmp_path, monkey
                     ("shots_on_target", sot), ("corner_kicks", cor), ("goals", g),
                 ]:
                     conn.execute(
-                        "INSERT INTO fixture_statistics VALUES (?,?,?,?,NULL,'football-data-co-uk','2026-11-20T00:00:00Z')",
+                        "INSERT INTO fixture_statistics (fixture_id, team, metric, value, n, provider, collected_at) VALUES (?,?,?,?,NULL,'football-data-co-uk','2026-11-20T00:00:00Z')",
                         (fid, t, met, val),
                     )
         # بازی پیش‌رو امروز با نام خام football-data.org

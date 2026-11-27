@@ -117,11 +117,11 @@ def pm_conn():
         ("f-future", "2026-11-22", "Chelsea", "Arsenal", "scheduled", []),
     ]
     for fid, kickoff, home, away, status, stats in rows:
-        c.execute("INSERT INTO fixtures VALUES (?,?,?,?,?,?,?,?,?,?)",
+        c.execute("INSERT INTO fixtures (fixture_id, provider, competition, season, kickoff_utc, home_team, away_team, status, raw_payload_hash, collected_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
                   (fid, PROVIDER, "Premier League", "2026-27", kickoff, home, away,
                    status, None, "2026-11-17T00:00:00Z"))
         for team, metric, value in stats:
-            c.execute("INSERT INTO fixture_statistics VALUES (?,?,?,?,?,?,?)",
+            c.execute("INSERT INTO fixture_statistics (fixture_id, team, metric, value, n, provider, collected_at) VALUES (?,?,?,?,?,?,?)",
                       (fid, team, metric, value, None, PROVIDER, "2026-11-17T00:00:00Z"))
     yield c
     c.close()
@@ -252,7 +252,8 @@ def test_post_match_studio_template_renders_exact_design(tmp_path: Path):
 
 
 def test_render_post_match_real_png(tmp_path):
-    pytest.importorskip("playwright", reason="playwright not installed")
+    from tests.conftest import require_chromium
+    require_chromium()
     _html, img_path, cap_path = render_post_match_card(
         _draft(), _facts(), out_dir=tmp_path, post_id=9, version=1, platform="telegram",
     )

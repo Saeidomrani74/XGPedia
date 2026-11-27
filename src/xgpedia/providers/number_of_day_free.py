@@ -564,8 +564,9 @@ def _translate_nod_text_fa(text: str, *, kind: str = "headline") -> str:
         res = generate_text(prompt, max_tokens=max_tok)
         if res and len(res.strip()) >= 8 and not _looks_english_text(res):
             return res.strip().strip('"\'«»')
-    except Exception:
-        pass
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.number_of_day", _em_exc)
     return raw
 
 

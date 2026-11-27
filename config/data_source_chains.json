@@ -1,195 +1,769 @@
 {
-  "version": "0.59.0",
+  "version": "0.79.0",
   "description": "رجیستری مرکزی و زنجیرهٔ اولویت‌بندی منابع داده (مرتب‌شده بر اساس امتیاز اعتبار 0 تا 100) برای تمامی ۲۳ کارت XGPedia",
   "authority_tiers": {
-    "official_opta": "۹۰–۱۰۰ (دیتای رسمی Opta / StatsBomb / فدراسیون و لیگ)",
-    "verified_api": "۷۵–۸۹ (APIهای رسمی معتبر مثل FDO, FPL, API-Football, Understat, ESPN)",
-    "verified_public": "۶۰–۷۴ (منابع عمومی معتبر مثل BBC, Guardian, Wikipedia, Transfermarkt, CSV)",
+    "official_opta": "۹۵–۱۰۰ (دیتای مستقیم و رسمی Opta / Stats Perform با لایسنس)",
+    "opta_aggregator": "۹۰–۹۹ (ارائه‌دهندگان تجمیعی/غیرمستقیم مبتنی بر دیتای Opta مثل Sportmonks، FotMob، SofaScore)",
+    "local_asset": "۹۰–۱۰۰ (دارایی‌های محلی آفلاین تاییدشده مثل SVG باشگاه‌ها)",
+    "verified_api": "۷۵–۹۵ (APIهای رسمی معتبر مثل FDO، FPL، API-Football، Understat، ESPN)",
+    "verified_public": "۶۰–۷۴ (منابع عمومی معتبر مثل BBC، Guardian، Wikipedia، Transfermarkt، CSV)",
     "community_fallback": "۱–۵۹ (کش محلی، آرشیو و پشتیبان آفلاین)"
   },
   "domain_chains": {
     "match_xg_and_shotmap": [
-      {"provider_id": "opta_official", "label_fa": "Opta / Stats Perform (رسمی)", "authority_score": 100, "tier": "official_opta", "requires_env": "OPTA_API_KEY", "coverage": "all_leagues"},
-      {"provider_id": "sportmonks", "label_fa": "Sportmonks xG API", "authority_score": 96, "tier": "official_opta", "requires_env": "SPORTMONKS_API_KEY", "coverage": "all_leagues"},
-      {"provider_id": "sofascore", "label_fa": "SofaScore (Opta xG & ShotMap)", "authority_score": 94, "tier": "official_opta", "requires_env": null, "coverage": "all_6_leagues"},
-      {"provider_id": "fotmob", "label_fa": "FotMob (Opta xG, ShotMap, Ratings, MOTM)", "authority_score": 93, "tier": "official_opta", "requires_env": null, "coverage": "all_6_leagues"},
-      {"provider_id": "understat", "label_fa": "Understat (Shot-level xG)", "authority_score": 88, "tier": "verified_api", "requires_env": null, "coverage": "top5_domestic"},
-      {"provider_id": "api-football", "label_fa": "API-Football v3", "authority_score": 85, "tier": "verified_api", "requires_env": "API_FOOTBALL_KEY", "coverage": "all_leagues"},
-      {"provider_id": "espn-public", "label_fa": "ESPN Soccer Summary (فقط expectedGoals واقعی)", "authority_score": 78, "tier": "verified_api", "requires_env": null, "coverage": "all_6_leagues"},
-      {"provider_id": "football-data-co-uk", "label_fa": "Football-Data.co.uk Weekly CSV", "authority_score": 74, "tier": "verified_public", "requires_env": null, "coverage": "top5_domestic"}
+      {
+        "provider_id": "opta_official",
+        "label_fa": "Opta / Stats Perform (رسمی)",
+        "authority_score": 100,
+        "tier": "official_opta",
+        "requires_env": "OPTA_API_KEY",
+        "coverage": "all_leagues"
+      },
+      {
+        "provider_id": "sportmonks",
+        "label_fa": "Sportmonks xG API",
+        "authority_score": 96,
+        "tier": "opta_aggregator",
+        "requires_env": "SPORTMONKS_API_KEY",
+        "coverage": "all_leagues"
+      },
+      {
+        "provider_id": "sofascore",
+        "label_fa": "SofaScore (Opta xG & ShotMap)",
+        "authority_score": 94,
+        "tier": "opta_aggregator",
+        "requires_env": null,
+        "coverage": "all_6_leagues"
+      },
+      {
+        "provider_id": "fotmob",
+        "label_fa": "FotMob (Opta xG, ShotMap, Ratings, MOTM)",
+        "authority_score": 93,
+        "tier": "opta_aggregator",
+        "requires_env": null,
+        "coverage": "all_6_leagues"
+      },
+      {
+        "provider_id": "understat",
+        "label_fa": "Understat (Shot-level xG)",
+        "authority_score": 88,
+        "tier": "verified_api",
+        "requires_env": null,
+        "coverage": "top5_domestic"
+      },
+      {
+        "provider_id": "api-football",
+        "label_fa": "API-Football v3",
+        "authority_score": 85,
+        "tier": "verified_api",
+        "requires_env": "API_FOOTBALL_KEY",
+        "coverage": "all_leagues"
+      },
+      {
+        "provider_id": "espn-public",
+        "label_fa": "ESPN Soccer Summary (فقط expectedGoals واقعی)",
+        "authority_score": 78,
+        "tier": "verified_api",
+        "requires_env": null,
+        "coverage": "all_6_leagues"
+      },
+      {
+        "provider_id": "football-data-co-uk",
+        "label_fa": "Football-Data.co.uk Weekly CSV",
+        "authority_score": 74,
+        "tier": "verified_public",
+        "requires_env": null,
+        "coverage": "top5_domestic"
+      }
     ],
     "fixtures_and_results": [
-      {"provider_id": "football-data-org", "label_fa": "Football-Data.org v4 (رسمی)", "authority_score": 92, "tier": "verified_api", "requires_env": "FOOTBALL_DATA_ORG_TOKEN", "coverage": "all_6_leagues"},
-      {"provider_id": "espn-public", "label_fa": "ESPN Scoreboard (زنده ۶ لیگ)", "authority_score": 88, "tier": "verified_api", "requires_env": null, "coverage": "all_6_leagues"},
-      {"provider_id": "football-data-co-uk", "label_fa": "Football-Data.co.uk CSV", "authority_score": 80, "tier": "verified_public", "requires_env": null, "coverage": "top5_domestic"}
+      {
+        "provider_id": "football-data-org",
+        "label_fa": "Football-Data.org v4 (رسمی)",
+        "authority_score": 92,
+        "tier": "verified_api",
+        "requires_env": "FOOTBALL_DATA_ORG_TOKEN",
+        "coverage": "all_6_leagues"
+      },
+      {
+        "provider_id": "espn-public",
+        "label_fa": "ESPN Scoreboard (زنده ۶ لیگ)",
+        "authority_score": 88,
+        "tier": "verified_api",
+        "requires_env": null,
+        "coverage": "all_6_leagues"
+      },
+      {
+        "provider_id": "football-data-co-uk",
+        "label_fa": "Football-Data.co.uk CSV",
+        "authority_score": 80,
+        "tier": "verified_public",
+        "requires_env": null,
+        "coverage": "top5_domestic"
+      }
     ],
     "player_season_stats": [
-      {"provider_id": "fpl-official", "label_fa": "FPL Official (Opta PL)", "authority_score": 95, "tier": "official_opta", "requires_env": null, "coverage": "pl_only"},
-      {"provider_id": "understat", "label_fa": "Understat (5 لیگ برتر اروپا)", "authority_score": 90, "tier": "verified_api", "requires_env": null, "coverage": "top5_domestic"},
-      {"provider_id": "football-data-org", "label_fa": "Football-Data.org Scorers (۶ لیگ)", "authority_score": 84, "tier": "verified_api", "requires_env": "FOOTBALL_DATA_ORG_TOKEN", "coverage": "all_6_leagues"}
+      {
+        "provider_id": "fpl-official",
+        "label_fa": "FPL Official (Opta PL)",
+        "authority_score": 95,
+        "tier": "verified_api",
+        "requires_env": null,
+        "coverage": "pl_only"
+      },
+      {
+        "provider_id": "understat",
+        "label_fa": "Understat (5 لیگ برتر اروپا)",
+        "authority_score": 90,
+        "tier": "verified_api",
+        "requires_env": null,
+        "coverage": "top5_domestic"
+      },
+      {
+        "provider_id": "football-data-org",
+        "label_fa": "Football-Data.org Scorers (۶ لیگ)",
+        "authority_score": 84,
+        "tier": "verified_api",
+        "requires_env": "FOOTBALL_DATA_ORG_TOKEN",
+        "coverage": "all_6_leagues"
+      }
     ],
     "player_match_ratings": [
-      {"provider_id": "fotmob", "label_fa": "FotMob Opta Ratings & MOTM", "authority_score": 94, "tier": "official_opta", "requires_env": null, "coverage": "all_6_leagues"},
-      {"provider_id": "sofascore", "label_fa": "SofaScore Opta Ratings", "authority_score": 93, "tier": "official_opta", "requires_env": null, "coverage": "all_6_leagues"},
-      {"provider_id": "fpl-official", "label_fa": "FPL BPS Official (لیگ برتر)", "authority_score": 86, "tier": "verified_api", "requires_env": null, "coverage": "pl_only"},
-      {"provider_id": "espn-public", "label_fa": "ESPN Match Rosters & Events", "authority_score": 72, "tier": "verified_public", "requires_env": null, "coverage": "all_6_leagues"}
+      {
+        "provider_id": "fotmob",
+        "label_fa": "FotMob Opta Ratings & MOTM",
+        "authority_score": 94,
+        "tier": "opta_aggregator",
+        "requires_env": null,
+        "coverage": "all_6_leagues"
+      },
+      {
+        "provider_id": "sofascore",
+        "label_fa": "SofaScore Opta Ratings",
+        "authority_score": 93,
+        "tier": "opta_aggregator",
+        "requires_env": null,
+        "coverage": "all_6_leagues"
+      },
+      {
+        "provider_id": "fpl-official",
+        "label_fa": "FPL BPS Official (لیگ برتر)",
+        "authority_score": 86,
+        "tier": "verified_api",
+        "requires_env": null,
+        "coverage": "pl_only"
+      },
+      {
+        "provider_id": "espn-public",
+        "label_fa": "ESPN Match Rosters & Events",
+        "authority_score": 72,
+        "tier": "verified_public",
+        "requires_env": null,
+        "coverage": "all_6_leagues"
+      }
     ],
     "standings_tables": [
-      {"provider_id": "football-data-org", "label_fa": "Football-Data.org Standings (۶ لیگ)", "authority_score": 92, "tier": "verified_api", "requires_env": "FOOTBALL_DATA_ORG_TOKEN", "coverage": "all_6_leagues"},
-      {"provider_id": "espn-public", "label_fa": "ESPN Standings (۶ لیگ)", "authority_score": 88, "tier": "verified_api", "requires_env": null, "coverage": "all_6_leagues"},
-      {"provider_id": "understat", "label_fa": "Understat xPTS Table (۵ لیگ)", "authority_score": 86, "tier": "verified_api", "requires_env": null, "coverage": "top5_domestic"}
+      {
+        "provider_id": "football-data-org",
+        "label_fa": "Football-Data.org Standings (۶ لیگ)",
+        "authority_score": 92,
+        "tier": "verified_api",
+        "requires_env": "FOOTBALL_DATA_ORG_TOKEN",
+        "coverage": "all_6_leagues"
+      },
+      {
+        "provider_id": "espn-public",
+        "label_fa": "ESPN Standings (۶ لیگ)",
+        "authority_score": 88,
+        "tier": "verified_api",
+        "requires_env": null,
+        "coverage": "all_6_leagues"
+      },
+      {
+        "provider_id": "understat",
+        "label_fa": "Understat xPTS Table (۵ لیگ)",
+        "authority_score": 86,
+        "tier": "verified_api",
+        "requires_env": null,
+        "coverage": "top5_domestic"
+      }
     ],
     "market_odds": [
-      {"provider_id": "the-odds-api", "label_fa": "The Odds API (ضرایب زنده ۶ لیگ)", "authority_score": 90, "tier": "verified_api", "requires_env": "ODDS_API_KEY", "coverage": "all_6_leagues"},
-      {"provider_id": "espn-public", "label_fa": "ESPN Live Odds", "authority_score": 82, "tier": "verified_api", "requires_env": null, "coverage": "all_6_leagues"},
-      {"provider_id": "football-data-co-uk", "label_fa": "Football-Data.co.uk Fixtures Odds CSV", "authority_score": 78, "tier": "verified_public", "requires_env": null, "coverage": "top5_domestic"}
+      {
+        "provider_id": "the-odds-api",
+        "label_fa": "The Odds API (ضرایب زنده ۶ لیگ)",
+        "authority_score": 90,
+        "tier": "verified_api",
+        "requires_env": "ODDS_API_KEY",
+        "coverage": "all_6_leagues"
+      },
+      {
+        "provider_id": "espn-public",
+        "label_fa": "ESPN Live Odds",
+        "authority_score": 82,
+        "tier": "verified_api",
+        "requires_env": null,
+        "coverage": "all_6_leagues"
+      },
+      {
+        "provider_id": "football-data-co-uk",
+        "label_fa": "Football-Data.co.uk Fixtures Odds CSV",
+        "authority_score": 78,
+        "tier": "verified_public",
+        "requires_env": null,
+        "coverage": "top5_domestic"
+      }
     ],
     "club_crests": [
-      {"provider_id": "local-svg-official", "label_fa": "لوگوی رسمی محلی SVG (brand/crests)", "authority_score": 98, "tier": "official_opta", "requires_env": null, "coverage": "pl_only"},
-      {"provider_id": "espn-badges", "label_fa": "ESPN 500x500 Official Club PNG", "authority_score": 92, "tier": "verified_api", "requires_env": null, "coverage": "all_6_leagues"},
-      {"provider_id": "dynamic-crests", "label_fa": "کشف پویای لوگوی ESPN/FDO (چمپیونزلیگ و جهان)", "authority_score": 90, "tier": "verified_api", "requires_env": null, "coverage": "all_leagues"},
-      {"provider_id": "local-svg-shield", "label_fa": "سپر گرافیکی آفلاین (پشتیبان اضطراری)", "authority_score": 40, "tier": "community_fallback", "requires_env": null, "coverage": "all_leagues"}
+      {
+        "provider_id": "local-svg-official",
+        "label_fa": "لوگوی رسمی محلی SVG (brand/crests)",
+        "authority_score": 98,
+        "tier": "local_asset",
+        "requires_env": null,
+        "coverage": "pl_only"
+      },
+      {
+        "provider_id": "espn-badges",
+        "label_fa": "ESPN 500x500 Official Club PNG",
+        "authority_score": 92,
+        "tier": "verified_api",
+        "requires_env": null,
+        "coverage": "all_6_leagues"
+      },
+      {
+        "provider_id": "dynamic-crests",
+        "label_fa": "کشف پویای لوگوی ESPN/FDO (چمپیونزلیگ و جهان)",
+        "authority_score": 90,
+        "tier": "verified_api",
+        "requires_env": null,
+        "coverage": "all_leagues"
+      },
+      {
+        "provider_id": "local-svg-shield",
+        "label_fa": "سپر گرافیکی آفلاین (پشتیبان اضطراری)",
+        "authority_score": 40,
+        "tier": "community_fallback",
+        "requires_env": null,
+        "coverage": "all_leagues"
+      }
     ],
     "coaches_and_venues": [
-      {"provider_id": "wikipedia-live", "label_fa": "ویکی‌پدیا + ویکی‌دیتا زنده (سرمربی فعلی)", "authority_score": 92, "tier": "verified_public", "requires_env": null, "coverage": "all_leagues"},
-      {"provider_id": "football-data-org", "label_fa": "Football-Data.org Teams", "authority_score": 82, "tier": "verified_api", "requires_env": "FOOTBALL_DATA_ORG_TOKEN", "coverage": "all_6_leagues"},
-      {"provider_id": "local-team-venues", "label_fa": "فایل محلی config/team_venues.json", "authority_score": 70, "tier": "community_fallback", "requires_env": null, "coverage": "all_6_leagues"}
+      {
+        "provider_id": "wikipedia-live",
+        "label_fa": "ویکی‌پدیا + ویکی‌دیتا زنده (سرمربی فعلی)",
+        "authority_score": 92,
+        "tier": "verified_public",
+        "requires_env": null,
+        "coverage": "all_leagues"
+      },
+      {
+        "provider_id": "football-data-org",
+        "label_fa": "Football-Data.org Teams",
+        "authority_score": 82,
+        "tier": "verified_api",
+        "requires_env": "FOOTBALL_DATA_ORG_TOKEN",
+        "coverage": "all_6_leagues"
+      },
+      {
+        "provider_id": "local-team-venues",
+        "label_fa": "فایل محلی config/team_venues.json",
+        "authority_score": 70,
+        "tier": "community_fallback",
+        "requires_env": null,
+        "coverage": "all_6_leagues"
+      }
     ],
     "news_and_quotes": [
-      {"provider_id": "bbc-sport-rss", "label_fa": "BBC Sport Football RSS", "authority_score": 92, "tier": "verified_public", "requires_env": null, "coverage": "all_leagues"},
-      {"provider_id": "guardian-football", "label_fa": "The Guardian Football RSS & API", "authority_score": 90, "tier": "verified_public", "requires_env": null, "coverage": "all_leagues"},
-      {"provider_id": "espn-news", "label_fa": "ESPN Soccer Live News (۶ لیگ)", "authority_score": 86, "tier": "verified_api", "requires_env": null, "coverage": "all_6_leagues"},
-      {"provider_id": "sky-sports-rss", "label_fa": "Sky Sports Football RSS", "authority_score": 85, "tier": "verified_public", "requires_env": null, "coverage": "all_leagues"},
-      {"provider_id": "google-news-rss", "label_fa": "Google News Football Wire", "authority_score": 74, "tier": "verified_public", "requires_env": null, "coverage": "all_leagues"}
+      {
+        "provider_id": "bbc-sport-rss",
+        "label_fa": "BBC Sport Football RSS",
+        "authority_score": 92,
+        "tier": "verified_public",
+        "requires_env": null,
+        "coverage": "all_leagues"
+      },
+      {
+        "provider_id": "guardian-football",
+        "label_fa": "The Guardian Football RSS & API",
+        "authority_score": 90,
+        "tier": "verified_public",
+        "requires_env": null,
+        "coverage": "all_leagues"
+      },
+      {
+        "provider_id": "espn-news",
+        "label_fa": "ESPN Soccer Live News (۶ لیگ)",
+        "authority_score": 86,
+        "tier": "verified_api",
+        "requires_env": null,
+        "coverage": "all_6_leagues"
+      },
+      {
+        "provider_id": "sky-sports-rss",
+        "label_fa": "Sky Sports Football RSS",
+        "authority_score": 85,
+        "tier": "verified_public",
+        "requires_env": null,
+        "coverage": "all_leagues"
+      },
+      {
+        "provider_id": "google-news-rss",
+        "label_fa": "Google News Football Wire",
+        "authority_score": 74,
+        "tier": "verified_public",
+        "requires_env": null,
+        "coverage": "all_leagues"
+      }
     ],
     "injuries_and_lineups": [
-      {"provider_id": "fpl-official", "label_fa": "FPL Official Availability (لیگ برتر)", "authority_score": 92, "tier": "official_opta", "requires_env": null, "coverage": "pl_only"},
-      {"provider_id": "espn-public", "label_fa": "ESPN Rosters & Injuries (۶ لیگ)", "authority_score": 84, "tier": "verified_api", "requires_env": null, "coverage": "all_6_leagues"},
-      {"provider_id": "news-injury-wire", "label_fa": "فید خبری مصدومان (BBC/Guardian/Google News)", "authority_score": 75, "tier": "verified_public", "requires_env": null, "coverage": "all_6_leagues"}
+      {
+        "provider_id": "fpl-official",
+        "label_fa": "FPL Official Availability (لیگ برتر)",
+        "authority_score": 92,
+        "tier": "verified_api",
+        "requires_env": null,
+        "coverage": "pl_only"
+      },
+      {
+        "provider_id": "espn-public",
+        "label_fa": "ESPN Rosters & Injuries (۶ لیگ)",
+        "authority_score": 84,
+        "tier": "verified_api",
+        "requires_env": null,
+        "coverage": "all_6_leagues"
+      },
+      {
+        "provider_id": "news-injury-wire",
+        "label_fa": "فید خبری مصدومان (BBC/Guardian/Google News)",
+        "authority_score": 75,
+        "tier": "verified_public",
+        "requires_env": null,
+        "coverage": "all_6_leagues"
+      }
     ],
     "history_and_bios": [
-      {"provider_id": "wikimedia-onthisday", "label_fa": "Wikipedia / Wikidata Official API", "authority_score": 90, "tier": "verified_public", "requires_env": null, "coverage": "all_leagues"},
-      {"provider_id": "local-presets", "label_fa": "آرشیو راستی‌آزمایی‌شده محلی", "authority_score": 65, "tier": "community_fallback", "requires_env": null, "coverage": "all_leagues"}
+      {
+        "provider_id": "wikimedia-onthisday",
+        "label_fa": "Wikipedia / Wikidata Official API",
+        "authority_score": 90,
+        "tier": "verified_public",
+        "requires_env": null,
+        "coverage": "all_leagues"
+      },
+      {
+        "provider_id": "local-presets",
+        "label_fa": "آرشیو راستی‌آزمایی‌شده محلی",
+        "authority_score": 65,
+        "tier": "community_fallback",
+        "requires_env": null,
+        "coverage": "all_leagues"
+      }
     ],
     "broadcast_irib": [
-      {"provider_id": "irib-conductor", "label_fa": "کنداکتور رسمی شبکه ۳ و ورزش", "authority_score": 90, "tier": "verified_public", "requires_env": null, "coverage": "all_leagues"}
+      {
+        "provider_id": "irib-conductor",
+        "label_fa": "کنداکتور رسمی شبکه ۳ و ورزش",
+        "authority_score": 90,
+        "tier": "verified_public",
+        "requires_env": null,
+        "coverage": "all_leagues"
+      }
     ]
   },
   "cards": {
     "pre_match": {
       "title_fa": "کارت پیش‌ازبازی (Pre-Match)",
-      "required_fields": ["kickoff_utc", "competition", "stadium", "coaches", "club_crests", "xg_for_avg", "xg_against_avg", "xg_series", "last5_form", "radar_6axis", "key_player_duel", "market_odds_ev", "timing_wave_15m", "broadcast"],
-      "domains": ["fixtures_and_results", "match_xg_and_shotmap", "market_odds", "player_season_stats", "coaches_and_venues", "club_crests", "broadcast_irib"]
+      "required_fields": [
+        "kickoff_utc",
+        "competition",
+        "stadium",
+        "coaches",
+        "club_crests",
+        "xg_for_avg",
+        "xg_against_avg",
+        "xg_series",
+        "last5_form",
+        "radar_6axis",
+        "key_player_duel",
+        "market_odds_ev",
+        "timing_wave_15m",
+        "broadcast"
+      ],
+      "domains": [
+        "fixtures_and_results",
+        "match_xg_and_shotmap",
+        "market_odds",
+        "player_season_stats",
+        "coaches_and_venues",
+        "club_crests",
+        "broadcast_irib"
+      ]
     },
     "post_match": {
       "title_fa": "کارت پس‌ازبازی (Post-Match — ۷ ماژول)",
-      "required_fields": ["final_score", "scorers_with_minutes", "expected_goals", "xpts_dixon_coles", "shotmap_coords", "xg_race_series", "shots_inside_box", "momentum_5min", "top_rated_players", "motm_and_runnerup", "goalkeeper_psxg_saves", "possession", "total_shots", "shots_on_target", "big_chances", "coaches", "club_crests"],
-      "domains": ["match_xg_and_shotmap", "player_match_ratings", "fixtures_and_results", "coaches_and_venues", "club_crests"]
+      "required_fields": [
+        "final_score",
+        "scorers_with_minutes",
+        "expected_goals",
+        "xpts_dixon_coles",
+        "shotmap_coords",
+        "xg_race_series",
+        "shots_inside_box",
+        "momentum_5min",
+        "top_rated_players",
+        "motm_and_runnerup",
+        "goalkeeper_psxg_saves",
+        "possession",
+        "total_shots",
+        "shots_on_target",
+        "big_chances",
+        "coaches",
+        "club_crests"
+      ],
+      "domains": [
+        "match_xg_and_shotmap",
+        "player_match_ratings",
+        "fixtures_and_results",
+        "coaches_and_venues",
+        "club_crests"
+      ]
     },
     "matchday_results": {
       "title_fa": "نتایج ۲۴ ساعت اخیر (Matchday Results)",
-      "required_fields": ["finished_matches_24h", "scores", "halftime_scores", "scorers", "expected_goals", "club_crests"],
-      "domains": ["fixtures_and_results", "match_xg_and_shotmap", "club_crests"]
+      "required_fields": [
+        "finished_matches_24h",
+        "scores",
+        "halftime_scores",
+        "scorers",
+        "expected_goals",
+        "club_crests"
+      ],
+      "domains": [
+        "fixtures_and_results",
+        "match_xg_and_shotmap",
+        "club_crests"
+      ]
     },
     "matchweek_wrapup": {
       "title_fa": "جمع‌بندی هفتهٔ لیگ (۵ اسلاید)",
-      "required_fields": ["matchweek_results", "standings_snapshot", "expected_goals", "top_performers", "team_of_week", "club_crests"],
-      "domains": ["fixtures_and_results", "standings_tables", "match_xg_and_shotmap", "player_season_stats", "club_crests"]
+      "required_fields": [
+        "matchweek_results",
+        "standings_snapshot",
+        "expected_goals",
+        "top_performers",
+        "team_of_week",
+        "club_crests"
+      ],
+      "domains": [
+        "fixtures_and_results",
+        "standings_tables",
+        "match_xg_and_shotmap",
+        "player_season_stats",
+        "club_crests"
+      ]
     },
     "shotmap_xg": {
       "title_fa": "نقشه شوت و کیفیت موقعیت‌ها (ShotMap & xG)",
-      "required_fields": ["match_score", "expected_goals", "npxg", "shot_coordinates_xy", "shot_xg", "shot_outcome", "shooter_names", "club_crests"],
-      "domains": ["match_xg_and_shotmap", "club_crests"]
+      "required_fields": [
+        "match_score",
+        "expected_goals",
+        "npxg",
+        "shot_coordinates_xy",
+        "shot_xg",
+        "shot_outcome",
+        "shooter_names",
+        "club_crests"
+      ],
+      "domains": [
+        "match_xg_and_shotmap",
+        "club_crests"
+      ]
     },
     "players_rating": {
       "title_fa": "نمرات بازیکنان (Players Rating)",
-      "required_fields": ["starting_xi_lineups", "formations", "player_opta_ratings", "goals_assists_cards", "motm", "club_crests"],
-      "domains": ["player_match_ratings", "fixtures_and_results", "club_crests"]
+      "required_fields": [
+        "starting_xi_lineups",
+        "formations",
+        "player_opta_ratings",
+        "goals_assists_cards",
+        "motm",
+        "club_crests"
+      ],
+      "domains": [
+        "player_match_ratings",
+        "fixtures_and_results",
+        "club_crests"
+      ]
     },
     "standings": {
       "title_fa": "جدول رده‌بندی (Standings)",
-      "required_fields": ["rank", "team_names", "played", "won_drawn_lost", "goal_diff", "points", "form_last5", "xpts", "club_crests"],
-      "domains": ["standings_tables", "club_crests"]
+      "required_fields": [
+        "rank",
+        "team_names",
+        "played",
+        "won_drawn_lost",
+        "goal_diff",
+        "points",
+        "form_last5",
+        "xpts",
+        "club_crests"
+      ],
+      "domains": [
+        "standings_tables",
+        "club_crests"
+      ]
     },
     "top_scorers": {
       "title_fa": "جدول گلزنان و کفش طلا (Top Scorers)",
-      "required_fields": ["player_name", "team_name", "goals", "assists", "minutes", "expected_goals", "goals_per_90", "club_crests"],
-      "domains": ["player_season_stats", "club_crests"]
+      "required_fields": [
+        "player_name",
+        "team_name",
+        "goals",
+        "assists",
+        "minutes",
+        "expected_goals",
+        "goals_per_90",
+        "club_crests"
+      ],
+      "domains": [
+        "player_season_stats",
+        "club_crests"
+      ]
     },
     "player_profile": {
       "title_fa": "پروفایل آماری بازیکن (Player Profile)",
-      "required_fields": ["player_bio", "portrait", "position", "minutes", "goals", "assists", "xg_per_90", "xa_per_90", "radar_percentiles", "similar_players", "club_crests"],
-      "domains": ["player_season_stats", "history_and_bios", "club_crests"]
+      "required_fields": [
+        "player_bio",
+        "portrait",
+        "position",
+        "minutes",
+        "goals",
+        "assists",
+        "xg_per_90",
+        "xa_per_90",
+        "radar_percentiles",
+        "similar_players",
+        "club_crests"
+      ],
+      "domains": [
+        "player_season_stats",
+        "history_and_bios",
+        "club_crests"
+      ]
     },
     "player_fc27": {
       "title_fa": "کارت بازیکن FC27",
-      "required_fields": ["player_name", "portrait", "position", "overall_rating", "pac_sho_pas_dri_def_phy", "season_xg_xa", "club_crests"],
-      "domains": ["player_season_stats", "history_and_bios", "club_crests"]
+      "required_fields": [
+        "player_name",
+        "portrait",
+        "position",
+        "overall_rating",
+        "pac_sho_pas_dri_def_phy",
+        "season_xg_xa",
+        "club_crests"
+      ],
+      "domains": [
+        "player_season_stats",
+        "history_and_bios",
+        "club_crests"
+      ]
     },
     "h2h_players": {
       "title_fa": "مقایسه دو بازیکن (H2H Players)",
-      "required_fields": ["player1_stats", "player2_stats", "goals", "assists", "xg_per_90", "xa_per_90", "key_passes", "radar_comparison", "club_crests"],
-      "domains": ["player_season_stats", "history_and_bios", "club_crests"]
+      "required_fields": [
+        "player1_stats",
+        "player2_stats",
+        "goals",
+        "assists",
+        "xg_per_90",
+        "xa_per_90",
+        "key_passes",
+        "radar_comparison",
+        "club_crests"
+      ],
+      "domains": [
+        "player_season_stats",
+        "history_and_bios",
+        "club_crests"
+      ]
     },
     "h2h_teams": {
       "title_fa": "تقابل مستقیم دو تیم (H2H Teams)",
-      "required_fields": ["historical_meetings", "wins_draws_losses", "goals_for_against", "recent_5_h2h", "club_crests"],
-      "domains": ["fixtures_and_results", "club_crests"]
+      "required_fields": [
+        "historical_meetings",
+        "wins_draws_losses",
+        "goals_for_against",
+        "recent_5_h2h",
+        "club_crests"
+      ],
+      "domains": [
+        "fixtures_and_results",
+        "club_crests"
+      ]
     },
     "value_radar": {
       "title_fa": "رادار ارزش و کشف استعداد (Value Radar +EV)",
-      "required_fields": ["player_price", "xgi_per_90", "ev_index", "minutes", "team_colors", "club_crests"],
-      "domains": ["player_season_stats", "club_crests"]
+      "required_fields": [
+        "player_price",
+        "xgi_per_90",
+        "ev_index",
+        "minutes",
+        "team_colors",
+        "club_crests"
+      ],
+      "domains": [
+        "player_season_stats",
+        "club_crests"
+      ]
     },
     "lineup_injuries": {
       "title_fa": "ترکیب احتمالی و مصدومان (Lineup & Injuries)",
-      "required_fields": ["upcoming_fixture", "probable_xi", "formation", "injured_suspended_list", "return_dates", "club_crests"],
-      "domains": ["injuries_and_lineups", "fixtures_and_results", "club_crests"]
+      "required_fields": [
+        "upcoming_fixture",
+        "probable_xi",
+        "formation",
+        "injured_suspended_list",
+        "return_dates",
+        "club_crests"
+      ],
+      "domains": [
+        "injuries_and_lineups",
+        "fixtures_and_results",
+        "club_crests"
+      ]
     },
     "injury_report": {
       "title_fa": "گزارش پزشکی و مصدومیت (Injury Report)",
-      "required_fields": ["player_name", "team_name", "injury_type", "expected_return", "missed_matches_impact", "club_crests"],
-      "domains": ["injuries_and_lineups", "news_and_quotes", "club_crests"]
+      "required_fields": [
+        "player_name",
+        "team_name",
+        "injury_type",
+        "expected_return",
+        "missed_matches_impact",
+        "club_crests"
+      ],
+      "domains": [
+        "injuries_and_lineups",
+        "news_and_quotes",
+        "club_crests"
+      ]
     },
     "breaking_news": {
       "title_fa": "خبر فوری (Breaking News)",
-      "required_fields": ["headline_fa", "summary_bullets", "photo_url", "source_name", "club_crests"],
-      "domains": ["news_and_quotes", "club_crests"]
+      "required_fields": [
+        "headline_fa",
+        "summary_bullets",
+        "photo_url",
+        "source_name",
+        "club_crests"
+      ],
+      "domains": [
+        "news_and_quotes",
+        "club_crests"
+      ]
     },
     "transfer_radar": {
       "title_fa": "رادار نقل‌وانتقالات (Transfer Radar)",
-      "required_fields": ["player_name", "from_club", "to_club", "fee_or_status", "reliability_tier", "club_crests"],
-      "domains": ["news_and_quotes", "player_season_stats", "club_crests"]
+      "required_fields": [
+        "player_name",
+        "from_club",
+        "to_club",
+        "fee_or_status",
+        "reliability_tier",
+        "club_crests"
+      ],
+      "domains": [
+        "news_and_quotes",
+        "player_season_stats",
+        "club_crests"
+      ]
     },
     "quote": {
       "title_fa": "نقل‌قول روز (Quote of the Day)",
-      "required_fields": ["speaker_name", "role_or_club", "quote_text_fa", "portrait_url", "bottom_3_live_stats", "club_crests"],
-      "domains": ["news_and_quotes", "player_season_stats", "club_crests"]
+      "required_fields": [
+        "speaker_name",
+        "role_or_club",
+        "quote_text_fa",
+        "portrait_url",
+        "bottom_3_live_stats",
+        "club_crests"
+      ],
+      "domains": [
+        "news_and_quotes",
+        "player_season_stats",
+        "club_crests"
+      ]
     },
     "debate": {
       "title_fa": "مناظره و نظرسنجی (Debate)",
-      "required_fields": ["topic_question", "side_a_claim_stats", "side_b_claim_stats", "auto_poll_options", "club_crests"],
-      "domains": ["news_and_quotes", "player_season_stats", "club_crests"]
+      "required_fields": [
+        "topic_question",
+        "side_a_claim_stats",
+        "side_b_claim_stats",
+        "auto_poll_options",
+        "club_crests"
+      ],
+      "domains": [
+        "news_and_quotes",
+        "player_season_stats",
+        "club_crests"
+      ]
     },
     "number_of_day": {
       "title_fa": "عدد روز (Number of the Day)",
-      "required_fields": ["hero_number", "context_headline", "supporting_stats", "player_or_team_name", "club_crests"],
-      "domains": ["player_season_stats", "standings_tables", "club_crests"]
+      "required_fields": [
+        "hero_number",
+        "context_headline",
+        "supporting_stats",
+        "player_or_team_name",
+        "club_crests"
+      ],
+      "domains": [
+        "player_season_stats",
+        "standings_tables",
+        "club_crests"
+      ]
     },
     "on_this_day": {
       "title_fa": "در چنین روزی (On This Day)",
-      "required_fields": ["historical_date", "event_title_fa", "match_or_milestone_details", "archive_photo"],
-      "domains": ["history_and_bios"]
+      "required_fields": [
+        "historical_date",
+        "event_title_fa",
+        "match_or_milestone_details",
+        "archive_photo"
+      ],
+      "domains": [
+        "history_and_bios"
+      ]
     },
     "birthday": {
       "title_fa": "تولد ستاره (Birthday)",
-      "required_fields": ["player_name", "birth_year_age", "career_trophies_stats", "portrait_url", "club_crests"],
-      "domains": ["history_and_bios", "club_crests"]
+      "required_fields": [
+        "player_name",
+        "birth_year_age",
+        "career_trophies_stats",
+        "portrait_url",
+        "club_crests"
+      ],
+      "domains": [
+        "history_and_bios",
+        "club_crests"
+      ]
     },
     "this_or_that": {
       "title_fa": "کدام را انتخاب می‌کنید؟ (This or That)",
-      "required_fields": ["option_a_entity_stats", "option_b_entity_stats", "comparison_metrics", "club_crests"],
-      "domains": ["player_season_stats", "history_and_bios", "club_crests"]
+      "required_fields": [
+        "option_a_entity_stats",
+        "option_b_entity_stats",
+        "comparison_metrics",
+        "club_crests"
+      ],
+      "domains": [
+        "player_season_stats",
+        "history_and_bios",
+        "club_crests"
+      ]
     }
   }
 }

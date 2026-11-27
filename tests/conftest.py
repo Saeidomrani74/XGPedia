@@ -1,24 +1,46 @@
 """تنظیمات مشترک pytest برای XGPedia:
+- ایزوله‌سازی کامل توکن‌ها/نشست‌های X و Instagram در `tmp_path` (بدون نوشتن در ریشهٔ ریپو)
+- تضمین وجود فیکسچر `data/samples/fact.json` از روی `tests/fixtures/fact.json` در checkout تمیز
 - ایزوله‌سازی کامل حافظهٔ سلامت APIها (`api_health`) در حالت حافظه (بدون نوشتن روی دیسک)
 - مسدودسازی درخواست‌های تصادفی شبکه (ویکی‌پدیا / RSS / FPL / LLM آنلاین / urllib خارجی)
   در تست‌های واحد تا کل مجموعهٔ تست‌ها سریع، یکدست و ۱۰۰٪ مستقل از اینترنت باشد.
-  تست‌هایی که خودشان `monkeypatch` روی `httpx.post`، `urllib.request.urlopen` یا توابع provider
-  می‌زنند، دقیقاً مثل قبل رفتار دلخواه خود را تست می‌کنند.
 """
 from __future__ import annotations
 
+import shutil
 import urllib.request
+from pathlib import Path
+
 import pytest
+
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+_FIXTURE_FACT = _REPO_ROOT / "tests" / "fixtures" / "fact.json"
+_SAMPLE_FACT = _REPO_ROOT / "data" / "samples" / "fact.json"
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _ensure_sample_fact_fixture():
+    """در checkout تمیز که پوشهٔ data/ وجود ندارد، فیکسچر fact.json را از tests/fixtures/ کپی می‌کند."""
+    created = False
+    if not _SAMPLE_FACT.exists() and _FIXTURE_FACT.exists():
+        _SAMPLE_FACT.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(_FIXTURE_FACT, _SAMPLE_FACT)
+        created = True
+    yield
+    if created and _SAMPLE_FACT.exists():
+        try:
+            _SAMPLE_FACT.unlink()
+        except OSError:
+            pass
 
 
 @pytest.fixture(autouse=True)
-def _block_accidental_live_http_and_llm(monkeypatch):
-    # ۰) ایزوله‌سازی فایل‌های توکن واقعی کاربر (X / Instagram) تا در تست‌های واحد نشت نکنند
+def _block_accidental_live_http_and_llm(monkeypatch, tmp_path):
+    # ۰) ایزوله‌سازی فایل‌های توکن واقعی کاربر (X / Instagram) درون tmp_path تا هرگز در ریشهٔ ریپو نشت نکنند
     try:
-        from pathlib import Path as _P
         from src.xgpedia.publishers import x_oauth, omnichannel
-        monkeypatch.setattr(x_oauth, "X_TOKEN_STORE", _P("__nonexistent_test_x_tokens__.json"))
-        monkeypatch.setattr(omnichannel, "IG_SESSION_FILE", _P("__nonexistent_test_ig_session__.json"))
+        monkeypatch.setattr(x_oauth, "X_TOKEN_STORE", tmp_path / "test_x_tokens.json")
+        monkeypatch.setattr(omnichannel, "IG_SESSION_FILE", tmp_path / "test_ig_session.json")
     except Exception:
         pass
 
@@ -63,7 +85,7 @@ def _block_accidental_live_http_and_llm(monkeypatch):
     except Exception:
         pass
 
-    # ۴) مسدودسازی httpx.post و urllib.request.urlopen خارجی (تست‌هایی که خودشان موک می‌کنند بی‌تداخل کار می‌کنند)
+    # ۴) مسدودسازی httpx.post و urllib.request.urlopen خارجی
     try:
         import httpx
 
@@ -83,3 +105,15 @@ def _block_accidental_live_http_and_llm(monkeypatch):
         raise RuntimeError(f"Live external urllib disabled in unit tests: {u[:80]}")
 
     monkeypatch.setattr(urllib.request, "urlopen", _offline_urlopen)
+
+
+def require_chromium() -> None:
+    """در صورت نصب‌نبودن باینری Chromium، تست رندر را تمیز skip می‌کند (به‌جای کرش در محیط تمیز)."""
+    pw = pytest.importorskip("playwright.sync_api", reason="playwright not installed")
+    try:
+        with pw.sync_playwright() as p:
+            exe = Path(p.chromium.executable_path)
+            if not exe.exists():
+                pytest.skip(f"Playwright Chromium binary not installed at {exe}")
+    except Exception as exc:
+        pytest.skip(f"Playwright Chromium unavailable: {exc}")

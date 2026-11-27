@@ -27,9 +27,28 @@ log = logging.getLogger(__name__)
 CHAINS_CONFIG_FILE = ROOT / "config" / "data_source_chains.json"
 
 
+@dataclass(frozen=True)
+class SourceQualityProfile:
+    """ارزیابی چندبعدی یک منبع داده (پایداری، کیفیت داده، تازگی و ایمنی حقوقی — ۰ تا ۱۰۰)."""
+
+    reliability: int = 80
+    data_quality: int = 80
+    freshness: int = 80
+    rights_safety: int = 80
+
+    def composite_score(self) -> float:
+        return round(
+            0.30 * self.reliability
+            + 0.35 * self.data_quality
+            + 0.20 * self.freshness
+            + 0.15 * self.rights_safety,
+            2,
+        )
+
+
 @dataclass
 class SourceCandidate:
-    """یک منبع داده در زنجیره با امتیاز اعتبار مشخص (۰ تا ۱۰۰)."""
+    """یک منبع داده در زنجیره با امتیاز اعتبار مشخص (۰ تا ۱۰۰) و پروفایل چندبعدی اختیاری."""
 
     provider_id: str
     authority_score: int
@@ -39,6 +58,13 @@ class SourceCandidate:
     coverage: str = "all_6_leagues"
     tier: str = "verified_api"
     health_key: str = ""
+    quality_profile: SourceQualityProfile | None = None
+
+    @property
+    def effective_score(self) -> float:
+        if self.quality_profile is not None:
+            return self.quality_profile.composite_score()
+        return float(self.authority_score)
 
     def is_available(self) -> bool:
         if self.requires_env:
@@ -74,7 +100,7 @@ class DataSourceChain:
         """افزودن یا به‌روزرسانی یک منبع در زنجیره و مرتب‌سازی خودکار بر اساس امتیاز اعتبار (نزولی)."""
         self._candidates = [c for c in self._candidates if c.provider_id != candidate.provider_id]
         self._candidates.append(candidate)
-        self._candidates.sort(key=lambda c: c.authority_score, reverse=True)
+        self._candidates.sort(key=lambda c: c.effective_score, reverse=True)
 
     def ordered_candidates(self, *, respect_health: bool = True) -> list[SourceCandidate]:
         """فهرست منابع فعال مرتب‌شده از معتبرترین به ضعیف‌ترین (منابع در cooldown به انتها می‌روند)."""

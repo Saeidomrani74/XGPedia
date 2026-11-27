@@ -13,7 +13,9 @@
 """
 from __future__ import annotations
 
+import logging
 import re
+from urllib.parse import urlparse
 from dataclasses import dataclass
 from typing import Any
 
@@ -22,6 +24,9 @@ import httpx
 from src.xgpedia.config import team_name_fa
 
 VARZESH_CONDUCTOR_URL = "https://varzeshtv.ir/conductor"
+_IRIB_LOG = logging.getLogger(__name__)
+_IRIB_INSECURE_HOSTS = ("tv3.ir", "varzeshtv.ir")
+
 TV3_CONDUCTOR_URL = "https://tv3.ir/conductor"
 
 FA_TO_EN_DIGITS = str.maketrans("۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩", "01234567890123456789")
@@ -257,7 +262,10 @@ class IRIBConductorProvider:
                     r = self._client.get(url)
                 except httpx.ConnectError as ssl_err:
                     # برخی سایت‌های صداوسیما (tv3.ir / varzeshtv.ir) روی ویندوز زنجیرهٔ گواهی ناقص دارند
-                    if "CERTIFICATE_VERIFY_FAILED" in str(ssl_err) or "SSL" in str(ssl_err).upper():
+                    host = (urlparse(url).hostname or "").lower()
+                    allowed_insecure = any(host == h or host.endswith("." + h) for h in _IRIB_INSECURE_HOSTS)
+                    if allowed_insecure and ("CERTIFICATE_VERIFY_FAILED" in str(ssl_err) or "SSL" in str(ssl_err).upper()):
+                        _IRIB_LOG.warning("IRIB TLS verify disabled for allowlisted host %s: %s", host, ssl_err)
                         with httpx.Client(
                             timeout=self._client.timeout,
                             follow_redirects=True,
@@ -270,5 +278,7 @@ class IRIBConductorProvider:
                 r.raise_for_status()
                 all_progs.extend(parse_conductor_html(r.text, key, label))
             except Exception as e:
+                from src.xgpedia.core.error_metrics import record_error
+                record_error(f"irib.{key}", e)
                 errors.append(f"{key}: {type(e).__name__}: {str(e)[:80]}")
         return all_progs, errors

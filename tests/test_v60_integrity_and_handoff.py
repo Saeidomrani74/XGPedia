@@ -39,7 +39,7 @@ def test_espn_timing_wave_has_no_artificial_006_offset() -> None:
 
 
 def test_handoff_doc_exists_and_preserves_all_roadmap_phases() -> None:
-    doc = Path("docs/XGPEDIA_HANDOFF_V060_FA.md")
+    doc = Path("docs/archive/XGPEDIA_HANDOFF_V060_FA.md") if Path("docs/archive/XGPEDIA_HANDOFF_V060_FA.md").exists() else Path("docs/XGPEDIA_HANDOFF_V060_FA.md")
     assert doc.exists()
     txt = doc.read_text(encoding="utf-8")
     for must in ("فاز ۵", "فاز ۸", "فاز ۲", "فاز ۴", "Live Ticker", "v0.60.0", "data-chains"):

@@ -372,8 +372,9 @@ def enrich_transfer_rumor(
         try:
             from src.xgpedia.providers.breaking_news_free import _fetch_article_excerpt
             excerpt = _fetch_article_excerpt(out.get("source_url"), timeout=5.0, max_chars=1600)
-        except Exception:
-            pass
+        except Exception as _em_exc:
+            from src.xgpedia.core.error_metrics import record_error as _rec_err
+            _rec_err("provider.transfer_radar", _em_exc)
 
     # ۱) استخراج ساختاریافتهٔ شایعه و جمع‌بندی تحریریه فارسی با LLM (مبتنی بر متن واقعی خبر)
     try:

@@ -479,7 +479,7 @@ def _fetch_article_excerpt(url: str | None, timeout: float = 5.0, max_chars: int
         total = 0
         skip_kw = ("cookie", "subscribe", "sign up", "privacy policy", "all rights reserved", "javascript")
         for raw_p in paras:
-            txt = _clean_text(raw_p)
+            txt = _clean_html_text(raw_p)
             low = txt.lower()
             if len(txt) < 48 or any(k in low for k in skip_kw):
                 continue
@@ -488,7 +488,9 @@ def _fetch_article_excerpt(url: str | None, timeout: float = 5.0, max_chars: int
             if total >= max_chars or len(chunks) >= 6:
                 break
         return "\n".join(chunks)[:max_chars]
-    except Exception:
+    except Exception as _exc:
+        from src.xgpedia.core.error_metrics import record_error
+        record_error("breaking_news.excerpt", _exc)
         return ""
 
 

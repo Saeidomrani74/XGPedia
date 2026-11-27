@@ -91,8 +91,10 @@ def _build_player_side(
     bps90 = float(el.get("bps") or 0) * 90.0 / mins
     ict90 = float(el.get("ict_index") or 0) * 90.0 / mins
 
-    p_xg = _percentile(xg90, [float(p.get("expected_goals_per_90") or 0) for p in peers])
-    p_xa = _percentile(xa90, [float(p.get("expected_assists_per_90") or 0) for p in peers])
+    _pxg = [float(p["expected_goals_per_90"]) for p in peers if p.get("expected_goals_per_90") not in (None, "")]
+    _pxa = [float(p["expected_assists_per_90"]) for p in peers if p.get("expected_assists_per_90") not in (None, "")]
+    p_xg = _percentile(xg90, _pxg or [xg90])
+    p_xa = _percentile(xa90, _pxa or [xa90])
     p_crea = _percentile(crea90, [float(p.get("creativity") or 0) * 90.0 / max(1.0, float(p.get("minutes") or 1)) for p in peers])
     p_threat = _percentile(threat90, [float(p.get("threat") or 0) * 90.0 / max(1.0, float(p.get("minutes") or 1)) for p in peers])
     p_infl = _percentile(infl90, [float(p.get("influence") or 0) * 90.0 / max(1.0, float(p.get("minutes") or 1)) for p in peers])

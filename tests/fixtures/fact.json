@@ -1,0 +1,67 @@
+{
+  "fixture_id": "fdcouk:2026-11-08:Arsenal:Chelsea",
+  "competition": {
+    "name": "Premier League",
+    "season": "2026-27"
+  },
+  "kickoff_utc": "2026-11-08T16:30:00Z",
+  "matchday": 11,
+  "source": {
+    "provider": "football-data-co-uk",
+    "collected_at": "2026-11-07T09:00:00Z",
+    "payload_hash": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "home": {
+    "name_fa": "آرسنال",
+    "name_en": "Arsenal",
+    "last5": {
+      "n": 5,
+      "points": 11,
+      "goals_for": 10,
+      "goals_against": 4
+    },
+    "xg_for_avg": {
+      "value": 1.85,
+      "n": 10,
+      "provider": "football-data-co-uk"
+    },
+    "xg_against_avg": {
+      "value": 0.92,
+      "n": 10,
+      "provider": "football-data-co-uk"
+    },
+    "corners_avg": {
+      "value": 6.2,
+      "n": 10,
+      "provider": "football-data-co-uk"
+    }
+  },
+  "away": {
+    "name_fa": "چلسی",
+    "name_en": "Chelsea",
+    "last5": {
+      "n": 5,
+      "points": 8,
+      "goals_for": 7,
+      "goals_against": 6
+    },
+    "xg_for_avg": {
+      "value": 1.42,
+      "n": 10,
+      "provider": "football-data-co-uk"
+    },
+    "xg_against_avg": {
+      "value": 1.18,
+      "n": 10,
+      "provider": "football-data-co-uk"
+    },
+    "corners_avg": {
+      "value": 5.1,
+      "n": 10,
+      "provider": "football-data-co-uk"
+    }
+  },
+  "data_quality": {
+    "missing_fields": []
+  }
+}

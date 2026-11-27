@@ -99,7 +99,9 @@ def format_jalali_birth(gy: int, gm: int, gd: int) -> str:
     try:
         jy, jm, jd = _gregorian_to_jalali(gy, gm, gd)
         return f"{jd} {_JALALI_MONTHS[jm]} {jy}"
-    except Exception:
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.birthday", _em_exc)
         return ""
 
 
@@ -652,8 +654,9 @@ def _enrich_from_wikipedia(item: dict[str, Any], timeout: float = 7.0) -> None:
                         item["nameEn"] = title_en.upper()
                         item["surnameEn"] = _make_surname(title_en)
                     break
-        except Exception:
-            pass
+        except Exception as _em_exc:
+            from src.xgpedia.core.error_metrics import record_error as _rec_err
+            _rec_err("provider.birthday", _em_exc)
 
     if not title_en:
         return
@@ -673,8 +676,9 @@ def _enrich_from_wikipedia(item: dict[str, Any], timeout: float = 7.0) -> None:
                 pu = (sj.get("content_urls") or {}).get("desktop", {}).get("page")
                 if pu:
                     item["source_url"] = str(pu)
-    except Exception:
-        pass
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.birthday", _em_exc)
 
     # ۲) معادل نام فارسی از langlinks ویکی‌پدیای انگلیسی
     if not title_fa or not any("\u0600" <= ch <= "\u06ff" for ch in str(item.get("nameFa") or "")):
@@ -693,8 +697,9 @@ def _enrich_from_wikipedia(item: dict[str, Any], timeout: float = 7.0) -> None:
                         item["nameFa"] = re.sub(r"\s*\([^)]*\)$", "", fa_t).strip()
                         item["wikiTitleFa"] = fa_t
                     break
-        except Exception:
-            pass
+        except Exception as _em_exc:
+            from src.xgpedia.core.error_metrics import record_error as _rec_err
+            _rec_err("provider.birthday", _em_exc)
 
     # ۳) Infobox Wikitext برای استخراج آمار رسمی بازی/گل، باشگاه‌ها و شماره پیراهن
     try:

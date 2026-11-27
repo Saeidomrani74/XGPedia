@@ -96,7 +96,7 @@ def _seed_today_fixtures(conn: sqlite3.Connection) -> None:
     ]
     for fid, team, metric, val in stats:
         conn.execute(
-            "INSERT INTO fixture_statistics VALUES (?,?,?,?,NULL,'football-data-co-uk','2026-11-21T09:00:00Z')",
+            "INSERT INTO fixture_statistics (fixture_id, team, metric, value, n, provider, collected_at) VALUES (?,?,?,?,NULL,'football-data-co-uk','2026-11-21T09:00:00Z')",
             (fid, team, metric, val),
         )
 
@@ -302,10 +302,10 @@ def test_raw_fdo_team_names_match_csv_stats(tmp_path, monkeypatch):
     assert canonical_team_name("Liverpool FC", 64) == "Liverpool"
     assert canonical_team_name("Manchester United FC", 66) == "Manchester United"
     assert canonical_team_name("Brighton & Hove Albion FC", 397) == "Brighton"
-    assert canonical_team_name("Hull City AFC", 395) == "Hull"
+    assert canonical_team_name("Hull City AFC", 395) == "Hull City"
     assert canonical_team_name("AFC Bournemouth", 354) == "Bournemouth"
     assert canonical_team_name("Tottenham Hotspur FC", 73) == "Tottenham"
-    assert canonical_team_name("Newcastle United FC", 67) == "Newcastle"
+    assert canonical_team_name("Newcastle United FC", 67) == "Newcastle United"
     assert team_name_fa("Hull City AFC") == "هال سیتی"
     assert team_name_fa("Brighton & Hove Albion FC") == "برایتون"
     assert team_name_fa("Liverpool FC") == "لیورپول"

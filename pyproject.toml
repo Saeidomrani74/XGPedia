@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "xgpedia"
-version = "0.36.0"
+version = "0.79.0"
 description = "XGPedia — خط تولید محتوای تحلیلی فوتبال داده‌محور (عدد را API می‌دهد، متن را مدل می‌نویسد، تصویر را قالب HTML می‌سازد)"
 requires-python = ">=3.12"
 dependencies = [
@@ -14,22 +14,31 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# مرحلهٔ رندر (هفتهٔ ۵): jinja2 + playwright + jdatetime + pillow — نصب: pip install -e ".[render]"
+# مرحلهٔ رندر: playwright + jdatetime + pillow — نصب: pip install -e ".[render]"
 render = [
-    "jinja2>=3.1",           # پرکردن قالب‌های کارت از draft/fact JSON
+    "jinja2>=3.1",           # قالب‌بندی اختیاری
     "playwright>=1.47",      # رندر HTML به PNG/JPEG و ضبط فریم ویدیو
     "jdatetime>=5.0",        # تاریخ جلالی در کارت (نمایش فارسی، ذخیره همیشه UTC)
-    "pillow>=10.0",          # پیکسل‌چک تست‌های رندر (ابعاد/غیرخالی بودن) — کد src به آن نیاز ندارد
+    "pillow>=10.0",          # تبدیل JPEG اینستاگرام در omnichannel و پیکسل‌چک تست‌های رندر
 ]
-# مرحلهٔ انتشار (هفتهٔ ۹+): تلگرام و RSS
+# مرحلهٔ انتشار: تلگرام و RSS
 publish = [
     "aiogram>=3.13",         # ربات تلگرام (approval/publish)
     "feedparser>=6.0",       # RSS اخبار رسمی (Workflow F)
 ]
+# اسکریپینگ و منابع کمکی اختیاری (FotMob/IRIB)
+scrape = [
+    "curl_cffi>=0.7",        # پشتیبان اختیاری درخواست‌های TLS مرورگری
+    "beautifulsoup4>=4.12",  # پارس HTML کنداکتور IRIB
+]
+# انتشار مستقیم اینستاگرام (اختیاری)
+instagram = [
+    "instagrapi>=2.1",       # آپلود مستقیم عکس و ریلز با IG_SESSIONID
+]
 dev = [
     "pytest>=8.0",
+    "pytest-cov>=5.0",
     "ruff>=0.6",
-    "gitleaks>=8.18",        # اسکن secret در pre-commit (پیشنهاد نسخهٔ ۲)
 ]
 
 [tool.setuptools.packages.find]

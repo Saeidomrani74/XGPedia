@@ -44,7 +44,7 @@ def test_seriea_all_20_clubs_symmetric_in_all_four_configs_and_crests() -> None:
         assert name_en in tm["teams"]
         assert tm["teams"][name_en]["name_fa"] == name_fa
         assert name_en in tv["teams"]
-        assert (Path("brand/crests") / f"{code}.svg").exists()
+        assert (Path("brand/crests") / f"{code}.svg").exists() or (Path("brand/crests") / f"{code}.png").exists()
 
 
 def test_pl_badges_bridge_resolves_seriea_clubs_and_offline_crests() -> None:

@@ -57,13 +57,13 @@ def conn():
     ]
     for fid, kickoff, home, away, stats in rows:
         c.execute(
-            "INSERT INTO fixtures VALUES (?,?,?,?,?,?,?,?,?,?)",
+            "INSERT INTO fixtures (fixture_id, provider, competition, season, kickoff_utc, home_team, away_team, status, raw_payload_hash, collected_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
             (fid, "football-data-co-uk", "Premier League", "2026-27", kickoff, home, away,
              "finished", None, "2026-11-01T00:00:00Z"),
         )
         for team, metric, value in stats:
             c.execute(
-                "INSERT INTO fixture_statistics VALUES (?,?,?,?,?,?,?)",
+                "INSERT INTO fixture_statistics (fixture_id, team, metric, value, n, provider, collected_at) VALUES (?,?,?,?,?,?,?)",
                 (fid, team, metric, value, None, "football-data-co-uk", "2026-11-01T00:00:00Z"),
             )
     yield c

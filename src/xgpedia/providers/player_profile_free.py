@@ -165,9 +165,13 @@ def parse_fpl_top_players(bootstrap: dict[str, Any], *, limit: int = 24) -> list
         starts = int(el.get("starts") or max(1, round(mins / 85.0)))
         goals = int(el.get("goals_scored") or 0)
         assists = int(el.get("assists") or 0)
-        xg90 = round(float(el.get("expected_goals") or 0.0) * 90.0 / mins, 2)
-        xa90 = round(float(el.get("expected_assists") or 0.0) * 90.0 / mins, 2)
-        xgi90 = round(xg90 + xa90, 2)
+        _raw_xg = el.get("expected_goals")
+        _raw_xa = el.get("expected_assists")
+        xg_available = _raw_xg not in (None, "")
+        xa_available = _raw_xa not in (None, "")
+        xg90 = round(float(_raw_xg) * 90.0 / mins, 2) if xg_available else 0.0
+        xa90 = round(float(_raw_xa) * 90.0 / mins, 2) if xa_available else 0.0
+        xgi90 = round(xg90 + xa90, 2) if (xg_available and xa_available) else None
         creativity90 = round(float(el.get("creativity") or 0.0) * 90.0 / mins, 1)
         threat90 = round(float(el.get("threat") or 0.0) * 90.0 / mins, 1)
         influence90 = round(float(el.get("influence") or 0.0) * 90.0 / mins, 1)
@@ -261,7 +265,7 @@ def parse_fpl_top_players(bootstrap: dict[str, Any], *, limit: int = 24) -> list
             "imgY": 0,
             "pitchZones": [{"x": 82, "y": 50 if pos_id == 4 else 28, "r": 22, "p": 1.0}],
             "kpis": [
-                {"label": "مشارکت مورد انتظار", "sub": "xG + xA / 90", "val": f"{xgi90:.2f}", "delta": f"صدک {max(p_xg, p_xa)}", "pct": max(p_xg, p_xa), "accent": "#34D399"},
+                {"label": "مشارکت مورد انتظار", "sub": "xG + xA / 90", "val": (f"{xgi90:.2f}" if xgi90 is not None else "—"), "delta": f"صدک {max(p_xg, p_xa)}", "pct": max(p_xg, p_xa), "accent": "#34D399"},
                 {"label": "شاخص خلاقیت", "sub": "CREATIVITY / 90", "val": f"{creativity90:.1f}", "delta": f"صدک {p_cre}", "pct": p_cre, "accent": "#38BDF8"},
                 {"label": "شاخص تهدید دروازه", "sub": "THREAT / 90", "val": f"{threat90:.1f}", "delta": f"صدک {p_thr}", "pct": p_thr, "accent": "#FBBF24"},
                 {"label": "شاخص کل ICT", "sub": "ICT INDEX / 90", "val": f"{ict90:.1f}", "delta": f"صدک {p_inf}", "pct": p_inf, "accent": "#E62E45"},

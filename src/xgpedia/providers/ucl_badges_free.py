@@ -205,7 +205,8 @@ def get_ucl_badge_data_uri(
             pass
 
     # ۳) پشتیبان ۱۰۰٪ آفلاین SVG برداری محلی
-    svg_p = LOCAL_CRESTS_DIR / f"{tla}.svg"
-    if svg_p.exists():
-        return "data:image/svg+xml;base64," + base64.b64encode(svg_p.read_bytes()).decode("ascii")
+    for _ext, _mime in ((".svg", "image/svg+xml"), (".png", "image/png")):
+        _cp = LOCAL_CRESTS_DIR / f"{tla}{_ext}"
+        if _cp.exists() and _cp.stat().st_size > 100:
+            return f"data:{_mime};base64," + base64.b64encode(_cp.read_bytes()).decode("ascii")
     return None

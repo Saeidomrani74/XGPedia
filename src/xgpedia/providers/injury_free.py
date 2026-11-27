@@ -104,7 +104,9 @@ def _download_image_data_uri(url: str, timeout: float = 6.0) -> str | None:
             return None
         mime = "image/png" if url.lower().endswith(".png") or raw[:4] == b"\x89PNG" else "image/jpeg"
         return f"data:{mime};base64,{base64.b64encode(raw).decode('ascii')}"
-    except Exception:
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.injury", _em_exc)
         return None
 
 
@@ -144,8 +146,9 @@ def fetch_current_player_media_and_number(
                                 out["photoUrl"] = uri
                                 break
                 break
-        except Exception:
-            pass
+        except Exception as _em_exc:
+            from src.xgpedia.core.error_metrics import record_error as _rec_err
+            _rec_err("provider.injury", _em_exc)
     return out
 
 
@@ -174,7 +177,9 @@ def load_injury_presets() -> list[dict[str, Any]]:
     try:
         data = json.loads(PRESETS_PATH.read_text(encoding="utf-8"))
         return data if isinstance(data, list) else []
-    except Exception:
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.injury", _em_exc)
         return []
 
 
@@ -333,83 +338,19 @@ def _get_glossary_player_index() -> dict[str, str]:
                     idx[init_key] = ""  # مبهم — تداخل هویت
                 else:
                     idx[init_key] = fa_n
-    except Exception:
-        pass
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.injury", _em_exc)
     _GLOSSARY_PLAYERS_CACHE = {k: v for k, v in idx.items() if v}
     return _GLOSSARY_PLAYERS_CACHE
 
 
 def transliterate_player_name_fa(name: str) -> str:
-    """ترجمه یا آوانگاری تمیز نام بازیکن فوتبال از انگلیسی به فارسی (همگام با glossary_fa)."""
-    s = str(name or "").strip()
-    if not s:
-        return "بازیکن"
-    if re.search(r"[؀-ۿ]", s):
-        return s
-    low = s.lower()
-    if low in _PLAYER_FA_MAP:
-        return _PLAYER_FA_MAP[low]
-    import unicodedata
-    norm = "".join(c for c in unicodedata.normalize("NFKD", low) if not unicodedata.combining(c))
-    if norm in _PLAYER_FA_MAP:
-        return _PLAYER_FA_MAP[norm]
-    # فرم مخفف حرف اول با یا بدون فاصله (مثل B.Fernandes یا B. Fernandes)
-    m_init = re.match(r"^([a-z])\.\s*(.+)$", norm)
-    if m_init:
-        compact_init = f"{m_init.group(1)}.{m_init.group(2).strip()}"
-        if compact_init in _PLAYER_FA_MAP:
-            return _PLAYER_FA_MAP[compact_init]
-        g_idx = _get_glossary_player_index()
-        if compact_init in g_idx:
-            return g_idx[compact_init]
-    g_idx = _get_glossary_player_index()
-    if norm in g_idx:
-        return g_idx[norm]
-    norm_words = norm.split()
-    if len(norm_words) >= 3:
-        first_last = f"{norm_words[0]} {norm_words[-1]}"
-        if first_last in _PLAYER_FA_MAP:
-            return _PLAYER_FA_MAP[first_last]
-        if first_last in g_idx:
-            return g_idx[first_last]
-    # اگر ورودی مخفف حرف اول بود (مثلاً B.Fernandes) و در دیکشنری نبود، حرف اول را به نام‌خانوادگی نچسبان
-    if m_init:
-        norm_for_parts = m_init.group(2).strip()
-        parts = [p for p in re.split(r"[\s\-\.]+", norm_for_parts) if p]
-    else:
-        parts = [p for p in re.split(r"[\s\-\.]+", norm) if p]
-    out_parts = []
-    for p in parts:
-        if p in _PLAYER_FA_MAP:
-            out_parts.append(_PLAYER_FA_MAP[p])
-            continue
-        w = p
-        res = []
-        i = 0
-        while i < len(w):
-            matched = False
-            for dg, fa in _PHONETIC_DIGRAPHS:
-                if w.startswith(dg, i):
-                    res.append(fa)
-                    i += len(dg)
-                    matched = True
-                    break
-            if matched:
-                continue
-            ch = w[i]
-            if i == 0 and ch in ("a", "e", "i", "o", "u"):
-                res.append({"a": "آ", "e": "ا", "i": "ای", "o": "او", "u": "او"}[ch])
-            elif ch == "e" and i == len(w) - 1 and len(w) > 2:
-                pass
-            elif ch == "e" and 0 < i < len(w) - 1:
-                res.append("")
-            else:
-                res.append(_PHONETIC_CHARS.get(ch, ""))
-            i += 1
-        word_fa = "".join(res).strip()
-        if word_fa:
-            out_parts.append(word_fa)
-    return " ".join(out_parts) or s
+    """ترجمه یا آوانگاری تمیز نام بازیکن فوتبال از انگلیسی به فارسی از طریق سرویس واحد هویت نام‌ها (v0.77.0)."""
+    from src.xgpedia.core.identity_service import resolve_player_name_fa
+
+    res = resolve_player_name_fa(name)
+    return res or "بازیکن"
 
 
 def translate_injury_diagnosis_fa(news: str) -> tuple[str, str]:
@@ -660,7 +601,9 @@ def fetch_injury_rss_alerts(limit: int = 8) -> list[dict[str, Any]]:
                 })
                 if len(alerts) >= limit:
                     break
-        except Exception:
+        except Exception as _em_exc:
+            from src.xgpedia.core.error_metrics import record_error as _rec_err
+            _rec_err("provider.injury", _em_exc)
             continue
     return alerts
 
@@ -677,12 +620,14 @@ def fetch_live_injuries(force_refresh: bool = False) -> list[dict[str, Any]]:
         except Exception:
             fxs = []
         items.extend(parse_fpl_injuries(bs, fxs, limit=16))
-    except Exception:
-        pass
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.injury", _em_exc)
     try:
         items.extend(fetch_injury_rss_alerts(limit=6))
-    except Exception:
-        pass
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.injury", _em_exc)
     _LIVE_CACHE["ts"] = now
     _LIVE_CACHE["items"] = items
     return list(items)
@@ -752,8 +697,9 @@ def enrich_injury_item(
                             "tag": _clean_fa_text(parsed.get("verdict_tag") or "پایش پزشکی XGPedia")[:90],
                         }
                         return out
-        except Exception:
-            pass
+        except Exception as _em_exc:
+            from src.xgpedia.core.error_metrics import record_error as _rec_err
+            _rec_err("provider.injury", _em_exc)
 
     if not out.get("verdict"):
         out["verdict"] = {

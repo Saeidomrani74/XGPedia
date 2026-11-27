@@ -76,8 +76,9 @@ def test_151_clubs_1to1_symmetry_no_windows_reserved_and_all_36_uel_clubs_comple
         ident = team_identity(canon)
         assert ident is not None, f"Missing identity for {club}"
         assert ident["code"] not in WINDOWS_RESERVED
-        crest_path = Path(ident.get("crest") or f"brand/crests/{ident['code']}.svg")
-        assert crest_path.exists(), f"Missing SVG crest for {club}: {crest_path}"
+        crest_svg = Path(ident.get("crest") or f"brand/crests/{ident['code']}.svg")
+        crest_png = Path(f"brand/crests/{ident['code']}.png")
+        assert crest_svg.exists() or crest_png.exists(), f"Missing SVG/PNG crest for {club}: {crest_svg}"
         assert team_name_fa(canon), f"Missing Persian name for {club}"
         assert canon in tv or club in tv, f"Missing stadium for {club}"
         assert canon in TEAM_WIKI_TITLES or club in TEAM_WIKI_TITLES, f"Missing Wikipedia title for {club}"
@@ -86,5 +87,5 @@ def test_151_clubs_1to1_symmetry_no_windows_reserved_and_all_36_uel_clubs_comple
     assert card_short_team_name_fa("Jagiellonia Bialystok") == "یاگیلونیا"
     assert card_short_team_name_fa("NEC Nijmegen") == "نایمخن"
     assert translate_player_fa("Vangelis Pavlidis") == "پاولیدیس"
-    assert translate_player_fa("Mikel Oyarzabal") == "اویارزابال"
+    assert translate_player_fa("Mikel Oyarzabal") == "میکل اویارزابال"
     assert translate_player_fa("Ayoub El Kaabi") == "ال‌کعبی"

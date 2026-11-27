@@ -226,7 +226,48 @@ class XTwitterAdapter:
         return await self._post_tweet(caption)
 
 
-IG_SESSION_FILE = Path("data") / "ig_session.json"
+from src.xgpedia.config import ROOT as _XGPEDIA_ROOT
+
+IG_SESSION_FILE = _XGPEDIA_ROOT / "data" / "ig_session.json"
+
+
+def _ig_graph_api_version() -> str:
+    return (os.getenv("IG_GRAPH_API_VERSION") or "v22.0").strip()
+
+
+def _dump_ig_settings(cl: Any) -> None:
+    IG_SESSION_FILE.parent.mkdir(parents=True, exist_ok=True)
+    cl.dump_settings(str(IG_SESSION_FILE))
+    try:
+        os.chmod(IG_SESSION_FILE, 0o600)
+    except OSError:
+        pass
+
+
+def _poll_ig_container_status(
+    httpx_mod: Any,
+    creation_id: str,
+    token: str,
+    version: str,
+    *,
+    max_attempts: int = 15,
+    interval_sec: float = 2.0,
+) -> str:
+    """بررسی وضعیت پردازش کانتینر ویدیوی Reels پیش از فراخوانی media_publish."""
+    url = f"https://graph.facebook.com/{version}/{creation_id}"
+    last_status = "IN_PROGRESS"
+    for attempt in range(max_attempts):
+        r = httpx_mod.get(url, params={"fields": "status_code", "access_token": token}, timeout=20.0)
+        r.raise_for_status()
+        status = str(r.json().get("status_code") or "").upper()
+        last_status = status or last_status
+        if status in ("FINISHED", "PUBLISHED"):
+            return status
+        if status in ("ERROR", "EXPIRED"):
+            raise RuntimeError(f"IG container {creation_id} failed with status={status}")
+        if attempt + 1 < max_attempts:
+            time.sleep(interval_sec)
+    raise RuntimeError(f"IG container {creation_id} timed out (last status={last_status})")
 
 
 def _ensure_jpeg_for_ig(image_path: Path) -> Path:
@@ -298,8 +339,9 @@ def _build_ig_client() -> Any:
     if IG_SESSION_FILE.exists():
         try:
             cl.load_settings(str(IG_SESSION_FILE))
-        except Exception:
-            pass
+        except Exception as _exc:
+            from src.xgpedia.core.error_metrics import record_error
+            record_error("omnichannel.ig_load_settings", _exc)
     return cl
 
 
@@ -312,8 +354,7 @@ def _authenticate_ig_client(cl: Any) -> str:
     if sess_id:
         import urllib.parse
         cl.login_by_sessionid(urllib.parse.unquote(sess_id))
-        IG_SESSION_FILE.parent.mkdir(parents=True, exist_ok=True)
-        cl.dump_settings(str(IG_SESSION_FILE))
+        _dump_ig_settings(cl)
         try:
             return str(getattr(cl.account_info(), "username", "") or user or "instagram")
         except Exception:
@@ -330,8 +371,7 @@ def _authenticate_ig_client(cl: Any) -> str:
                     "مقدار کوکی `sessionid` را کپی و در `.env` به‌صورت `IG_SESSIONID=...` بگذار و دوباره `python run.py ig-auth` بزن."
                 ) from exc
             raise
-        IG_SESSION_FILE.parent.mkdir(parents=True, exist_ok=True)
-        cl.dump_settings(str(IG_SESSION_FILE))
+        _dump_ig_settings(cl)
         return user
     raise RuntimeError("مقدار IG_SESSIONID (پیشنهادی) یا IG_USERNAME/IG_PASSWORD در فایل .env تنظیم نشده است.")
 
@@ -421,19 +461,22 @@ class InstagramAdapter:
             public_url = f"{base}/{media_path.name}"
 
             def _do_graph() -> str:
+                ver = _ig_graph_api_version()
                 payload: dict[str, Any] = {"caption": plain_cap, "access_token": token}
                 if is_video:
                     payload["media_type"] = "REELS"
                     payload["video_url"] = public_url
                 else:
                     payload["image_url"] = public_url
-                r1 = httpx.post(f"https://graph.facebook.com/v21.0/{uid}/media", data=payload, timeout=30.0)
+                r1 = httpx.post(f"https://graph.facebook.com/{ver}/{uid}/media", data=payload, timeout=30.0)
                 r1.raise_for_status()
                 creation_id = r1.json().get("id")
                 if not creation_id:
                     raise RuntimeError(f"missing creation_id: {r1.text[:120]}")
+                if is_video:
+                    _poll_ig_container_status(httpx, str(creation_id), token, ver)
                 r2 = httpx.post(
-                    f"https://graph.facebook.com/v21.0/{uid}/media_publish",
+                    f"https://graph.facebook.com/{ver}/{uid}/media_publish",
                     data={"creation_id": creation_id, "access_token": token},
                     timeout=30.0,
                 )
@@ -580,7 +623,7 @@ def verify_omnichannel_connections(*, timeout: float = 10.0) -> list[dict[str, A
                 else:
                     tok = (os.getenv("IG_ACCESS_TOKEN") or "").strip()
                     uid = (os.getenv("IG_USER_ID") or "").strip()
-                    r = httpx.get(f"https://graph.facebook.com/v21.0/{uid}", params={"fields": "id,username", "access_token": tok}, timeout=timeout)
+                    r = httpx.get(f"https://graph.facebook.com/{_ig_graph_api_version()}/{uid}", params={"fields": "id,username", "access_token": tok}, timeout=timeout)
                     r.raise_for_status()
                     j = r.json()
                     uname = j.get("username") or j.get("id") or ""

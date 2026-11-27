@@ -189,7 +189,9 @@ def load_standings_presets() -> list[dict[str, Any]]:
     try:
         data = json.loads(PRESETS_PATH.read_text(encoding="utf-8"))
         return data if isinstance(data, list) else []
-    except Exception:
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.standings", _em_exc)
         return []
 
 
@@ -219,7 +221,9 @@ def fetch_understat_league_xg(understat_slug: str, season_year: int) -> dict[str
                 "form": [str(h.get("result") or "").upper() for h in hist[-5:] if str(h.get("result") or "").upper() in ("W", "D", "L")],
             }
         return out
-    except Exception:
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.standings", _em_exc)
         return {}
 
 
@@ -424,7 +428,9 @@ def fetch_fpl_premier_league_standings(
     try:
         boot = json.loads(_http_get("https://fantasy.premierleague.com/api/bootstrap-static/", timeout=9.0))
         fixtures = json.loads(_http_get("https://fantasy.premierleague.com/api/fixtures/", timeout=9.0))
-    except Exception:
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.standings", _em_exc)
         return None
     if not isinstance(boot, dict) or not isinstance(fixtures, list):
         return None
@@ -551,8 +557,9 @@ def fetch_live_standings(force_refresh: bool = False) -> list[dict[str, Any]]:
                 parsed = parse_football_data_standings(payload, spec, understat_map=umap)
                 if parsed:
                     return parsed
-            except Exception:
-                pass
+            except Exception as _em_exc:
+                from src.xgpedia.core.error_metrics import record_error as _rec_err
+                _rec_err("provider.standings", _em_exc)
         if spec.get("espn_slug") == "eng.1":
             fpl_tbl = fetch_fpl_premier_league_standings(spec, understat_map=umap)
             if fpl_tbl:
@@ -563,8 +570,9 @@ def fetch_live_standings(force_refresh: bool = False) -> list[dict[str, Any]]:
             parsed = parse_espn_standings(payload, spec, understat_map=umap)
             if parsed:
                 return parsed
-        except Exception:
-            pass
+        except Exception as _em_exc:
+            from src.xgpedia.core.error_metrics import record_error as _rec_err
+            _rec_err("provider.standings", _em_exc)
         # Fallbackهای رایگان تاییدشده از Open Football Hub (v0.36.0 — بدون نیاز به کلید)
         try:
             from src.xgpedia.providers.open_football_hub import (
@@ -579,8 +587,9 @@ def fetch_live_standings(force_refresh: bool = False) -> list[dict[str, Any]]:
                 wc = fetch_wc26_standings(league_slug=spec["espn_slug"], season=season_yr)
                 if wc:
                     return wc
-        except Exception:
-            pass
+        except Exception as _em_exc:
+            from src.xgpedia.core.error_metrics import record_error as _rec_err
+            _rec_err("provider.standings", _em_exc)
         return None
 
     results: list[dict[str, Any]] = []

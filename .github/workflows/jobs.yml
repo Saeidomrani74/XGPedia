@@ -6,6 +6,13 @@ on:
     - cron: "0 20 * * *"   # pre_match window — ۶ تا ۱۲ ساعت قبل از کیک‌آف‌های شبانه
   workflow_dispatch: {}    # اجرای دستی از UI
 
+permissions:
+  contents: read
+
+concurrency:
+  group: xgpedia-jobs-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   run:
     runs-on: ubuntu-latest
@@ -15,7 +22,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install -e ".[render,dev]" && python -m playwright install --with-deps chromium
+      - run: pip install -e ".[render,publish,scrape,dev]" && python -m playwright install --with-deps chromium
+      - name: Static syntax & undefined-name gate (Ruff)
+        run: ruff check src/ run.py --select E9,F63,F7,F82,F811
       - run: python run.py init
         env:
           DATABASE_PATH: data/dev.sqlite
@@ -24,8 +33,6 @@ jobs:
         env:
           DATABASE_PATH: data/dev.sqlite
       # بازی‌های پیش‌رو — فقط وقتی secret تنظیم شده باشد.
-      # تعمیر بدهی ۶/۴ HANDOFF: فلگ واقعی --days است (نه --date) و توکن سرویس
-      # football-data.org است (نه API_FOOTBALL_KEY که مربوط به provider حذف‌شده است).
       - name: Sync upcoming fixtures (when token is configured)
         run: |
           if [ -n "$FOOTBALL_DATA_ORG_TOKEN" ]; then
@@ -40,7 +47,7 @@ jobs:
       - run: python run.py status
         env:
           DATABASE_PATH: data/dev.sqlite
-      # مجموعهٔ تست — بدون توکن/کلید (تست‌های publish با importorskip رد می‌شوند)
+      # مجموعهٔ تست کامل در محیط تمیز
       - run: python -m pytest tests/ -q
         env:
           DATABASE_PATH: data/dev.sqlite

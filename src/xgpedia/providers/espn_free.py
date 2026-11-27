@@ -100,8 +100,9 @@ def parse_espn_upcoming(payload: dict[str, Any], *, competition_name: str = "Pre
                 register_team_logo(h_name, str(h_tm_u["logo"]))
             if a_name and a_tm_u.get("logo"):
                 register_team_logo(a_name, str(a_tm_u["logo"]))
-        except Exception:
-            pass
+        except Exception as _em_exc:
+            from src.xgpedia.core.error_metrics import record_error as _rec_err
+            _rec_err("provider.espn", _em_exc)
 
         # ۰) بازی‌های شروع‌نشده برای همگام‌سازی خودکار همهٔ ۶ لیگ حتی در صورت محدودیت FDO
         st_obj = comp.get("status") if isinstance(comp.get("status"), dict) else {}
@@ -295,8 +296,9 @@ def parse_espn_finished_summary(
                 _lurl = str((_to["logos"][0] or {}).get("href") or "").strip()
             if _tn and _lurl:
                 register_team_logo(_tn, _lurl)
-    except Exception:
-        pass
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.espn", _em_exc)
     h_id = str(h_tm.get("id") or "")
     a_id = str(a_tm.get("id") or "")
     if not (h_name and a_name):
@@ -661,14 +663,17 @@ class ESPNFreeProvider:
                     up_local = parse_espn_upcoming(
                         r_up.json(), competition_name=spec.name_en, league_slug=spec.espn_slug
                     )
-            except Exception:
-                pass
+            except Exception as _em_exc:
+                from src.xgpedia.core.error_metrics import record_error as _rec_err
+                _rec_err("provider.espn", _em_exc)
             for ymd in dates_to_check[:6]:
                 try:
                     r_h = self._client.get(sb_url, params={"dates": ymd})
                     if r_h.status_code == 200:
                         merged_events.extend(r_h.json().get("events") or [])
-                except Exception:
+                except Exception as _em_exc:
+                    from src.xgpedia.core.error_metrics import record_error as _rec_err
+                    _rec_err("provider.espn", _em_exc)
                     continue
             wmap = parse_espn_timing_wave({"events": merged_events})
             if len(up_local["key_players"]) < 10 and merged_events:
@@ -690,7 +695,9 @@ class ESPNFreeProvider:
                         all_kp.setdefault(t, kp)
                     for t, wv in (w_l or {}).items():
                         all_waves.setdefault(t, wv)
-                except Exception:
+                except Exception as _em_exc:
+                    from src.xgpedia.core.error_metrics import record_error as _rec_err
+                    _rec_err("provider.espn", _em_exc)
                     continue
 
         return {
@@ -725,7 +732,9 @@ class ESPNFreeProvider:
                     if r.status_code != 200:
                         continue
                     payload = r.json()
-                except Exception:
+                except Exception as _em_exc:
+                    from src.xgpedia.core.error_metrics import record_error as _rec_err
+                    _rec_err("provider.espn", _em_exc)
                     continue
                 for ev in (payload.get("events") or []):
                     if not isinstance(ev, dict):
@@ -751,8 +760,9 @@ class ESPNFreeProvider:
                             continue
                         if elapsed_from_end > hours * 3600.0:
                             continue
-                    except Exception:
-                        pass
+                    except Exception as _em_exc:
+                        from src.xgpedia.core.error_metrics import record_error as _rec_err
+                        _rec_err("provider.espn", _em_exc)
                     seen_local.add(eid)
                     try:
                         rs = self._client.get(sum_url, params={"event": eid})
@@ -765,7 +775,9 @@ class ESPNFreeProvider:
                             )
                             if parsed:
                                 out_local.append(parsed)
-                    except Exception:
+                    except Exception as _em_exc:
+                        from src.xgpedia.core.error_metrics import record_error as _rec_err
+                        _rec_err("provider.espn", _em_exc)
                         continue
             return out_local
 
@@ -782,7 +794,9 @@ class ESPNFreeProvider:
                         if eid:
                             seen_ids.add(eid)
                         results.append(item)
-                except Exception:
+                except Exception as _em_exc:
+                    from src.xgpedia.core.error_metrics import record_error as _rec_err
+                    _rec_err("provider.espn", _em_exc)
                     continue
         return results
 
@@ -859,7 +873,9 @@ class ESPNFreeProvider:
                     return parse_espn_scoreboard_finished(
                         r.json(), competition_name=competition_name, league_slug=league_slug
                     )
-            except Exception:
+            except Exception as _em_exc:
+                from src.xgpedia.core.error_metrics import record_error as _rec_err
+                _rec_err("provider.espn", _em_exc)
                 return []
 
         results: list[dict[str, Any]] = []

@@ -54,8 +54,9 @@ def _team_fa(code: str, fallback: str) -> str:
         info = lookup_pl_club(fallback, tla_hint=code)
         if info and info[0]:
             return str(info[0])
-    except Exception:
-        pass
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err("provider.lineup_injuries", _em_exc)
     return fallback
 
 

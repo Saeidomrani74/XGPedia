@@ -419,68 +419,10 @@ _NON_SURNAME_SUFFIXES: set[str] = {
 
 
 def translate_player_fa(name: str | None) -> str:
-    """تبدیل دقیق نام بازیکن/گلزن/دروازه‌بان به فارسی روان بدون تداخل هویت بین بازیکنان همنام."""
-    s = str(name or "").strip()
-    if not s:
-        return ""
-    if any("\u0600" <= ch <= "\u06FF" for ch in s):
-        return s
+    """تبدیل دقیق نام بازیکن/گلزن/دروازه‌بان به فارسی روان از طریق سرویس واحد هویت نام‌ها (v0.77.0)."""
+    from src.xgpedia.core.identity_service import resolve_player_name_fa
 
-    fold_full = _ascii_fold(s)
-    # ۱) تطبیق دقیق نام کامل (اولویت اول — بدون حذف هیچ بخشی از نام)
-    if fold_full in _PLAYER_NAMES_FA:
-        return _PLAYER_NAMES_FA[fold_full]
-
-    try:
-        glossary_players = load_glossary().get("players", [])
-    except Exception:
-        glossary_players = []
-
-    for p in glossary_players:
-        en = _ascii_fold(str(p.get("name_en") or ""))
-        fa_n = str(p.get("name_fa") or "").strip()
-        if fa_n and en and en == fold_full:
-            return fa_n
-
-    # تشخیص فرم مخفف حرف اول (مثل "J. Oblak" یا "L. Júnior")
-    m_init = re.match(r"^([A-Za-zÀ-ÿ])\.\s*(.+)$", s)
-    first_initial = _ascii_fold(m_init.group(1)) if m_init else ""
-    s_clean = m_init.group(2).strip() if m_init else s
-    fold_clean = _ascii_fold(s_clean)
-
-    # ۲) فقط اگر ورودی حرف اول مخفف داشت (J. Oblak)، تطبیق روی بخش دوم (به‌شرطی که پسوند عمومی مثل junior نباشد)
-    if m_init and fold_clean not in _NON_SURNAME_SUFFIXES:
-        if fold_clean in _PLAYER_NAMES_FA:
-            return _PLAYER_NAMES_FA[fold_clean]
-        # تطبیق یکتا در glossary فقط با شرط یکسان‌بودن حرف اول و نام‌خانوادگی دقیق
-        matches_init: list[str] = []
-        for p in glossary_players:
-            en = _ascii_fold(str(p.get("name_en") or ""))
-            fa_n = str(p.get("name_fa") or "").strip()
-            ep = en.split()
-            if fa_n and len(ep) >= 2 and ep[0].startswith(first_initial) and ep[-1] == fold_clean:
-                matches_init.append(fa_n)
-        if len(matches_init) == 1:
-            return matches_init[0]
-
-    # ۳) تطبیق نام‌خانوادگی در دیکشنری داخلی (فقط نام‌خانوادگی تک‌کلمه‌ای، هرگز پسوند عمومی مانند junior)
-    parts = fold_clean.split()
-    if len(parts) > 1 and parts[-1] not in _NON_SURNAME_SUFFIXES and parts[-1] in _PLAYER_NAMES_FA:
-        cand_fa = _PLAYER_NAMES_FA[parts[-1]]
-        # تنها زمانی نام‌خانوادگی کوتاه جایگزین می‌شود که خودش نام کامل بازیکن دیگری نباشد
-        if " " not in cand_fa.strip():
-            return cand_fa
-
-    # ۴) آوانویسی مستقیم فارسی (برای نام‌های دارای پسوند مثل Luiz Júnior هر دو بخش حفظ می‌شود)
-    raw_words = s_clean.split()
-    if len(raw_words) >= 2 and _ascii_fold(raw_words[-1]) in _NON_SURNAME_SUFFIXES:
-        target = " ".join(raw_words[-2:])
-    elif len(raw_words) >= 2 and len(s_clean) > 12:
-        target = raw_words[-1]
-    else:
-        target = s_clean
-    return _transliterate_latin_to_fa(target)
-
+    return resolve_player_name_fa(name)
 
 def format_scorers_fa(raw_scorers: str | None) -> str:
     """تبدیل رشتهٔ گلزنان (مثلاً `Wirtz 12′, Salah 64′`) به فارسی روان (`ویرتز ۱۲′، صلاح ۶۴′`)."""

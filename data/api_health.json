@@ -72,12 +72,12 @@
     "last_err": "HTTPStatusError: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check:"
   },
   "llm:OpenRouter (nvidia/nemotron-3-ultra-550b-a55b:free)": {
-    "ok": 8,
+    "ok": 9,
     "fail": 0,
     "streak_fail": 0,
-    "avg_ms": 47202.2,
+    "avg_ms": 46220.4,
     "cooldown_until": 0.0,
-    "last_ok": 1795753557.1,
+    "last_ok": 1795761966.6,
     "last_err": ""
   },
   "llm:OpenRouter (openrouter/free)": {

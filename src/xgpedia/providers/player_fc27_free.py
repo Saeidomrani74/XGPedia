@@ -200,8 +200,10 @@ def parse_fpl_fc27_players(bootstrap: dict[str, Any], *, limit: int = 24) -> lis
         cs_rate = float(el.get("clean_sheets") or 0) / apps
 
         peers = peers_by_pos.get(pos_id) or candidates
-        p_xg = _percentile(xg90, [float(p.get("expected_goals_per_90") or 0) for p in peers])
-        p_xa = _percentile(xa90, [float(p.get("expected_assists_per_90") or 0) for p in peers])
+        _peer_xg = [float(p["expected_goals_per_90"]) for p in peers if p.get("expected_goals_per_90") not in (None, "")]
+        _peer_xa = [float(p["expected_assists_per_90"]) for p in peers if p.get("expected_assists_per_90") not in (None, "")]
+        p_xg = _percentile(xg90, _peer_xg or [xg90])
+        p_xa = _percentile(xa90, _peer_xa or [xa90])
         p_crea = _percentile(crea90, [float(p.get("creativity") or 0) * 90.0 / max(1.0, float(p.get("minutes") or 1)) for p in peers])
         p_threat = _percentile(threat90, [float(p.get("threat") or 0) * 90.0 / max(1.0, float(p.get("minutes") or 1)) for p in peers])
         p_infl = _percentile(infl90, [float(p.get("influence") or 0) * 90.0 / max(1.0, float(p.get("minutes") or 1)) for p in peers])
@@ -324,7 +326,12 @@ def hydrate_player_fc27_item(item: dict[str, Any]) -> dict[str, Any]:
     pid = item.get("fpl_id")
     if pid:
         try:
-            summ = _http_get_json(FPL_ELEMENT_SUMMARY_URL.format(pid=pid), timeout=6.5)
+            from src.xgpedia.core.hydration_cache import get_or_fetch as _hc_get_or_fetch
+            summ = _hc_get_or_fetch(
+                f"fpl_element_summary:{pid}",
+                "fpl_element_summary",
+                lambda: _http_get_json(FPL_ELEMENT_SUMMARY_URL.format(pid=pid), timeout=6.5),
+            )
             hist = [h for h in (summ.get("history") or []) if isinstance(h, dict) and int(h.get("minutes") or 0) > 0]
             last5 = hist[-5:]
             teams_map = _LIVE_CACHE.get("teams_by_id") or {}
