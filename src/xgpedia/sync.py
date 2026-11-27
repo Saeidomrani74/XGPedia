@@ -102,13 +102,13 @@ def sync_csv_results(rows, payload_hash: str, season_start: int = CURRENT_SEASON
                 inserted_fx += 1
 
             # آمار: هر سوی هر متریک فقط با مقدار موجود (None → درج نمی‌شود)
-            def upsert_stat(team: str, metric: str, value: float | None) -> None:
+            def upsert_stat(team: str, metric: str, value: float | None, _fid: str = fid) -> None:
                 nonlocal inserted_stats
                 if value is None:
                     return  # قاعدهٔ null≠0
                 stat_existed = conn.execute(
                     "SELECT 1 FROM fixture_statistics WHERE fixture_id=? AND team=? AND metric=? AND provider=?",
-                    (fid, team, metric, PRIMARY_STATS_PROVIDER),
+                    (_fid, team, metric, PRIMARY_STATS_PROVIDER),
                 ).fetchone()
                 conn.execute(
                     """
@@ -118,7 +118,7 @@ def sync_csv_results(rows, payload_hash: str, season_start: int = CURRENT_SEASON
                       team_code=COALESCE(excluded.team_code, fixture_statistics.team_code),
                       value=excluded.value, collected_at=excluded.collected_at
                     """,
-                    (fid, team, _safe_team_code(team), metric, value, PRIMARY_STATS_PROVIDER, now),
+                    (_fid, team, _safe_team_code(team), metric, value, PRIMARY_STATS_PROVIDER, now),
                 )
                 if not stat_existed:
                     inserted_stats += 1

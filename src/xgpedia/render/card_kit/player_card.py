@@ -371,16 +371,16 @@ def render_player_html(
             cx, cy, R = 420.0, 195.0, 112.0
             dx = R * 0.866 + 24.0
 
-            def _pts(vs: list[float]) -> list[tuple[float, float]]:
+            def _pts(vs: list[float], _cx: float = cx, _cy: float = cy, _r: float = R) -> list[tuple[float, float]]:
                 out = []
                 for idx_r, v in enumerate(vs[:6]):
                     ang = (idx_r * 60 - 90) * math.pi / 180.0
-                    rad = max(15.0, min(100.0, v)) / 100.0 * R
-                    out.append((cx + rad * math.cos(ang), cy + rad * math.sin(ang)))
+                    rad = max(15.0, min(100.0, v)) / 100.0 * _r
+                    out.append((_cx + rad * math.cos(ang), _cy + rad * math.sin(ang)))
                 return out
 
-            def _ring(k: float) -> str:
-                return " ".join(f"{f1(cx + R * k * math.cos((i * 60 - 90) * math.pi / 180.0))},{f1(cy + R * k * math.sin((i * 60 - 90) * math.pi / 180.0))}" for i in range(6))
+            def _ring(k: float, _cx: float = cx, _cy: float = cy, _r: float = R) -> str:
+                return " ".join(f"{f1(_cx + _r * k * math.cos((i * 60 - 90) * math.pi / 180.0))},{f1(_cy + _r * k * math.sin((i * 60 - 90) * math.pi / 180.0))}" for i in range(6))
 
             pc, ac_pts = _pts(p_v), _pts(a_v)
             p_poly = " ".join(f"{f1(x)},{f1(y)}" for x, y in pc)

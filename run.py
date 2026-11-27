@@ -582,9 +582,9 @@ def cmd_today(args: argparse.Namespace) -> None:
             from src.xgpedia.publishers import telegram_publish as tp
             from src.xgpedia.publishers.telegram_bot import make_transport
 
-            async def _pub_now():
+            async def _pub_now(_post_id: int = res.post_id):
                 async with Bot(TELEGRAM_BOT_TOKEN) as bot:
-                    return await tp.approve_and_publish(res.post_id, min(ADMIN_TELEGRAM_IDS), make_transport(bot))
+                    return await tp.approve_and_publish(_post_id, min(ADMIN_TELEGRAM_IDS), make_transport(bot))
 
             try:
                 out = asyncio.run(_pub_now())

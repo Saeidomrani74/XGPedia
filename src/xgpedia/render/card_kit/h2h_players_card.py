@@ -432,7 +432,7 @@ def _mod_vitals(p1: dict[str, Any], p2: dict[str, Any], cls: str) -> str:
         win_col = c1 if win1 else (c2 if win2 else "#94A3B8")
         aura = f"linear-gradient(270deg,{c1}1f,transparent 48%)" if win1 else (f"linear-gradient(90deg,{c2}1f,transparent 48%)" if win2 else "none")
         arrow = "▸" if win1 else ("◂" if win2 else "=")
-        fmt_s = lambda val: _fa(f"{val:.{d}f}")
+        fmt_s = lambda val, _d=d: _fa(f"{val:.{_d}f}")
         rows.append(
             f'<div class="vcap" style="background-image:{aura}">'
             f'<div style="display:grid;grid-template-columns:repeat(12,1fr);align-items:center;gap:6px;margin-bottom:4px">'
