@@ -10,10 +10,21 @@
 """
 from __future__ import annotations
 
+from pathlib import Path
 import sqlite3
 from contextlib import contextmanager
 
 from src.xgpedia.config import DATABASE_PATH
+
+_BOT_KV_STATE_DDL = """
+CREATE TABLE IF NOT EXISTS bot_kv_state (
+  namespace TEXT NOT NULL,
+  state_key TEXT NOT NULL,
+  value_json TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  PRIMARY KEY (namespace, state_key)
+);
+"""
 
 SCHEMA = """
 PRAGMA journal_mode=WAL;
@@ -26,6 +37,8 @@ CREATE TABLE IF NOT EXISTS fixtures (
   kickoff_utc TEXT NOT NULL,
   home_team TEXT NOT NULL,
   away_team TEXT NOT NULL,
+  home_team_code TEXT,
+  away_team_code TEXT,
   status TEXT NOT NULL DEFAULT 'scheduled',
   matchday INTEGER,
   raw_payload_hash TEXT,
@@ -35,6 +48,7 @@ CREATE TABLE IF NOT EXISTS fixtures (
 CREATE TABLE IF NOT EXISTS fixture_statistics (
   fixture_id TEXT NOT NULL,
   team TEXT NOT NULL,
+  team_code TEXT,
   metric TEXT NOT NULL,                  -- total_shots, expected_goals, ...
   value REAL,                            -- NULL = داده در دسترس نیست (هرگز 0 جایگزین نشود)
   n INTEGER,
@@ -97,6 +111,8 @@ CREATE TABLE IF NOT EXISTS scheduled_publishes (
 CREATE TABLE IF NOT EXISTS fixture_odds (
   home_team TEXT NOT NULL,
   away_team TEXT NOT NULL,
+  home_team_code TEXT,
+  away_team_code TEXT,
   match_date TEXT NOT NULL,              -- YYYY-MM-DD
   home_odds REAL,
   draw_odds REAL,
@@ -110,6 +126,7 @@ CREATE TABLE IF NOT EXISTS fixture_odds (
 
 CREATE TABLE IF NOT EXISTS team_enrichments (
   team TEXT NOT NULL,
+  team_code TEXT,
   season TEXT NOT NULL,
   key_player_json TEXT,                  -- {"name", "pos", "s1", "s2"}
   ppda REAL,
@@ -145,6 +162,7 @@ CREATE TABLE IF NOT EXISTS fixture_post_match (
 
 CREATE TABLE IF NOT EXISTS team_metadata (
   team TEXT NOT NULL,
+  team_code TEXT,
   season TEXT NOT NULL,
   venue_en TEXT,
   coach_en TEXT,
@@ -179,18 +197,12 @@ CREATE TABLE IF NOT EXISTS post_metrics (
 
 CREATE INDEX IF NOT EXISTS idx_post_metrics_card_time ON post_metrics(card_type, recorded_at);
 
-CREATE TABLE IF NOT EXISTS bot_kv_state (
-  namespace TEXT NOT NULL,
-  state_key TEXT NOT NULL,
-  value_json TEXT NOT NULL,
-  updated_at TEXT NOT NULL,
-  PRIMARY KEY (namespace, state_key)
-);
+
 
 CREATE INDEX IF NOT EXISTS idx_posts_status ON posts(status);
 CREATE INDEX IF NOT EXISTS idx_fixtures_kickoff ON fixtures(kickoff_utc);
 CREATE INDEX IF NOT EXISTS idx_scheduled_status_time ON scheduled_publishes(status, scheduled_at_utc);
-"""
+""" + _BOT_KV_STATE_DDL
 
 
 SCHEMA_VERSION = 5
@@ -221,146 +233,49 @@ def init_db() -> None:
         _migrate(conn)
 
 
+def backup_database(db_path: Path | None = None, *, reason: str = "manual") -> Path | None:
+    """پشتیبان‌گیری امن (WAL-safe) از فایل SQLite پیش از مهاجرت یا به‌صورت دستی (v0.80.0)."""
+    src_path = Path(db_path) if db_path is not None else DATABASE_PATH
+    if not src_path.exists() or src_path.stat().st_size == 0:
+        return None
+    from datetime import datetime, timezone
+
+    backup_dir = src_path.parent / "backups"
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    safe_reason = "".join(c if (c.isalnum() or c in "-_") else "_" for c in reason)[:32] or "backup"
+    dst_path = backup_dir / f"{src_path.stem}_{safe_reason}_{ts}.sqlite"
+    src_conn = sqlite3.connect(str(src_path), timeout=30.0)
+    dst_conn = sqlite3.connect(str(dst_path), timeout=30.0)
+    try:
+        src_conn.backup(dst_conn)
+    finally:
+        dst_conn.close()
+        src_conn.close()
+    return dst_path
+
+
 def _migrate(conn: sqlite3.Connection) -> None:
-    """مهاجرت سبک و idempotent برای DBهای نسخه‌های قبل."""
+    """مهاجرت سبک و idempotent برای DBهای نسخه‌های قبل (با مرجع یگانهٔ SCHEMA و بکاپ خودکار)."""
+    cur_ver = get_schema_version(conn)
+    if 0 < cur_ver < SCHEMA_VERSION and DATABASE_PATH.exists():
+        try:
+            backup_database(DATABASE_PATH, reason=f"pre_v{SCHEMA_VERSION}_from_v{cur_ver}")
+        except Exception:
+            pass
+    # تضمین وجود تمام جدول‌ها و ایندکس‌ها از روی تعریف یگانهٔ SCHEMA
+    conn.executescript(SCHEMA)
+
     fx_cols = {r["name"] for r in conn.execute("PRAGMA table_info(fixtures)")}
     if "matchday" not in fx_cols:
         conn.execute("ALTER TABLE fixtures ADD COLUMN matchday INTEGER")
     cols = {r["name"] for r in conn.execute("PRAGMA table_info(posts)")}
     if "draft_json" not in cols:
         conn.execute("ALTER TABLE posts ADD COLUMN draft_json TEXT")
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS scheduled_publishes (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          post_id INTEGER NOT NULL REFERENCES posts(post_id),
-          scheduled_at_utc TEXT NOT NULL,
-          scheduled_time_tehran TEXT NOT NULL,
-          scheduled_by_admin INTEGER NOT NULL,
-          status TEXT NOT NULL DEFAULT 'pending',
-          error_detail TEXT,
-          created_at TEXT NOT NULL,
-          executed_at TEXT
-        )
-        """
-    )
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS fixture_odds (
-          home_team TEXT NOT NULL,
-          away_team TEXT NOT NULL,
-          match_date TEXT NOT NULL,
-          home_odds REAL,
-          draw_odds REAL,
-          away_odds REAL,
-          over25_odds REAL,
-          btts_odds REAL,
-          provider TEXT NOT NULL,
-          collected_at TEXT NOT NULL,
-          PRIMARY KEY (home_team, away_team, match_date, provider)
-        )
-        """
-    )
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS team_enrichments (
-          team TEXT NOT NULL,
-          season TEXT NOT NULL,
-          key_player_json TEXT,
-          ppda REAL,
-          deep_passes REAL,
-          wave_json TEXT,
-          provider TEXT NOT NULL,
-          collected_at TEXT NOT NULL,
-          PRIMARY KEY (team, season, provider)
-        )
-        """
-    )
-    conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_scheduled_status_time "
-        "ON scheduled_publishes(status, scheduled_at_utc)"
-    )
-
-
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS fixture_broadcasts (
-          fixture_id TEXT PRIMARY KEY,
-          channel_label TEXT NOT NULL,
-          program_title TEXT,
-          broadcast_time TEXT,
-          tehran_date TEXT NOT NULL,
-          collected_at TEXT NOT NULL
-        )
-        """
-    )
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS sync_cache (
-          source_key TEXT PRIMARY KEY,
-          tehran_date TEXT NOT NULL,
-          last_synced_at TEXT NOT NULL,
-          summary TEXT
-        )
-        """
-    )
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS team_metadata (
-          team TEXT NOT NULL,
-          season TEXT NOT NULL,
-          venue_en TEXT,
-          coach_en TEXT,
-          provider TEXT NOT NULL,
-          collected_at TEXT NOT NULL,
-          PRIMARY KEY (team, season, provider)
-        )
-        """
-    )
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS fixture_post_match (
-          fixture_id TEXT PRIMARY KEY,
-          details_json TEXT NOT NULL,
-          provider TEXT NOT NULL,
-          collected_at TEXT NOT NULL
-        )
-        """
-    )
     enr_cols = {r["name"] for r in conn.execute("PRAGMA table_info(team_enrichments)")}
     if "wave_json" not in enr_cols:
         conn.execute("ALTER TABLE team_enrichments ADD COLUMN wave_json TEXT")
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS bot_kv_state (
-          namespace TEXT NOT NULL,
-          state_key TEXT NOT NULL,
-          value_json TEXT NOT NULL,
-          updated_at TEXT NOT NULL,
-          PRIMARY KEY (namespace, state_key)
-        )
-        """
-    )
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS post_metrics (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          post_id INTEGER,
-          card_type TEXT NOT NULL,
-          tone TEXT,
-          admin_decision TEXT NOT NULL,
-          edit_count INTEGER NOT NULL DEFAULT 0,
-          llm_provider TEXT,
-          render_ms INTEGER,
-          notes TEXT,
-          recorded_at TEXT NOT NULL
-        )
-        """
-    )
-    conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_post_metrics_card_time "
-        "ON post_metrics(card_type, recorded_at)"
-    )
+
     # مهاجرت غیرمخرب v0.76.0: افزودن ستون‌های کد استاندارد سه‌حرفی تیم (team_code) بدون حذف هیچ ردیف قدیمی
     _tc_alters = (
         ("fixtures", "home_team_code"),
@@ -375,25 +290,13 @@ def _migrate(conn: sqlite3.Connection) -> None:
         _tcols = {r["name"] for r in conn.execute(f"PRAGMA table_info({_tbl})")}
         if _tcols and _col not in _tcols:
             conn.execute(f"ALTER TABLE {_tbl} ADD COLUMN {_col} TEXT")
+
     conn.execute("CREATE INDEX IF NOT EXISTS idx_fixtures_team_codes ON fixtures(home_team_code, away_team_code)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_fstats_team_code ON fixture_statistics(team_code)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_enr_team_code ON team_enrichments(team_code)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_meta_team_code ON team_metadata(team_code)")
     if get_schema_version(conn) < 4:
         backfill_team_codes(conn)
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS api_hydration_cache (
-          cache_key TEXT PRIMARY KEY,
-          namespace TEXT NOT NULL,
-          payload_json TEXT NOT NULL,
-          fetched_at REAL NOT NULL,
-          ttl_sec INTEGER NOT NULL,
-          expires_at REAL NOT NULL
-        )
-        """
-    )
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_hydration_ns_exp ON api_hydration_cache(namespace, expires_at)")
     if get_schema_version(conn) < SCHEMA_VERSION:
         conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
 
@@ -445,17 +348,7 @@ class PersistentStateDict:
             now = datetime.now(timezone.utc).isoformat()
             DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
             with db() as conn:
-                conn.execute(
-                    """
-                    CREATE TABLE IF NOT EXISTS bot_kv_state (
-                      namespace TEXT NOT NULL,
-                      state_key TEXT NOT NULL,
-                      value_json TEXT NOT NULL,
-                      updated_at TEXT NOT NULL,
-                      PRIMARY KEY (namespace, state_key)
-                    )
-                    """
-                )
+                conn.execute(_BOT_KV_STATE_DDL)
                 conn.execute(
                     "INSERT OR REPLACE INTO bot_kv_state (namespace, state_key, value_json, updated_at) VALUES (?, ?, ?, ?)",
                     (self._ns, str(key), payload, now),

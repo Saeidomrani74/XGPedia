@@ -17,6 +17,7 @@ from typing import Any
 
 from src.xgpedia.config import ROOT as PROJECT_ROOT
 from src.xgpedia.render.card_kit.helpers import (
+    with_sample_badge,
     contrast_ink,
     ensure_dark_bg_contrast,
     esc,
@@ -586,6 +587,7 @@ def _render_editorial(ev: dict[str, Any], enabled: set[str], is_banner: bool, is
     return f'{quote_stage}{story_dock}'
 
 
+@with_sample_badge
 def render_on_this_day_html(
     event: dict[str, Any],
     *,

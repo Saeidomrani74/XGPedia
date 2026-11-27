@@ -55,8 +55,9 @@ class AdminOnlyMiddleware(BaseMiddleware):
             if isinstance(event, CallbackQuery):
                 try:
                     await event.answer("شما مجاز نیستید.", show_alert=True)
-                except Exception:
-                    pass
+                except Exception as _em_exc:
+                    from src.xgpedia.core.error_metrics import record_error as _rec_err
+                    _rec_err('bot.telegram', _em_exc)
             return None
         return await handler(event, data)
 
@@ -792,8 +793,9 @@ async def _send_post_preview(
                 parse_mode="HTML",
                 reply_markup=retry_kb,
             )
-        except Exception:
-            pass
+        except Exception as _em_exc:
+            from src.xgpedia.core.error_metrics import record_error as _rec_err
+            _rec_err('bot.telegram', _em_exc)
 
 
 # ─── هندلرهای دستورها و پیام‌های متنی ───
@@ -1161,8 +1163,9 @@ async def _run_sync_with_heartbeat(status_msg: Message, mode_lbl: str, *, force:
                 await status_msg.edit_text(
                     f"⏳ همچنان در حال دریافت بازی‌های امروز ({mode_lbl})... ({sec} ثانیه گذشته)",
                 )
-            except Exception:
-                pass
+            except Exception as _em_exc:
+                from src.xgpedia.core.error_metrics import record_error as _rec_err
+                _rec_err('bot.telegram', _em_exc)
 
 
 async def _run_sync_flow(cb: CallbackQuery, *, force: bool) -> None:
@@ -1895,8 +1898,9 @@ async def on_decision(cb: CallbackQuery, bot: Bot) -> None:
         from src.xgpedia.db import record_post_metric
         _dec_map = {"approve": "approved", "reject": "rejected", "edit": "edited"}
         record_post_metric("match_post", _dec_map.get(action, action), post_id=post_id)
-    except Exception:
-        pass
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err('bot.telegram', _em_exc)
     log.info("moderation action=%s post=%s by=%s", action, post_id, cb.from_user.id)
 
 
@@ -2015,6 +2019,15 @@ async def on_api_health_reset(cb: CallbackQuery) -> None:
     await _safe_cb_answer(cb, f"حافظه سلامت پاک شد ({n} مورد).", show_alert=True)
 
 
+@router.message(Command("metrics"))
+async def cmd_post_metrics(m: Message) -> None:
+    from src.xgpedia.core.metrics_learner import format_metrics_report_fa
+    kb = InlineKeyboardMarkup(inline_keyboard=[[
+        InlineKeyboardButton(text="🏠 پنل اصلی", callback_data="nav:home"),
+    ]])
+    await m.answer(format_metrics_report_fa(), parse_mode="HTML", reply_markup=kb)
+
+
 @router.message(Command("platforms"))
 async def cmd_omnichannel_status(m: Message) -> None:
     from src.xgpedia.publishers.omnichannel import format_omnichannel_status_fa
@@ -2076,8 +2089,9 @@ async def main() -> None:
         for aid in sorted(ADMIN_TELEGRAM_IDS):
             try:
                 await asyncio.wait_for(bot.send_message(aid, msg_text), timeout=4.0)
-            except Exception:
-                pass
+            except Exception as _em_exc:
+                from src.xgpedia.core.error_metrics import record_error as _rec_err
+                _rec_err('bot.telegram', _em_exc)
 
     from src.xgpedia.core.background_warmer import background_warmer_loop
     sched_task = asyncio.create_task(_scheduler_loop(bot))
@@ -2093,12 +2107,14 @@ async def main() -> None:
         warmer_task.cancel()
         try:
             await _notify_admins("🔴 ربات XGPedia متوقف شد (آفلاین). برای فعال‌سازی مجدد، python run.py bot را اجرا کنید.")
-        except Exception:
-            pass
+        except Exception as _em_exc:
+            from src.xgpedia.core.error_metrics import record_error as _rec_err
+            _rec_err('bot.telegram', _em_exc)
         try:
             await bot.session.close()
-        except Exception:
-            pass
+        except Exception as _em_exc:
+            from src.xgpedia.core.error_metrics import record_error as _rec_err
+            _rec_err('bot.telegram', _em_exc)
 
 
 if __name__ == "__main__":

@@ -14,7 +14,7 @@ import math
 from typing import Any
 
 from src.xgpedia.providers.injury_free import transliterate_player_name_fa
-from src.xgpedia.render.card_kit.helpers import esc, f1, f2, fa, luminance
+from src.xgpedia.render.card_kit.helpers import with_sample_badge, esc, f1, f2, fa, luminance
 from src.xgpedia.render.cards import _brand_logo_data_uri
 from src.xgpedia.render.studio_engine import build_embedded_font_css
 
@@ -507,6 +507,7 @@ def _render_verdict(p: dict[str, Any]) -> str:
     )
 
 
+@with_sample_badge
 def render_player_fc27_html(
     data: dict[str, Any],
     *,

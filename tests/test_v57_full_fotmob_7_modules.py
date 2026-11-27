@@ -71,9 +71,9 @@ def _sample_fotmob_payload() -> dict:
                 },
             },
             "playerStats": {
-                "1": {"stats": [{"key": "saves", "stat": {"value": 3}}, {"key": "expected_goals_conceded", "stat": {"value": 1.15}}]},
+                "1": {"stats": [{"key": "saves", "stat": {"value": 3}}, {"key": "expected_goals_on_target_faced", "stat": {"value": 1.15}}]},
                 "2": {"stats": [{"key": "goals", "stat": {"value": 2}}, {"key": "chances_created", "stat": {"value": 2}}]},
-                "3": {"stats": [{"key": "saves", "stat": {"value": 3}}, {"key": "expected_goals_conceded", "stat": {"value": 1.94}}]},
+                "3": {"stats": [{"key": "saves", "stat": {"value": 3}}, {"key": "expected_goals_on_target_faced", "stat": {"value": 1.94}}]},
                 "4": {"stats": [{"key": "goals", "stat": {"value": 1}}]},
             },
         },

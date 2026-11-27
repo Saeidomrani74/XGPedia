@@ -1,6 +1,8 @@
 """ابزارهای مشترک معماری ماژولار کارت‌های XGPedia (`card_kit`)."""
 from __future__ import annotations
 
+import functools
+
 import html
 import math
 from typing import Any
@@ -236,3 +238,54 @@ def dixon_coles_5x5(lh: float, la: float) -> list[list[float]]:
             row.append(p)
         mat.append(row)
     return mat
+
+
+def is_sample_preset(item: dict[str, Any] | None) -> bool:
+    """تشخیص آیتم پریست/نمونه برای نمایش برچسب آشکار «نمونه / SAMPLE» روی کارت."""
+    if not isinstance(item, dict):
+        return False
+    if item.get("is_preset") is True or item.get("is_sample") is True:
+        return True
+    item_id = str(item.get("id") or "").strip().lower()
+    return item_id.startswith("preset_") or item_id.startswith("sample_")
+
+
+def sample_badge_html(item: dict[str, Any] | None) -> str:
+    """برچسب گرافیکی خوانا و غیرقابل‌اغماض برای کارت‌های پریست/نمونه."""
+    if not is_sample_preset(item):
+        return ""
+    return (
+        '<span class="xg-sample-pill" '
+        'style="display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;'
+        'font-size:16px;font-weight:900;background:rgba(245,158,11,.22);'
+        'border:1.5px solid rgba(251,191,36,.75);color:#FDE68A;letter-spacing:.03em">'
+        'نمونه • SAMPLE</span>'
+    )
+
+
+def inject_sample_badge_html(html: str, item: dict[str, Any] | None) -> str:
+    """درج برچسب آشکار «نمونه استودیو • SAMPLE» در HTML هر کارت هنگام رندر آیتم پریست/نمونه."""
+    if not html or not is_sample_preset(item) or "xg-sample-pill" in html:
+        return html
+    pill = (
+        '<div class="xg-sample-pill" dir="rtl" '
+        'style="position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:9999;'
+        'display:inline-flex;align-items:center;gap:6px;padding:5px 16px;border-radius:999px;'
+        "font-family:'Vazirmatn',system-ui,sans-serif;font-size:15px;font-weight:900;"
+        'background:rgba(15,23,42,.92);border:1.5px solid rgba(251,191,36,.85);color:#FDE68A;'
+        'box-shadow:0 8px 24px rgba(0,0,0,.45);letter-spacing:.03em;pointer-events:none">'
+        'نمونه استودیو • SAMPLE</div>'
+    )
+    if "</body>" in html:
+        return html.replace("</body>", f"{pill}\n</body>", 1)
+    return html + pill
+
+
+def with_sample_badge(fn):
+    """دکوراتور یکپارچه برای تزریق خودکار نشان «نمونه • SAMPLE» روی خروجی تمام کارت‌های استودیو."""
+    @functools.wraps(fn)
+    def _wrapped(*args, **kwargs):
+        html = fn(*args, **kwargs)
+        item = args[0] if args else next(iter(kwargs.values()), None)
+        return inject_sample_badge_html(html, item if isinstance(item, dict) else None)
+    return _wrapped

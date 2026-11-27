@@ -12,6 +12,7 @@ from __future__ import annotations
 from typing import Any
 
 from src.xgpedia.render.card_kit.helpers import (
+    with_sample_badge,
     _hex_to_rgb,
     ensure_dark_bg_contrast,
     esc,
@@ -286,6 +287,7 @@ def _scatter_svg(players: list[dict[str, Any]], avg_p: float, avg_x: float, w_sv
     )
 
 
+@with_sample_badge
 def render_value_radar_html(
     item: dict[str, Any],
     *,

@@ -333,8 +333,9 @@ def _save_sync_cache(source_key: str, tehran_date: str, now: datetime, summary: 
                 """,
                 (source_key, tehran_date, now.strftime("%Y-%m-%dT%H:%M:%SZ"), summary),
             )
-    except Exception:
-        pass
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err('workflow.today', _em_exc)
 
 
 def sync_today_matches(
@@ -420,8 +421,9 @@ def sync_today_matches(
                         wmap = compute_wave_from_csv(saved_csv_path.read_text(encoding="utf-8", errors="ignore"))
                         ws = sync_csv_waves(wmap, season_start=CURRENT_SEASON_START)
                         wave_cnt += ws.get("waves", 0)
-                    except Exception:
-                        pass
+                    except Exception as _em_exc:
+                        from src.xgpedia.core.error_metrics import record_error as _rec_err
+                        _rec_err('workflow.today', _em_exc)
 
             uefa_saved = 0
             for u_rows in uefa_results:
@@ -495,8 +497,9 @@ def sync_today_matches(
                             c_res = sync_live_coaches_for_teams(upcoming_teams, season_start=CURRENT_SEASON_START)
                             if c_res.get("coaches_updated", 0) > 0:
                                 _save_sync_cache("coaches", tehran_date, now, f"{c_res['coaches_updated']} مربی")
-                    except Exception:
-                        pass
+                    except Exception as _em_exc:
+                        from src.xgpedia.core.error_metrics import record_error as _rec_err
+                        _rec_err('workflow.today', _em_exc)
                 return f"{total_in} بازی پیش‌رو در {leagues_ok} لیگ دریافت شد (جدید: {total_new})"
             finally:
                 api.close()
@@ -547,8 +550,9 @@ def sync_today_matches(
                 total_saved += s["odds_saved"]
                 if s["odds_saved"]:
                     sources_used.append(f"CSV:{s['odds_saved']}")
-            except Exception:
-                pass
+            except Exception as _em_exc:
+                from src.xgpedia.core.error_metrics import record_error as _rec_err
+                _rec_err('workflow.today', _em_exc)
             try:
                 oapi = TheOddsAPIProvider()
                 try:
@@ -559,8 +563,9 @@ def sync_today_matches(
                     s2 = sync_upcoming_odds(orows, provider="the-odds-api")
                     total_saved += s2["odds_saved"]
                     sources_used.append(f"OddsAPI:{s2['odds_saved']}")
-            except Exception:
-                pass
+            except Exception as _em_exc:
+                from src.xgpedia.core.error_metrics import record_error as _rec_err
+                _rec_err('workflow.today', _em_exc)
             src_note = f" ({'، '.join(sources_used)})" if sources_used else ""
             return f"{total_saved} بازی دارای ضریب بازار (+EV){src_note}"
 
@@ -744,16 +749,18 @@ def get_match_card_options(
                 if _pmr and _pmr["details_json"]:
                     _det_j = json.loads(_pmr["details_json"])
                     _enriched_v = int(_det_j.get("xg_enriched_v") or (1 if _det_j.get("xg_enriched") else 0))
-        except Exception:
-            pass
+        except Exception as _em_exc:
+            from src.xgpedia.core.error_metrics import record_error as _rec_err
+            _rec_err('workflow.today', _em_exc)
         _all_core_ready = bool(ctx["has"].get("xgrace") and ctx["has"].get("toprated") and ctx["has"].get("efficiency"))
         if (_enriched_v < 3) and (not _all_core_ready):
             try:
                 enrich_post_match_fixture(fixture_id)
                 facts = build_match_facts(fixture_id, post_match=True)
                 ctx = build_post_match_context(dummy_draft, facts, fmt=fmt)
-            except Exception:
-                pass
+            except Exception as _em_exc:
+                from src.xgpedia.core.error_metrics import record_error as _rec_err
+                _rec_err('workflow.today', _em_exc)
         priority = POST_MATCH_PRIORITY
     else:
         ctx = build_preview_context(dummy_draft, facts, fmt=fmt)
@@ -823,8 +830,9 @@ def _refresh_live_coaches_on_facts(facts: dict[str, Any]) -> None:
             ac = cmap.get(canonical_team_name(a_en))
             if ac:
                 a_obj["sub"] = ac
-    except Exception:
-        pass
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err('workflow.today', _em_exc)
 
 
 def _attach_live_breaking_news(facts: dict[str, Any]) -> None:
@@ -840,8 +848,9 @@ def _attach_live_breaking_news(facts: dict[str, Any]) -> None:
             news = fetch_match_breaking_news(h_en, a_en, max_items=6, timeout=8.0)
             if news:
                 facts["recent_news"] = news
-    except Exception:
-        pass
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err('workflow.today', _em_exc)
 
 
 def generate_match_post(
@@ -877,8 +886,9 @@ def generate_match_post(
                     ).fetchone()
                 if not _has_real_xg:
                     enrich_post_match_fixture(fixture_id)
-            except Exception:
-                pass
+            except Exception as _em_exc:
+                from src.xgpedia.core.error_metrics import record_error as _rec_err
+                _rec_err('workflow.today', _em_exc)
         facts = build_match_facts(fixture_id, post_match=(post_type == "post_match"))
         _refresh_live_coaches_on_facts(facts)
         _attach_live_breaking_news(facts)

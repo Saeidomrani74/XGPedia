@@ -23,8 +23,8 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -e ".[render,publish,scrape,dev]" && python -m playwright install --with-deps chromium
-      - name: Static syntax & undefined-name gate (Ruff)
-        run: ruff check src/ run.py --select E9,F63,F7,F82,F811
+      - name: Static syntax, undefined-name & loop-closure gate (Ruff)
+        run: ruff check src/ run.py --select E9,F63,F7,F82,F811,B023
       - run: python run.py init
         env:
           DATABASE_PATH: data/dev.sqlite
@@ -47,9 +47,12 @@ jobs:
       - run: python run.py status
         env:
           DATABASE_PATH: data/dev.sqlite
-      # مجموعهٔ تست کامل در محیط تمیز
+      # مجموعهٔ تست کامل در محیط تمیز (CI — دیتابیس SQLite روی runner موقتی است و جایگزین زمان‌بند دائمی نیست)
       - run: python -m pytest tests/ -q
         env:
           DATABASE_PATH: data/dev.sqlite
+      # آزمون رگرسیون بصری خودکار روی Chromium
+      - name: Visual QA Regression Gate
+        run: python run.py visual-qa
       # نکته: cron گیت‌هاب چند دقیقه تأخیر طبیعی دارد — برای لایو و ربات
       # همیشه‌روشن مناسب نیست؛ VPS فقط پس از نیاز واقعی (دروازهٔ ۴)

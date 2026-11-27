@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from src.xgpedia.providers.pl_badges_free import resolve_distinct_team_colors
-from src.xgpedia.render.card_kit.helpers import esc
+from src.xgpedia.render.card_kit.helpers import with_sample_badge, esc
 from src.xgpedia.render.cards import _brand_logo_data_uri
 from src.xgpedia.render.studio_engine import build_embedded_font_css
 
@@ -642,6 +642,7 @@ def get_matchday_results_modules(item: dict[str, Any], slide: str = "slide1") ->
     return mods, missing
 
 
+@with_sample_badge
 def render_matchday_results_html(
     item: dict[str, Any],
     *,

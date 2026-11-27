@@ -1,0 +1,90 @@
+{
+  "header": {
+    "id": "800101",
+    "competitions": [
+      {
+        "date": "2026-11-26T18:00:00Z",
+        "status": {
+          "type": {
+            "completed": true,
+            "state": "post"
+          }
+        },
+        "competitors": [
+          {
+            "id": "359",
+            "homeAway": "home",
+            "score": "2",
+            "team": {
+              "id": "359",
+              "displayName": "Arsenal"
+            }
+          },
+          {
+            "id": "363",
+            "homeAway": "away",
+            "score": "1",
+            "team": {
+              "id": "363",
+              "displayName": "Chelsea"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "boxscore": {
+    "teams": [
+      {
+        "homeAway": "home",
+        "team": {
+          "id": "359",
+          "displayName": "Arsenal"
+        },
+        "statistics": [
+          {
+            "name": "possessionPct",
+            "displayValue": "61"
+          },
+          {
+            "name": "totalShots",
+            "displayValue": "15"
+          },
+          {
+            "name": "shotsOnTarget",
+            "displayValue": "6"
+          },
+          {
+            "name": "wonCorners",
+            "displayValue": "7"
+          }
+        ]
+      },
+      {
+        "homeAway": "away",
+        "team": {
+          "id": "363",
+          "displayName": "Chelsea"
+        },
+        "statistics": [
+          {
+            "name": "possessionPct",
+            "displayValue": "39"
+          },
+          {
+            "name": "totalShots",
+            "displayValue": "9"
+          },
+          {
+            "name": "shotsOnTarget",
+            "displayValue": "3"
+          },
+          {
+            "name": "wonCorners",
+            "displayValue": "4"
+          }
+        ]
+      }
+    ]
+  }
+}

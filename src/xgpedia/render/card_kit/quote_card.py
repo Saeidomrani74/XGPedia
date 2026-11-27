@@ -19,6 +19,7 @@ import re
 from typing import Any
 
 from src.xgpedia.render.card_kit.helpers import (
+    with_sample_badge,
     _hex_to_rgb,
     ensure_dark_bg_contrast,
     esc,
@@ -245,6 +246,7 @@ def _quote_dir_attr(text: str) -> str:
     return 'dir="ltr" style="text-align:left;' if ascii_n > fa_n * 1.4 else 'dir="rtl" style="text-align:right;'
 
 
+@with_sample_badge
 def render_quote_html(
     item: dict[str, Any],
     *,

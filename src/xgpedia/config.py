@@ -40,9 +40,22 @@ RAW_PAYLOAD_DIR = Path(os.environ.get("RAW_PAYLOAD_DIR", ROOT / "data" / "raw"))
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHANNEL_ID = os.environ.get("TELEGRAM_CHANNEL_ID", "")
 TELEGRAM_GROUP_ID = os.environ.get("TELEGRAM_GROUP_ID", "")
-ADMIN_TELEGRAM_IDS = frozenset(
-    int(x) for x in os.environ.get("ADMIN_TELEGRAM_IDS", "").split(",") if x.strip()
-)
+ALERT_TELEGRAM_CHAT_ID = os.environ.get("ALERT_TELEGRAM_CHAT_ID", "").strip()
+def _parse_admin_telegram_ids(raw: str) -> frozenset[int]:
+    out: set[int] = set()
+    for tok in (raw or "").split(","):
+        s = tok.strip()
+        if not s:
+            continue
+        try:
+            out.add(int(s))
+        except ValueError:
+            import logging as _logging
+            _logging.getLogger(__name__).warning("Ignoring invalid ADMIN_TELEGRAM_IDS entry: %r", s)
+    return frozenset(out)
+
+
+ADMIN_TELEGRAM_IDS = _parse_admin_telegram_ids(os.environ.get("ADMIN_TELEGRAM_IDS", ""))
 
 DISPLAY_TZ = "Asia/Tehran"  # ذخیره همیشه UTC؛ نمایش «به وقت تهران (UTC+3:30)»
 

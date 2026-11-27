@@ -266,8 +266,9 @@ async def on_bday_open(cb: CallbackQuery) -> None:
             return enriched
         try:
             enriched = await asyncio.wait_for(asyncio.to_thread(_quick_enrich), timeout=16.0)
-        except Exception:
-            pass
+        except Exception as _em_exc:
+            from src.xgpedia.core.error_metrics import record_error as _rec_err
+            _rec_err('bot.studio_bday_tr', _em_exc)
     # یادداشت تحریریه همیشه در مرحلهٔ ساخت با LLM تولید می‌شود پس quote را به‌عنوان ماژول قابل انتخاب نگه می‌داریم
     if not enriched.get("quote"):
         enriched["quote"] = {"title": "یادداشت تحریریه تولد", "body": "(در مرحلهٔ ساخت نهایی با هوش مصنوعی نگارش می‌شود)", "tag": "XGPedia"}

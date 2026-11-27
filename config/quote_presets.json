@@ -30,10 +30,20 @@
       "ticker": "PREMIER LEAGUE 26/27 • QUOTE DUEL",
       "source": "Opta / XGPedia",
       "stats": [
-        {"label": "مالکیت توپ", "val": "۶۱٪ / ۳۹٪"},
-        {"label": "ضدحمله خطرناک", "val": "۲ / ۷"},
-        {"label": "امید گل (xG)", "val": "۲.۱۲ / ۲.۲۴"}
-      ]
+        {
+          "label": "مالکیت توپ",
+          "val": "۶۱٪ / ۳۹٪"
+        },
+        {
+          "label": "ضدحمله خطرناک",
+          "val": "۲ / ۷"
+        },
+        {
+          "label": "امید گل (xG)",
+          "val": "۲.۱۲ / ۲.۲۴"
+        }
+      ],
+      "is_preset": true
     },
     {
       "id": "preset_quote_tactical_press",
@@ -64,10 +74,20 @@
       "ticker": "PREMIER LEAGUE 26/27 • POST-MATCH QUOTE",
       "source": "Opta / XGPedia",
       "stats": [
-        {"label": "امید گل (xG)", "val": "۲.۴۱"},
-        {"label": "شدت پرس (PPDA)", "val": "۷.۸"},
-        {"label": "لمس در محوطه", "val": "۴۲"}
-      ]
+        {
+          "label": "امید گل (xG)",
+          "val": "۲.۴۱"
+        },
+        {
+          "label": "شدت پرس (PPDA)",
+          "val": "۷.۸"
+        },
+        {
+          "label": "لمس در محوطه",
+          "val": "۴۲"
+        }
+      ],
+      "is_preset": true
     },
     {
       "id": "preset_quote_derby_fire",
@@ -98,10 +118,20 @@
       "ticker": "PERSIAN GULF PRO LEAGUE 26/27 • MIXED ZONE",
       "source": "Metrica / XGPedia",
       "stats": [
-        {"label": "شوت در چارچوب", "val": "۷"},
-        {"label": "دریبل موفق", "val": "۶ / ۷"},
-        {"label": "امتیاز XGPedia", "val": "۸.۹"}
-      ]
+        {
+          "label": "شوت در چارچوب",
+          "val": "۷"
+        },
+        {
+          "label": "دریبل موفق",
+          "val": "۶ / ۷"
+        },
+        {
+          "label": "امتیاز XGPedia",
+          "val": "۸.۹"
+        }
+      ],
+      "is_preset": true
     },
     {
       "id": "preset_quote_ucl_data",
@@ -132,10 +162,20 @@
       "ticker": "CHAMPIONS LEAGUE 26/27 • TACTICAL VOICE",
       "source": "Opta / XGPedia Lab",
       "stats": [
-        {"label": "پاس پیش‌رونده", "val": "۱۴"},
-        {"label": "تهدید پاس (xT)", "val": "۰.۴۴"},
-        {"label": "دقت پاس", "val": "۹۳٪"}
-      ]
+        {
+          "label": "پاس پیش‌رونده",
+          "val": "۱۴"
+        },
+        {
+          "label": "تهدید پاس (xT)",
+          "val": "۰.۴۴"
+        },
+        {
+          "label": "دقت پاس",
+          "val": "۹۳٪"
+        }
+      ],
+      "is_preset": true
     },
     {
       "id": "preset_quote_bernabeu_poster",
@@ -166,10 +206,20 @@
       "ticker": "LALIGA 26/27 • MATCHDAY POSTER",
       "source": "LaLiga / XGPedia",
       "stats": [
-        {"label": "نرخ تبدیل شوت", "val": "۲۸٪"},
-        {"label": "xG نیمه دوم", "val": "۱.۸۵"},
-        {"label": "پاس کلیدی", "val": "۵"}
-      ]
+        {
+          "label": "نرخ تبدیل شوت",
+          "val": "۲۸٪"
+        },
+        {
+          "label": "xG نیمه دوم",
+          "val": "۱.۸۵"
+        },
+        {
+          "label": "پاس کلیدی",
+          "val": "۵"
+        }
+      ],
+      "is_preset": true
     }
   ]
 }

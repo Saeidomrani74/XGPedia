@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from src.xgpedia.render.card_kit.helpers import ensure_dark_bg_contrast, esc, f1, fa
+from src.xgpedia.render.card_kit.helpers import with_sample_badge, ensure_dark_bg_contrast, esc, f1, fa
 from src.xgpedia.render.cards import _brand_logo_data_uri
 from src.xgpedia.render.studio_engine import build_embedded_font_css
 
@@ -269,6 +269,7 @@ def render_mod_editorial_verdict(item: dict[str, Any]) -> str:
     )
 
 
+@with_sample_badge
 def render_matchweek_wrapup_html(
     item: dict[str, Any],
     *,

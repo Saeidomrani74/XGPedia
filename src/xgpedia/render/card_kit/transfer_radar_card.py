@@ -11,7 +11,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from src.xgpedia.render.card_kit.helpers import ensure_dark_bg_contrast, esc, fa
+from src.xgpedia.render.card_kit.helpers import with_sample_badge, ensure_dark_bg_contrast, esc, fa
 from src.xgpedia.render.cards import _brand_logo_data_uri
 from src.xgpedia.render.studio_engine import build_embedded_font_css
 
@@ -478,6 +478,7 @@ def _render_module(mod: dict[str, Any], item: dict[str, Any], st: dict[str, str]
     return ""
 
 
+@with_sample_badge
 def render_transfer_radar_html(
     item: dict[str, Any],
     *,

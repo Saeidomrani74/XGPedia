@@ -15,7 +15,7 @@ from functools import lru_cache
 from typing import Any
 
 from src.xgpedia.config import ROOT
-from src.xgpedia.render.card_kit.helpers import ensure_dark_bg_contrast, esc, fa
+from src.xgpedia.render.card_kit.helpers import with_sample_badge, ensure_dark_bg_contrast, esc, fa
 from src.xgpedia.render.cards import _brand_logo_data_uri
 from src.xgpedia.render.studio_engine import build_embedded_font_css
 
@@ -298,6 +298,7 @@ def _brand_logo_html() -> str:
     return '<div class="nw-brand" dir="ltr"><div class="fd nw-brand-txt"><span style="color:#E62E45">XG</span><span style="color:#F8FAFC">Pedia</span></div></div>'
 
 
+@with_sample_badge
 def render_news_html(
     item: dict[str, Any],
     *,

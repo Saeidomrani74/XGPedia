@@ -41,8 +41,9 @@ async def _get_shared_browser(timeout_ms: int = 25_000) -> Any:
             try:
                 if browser.is_connected():
                     return browser
-            except Exception:
-                pass
+            except Exception as _em_exc:
+                from src.xgpedia.core.error_metrics import record_error as _rec_err
+                _rec_err('render.png', _em_exc)
             # اتصال قطع شده؛ پاک‌سازی ایمن و راه‌اندازی مجدد
             await _close_state_unlocked(state)
 
@@ -52,8 +53,9 @@ async def _get_shared_browser(timeout_ms: int = 25_000) -> Any:
         except Exception:
             try:
                 await pw.stop()
-            except Exception:
-                pass
+            except Exception as _em_exc:
+                from src.xgpedia.core.error_metrics import record_error as _rec_err
+                _rec_err('render.png', _em_exc)
             raise
         state["pw"] = pw
         state["browser"] = browser
@@ -68,13 +70,15 @@ async def _close_state_unlocked(state: dict[str, Any]) -> None:
     if browser is not None:
         try:
             await browser.close()
-        except Exception:
-            pass
+        except Exception as _em_exc:
+            from src.xgpedia.core.error_metrics import record_error as _rec_err
+            _rec_err('render.png', _em_exc)
     if pw is not None:
         try:
             await pw.stop()
-        except Exception:
-            pass
+        except Exception as _em_exc:
+            from src.xgpedia.core.error_metrics import record_error as _rec_err
+            _rec_err('render.png', _em_exc)
 
 
 async def close_browser_pool() -> None:
@@ -111,8 +115,9 @@ async def render(
             pass  # قالب یکپارچه ۱۰۰٪ آفلاین است و نیازی به CDN ندارد
         try:
             await asyncio.wait_for(pg.evaluate("document.fonts.ready"), timeout=5.0)
-        except Exception:
-            pass
+        except Exception as _em_exc:
+            from src.xgpedia.core.error_metrics import record_error as _rec_err
+            _rec_err('render.png', _em_exc)
         await pg.wait_for_timeout(120)
         kw = {"type": "jpeg", "quality": 90} if fmt == "jpeg" else {"type": "png"}
         await pg.screenshot(path=out_path, timeout=timeout_ms, **kw)

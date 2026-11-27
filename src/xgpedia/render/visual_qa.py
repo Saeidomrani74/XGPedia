@@ -156,12 +156,22 @@ def build_flagship_card_htmls() -> dict[str, str]:
     fc_presets = json.loads((ROOT / "config" / "player_fc27_presets.json").read_text(encoding="utf-8"))
     fc_item = (fc_presets.get("items") or fc_presets if isinstance(fc_presets, dict) else fc_presets)[0]
 
-    return {
+    from src.xgpedia.providers.standings_free import load_standings_presets
+    from src.xgpedia.render.card_kit.standings_card import render_standings_html
+
+    st_presets = load_standings_presets()
+    st_item = st_presets[0] if st_presets else {}
+
+    out_htmls = {
         "pre_match": render_preview_html(draft, facts),
         "post_match": render_post_match_html(draft, facts_pm),
         "top_scorers": render_top_scorers_html(ts_item),
         "player_fc27": render_player_fc27_html(fc_item),
+        "pre_match_story_9x16": render_preview_html(draft, facts, fmt="9:16"),
     }
+    if st_item:
+        out_htmls["standings_wide_16x9"] = render_standings_html(st_item, fmt="16:9")
+    return out_htmls
 
 
 async def inspect_html_in_playwright(
@@ -236,12 +246,19 @@ def run_visual_smoke_suite(
 
     async def _run_all() -> list[VisualQAResult]:
         out: list[VisualQAResult] = []
+        _dims = {
+            "pre_match_story_9x16": (1080, 1920),
+            "standings_wide_16x9": (1920, 1080),
+        }
         for name, html_str in htmls.items():
+            w_px, h_px = _dims.get(name, (1080, 1350))
             static_issues = check_offline_html(html_str, name)
+            if name == "standings_wide_16x9" and "نمونه • SAMPLE" not in html_str:
+                static_issues.append("missing visible SAMPLE badge on preset standings card")
             h_path = target_dir / f"qa_{name}.html"
             p_path = target_dir / f"qa_{name}.png"
             h_path.write_text(html_str, encoding="utf-8")
-            r = await inspect_html_in_playwright(name, h_path, p_path, w=1080, h=1350, fmt="png")
+            r = await inspect_html_in_playwright(name, h_path, p_path, w=w_px, h=h_px, fmt="png")
             r.issues = static_issues + r.issues
             out.append(r)
 

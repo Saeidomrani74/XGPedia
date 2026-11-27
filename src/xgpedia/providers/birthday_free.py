@@ -275,7 +275,7 @@ def parse_wikidata_sparql_json(
     for b in bindings:
         if not isinstance(b, dict):
             continue
-        val = lambda k: str((b.get(k) or {}).get("value") or "").strip()
+        val = lambda k, _b=b: str((_b.get(k) or {}).get("value") or "").strip()
         name_en = val("nameEn")
         name_fa = val("nameFa")
         dob = val("dob")

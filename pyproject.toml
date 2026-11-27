@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "xgpedia"
-version = "0.79.0"
+version = "0.80.3"
 description = "XGPedia — خط تولید محتوای تحلیلی فوتبال داده‌محور (عدد را API می‌دهد، متن را مدل می‌نویسد، تصویر را قالب HTML می‌سازد)"
 requires-python = ">=3.12"
 dependencies = [
@@ -16,7 +16,6 @@ dependencies = [
 [project.optional-dependencies]
 # مرحلهٔ رندر: playwright + jdatetime + pillow — نصب: pip install -e ".[render]"
 render = [
-    "jinja2>=3.1",           # قالب‌بندی اختیاری
     "playwright>=1.47",      # رندر HTML به PNG/JPEG و ضبط فریم ویدیو
     "jdatetime>=5.0",        # تاریخ جلالی در کارت (نمایش فارسی، ذخیره همیشه UTC)
     "pillow>=10.0",          # تبدیل JPEG اینستاگرام در omnichannel و پیکسل‌چک تست‌های رندر

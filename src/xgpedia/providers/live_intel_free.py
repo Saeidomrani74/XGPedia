@@ -419,8 +419,9 @@ def fetch_live_coach_wikipedia(team_en: str, *, timeout: float = 10.0) -> tuple[
                         arr = rs.json()
                         if isinstance(arr, list) and len(arr) >= 2 and arr[1]:
                             wikitext, club_qid = _query_title(client, str(arr[1][0]))
-                except Exception:
-                    pass
+                except Exception as _em_exc:
+                    from src.xgpedia.core.error_metrics import record_error as _rec_err
+                    _rec_err('provider.live_intel', _em_exc)
 
             coach_en = parse_coach_from_wikitext(wikitext)
             if not coach_en:
@@ -458,8 +459,9 @@ def fetch_live_coach_wikipedia(team_en: str, *, timeout: float = 10.0) -> tuple[
                             if fa_title:
                                 coach_fa = fa_title
                                 break
-            except Exception:
-                pass
+            except Exception as _em_exc:
+                from src.xgpedia.core.error_metrics import record_error as _rec_err
+                _rec_err('provider.live_intel', _em_exc)
 
             return coach_en, (coach_fa or translate_coach_fa(coach_en))
     except Exception:
@@ -533,8 +535,9 @@ def fetch_match_breaking_news(
                             if key and key not in seen_titles:
                                 seen_titles.add(key)
                                 collected.append((_score_headline(it["title"], team), it))
-                except Exception:
-                    pass
+                except Exception as _em_exc:
+                    from src.xgpedia.core.error_metrics import record_error as _rec_err
+                    _rec_err('provider.live_intel', _em_exc)
 
             # پشتیبان رایگان BBC Sport Football RSS
             try:
@@ -548,8 +551,9 @@ def fetch_match_breaking_news(
                                 if key and key not in seen_titles:
                                     seen_titles.add(key)
                                     collected.append((_score_headline(it["title"], team) + 2, it))
-            except Exception:
-                pass
+            except Exception as _em_exc:
+                from src.xgpedia.core.error_metrics import record_error as _rec_err
+                _rec_err('provider.live_intel', _em_exc)
     except Exception:
         return []
 

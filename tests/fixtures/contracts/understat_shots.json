@@ -1,0 +1,30 @@
+{
+  "h": [
+    {
+      "X": "0.91",
+      "Y": "0.49",
+      "xG": "0.52",
+      "minute": "19",
+      "player": "Bukayo Saka",
+      "result": "Goal"
+    },
+    {
+      "X": "0.87",
+      "Y": "0.52",
+      "xG": "0.32",
+      "minute": "64",
+      "player": "Kai Havertz",
+      "result": "Goal"
+    }
+  ],
+  "a": [
+    {
+      "X": "0.89",
+      "Y": "0.47",
+      "xG": "0.31",
+      "minute": "51",
+      "player": "Cole Palmer",
+      "result": "Goal"
+    }
+  ]
+}

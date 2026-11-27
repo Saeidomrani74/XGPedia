@@ -19,7 +19,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from src.xgpedia.render.card_kit.helpers import esc
+from src.xgpedia.render.card_kit.helpers import with_sample_badge, esc
 from src.xgpedia.render.cards import _brand_logo_data_uri
 from src.xgpedia.render.studio_engine import build_embedded_font_css
 
@@ -730,6 +730,7 @@ def _mod_archetype(p1: dict[str, Any], p2: dict[str, Any], item: dict[str, Any],
     )
 
 
+@with_sample_badge
 def render_h2h_players_html(
     item: dict[str, Any],
     *,

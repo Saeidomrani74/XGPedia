@@ -60,8 +60,9 @@ def _load_locked(path: Path) -> None:
             for k, v in raw.items():
                 if isinstance(k, str) and isinstance(v, dict):
                     _STATE[k] = dict(v)
-    except Exception:
-        pass
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err('core.api_health', _em_exc)
 
 
 def _save_locked() -> None:
@@ -73,8 +74,9 @@ def _save_locked() -> None:
         tmp = target.with_suffix(".tmp")
         tmp.write_text(json.dumps(_STATE, ensure_ascii=False, indent=2), encoding="utf-8")
         tmp.replace(target)
-    except Exception:
-        pass
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err('core.api_health', _em_exc)
 
 
 def record_success(key: str, latency_ms: float = 400.0) -> None:
@@ -210,8 +212,9 @@ def reset_health(prefix: str | None = None) -> int:
             try:
                 from src.xgpedia.core.error_metrics import reset_error_counts
                 reset_error_counts()
-            except Exception:
-                pass
+            except Exception as _em_exc:
+                from src.xgpedia.core.error_metrics import record_error as _rec_err
+                _rec_err('core.api_health', _em_exc)
             return n
         keys = [k for k in list(_STATE.keys()) if k.startswith(prefix)]
         for k in keys:
@@ -256,14 +259,16 @@ def format_health_report_fa(max_rows: int = 12) -> str:
             lines.append("⚠️ <b>خطاهای مهارشده (Error Metrics):</b>")
             for ek, cnt in sorted(ec.items(), key=lambda kv: kv[1], reverse=True)[:8]:
                 lines.append(f"• <code>{ek}</code>: <b>{cnt}</b>")
-    except Exception:
-        pass
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err('core.api_health', _em_exc)
     try:
         from src.xgpedia.core.hydration_cache import get_cache_stats
         cs = get_cache_stats()
         if cs.get("total", 0) > 0:
             lines.append("")
             lines.append(f"🗄 <b>کش پایدار SQLite:</b> {cs['fresh']}/{cs['total']} کلید تازه")
-    except Exception:
-        pass
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err('core.api_health', _em_exc)
     return "\n".join(lines)
