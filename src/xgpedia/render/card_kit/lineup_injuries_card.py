@@ -12,6 +12,7 @@ from __future__ import annotations
 from typing import Any
 
 from src.xgpedia.render.card_kit.helpers import (
+    with_sample_badge,
     _hex_to_rgb,
     ensure_dark_bg_contrast,
     esc,
@@ -199,6 +200,7 @@ def _absentees_list_html(absentees: list[dict[str, Any]], max_items: int = 6) ->
     return "".join(rows)
 
 
+@with_sample_badge
 def render_lineup_injuries_html(
     item: dict[str, Any],
     *,

@@ -504,7 +504,8 @@ def parse_espn_finished_summary(
                     gk_info[sk] = {
                         "name": gk_name,
                         "saves": int(round(eff_saves)),
-                        "psxg": round(float(opp_xg), 2) if opp_xg is not None else None,
+                        "psxg": None,
+                        "opp_xg": round(float(opp_xg), 2) if opp_xg is not None else None,
                         "ga": int(ga_val),
                     }
                 break

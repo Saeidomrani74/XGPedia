@@ -84,11 +84,11 @@ def test_visual_smoke_four_flagship_cards_real_png_and_no_overflow(tmp_path) -> 
 
     require_chromium()
     results = run_visual_smoke_suite(out_dir=tmp_path, include_instagram_jpeg=True)
-    assert len(results) == 5
+    assert len(results) == 7
     for r in results:
         assert r.ok, f"{r.card_name} failed Visual QA: {r.issues}"
         assert not r.broken_images, f"{r.card_name} has broken logos/images: {r.broken_images}"
-        assert (r.actual_width, r.actual_height) == (1080, 1350)
+        assert (r.actual_width, r.actual_height) == (r.width, r.height)
 
 def test_source_chain_multidimensional_quality_profile_ranking() -> None:
     """ارزیابی چندبعدی SourceQualityProfile باید ترتیب زنجیره را بر اساس امتیاز ترکیبی تنظیم کند."""

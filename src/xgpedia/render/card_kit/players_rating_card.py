@@ -13,7 +13,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from src.xgpedia.render.card_kit.helpers import contrast_ink, ensure_dark_bg_contrast, esc, f1, f2, fa, luminance
+from src.xgpedia.render.card_kit.helpers import with_sample_badge, contrast_ink, ensure_dark_bg_contrast, esc, f1, f2, fa, luminance
 from src.xgpedia.render.cards import _brand_logo_data_uri
 from src.xgpedia.render.studio_engine import build_embedded_font_css
 
@@ -530,6 +530,7 @@ def _render_verdict_module(item: dict[str, Any], span_cls: str) -> str:
     )
 
 
+@with_sample_badge
 def render_players_rating_html(
     item: dict[str, Any],
     *,

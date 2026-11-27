@@ -3,20 +3,25 @@ from __future__ import annotations
 
 import json
 import re
+import threading
 import time
 from typing import Any
 
-from src.xgpedia.providers import xg_engine as _xge
-
-
-def _extract_fotmob_matches_from_next_data(*a, **kw): return _xge._extract_fotmob_matches_from_next_data(*a, **kw)
-def _match_fotmob_entries(*a, **kw): return _xge._match_fotmob_entries(*a, **kw)
-def _date_candidates(*a, **kw): return _xge._date_candidates(*a, **kw)
-def _teams_match(*a, **kw): return _xge._teams_match(*a, **kw)
-def _swap_parsed(*a, **kw): return _xge._swap_parsed(*a, **kw)
-def parse_fotmob_match_details(*a, **kw): return _xge.parse_fotmob_match_details(*a, **kw)
-def parse_sofascore_statistics(*a, **kw): return _xge.parse_sofascore_statistics(*a, **kw)
-def parse_sofascore_shotmap(*a, **kw): return _xge.parse_sofascore_shotmap(*a, **kw)
+from src.xgpedia.providers import xg_engine_common as _xge
+from src.xgpedia.providers.xg_engine_common import (
+    _date_candidates,
+    _extract_fotmob_matches_from_next_data,
+    _extract_fotmob_slug_teams,
+    _match_fotmob_entries,
+    _swap_parsed,
+    _teams_match,
+    parse_sofascore_shotmap,
+    parse_sofascore_statistics,
+)
+from src.xgpedia.providers.xg_engine_fotmob import (
+    parse_fotmob_match_details,
+    parse_fotmob_next_data_html,
+)
 
 
 def fetch_fotmob_via_playwright(
@@ -82,11 +87,11 @@ def fetch_fotmob_via_playwright(
                     cand_dates = _date_candidates(match_date)[:2]
                     # ۰) بررسی کش روزانهٔ FotMob (حذف نیاز به بازکردن مجدد صفحهٔ اصلی برای بازی‌های هم‌روز)
                     now_ts = time.time()
-                    with _FOTMOB_DAY_CACHE_LOCK:
+                    with _xge._FOTMOB_DAY_CACHE_LOCK:
                         for d in cand_dates:
                             ymd = d.replace("-", "")
-                            cached = _FOTMOB_DAY_CACHE.get(ymd)
-                            if cached and (now_ts - cached[0]) <= _FOTMOB_DAY_CACHE_TTL:
+                            cached = _xge._FOTMOB_DAY_CACHE.get(ymd)
+                            if cached and (now_ts - cached[0]) <= _xge._FOTMOB_DAY_CACHE_TTL:
                                 pu, sw = _match_fotmob_entries(cached[1], home_en, away_en)
                                 if pu:
                                     page_url, swapped = pu, sw
@@ -148,8 +153,8 @@ def fetch_fotmob_via_playwright(
                             _log(f"fotmob-pw: dom scan err={type(e_dom).__name__}")
 
                         if day_entries:
-                            with _FOTMOB_DAY_CACHE_LOCK:
-                                _FOTMOB_DAY_CACHE[ymd] = (time.time(), day_entries)
+                            with _xge._FOTMOB_DAY_CACHE_LOCK:
+                                _xge._FOTMOB_DAY_CACHE[ymd] = (time.time(), day_entries)
                             page_url, swapped = _match_fotmob_entries(day_entries, home_en, away_en)
 
                         if not page_url:
@@ -284,7 +289,7 @@ def fetch_sofascore_via_playwright(
                     event_id = None
                     swapped = False
                     for d in _date_candidates(match_date):
-                        ev_data = _fetch_in_page(f"{_SOFA_BASE}/sport/football/scheduled-events/{d}")
+                        ev_data = _fetch_in_page(f"{_xge._SOFA_BASE}/sport/football/scheduled-events/{d}")
                         if not isinstance(ev_data, dict):
                             continue
                         for ev in ev_data.get("events") or []:
@@ -300,11 +305,11 @@ def fetch_sofascore_via_playwright(
                             break
                     if event_id is None:
                         return
-                    st_data = _fetch_in_page(f"{_SOFA_BASE}/event/{event_id}/statistics")
+                    st_data = _fetch_in_page(f"{_xge._SOFA_BASE}/event/{event_id}/statistics")
                     parsed = parse_sofascore_statistics(st_data or {})
                     if "home_xg" not in parsed or "away_xg" not in parsed:
                         return
-                    sm_data = _fetch_in_page(f"{_SOFA_BASE}/event/{event_id}/shotmap")
+                    sm_data = _fetch_in_page(f"{_xge._SOFA_BASE}/event/{event_id}/shotmap")
                     if isinstance(sm_data, dict):
                         hs, as_ = parse_sofascore_shotmap(sm_data)
                         if hs or as_:

@@ -1,0 +1,21 @@
+{
+  "competition": {
+    "code": "PL",
+    "name": "Premier League"
+  },
+  "matches": [
+    {
+      "id": 555001,
+      "utcDate": "2026-12-05T15:00:00Z",
+      "matchday": 15,
+      "homeTeam": {
+        "id": 57,
+        "name": "Arsenal FC"
+      },
+      "awayTeam": {
+        "id": 61,
+        "name": "Chelsea FC"
+      }
+    }
+  ]
+}

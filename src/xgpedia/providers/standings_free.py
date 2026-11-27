@@ -188,7 +188,17 @@ def load_standings_presets() -> list[dict[str, Any]]:
         return []
     try:
         data = json.loads(PRESETS_PATH.read_text(encoding="utf-8"))
-        return data if isinstance(data, list) else []
+        if not isinstance(data, list):
+            return []
+        out: list[dict[str, Any]] = []
+        for item in data:
+            if not isinstance(item, dict):
+                continue
+            cp = dict(item)
+            cp["is_preset"] = True
+            cp["source"] = "نمونه استودیو • XGPedia Sample"
+            out.append(cp)
+        return out
     except Exception as _em_exc:
         from src.xgpedia.core.error_metrics import record_error as _rec_err
         _rec_err("provider.standings", _em_exc)

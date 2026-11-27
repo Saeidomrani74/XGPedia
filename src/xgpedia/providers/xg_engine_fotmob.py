@@ -275,7 +275,6 @@ def parse_fotmob_match_details(payload: dict[str, Any]) -> dict[str, Any]:
                     "expected goals on target faced",
                     "expected_goals_on_target_faced",
                     "xgot faced",
-                    "expected_goals_conceded",
                 ),
             )
             goals_conc = _fotmob_stat_val(pstat.get("stats"), ("goals conceded", "goals_conceded"))
@@ -295,7 +294,7 @@ def parse_fotmob_match_details(payload: dict[str, Any]) -> dict[str, Any]:
                 if opp_g is None and goals_conc is not None:
                     opp_g = goals_conc
                 opp_xg = out.get("away_xg") if side_key == "home" else out.get("home_xg")
-                psxg_v = xgot if xgot is not None else opp_xg
+                psxg_v = xgot
                 if eff_saves is not None and psxg_v is not None:
                     gk_by_side[side_key] = {
                         "name": p_fa,
@@ -328,7 +327,7 @@ def parse_fotmob_match_details(payload: dict[str, Any]) -> dict[str, Any]:
                     chip_objs.append({"label": "xG", "val": f"{xg_p:.2f}"})
                 if saves is not None and saves >= 1 and not chip_objs:
                     chip_objs.append({"label": "مهار", "val": str(int(round(saves)))})
-                chip_objs.append({"label": "امتیاز Opta", "val": f"{rating:.1f}"})
+                chip_objs.append({"label": "امتیاز FotMob", "val": f"{rating:.1f}"})
                 rated_players.append({
                     "name": p_fa,
                     "side": side_key,
@@ -371,14 +370,13 @@ def parse_fotmob_match_details(payload: dict[str, Any]) -> dict[str, Any]:
                         "expected goals on target faced",
                         "expected_goals_on_target_faced",
                         "xgot faced",
-                        "expected_goals_conceded",
-                    ),
+                        ),
                 )
                 opp_g = away_goals if side_key == "home" else home_goals
                 if opp_g is None:
                     opp_g = _fotmob_stat_val(pstat.get("stats"), ("goals conceded", "goals_conceded"))
                 opp_xg = out.get("away_xg") if side_key == "home" else out.get("home_xg")
-                psxg_v = xgot if xgot is not None else opp_xg
+                psxg_v = xgot
                 if eff_saves is not None and psxg_v is not None:
                     gk_by_side[side_key] = {
                         "name": translate_player_fa(raw_nm),
@@ -412,7 +410,7 @@ def parse_fotmob_match_details(payload: dict[str, Any]) -> dict[str, Any]:
                 "chips": (
                     ([{"label": "گل", "val": str(goals)}] if goals else [])
                     + ([{"label": "پاس گل", "val": str(assists)}] if assists else [])
-                    + [{"label": "امتیاز Opta", "val": f"{rating:.1f}"}]
+                    + [{"label": "امتیاز FotMob", "val": f"{rating:.1f}"}]
                 )[:3],
             })
 
@@ -436,7 +434,7 @@ def parse_fotmob_match_details(payload: dict[str, Any]) -> dict[str, Any]:
                 "pos": best["pos"],
                 "number": best["number"],
                 "rating": best["rating"],
-                "chips": best["chips"] or [{"label": "امتیاز Opta", "val": f"{best['rating']:.1f}"}],
+                "chips": best["chips"] or [{"label": "امتیاز FotMob", "val": f"{best['rating']:.1f}"}],
                 "runnerUp": {
                     "side": runner["side"],
                     "name": runner["name"],

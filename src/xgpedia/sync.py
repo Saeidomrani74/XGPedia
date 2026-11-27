@@ -33,6 +33,17 @@ if TYPE_CHECKING:
     from src.xgpedia.providers.base import RawResponse
 
 
+def _safe_team_code(team_name: str | None) -> str | None:
+    if not team_name:
+        return None
+    try:
+        from src.xgpedia.config import team_identity
+        code = (team_identity(team_name) or {}).get("code")
+        return str(code).upper() if code else None
+    except Exception:
+        return None
+
+
 def season_label(start_year: int) -> str:
     """برچسب فصل به سبک سند: ۲۰۲۶ (سال شروع) → «2026-27»."""
     return f"{start_year}-{str(start_year + 1)[2:]}"
@@ -72,15 +83,18 @@ def sync_csv_results(rows, payload_hash: str, season_start: int = CURRENT_SEASON
             conn.execute(
                 """
                 INSERT INTO fixtures (fixture_id, provider, competition, season, kickoff_utc,
-                                      home_team, away_team, status, raw_payload_hash, collected_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, 'finished', ?, ?)
+                                      home_team, away_team, home_team_code, away_team_code,
+                                      status, raw_payload_hash, collected_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'finished', ?, ?)
                 ON CONFLICT(fixture_id) DO UPDATE SET
                   competition=excluded.competition,
+                  home_team_code=COALESCE(excluded.home_team_code, fixtures.home_team_code),
+                  away_team_code=COALESCE(excluded.away_team_code, fixtures.away_team_code),
                   status='finished', raw_payload_hash=excluded.raw_payload_hash,
                   collected_at=excluded.collected_at
                 """,
                 (fid, PRIMARY_STATS_PROVIDER, competition, season, r.date_utc, r.home_team, r.away_team,
-                 payload_hash, now),
+                 _safe_team_code(r.home_team), _safe_team_code(r.away_team), payload_hash, now),
             )
             if existed:
                 updated_fx += 1
@@ -88,22 +102,23 @@ def sync_csv_results(rows, payload_hash: str, season_start: int = CURRENT_SEASON
                 inserted_fx += 1
 
             # آمار: هر سوی هر متریک فقط با مقدار موجود (None → درج نمی‌شود)
-            def upsert_stat(team: str, metric: str, value: float | None) -> None:
+            def upsert_stat(team: str, metric: str, value: float | None, _fid: str = fid) -> None:
                 nonlocal inserted_stats
                 if value is None:
                     return  # قاعدهٔ null≠0
                 stat_existed = conn.execute(
                     "SELECT 1 FROM fixture_statistics WHERE fixture_id=? AND team=? AND metric=? AND provider=?",
-                    (fid, team, metric, PRIMARY_STATS_PROVIDER),
+                    (_fid, team, metric, PRIMARY_STATS_PROVIDER),
                 ).fetchone()
                 conn.execute(
                     """
-                    INSERT INTO fixture_statistics (fixture_id, team, metric, value, provider, collected_at)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    INSERT INTO fixture_statistics (fixture_id, team, team_code, metric, value, provider, collected_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(fixture_id, team, metric, provider) DO UPDATE SET
+                      team_code=COALESCE(excluded.team_code, fixture_statistics.team_code),
                       value=excluded.value, collected_at=excluded.collected_at
                     """,
-                    (fid, team, metric, value, PRIMARY_STATS_PROVIDER, now),
+                    (_fid, team, _safe_team_code(team), metric, value, PRIMARY_STATS_PROVIDER, now),
                 )
                 if not stat_existed:
                     inserted_stats += 1
@@ -153,16 +168,20 @@ def sync_upcoming_fixtures(raw, season_start: int = CURRENT_SEASON_START, *, com
             conn.execute(
                 """
                 INSERT INTO fixtures (fixture_id, provider, competition, season, kickoff_utc,
-                                      home_team, away_team, status, matchday, raw_payload_hash, collected_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, 'scheduled', ?, ?, ?)
+                                      home_team, away_team, home_team_code, away_team_code,
+                                      status, matchday, raw_payload_hash, collected_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'scheduled', ?, ?, ?)
                 ON CONFLICT(fixture_id) DO UPDATE SET
                   competition=excluded.competition,
                   home_team=excluded.home_team, away_team=excluded.away_team,
+                  home_team_code=COALESCE(excluded.home_team_code, fixtures.home_team_code),
+                  away_team_code=COALESCE(excluded.away_team_code, fixtures.away_team_code),
                   kickoff_utc=excluded.kickoff_utc, status='scheduled',
                   matchday=COALESCE(excluded.matchday, fixtures.matchday),
                   raw_payload_hash=excluded.raw_payload_hash, collected_at=excluded.collected_at
                 """,
                 (fid, PRIMARY_FIXTURES_PROVIDER, _fdo_competition_name(raw.payload, competition), season, kickoff, home, away,
+                 _safe_team_code(home), _safe_team_code(away),
                  int(matchday) if matchday is not None else None, raw.payload_hash, now),
             )
             if not existed:
@@ -181,15 +200,19 @@ def sync_upcoming_odds(odds_rows: list[dict], provider: str = PRIMARY_STATS_PROV
             conn.execute(
                 """
                 INSERT INTO fixture_odds
-                  (home_team, away_team, match_date, home_odds, draw_odds, away_odds, over25_odds, btts_odds, provider, collected_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                  (home_team, away_team, home_team_code, away_team_code, match_date, home_odds, draw_odds, away_odds, over25_odds, btts_odds, provider, collected_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(home_team, away_team, match_date, provider) DO UPDATE SET
+                  home_team_code=COALESCE(excluded.home_team_code, fixture_odds.home_team_code),
+                  away_team_code=COALESCE(excluded.away_team_code, fixture_odds.away_team_code),
                   home_odds=excluded.home_odds, draw_odds=excluded.draw_odds,
                   away_odds=excluded.away_odds, over25_odds=excluded.over25_odds,
                   btts_odds=excluded.btts_odds, collected_at=excluded.collected_at
                 """,
                 (
-                    r["home_team"], r["away_team"], r["match_date"],
+                    r["home_team"], r["away_team"],
+                    _safe_team_code(r["home_team"]), _safe_team_code(r["away_team"]),
+                    r["match_date"],
                     r.get("home_odds"), r.get("draw_odds"), r.get("away_odds"),
                     r.get("over25_odds"), r.get("btts_odds"), provider, now,
                 ),
@@ -213,16 +236,17 @@ def sync_understat_league(league_data: dict, season_start: int = CURRENT_SEASON_
             conn.execute(
                 """
                 INSERT INTO team_enrichments
-                  (team, season, key_player_json, ppda, deep_passes, provider, collected_at)
-                VALUES (?, ?, ?, ?, ?, 'understat', ?)
+                  (team, team_code, season, key_player_json, ppda, deep_passes, provider, collected_at)
+                VALUES (?, ?, ?, ?, ?, ?, 'understat', ?)
                 ON CONFLICT(team, season, provider) DO UPDATE SET
+                  team_code=COALESCE(excluded.team_code, team_enrichments.team_code),
                   key_player_json=COALESCE(excluded.key_player_json, team_enrichments.key_player_json),
                   ppda=COALESCE(excluded.ppda, team_enrichments.ppda),
                   deep_passes=COALESCE(excluded.deep_passes, team_enrichments.deep_passes),
                   collected_at=excluded.collected_at
                 """,
                 (
-                    team, season,
+                    team, _safe_team_code(team), season,
                     json.dumps(kp, ensure_ascii=False) if kp else None,
                     tm.get("ppda"), tm.get("deep"), now,
                 ),
@@ -383,7 +407,7 @@ def _compute_league_radar_percentiles(
     n = len(valid_teams)
     radar_by_team: dict[str, list[int]] = {t: [0] * 6 for t in valid_teams}
     for axis in range(6):
-        ordered = sorted(valid_teams, key=lambda t: raw_axes[t][axis])
+        ordered = sorted(valid_teams, key=lambda t, _axis=axis: raw_axes[t][_axis])
         for rank, t in enumerate(ordered):
             pct = round(25 + (rank / max(n - 1, 1)) * 74)  # بازهٔ خوانا و واقعی ۲۵ تا ۹۹
             radar_by_team[t][axis] = int(pct)
@@ -472,7 +496,7 @@ def _team_xg_avg(conn: sqlite3.Connection, team: str, before_date: str) -> dict 
         ph = ",".join("?" for _ in _FALLBACK_REAL_XG_PROVIDERS)
         rows = conn.execute(
             f"""
-            SELECT s.value
+            SELECT s.value, s.provider
             FROM fixture_statistics s
             JOIN fixtures f ON f.fixture_id = s.fixture_id
             WHERE s.metric = 'expected_goals' AND s.provider IN ({ph}) AND s.team = ?
@@ -485,7 +509,8 @@ def _team_xg_avg(conn: sqlite3.Connection, team: str, before_date: str) -> dict 
         ).fetchall()
     if not rows:
         return None
-    return {"n": len(rows), "avg": sum(r["value"] for r in rows) / len(rows)}
+    prov = str(rows[0]["provider"]) if "provider" in rows[0].keys() else PRIMARY_STATS_PROVIDER
+    return {"n": len(rows), "avg": sum(r["value"] for r in rows) / len(rows), "provider": prov}
 
 
 def _team_corners_avg(conn: sqlite3.Connection, team: str, before_date: str) -> dict | None:
@@ -541,7 +566,7 @@ def _team_xga_avg(conn: sqlite3.Connection, team: str, before_date: str) -> dict
         ph = ",".join("?" for _ in _FALLBACK_REAL_XG_PROVIDERS)
         rows = conn.execute(
             f"""
-            SELECT s.value
+            SELECT s.value, s.provider
             FROM fixture_statistics s
             JOIN fixtures f ON f.fixture_id = s.fixture_id
             WHERE s.metric = 'expected_goals' AND s.provider IN ({ph})
@@ -647,10 +672,9 @@ def _team_form_sequence(conn: sqlite3.Connection, team: str, before_date: str, l
     return {"sequence": "".join(letters), "n": len(letters)}
 
 
-def _match_metrics(conn: sqlite3.Connection, fixture_id: str, team: str) -> dict[str, float]:
-    """آمار خودِ یک بازی برای یک تیم از همهٔ منابع معتبر با اولویت کیفیت و تطبیق هوشمند نام تیم."""
+def _match_metrics_with_provider(conn: sqlite3.Connection, fixture_id: str, team: str) -> dict[str, tuple[float, str]]:
+    """آمار خودِ یک بازی برای یک تیم همراه با provider واقعی هر شاخص."""
     from src.xgpedia.providers.xg_engine import _teams_match
-
     from src.xgpedia.core.source_chain import provider_priority_rank
 
     rows = conn.execute(
@@ -667,14 +691,19 @@ def _match_metrics(conn: sqlite3.Connection, fixture_id: str, team: str) -> dict
         reverse=True,
     )
     t_canon = canonical_team_name(team)
-    out: dict[str, float] = {}
+    out: dict[str, tuple[float, str]] = {}
     for r in rows:
         rt = str(r["team"] or "")
         if not (rt == team or rt == t_canon or canonical_team_name(rt) == t_canon or _teams_match(rt, t_canon)):
             continue
         if r["metric"] not in out:
-            out[r["metric"]] = float(r["value"])
+            out[r["metric"]] = (float(r["value"]), str(r["provider"] or PRIMARY_STATS_PROVIDER))
     return out
+
+
+def _match_metrics(conn: sqlite3.Connection, fixture_id: str, team: str) -> dict[str, float]:
+    """آمار خودِ یک بازی برای یک تیم از همهٔ منابع معتبر با اولویت کیفیت و تطبیق هوشمند نام تیم."""
+    return {k: v[0] for k, v in _match_metrics_with_provider(conn, fixture_id, team).items()}
 
 
 def _creative_match_descriptor(
@@ -815,8 +844,8 @@ def build_match_facts(fixture_id: str, post_match: bool = False) -> dict:
             form_seq = _team_form_sequence(conn, team, series_before)
             match_stats = None
             if post_match:
-                mm = _match_metrics(conn, fixture_id, team)
-                sv = lambda k: StatValue(value=mm[k], n=1, provider=PRIMARY_STATS_PROVIDER) if k in mm else None  # noqa: E731
+                mm = _match_metrics_with_provider(conn, fixture_id, team)
+                sv = lambda k, _mm=mm: StatValue(value=_mm[k][0], n=1, provider=_mm[k][1]) if k in _mm else None  # noqa: E731
                 match_stats = MatchStats(
                     goals=sv("goals"),
                     expected_goals=sv("expected_goals"),
@@ -834,7 +863,7 @@ def build_match_facts(fixture_id: str, post_match: bool = False) -> dict:
                 name_en=team,
                 last5=Last5(**l5) if l5 else None,
                 xg_for_avg=StatValue(
-                    value=round(xg["avg"], 2), n=xg["n"], provider=PRIMARY_STATS_PROVIDER
+                    value=round(xg["avg"], 2), n=xg["n"], provider=xg.get("provider", PRIMARY_STATS_PROVIDER)
                 ) if xg else None,
                 corners_avg=StatValue(
                     value=round(corners["avg"], 1), n=corners["n"], provider=PRIMARY_STATS_PROVIDER

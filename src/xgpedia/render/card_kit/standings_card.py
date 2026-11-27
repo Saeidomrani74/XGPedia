@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from src.xgpedia.render.card_kit.helpers import contrast_ink, esc, f1, f2, fa, luminance
+from src.xgpedia.render.card_kit.helpers import contrast_ink, esc, f1, f2, fa, is_sample_preset, luminance, sample_badge_html
 from src.xgpedia.render.cards import _brand_logo_data_uri
 from src.xgpedia.render.studio_engine import build_embedded_font_css
 
@@ -672,6 +672,7 @@ footer span, footer div, .pl-foot-tag, .pl-foot-s, .in-foot-tag, .pr-foot-tag, .
         </div>
         <span class="st-round-pill">{esc(fa(lg.get("round", "")))}</span>
         <span class="st-season-pill">{f"تمرکز: {esc(spotlight)}" if spotlight else f"فصل {esc(fa(lg.get('season', '26/27')))}"}</span>
+        {sample_badge_html(lg)}
       </div>
       <div class="st-sub-meta"><span>{esc(fa(lg.get("date", "")))}</span><span>•</span><span>{esc(fa(lg.get("subtitle", "")))}</span></div>
     </div>
@@ -684,7 +685,7 @@ footer span, footer div, .pl-foot-tag, .pl-foot-s, .in-foot-tag, .pr-foot-tag, .
     <div class="st-foot-line"></div>
     <div class="fbw">
       <div class="fi st-g10"><span class="st-dot-red"></span><span dir="ltr" class="fm st-foot-tag">{esc(lg.get("leagueEn", "LEAGUE"))} {esc(lg.get("season", "26/27"))} {esc(lg.get("weekCode", ""))} • STANDINGS</span></div>
-      <div class="fi st-g10 fm" dir="ltr"><span class="st-foot-h">@XGPedia</span><span style="color:#64748B">|</span><span class="st-foot-s">{esc(lg.get("source", "XGPedia Model"))}</span></div>
+      <div class="fi st-g10 fm" dir="ltr"><span class="st-foot-h">@XGPedia</span><span style="color:#64748B">|</span><span class="st-foot-s">{esc("نمونه استودیو • XGPedia Sample" if is_sample_preset(lg) else lg.get("source", "XGPedia Model"))}</span></div>
     </div>
   </footer>
 </div>

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from src.xgpedia.render.card_kit.helpers import ensure_dark_bg_contrast, esc, fa
+from src.xgpedia.render.card_kit.helpers import with_sample_badge, ensure_dark_bg_contrast, esc, fa
 from src.xgpedia.render.cards import _brand_logo_data_uri
 from src.xgpedia.render.studio_engine import build_embedded_font_css
 
@@ -162,6 +162,7 @@ def _pick_cls(pick: str, k: str) -> str:
     return "pick-dim" if pick in ("a", "b") else ""
 
 
+@with_sample_badge
 def render_this_or_that_html(
     item: dict[str, Any],
     *,

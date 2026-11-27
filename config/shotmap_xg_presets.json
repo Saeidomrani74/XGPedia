@@ -9,25 +9,166 @@
       "round": "نبرد صدر جدول • ورزشگاه امارات",
       "date": "فصل جاری",
       "source": "Understat / XGPedia Lab",
-      "home": {"name": "آرسنال", "code": "ARS", "color": "#EF0107", "score": 2, "xg": 2.18, "npxg": 1.42},
-      "away": {"name": "لیورپول", "code": "LIV", "color": "#38BDF8", "score": 1, "xg": 1.34, "npxg": 1.34},
+      "home": {
+        "name": "آرسنال",
+        "code": "ARS",
+        "color": "#EF0107",
+        "score": 2,
+        "xg": 2.18,
+        "npxg": 1.42
+      },
+      "away": {
+        "name": "لیورپول",
+        "code": "LIV",
+        "color": "#38BDF8",
+        "score": 1,
+        "xg": 1.34,
+        "npxg": 1.34
+      },
       "editorialVerdict": "آرسنال با خلق ۳ موقعیت بزرگ و کیفیت متوسط ۰.۱۸ امید گل به ازای هر شوت، جریان بازی را در نیمه اول در اختیار داشت و با وجود فشار پایانی لیورپول برتری شایسته‌ای ثبت کرد.",
       "shots": [
-        {"team": "h", "min": 9, "x": 0.89, "y": 0.44, "xg": 0.34, "result": "Goal", "situation": "OpenPlay", "player": "بوکایو ساکا"},
-        {"team": "h", "min": 18, "x": 0.84, "y": 0.61, "xg": 0.11, "result": "SavedShot", "situation": "OpenPlay", "player": "مارتین اودگارد"},
-        {"team": "a", "min": 24, "x": 0.88, "y": 0.56, "xg": 0.27, "result": "SavedShot", "situation": "OpenPlay", "player": "محمد صلاح"},
-        {"team": "h", "min": 33, "x": 0.92, "y": 0.52, "xg": 0.42, "result": "MissedShots", "situation": "FromCorner", "player": "گابریل ماگالاش"},
-        {"team": "a", "min": 41, "x": 0.91, "y": 0.47, "xg": 0.38, "result": "Goal", "situation": "OpenPlay", "player": "محمد صلاح"},
-        {"team": "h", "min": 52, "x": 0.78, "y": 0.38, "xg": 0.06, "result": "BlockedShot", "situation": "OpenPlay", "player": "دکلان رایس"},
-        {"team": "h", "min": 64, "x": 0.885, "y": 0.50, "xg": 0.76, "result": "Goal", "situation": "Penalty", "player": "بوکایو ساکا"},
-        {"team": "a", "min": 71, "x": 0.83, "y": 0.35, "xg": 0.14, "result": "MissedShots", "situation": "OpenPlay", "player": "کودی خاکپو"},
-        {"team": "h", "min": 77, "x": 0.87, "y": 0.55, "xg": 0.24, "result": "SavedShot", "situation": "OpenPlay", "player": "کای هاورتز"},
-        {"team": "a", "min": 82, "x": 0.93, "y": 0.49, "xg": 0.36, "result": "ShotOnPost", "situation": "OpenPlay", "player": "لوییس دیاز"},
-        {"team": "h", "min": 86, "x": 0.86, "y": 0.42, "xg": 0.16, "result": "SavedShot", "situation": "OpenPlay", "player": "گابریل مارتینلی"},
-        {"team": "a", "min": 89, "x": 0.80, "y": 0.58, "xg": 0.09, "result": "BlockedShot", "situation": "SetPiece", "player": "دومینیک سوبوسلای"},
-        {"team": "h", "min": 91, "x": 0.82, "y": 0.49, "xg": 0.09, "result": "MissedShots", "situation": "OpenPlay", "player": "لئاندرو تروسار"},
-        {"team": "a", "min": 93, "x": 0.85, "y": 0.44, "xg": 0.10, "result": "SavedShot", "situation": "FromCorner", "player": "ویرجیل فن دایک"}
-      ]
+        {
+          "team": "h",
+          "min": 9,
+          "x": 0.89,
+          "y": 0.44,
+          "xg": 0.34,
+          "result": "Goal",
+          "situation": "OpenPlay",
+          "player": "بوکایو ساکا"
+        },
+        {
+          "team": "h",
+          "min": 18,
+          "x": 0.84,
+          "y": 0.61,
+          "xg": 0.11,
+          "result": "SavedShot",
+          "situation": "OpenPlay",
+          "player": "مارتین اودگارد"
+        },
+        {
+          "team": "a",
+          "min": 24,
+          "x": 0.88,
+          "y": 0.56,
+          "xg": 0.27,
+          "result": "SavedShot",
+          "situation": "OpenPlay",
+          "player": "محمد صلاح"
+        },
+        {
+          "team": "h",
+          "min": 33,
+          "x": 0.92,
+          "y": 0.52,
+          "xg": 0.42,
+          "result": "MissedShots",
+          "situation": "FromCorner",
+          "player": "گابریل ماگالاش"
+        },
+        {
+          "team": "a",
+          "min": 41,
+          "x": 0.91,
+          "y": 0.47,
+          "xg": 0.38,
+          "result": "Goal",
+          "situation": "OpenPlay",
+          "player": "محمد صلاح"
+        },
+        {
+          "team": "h",
+          "min": 52,
+          "x": 0.78,
+          "y": 0.38,
+          "xg": 0.06,
+          "result": "BlockedShot",
+          "situation": "OpenPlay",
+          "player": "دکلان رایس"
+        },
+        {
+          "team": "h",
+          "min": 64,
+          "x": 0.885,
+          "y": 0.5,
+          "xg": 0.76,
+          "result": "Goal",
+          "situation": "Penalty",
+          "player": "بوکایو ساکا"
+        },
+        {
+          "team": "a",
+          "min": 71,
+          "x": 0.83,
+          "y": 0.35,
+          "xg": 0.14,
+          "result": "MissedShots",
+          "situation": "OpenPlay",
+          "player": "کودی خاکپو"
+        },
+        {
+          "team": "h",
+          "min": 77,
+          "x": 0.87,
+          "y": 0.55,
+          "xg": 0.24,
+          "result": "SavedShot",
+          "situation": "OpenPlay",
+          "player": "کای هاورتز"
+        },
+        {
+          "team": "a",
+          "min": 82,
+          "x": 0.93,
+          "y": 0.49,
+          "xg": 0.36,
+          "result": "ShotOnPost",
+          "situation": "OpenPlay",
+          "player": "لوییس دیاز"
+        },
+        {
+          "team": "h",
+          "min": 86,
+          "x": 0.86,
+          "y": 0.42,
+          "xg": 0.16,
+          "result": "SavedShot",
+          "situation": "OpenPlay",
+          "player": "گابریل مارتینلی"
+        },
+        {
+          "team": "a",
+          "min": 89,
+          "x": 0.8,
+          "y": 0.58,
+          "xg": 0.09,
+          "result": "BlockedShot",
+          "situation": "SetPiece",
+          "player": "دومینیک سوبوسلای"
+        },
+        {
+          "team": "h",
+          "min": 91,
+          "x": 0.82,
+          "y": 0.49,
+          "xg": 0.09,
+          "result": "MissedShots",
+          "situation": "OpenPlay",
+          "player": "لئاندرو تروسار"
+        },
+        {
+          "team": "a",
+          "min": 93,
+          "x": 0.85,
+          "y": 0.44,
+          "xg": 0.1,
+          "result": "SavedShot",
+          "situation": "FromCorner",
+          "player": "ویرجیل فن دایک"
+        }
+      ],
+      "is_preset": true
     },
     {
       "id": "preset_sm_mci_che",
@@ -37,22 +178,136 @@
       "round": "نبرد تاکتیکی • ورزشگاه اتحاد",
       "date": "فصل جاری",
       "source": "Understat / XGPedia Lab",
-      "home": {"name": "منچسترسیتی", "code": "MCI", "color": "#38BDF8", "score": 1, "xg": 2.46, "npxg": 2.46},
-      "away": {"name": "چلسی", "code": "CHE", "color": "#F59E0B", "score": 2, "xg": 1.12, "npxg": 1.12},
+      "home": {
+        "name": "منچسترسیتی",
+        "code": "MCI",
+        "color": "#38BDF8",
+        "score": 1,
+        "xg": 2.46,
+        "npxg": 2.46
+      },
+      "away": {
+        "name": "چلسی",
+        "code": "CHE",
+        "color": "#F59E0B",
+        "score": 2,
+        "xg": 1.12,
+        "npxg": 1.12
+      },
       "editorialVerdict": "نمونه کلاسیک «سرقت آماری»: منچسترسیتی بیش از ۲.۴ امید گل خلق کرد اما تمام‌کنندگی کلینیکال چلسی در ضدحملات سریع سرنوشت بازی را به سود میهمان تغییر داد.",
       "shots": [
-        {"team": "h", "min": 12, "x": 0.93, "y": 0.48, "xg": 0.54, "result": "Goal", "situation": "OpenPlay", "player": "ارلینگ هالند"},
-        {"team": "h", "min": 21, "x": 0.88, "y": 0.58, "xg": 0.31, "result": "SavedShot", "situation": "OpenPlay", "player": "فیل فودن"},
-        {"team": "a", "min": 29, "x": 0.86, "y": 0.43, "xg": 0.22, "result": "Goal", "situation": "OpenPlay", "player": "کول پالمر"},
-        {"team": "h", "min": 38, "x": 0.91, "y": 0.51, "xg": 0.44, "result": "ShotOnPost", "situation": "OpenPlay", "player": "ارلینگ هالند"},
-        {"team": "h", "min": 49, "x": 0.85, "y": 0.37, "xg": 0.19, "result": "SavedShot", "situation": "OpenPlay", "player": "برناردو سیلوا"},
-        {"team": "h", "min": 58, "x": 0.90, "y": 0.46, "xg": 0.38, "result": "MissedShots", "situation": "FromCorner", "player": "یوشکو گواردیول"},
-        {"team": "a", "min": 66, "x": 0.89, "y": 0.54, "xg": 0.35, "result": "Goal", "situation": "OpenPlay", "player": "نیکولاس جکسون"},
-        {"team": "h", "min": 74, "x": 0.84, "y": 0.52, "xg": 0.21, "result": "SavedShot", "situation": "OpenPlay", "player": "کوین دی‌بروینه"},
-        {"team": "a", "min": 79, "x": 0.81, "y": 0.39, "xg": 0.14, "result": "SavedShot", "situation": "OpenPlay", "player": "کول پالمر"},
-        {"team": "h", "min": 85, "x": 0.92, "y": 0.53, "xg": 0.39, "result": "SavedShot", "situation": "OpenPlay", "player": "ارلینگ هالند"},
-        {"team": "a", "min": 90, "x": 0.88, "y": 0.47, "xg": 0.41, "result": "MissedShots", "situation": "OpenPlay", "player": "پدرو نتو"}
-      ]
+        {
+          "team": "h",
+          "min": 12,
+          "x": 0.93,
+          "y": 0.48,
+          "xg": 0.54,
+          "result": "Goal",
+          "situation": "OpenPlay",
+          "player": "ارلینگ هالند"
+        },
+        {
+          "team": "h",
+          "min": 21,
+          "x": 0.88,
+          "y": 0.58,
+          "xg": 0.31,
+          "result": "SavedShot",
+          "situation": "OpenPlay",
+          "player": "فیل فودن"
+        },
+        {
+          "team": "a",
+          "min": 29,
+          "x": 0.86,
+          "y": 0.43,
+          "xg": 0.22,
+          "result": "Goal",
+          "situation": "OpenPlay",
+          "player": "کول پالمر"
+        },
+        {
+          "team": "h",
+          "min": 38,
+          "x": 0.91,
+          "y": 0.51,
+          "xg": 0.44,
+          "result": "ShotOnPost",
+          "situation": "OpenPlay",
+          "player": "ارلینگ هالند"
+        },
+        {
+          "team": "h",
+          "min": 49,
+          "x": 0.85,
+          "y": 0.37,
+          "xg": 0.19,
+          "result": "SavedShot",
+          "situation": "OpenPlay",
+          "player": "برناردو سیلوا"
+        },
+        {
+          "team": "h",
+          "min": 58,
+          "x": 0.9,
+          "y": 0.46,
+          "xg": 0.38,
+          "result": "MissedShots",
+          "situation": "FromCorner",
+          "player": "یوشکو گواردیول"
+        },
+        {
+          "team": "a",
+          "min": 66,
+          "x": 0.89,
+          "y": 0.54,
+          "xg": 0.35,
+          "result": "Goal",
+          "situation": "OpenPlay",
+          "player": "نیکولاس جکسون"
+        },
+        {
+          "team": "h",
+          "min": 74,
+          "x": 0.84,
+          "y": 0.52,
+          "xg": 0.21,
+          "result": "SavedShot",
+          "situation": "OpenPlay",
+          "player": "کوین دی‌بروینه"
+        },
+        {
+          "team": "a",
+          "min": 79,
+          "x": 0.81,
+          "y": 0.39,
+          "xg": 0.14,
+          "result": "SavedShot",
+          "situation": "OpenPlay",
+          "player": "کول پالمر"
+        },
+        {
+          "team": "h",
+          "min": 85,
+          "x": 0.92,
+          "y": 0.53,
+          "xg": 0.39,
+          "result": "SavedShot",
+          "situation": "OpenPlay",
+          "player": "ارلینگ هالند"
+        },
+        {
+          "team": "a",
+          "min": 90,
+          "x": 0.88,
+          "y": 0.47,
+          "xg": 0.41,
+          "result": "MissedShots",
+          "situation": "OpenPlay",
+          "player": "پدرو نتو"
+        }
+      ],
+      "is_preset": true
     }
   ]
 }

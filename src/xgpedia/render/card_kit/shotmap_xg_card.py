@@ -20,7 +20,7 @@ import math
 from typing import Any
 
 from src.xgpedia.providers.pl_badges_free import resolve_distinct_team_colors
-from src.xgpedia.render.card_kit.helpers import ensure_dark_bg_contrast, esc, f2, fa
+from src.xgpedia.render.card_kit.helpers import with_sample_badge, ensure_dark_bg_contrast, esc, f2, fa
 from src.xgpedia.render.cards import _brand_logo_data_uri
 from src.xgpedia.render.studio_engine import build_embedded_font_css
 
@@ -383,6 +383,7 @@ def render_mod_editorial_verdict(item: dict[str, Any]) -> str:
     )
 
 
+@with_sample_badge
 def render_shotmap_xg_html(
     item: dict[str, Any],
     *,

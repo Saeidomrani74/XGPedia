@@ -13,7 +13,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from src.xgpedia.render.card_kit.helpers import contrast_ink, esc, f1, f2, fa, luminance, smooth_spline
+from src.xgpedia.render.card_kit.helpers import with_sample_badge, contrast_ink, esc, f1, f2, fa, luminance, smooth_spline
 from src.xgpedia.render.cards import _brand_logo_data_uri
 from src.xgpedia.render.studio_engine import build_embedded_font_css
 
@@ -619,6 +619,7 @@ def _render_trajectory(data: dict[str, Any], P: list[dict[str, Any]]) -> str:
     )
 
 
+@with_sample_badge
 def render_top_scorers_html(
     data: dict[str, Any],
     *,

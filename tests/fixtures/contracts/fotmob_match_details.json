@@ -1,0 +1,562 @@
+{
+  "general": {
+    "homeTeam": {
+      "id": 9825,
+      "name": "Arsenal"
+    },
+    "awayTeam": {
+      "id": 8455,
+      "name": "Chelsea"
+    }
+  },
+  "header": {
+    "teams": [
+      {
+        "id": 9825,
+        "score": 2
+      },
+      {
+        "id": 8455,
+        "score": 1
+      }
+    ]
+  },
+  "content": {
+    "stats": {
+      "Periods": {
+        "All": {
+          "stats": [
+            {
+              "stats": [
+                {
+                  "key": "expected_goals",
+                  "stats": [
+                    "2.15",
+                    "0.88"
+                  ]
+                },
+                {
+                  "key": "big_chance",
+                  "stats": [
+                    "4",
+                    "1"
+                  ]
+                },
+                {
+                  "key": "BallPossesion",
+                  "stats": [
+                    "59",
+                    "41"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "shotmap": {
+      "shots": [
+        {
+          "teamId": 9825,
+          "x": 92.0,
+          "y": 34.0,
+          "expectedGoals": 0.48,
+          "eventType": "Goal",
+          "playerName": "Bukayo Saka",
+          "min": 19
+        },
+        {
+          "teamId": 9825,
+          "x": 88.5,
+          "y": 38.0,
+          "expectedGoals": 0.36,
+          "eventType": "Goal",
+          "playerName": "Kai Havertz",
+          "min": 64
+        },
+        {
+          "teamId": 8455,
+          "x": 91.0,
+          "y": 36.0,
+          "expectedGoals": 0.42,
+          "eventType": "Goal",
+          "playerName": "Cole Palmer",
+          "min": 51
+        }
+      ]
+    },
+    "momentum": {
+      "main": {
+        "data": [
+          {
+            "minute": 1,
+            "value": -12
+          },
+          {
+            "minute": 2,
+            "value": 22
+          },
+          {
+            "minute": 3,
+            "value": -12
+          },
+          {
+            "minute": 4,
+            "value": 22
+          },
+          {
+            "minute": 5,
+            "value": -12
+          },
+          {
+            "minute": 6,
+            "value": 22
+          },
+          {
+            "minute": 7,
+            "value": -12
+          },
+          {
+            "minute": 8,
+            "value": 22
+          },
+          {
+            "minute": 9,
+            "value": -12
+          },
+          {
+            "minute": 10,
+            "value": 22
+          },
+          {
+            "minute": 11,
+            "value": -12
+          },
+          {
+            "minute": 12,
+            "value": 22
+          },
+          {
+            "minute": 13,
+            "value": -12
+          },
+          {
+            "minute": 14,
+            "value": 22
+          },
+          {
+            "minute": 15,
+            "value": -12
+          },
+          {
+            "minute": 16,
+            "value": 22
+          },
+          {
+            "minute": 17,
+            "value": -12
+          },
+          {
+            "minute": 18,
+            "value": 22
+          },
+          {
+            "minute": 19,
+            "value": -12
+          },
+          {
+            "minute": 20,
+            "value": 22
+          },
+          {
+            "minute": 21,
+            "value": -12
+          },
+          {
+            "minute": 22,
+            "value": 22
+          },
+          {
+            "minute": 23,
+            "value": -12
+          },
+          {
+            "minute": 24,
+            "value": 22
+          },
+          {
+            "minute": 25,
+            "value": -12
+          },
+          {
+            "minute": 26,
+            "value": 22
+          },
+          {
+            "minute": 27,
+            "value": -12
+          },
+          {
+            "minute": 28,
+            "value": 22
+          },
+          {
+            "minute": 29,
+            "value": -12
+          },
+          {
+            "minute": 30,
+            "value": 22
+          },
+          {
+            "minute": 31,
+            "value": -12
+          },
+          {
+            "minute": 32,
+            "value": 22
+          },
+          {
+            "minute": 33,
+            "value": -12
+          },
+          {
+            "minute": 34,
+            "value": 22
+          },
+          {
+            "minute": 35,
+            "value": -12
+          },
+          {
+            "minute": 36,
+            "value": 22
+          },
+          {
+            "minute": 37,
+            "value": -12
+          },
+          {
+            "minute": 38,
+            "value": 22
+          },
+          {
+            "minute": 39,
+            "value": -12
+          },
+          {
+            "minute": 40,
+            "value": 22
+          },
+          {
+            "minute": 41,
+            "value": -12
+          },
+          {
+            "minute": 42,
+            "value": 22
+          },
+          {
+            "minute": 43,
+            "value": -12
+          },
+          {
+            "minute": 44,
+            "value": 22
+          },
+          {
+            "minute": 45,
+            "value": -12
+          },
+          {
+            "minute": 46,
+            "value": 22
+          },
+          {
+            "minute": 47,
+            "value": -12
+          },
+          {
+            "minute": 48,
+            "value": 22
+          },
+          {
+            "minute": 49,
+            "value": -12
+          },
+          {
+            "minute": 50,
+            "value": 22
+          },
+          {
+            "minute": 51,
+            "value": -12
+          },
+          {
+            "minute": 52,
+            "value": 22
+          },
+          {
+            "minute": 53,
+            "value": -12
+          },
+          {
+            "minute": 54,
+            "value": 22
+          },
+          {
+            "minute": 55,
+            "value": -12
+          },
+          {
+            "minute": 56,
+            "value": 22
+          },
+          {
+            "minute": 57,
+            "value": -12
+          },
+          {
+            "minute": 58,
+            "value": 22
+          },
+          {
+            "minute": 59,
+            "value": -12
+          },
+          {
+            "minute": 60,
+            "value": 22
+          },
+          {
+            "minute": 61,
+            "value": -12
+          },
+          {
+            "minute": 62,
+            "value": 22
+          },
+          {
+            "minute": 63,
+            "value": -12
+          },
+          {
+            "minute": 64,
+            "value": 22
+          },
+          {
+            "minute": 65,
+            "value": -12
+          },
+          {
+            "minute": 66,
+            "value": 22
+          },
+          {
+            "minute": 67,
+            "value": -12
+          },
+          {
+            "minute": 68,
+            "value": 22
+          },
+          {
+            "minute": 69,
+            "value": -12
+          },
+          {
+            "minute": 70,
+            "value": 22
+          },
+          {
+            "minute": 71,
+            "value": -12
+          },
+          {
+            "minute": 72,
+            "value": 22
+          },
+          {
+            "minute": 73,
+            "value": -12
+          },
+          {
+            "minute": 74,
+            "value": 22
+          },
+          {
+            "minute": 75,
+            "value": -12
+          },
+          {
+            "minute": 76,
+            "value": 22
+          },
+          {
+            "minute": 77,
+            "value": -12
+          },
+          {
+            "minute": 78,
+            "value": 22
+          },
+          {
+            "minute": 79,
+            "value": -12
+          },
+          {
+            "minute": 80,
+            "value": 22
+          },
+          {
+            "minute": 81,
+            "value": -12
+          },
+          {
+            "minute": 82,
+            "value": 22
+          },
+          {
+            "minute": 83,
+            "value": -12
+          },
+          {
+            "minute": 84,
+            "value": 22
+          },
+          {
+            "minute": 85,
+            "value": -12
+          },
+          {
+            "minute": 86,
+            "value": 22
+          },
+          {
+            "minute": 87,
+            "value": -12
+          },
+          {
+            "minute": 88,
+            "value": 22
+          },
+          {
+            "minute": 89,
+            "value": -12
+          },
+          {
+            "minute": 90,
+            "value": 22
+          }
+        ]
+      }
+    },
+    "lineup": {
+      "homeTeam": {
+        "starters": [
+          {
+            "id": "101",
+            "name": "David Raya",
+            "shirtNumber": 22,
+            "positionId": "GK",
+            "performance": {
+              "rating": 7.5
+            }
+          },
+          {
+            "id": "102",
+            "name": "Bukayo Saka",
+            "shirtNumber": 7,
+            "positionId": "FW",
+            "performance": {
+              "rating": 8.7
+            }
+          }
+        ]
+      },
+      "awayTeam": {
+        "starters": [
+          {
+            "id": "201",
+            "name": "Robert Sanchez",
+            "shirtNumber": 1,
+            "positionId": "GK",
+            "performance": {
+              "rating": 6.6
+            }
+          },
+          {
+            "id": "202",
+            "name": "Cole Palmer",
+            "shirtNumber": 20,
+            "positionId": "MF",
+            "performance": {
+              "rating": 7.8
+            }
+          }
+        ]
+      }
+    },
+    "playerStats": {
+      "101": {
+        "stats": [
+          {
+            "key": "saves",
+            "stat": {
+              "value": 3
+            }
+          },
+          {
+            "key": "expected_goals_on_target_faced",
+            "stat": {
+              "value": 0.94
+            }
+          }
+        ]
+      },
+      "102": {
+        "stats": [
+          {
+            "key": "goals",
+            "stat": {
+              "value": 1
+            }
+          },
+          {
+            "key": "assists",
+            "stat": {
+              "value": 1
+            }
+          }
+        ]
+      },
+      "201": {
+        "stats": [
+          {
+            "key": "saves",
+            "stat": {
+              "value": 4
+            }
+          },
+          {
+            "key": "expected_goals_on_target_faced",
+            "stat": {
+              "value": 2.02
+            }
+          }
+        ]
+      },
+      "202": {
+        "stats": [
+          {
+            "key": "goals",
+            "stat": {
+              "value": 1
+            }
+          }
+        ]
+      }
+    }
+  }
+}

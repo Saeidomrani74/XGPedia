@@ -1,86 +1,69 @@
-# XGPedia — سند جامع معماری، وضعیت فعلی (`v0.79.0`) و نقشهٔ راه کامل
+# XGPedia — سند جامع معماری، وضعیت فعلی (`v0.80.3`) و نقشهٔ راه کامل
 
-> **هدف این سند**: این فایل به‌همراه کل سورس‌کد موجود در بستهٔ `XGPedia_Master_Handoff_v0.71.0_Complete.zip` به‌تنهایی حاوی تمام معماری، قوانین دائمی، وضعیت دقیق کدها تا نسخهٔ **`v0.71.0`**، کل نقشهٔ راه قبلی (بدون حذف هیچ موردی)، پیشنهادهای راهبردی جدید و پروتکل فاز ممیزی و رفع باگ کلی در چت جدید است. برای شروع چت جدید هیچ فایل یا پیش‌زمینهٔ دیگری لازم نیست.
+> **هدف این سند**: این فایل به‌همراه کل سورس‌کد موجود در بستهٔ `XGPedia_Master_Handoff_v0.79.3_Complete.zip` به‌تنهایی حاوی تمام معماری، قوانین دائمی، وضعیت دقیق کدها تا نسخهٔ **`v0.80.3`**، کل نقشهٔ راه قبلی (بدون حذف هیچ موردی)، پیشنهادهای راهبردی جدید متناسب با وضعیت فعلی و پروتکل بازبینی و رفع باگ کلی در چت جدید است. برای شروع چت جدید هیچ فایل یا پیش‌زمینهٔ دیگری لازم نیست.
 
 ---
 
 ## ۱. محیط اجرا، هویت برند و قوانین دائمی (غیرقابل نقض)
 - **نام و شناسه**: `XGPedia` (`@XGPedia` / `@XGPedia_bot`) — رسانهٔ فارسی تحلیل داده‌محور فوتبال («عدد را API می‌دهد، متن را مدل می‌نویسد، تصویر را قالب HTML می‌سازد»).
-- **محیط توسعهٔ کاربر**: ویندوز (`C:\Users\saeid\StudioProjects\XGPedia`)، پایتون `3.14`، اجرای ربات با `python run.py bot` و اجرای تست‌ها با `python -m pytest tests/ -q`.
+- **محیط توسعهٔ کاربر**: ویندوز (`<PROJECT_ROOT>`)، پایتون `3.14`، اجرای ربات با `python run.py bot`، اجرای تست‌ها با `python -m pytest tests/ -q` و اجرای آزمون رگرسیون بصری با `python run.py visual-qa`.
+- **تصمیم‌های راهبردی تثبیت‌شدهٔ مالک پروژه**:
+  - شروع محدود، عمیق و بسیار قابل‌اعتماد روی فوتبال اروپا، سپس توسعه.
+  - هویت برند: **رسانهٔ تحلیل داده**؛ تلگرام مرکز انتشار با هدف رشد مخاطب و اعتمادسازی.
+  - حرکت مرحله‌به‌مرحله به‌سمت **حذف تایید انسانی و خودکارسازی کامل** (همراه با یادگیری تصمیم‌ها و ترجیحات از روی جدول `post_metrics`).
+  - اتکا به **منابع داده و سرور رایگان** (مگر منابع پولی با ارزش افزودهٔ بسیار بالا)؛ حفظ ماژول `+EV`؛ خاموش‌بودن پیش‌فرض مسیرهای ناشناس LLM (`LLM_ENABLE_ANONYMOUS_FALLBACK=0`)؛ حفظ ساختار پکیج `src.xgpedia` (عدم تغییر نام به `xgpedia`).
 - **قوانین دائمی و غیرقابل نقض**:
   1. **صرفاً فوتبال واقعی (Association Football / Soccer ONLY)**: هرگز داده یا خبر فوتبال آمریکایی (NFL/NCAAF)، استرالیایی (AFL)، کانادایی (CFL)، گیلیک یا راگبی وارد پروژه نشود.
   2. **قانون اکید `null ≠ 0` و ممنوعیت کامل داده‌های ساختگی**: اگر دادهٔ واقعی (مانند xG، پنالتی، شوت، دقیقهٔ گل، نتیجه نیمه اول، شماره پیراهن یا تیم حریف) در API موجود نیست، هرگز عدد جعلی یا فرمول تقریبی نسازید؛ مقدار `None` بماند و در کارت مخفی یا `—` نمایش داده شود.
   3. **ارائه‌دهندگان رایگان بدون وابستگی به `requests`**: تمام ارتباطات شبکه در ارائه‌دهندگان آزاد صرفاً با `urllib.request` / `httpx` / `curl_cffi` / `playwright` و کش داخلی انجام شود.
-  4. **رندر ۱۰۰٪ آفلاین و یکدست**: تمام فونت‌ها (`brand/fonts/`)، لوگوهای برداری (`brand/logo/svg/`) و نشان باشگاه‌ها (`brand/crests/` و `output/.badge_cache/`) به‌صورت محلی و Data URI بارگذاری شوند (بدون اتکا به CDN خارجی هنگام رندر Playwright).
-  5. **تقارن ۱:۱ فایل‌های پیکربندی**: `config/glossary_fa.json`، `config/team_identities.json`، `config/team_mapping.json` و `config/team_venues.json` برای تمام **۱۵۱ باشگاه** همواره متقارن و هماهنگ بمانند.
+  4. **رندر ۱۰۰٪ آفلاین و یکدست**: تمام فونت‌ها (`brand/fonts/`)، لوگوهای برداری (`brand/logo/svg/`) و نشان باشگاه‌ها (`brand/crests/` به‌صورت `.svg`/`.png` و `output/.badge_cache/`) به‌صورت محلی و Data URI بارگذاری شوند (بدون اتکا به CDN خارجی هنگام رندر Playwright).
+  5. **تقارن ۱:۱ فایل‌های پیکربندی**: `config/glossary_fa.json`، `config/team_identities.json`، `config/team_mapping.json` و `config/team_venues.json` برای تمام **۱۵۱ باشگاه** همواره متقارن ۱:۱ و هماهنگ بمانند.
   6. **ممنوعیت نام‌های رزرو ویندوز**: هرگز از `AUX`, `CON`, `PRN`, `NUL`, `COM1..9`, `LPT1..9` برای کد باشگاه استفاده نشود (اوسر = `AJA`، سلتاویگو = `CVG`).
   7. **تطابق گرافیکی ۱:۱ و معماری ماژولار/اسلایدی**: کادر چهارگوشهٔ قرمز یکپارچه، پالت `#0D1730` و `#E62E45`، تایپوگرافی `Vazirmatn` / `JetBrains Mono` / `Space Grotesk`، فرمت‌های `4:5` (`1080×1350`)، `9:16` (`1080×1920`) و `16:9` (`1920×1080`)، و پشتیبانی کامل از انتخاب/عرض/ترتیب ماژول‌ها و ذخیرهٔ تا ۵ قالب نام‌گذاری‌شده (`layout_templates.py`).
   8. **تحویل کد و بسته‌بندی**: هر تغییر یا پچ در چت به‌صورت فایل `.zip` با نام‌گذاری `XGPedia_v<VER>_<desc>.zip` و مسیرهای نسبی دقیق از ریشهٔ پروژه تحویل داده شود (سازگار با `Expand-Archive -Force` و اسکریپت رصد خودکار کاربر `watch_xgpedia_updates.ps1`).
-  9. **زبان پاسخ و نام‌گذاری فارسی**: فارسی روان، کوتاه و دقیق؛ استفاده از مصطلح‌ترین نوشتار فارسی برای تمام بازیکنان و باشگاه‌ها (بدون چسبیدن حرف اول مخفف به نام‌خانوادگی، `و` به‌جای `&` بین مربیان، کپشن ایمن ≤۱۰۲۴ کاراکتر در تلگرام و صفحه‌بندی اجباری لیست‌های در حال رشد).
-  10. **استراتژی چندمنبعی اجباری برای هر باشگاه، تورنمنت و عکس بازیکن جدید**: هر زمان باشگاه یا تورنمنت جدیدی اضافه شد (و نیز در فاز ۲ هنگام ساخت خط تولید عکس بازیکنان)، باید تمام زنجیرهٔ منابع آزاد راستی‌آزمایی‌شده به‌کار گرفته شود تا بیشترین پوشش واقعی و آفلاین حاصل شود: رجیستری محلی `data/team_logos.json` (`dynamic_crests.py`)، `crests.football-data.org`، FotMob CDN (`images.fotmob.com`)، TheSportsDB v3 (`strBadge`/`strCutout` **با فیلتر اکید `strSport == Soccer`**)، **Wikipedia Section-0 Infobox (`| image =`)** و Wikidata (`P154`/`P18`) **با User-Agent استاندارد ویکی‌مدیا**، **ESPN CDN مستقیم (`a.espncdn.com`)**، ESPN، Understat XHR، FPL و CSVهای `football-data.co.uk` (با ذخیرهٔ آفلاین در `brand/crests/` یا `brand/player_photos/` و حفظ کامل `null ≠ 0`).
+  9. **زبان پاسخ و نام‌گذاری فارسی**: فارسی روان، کوتاه و دقیق؛ استفاده از مصطلح‌ترین نوشتار فارسی برای تمام بازیکنان و باشگاه‌ها از طریق سرویس واحد `core/identity_service.py` (بدون چسبیدن حرف اول مخفف به نام‌خانوادگی، `و` به‌جای `&` بین مربیان، کپشن ایمن ≤۱۰۲۴ کاراکتر در تلگرام و صفحه‌بندی اجباری لیست‌های در حال رشد).
+  10. **استراتژی چندمنبعی اجباری برای هر باشگاه، تورنمنت و عکس بازیکن جدید**: هر زمان باشگاه یا تورنمنت جدیدی اضافه شد (و نیز در فاز ۲ هنگام ساخت خط تولید عکس بازیکنان)، باید تمام زنجیرهٔ منابع آزاد راستی‌آزمایی‌شده به‌کار گرفته شود تا بیشترین پوشش واقعی و آفلاین حاصل شود: رجیستری محلی `data/team_logos.json` (`dynamic_crests.py`)، **`Wikipedia Section-0 Infobox (| image =)`** و Wikidata (`P154` لوگو و `P18` عکس بازیکن) **با User-Agent استاندارد ویکی‌مدیا**، **CDN مستقیم ESPN (`a.espncdn.com`)**، CDN عمومی `crests.football-data.org`، FotMob CDN (`images.fotmob.com`)، TheSportsDB v3 (`strBadge`/`strCutout` **با فیلتر اکید `strSport == Soccer`**)، Understat XHR، FPL و CSVهای `football-data.co.uk` (با ذخیرهٔ آفلاین و پشتیبانی توأمان `.svg` و `.png`).
 
 ---
 
-## ۲. وضعیت فنی فعلی پروژه (تکمیل‌شده تا نسخهٔ `v0.71.0`)
+## ۲. وضعیت فنی فعلی پروژه (تکمیل‌شده تا نسخهٔ `v0.80.3`)
 
-### الف) پوشش رقابت‌ها و داده‌های باشگاهی/بازیکنان
-- **۷ رقابت معتبر اروپا (کامل)**:
-  1. لیگ برتر انگلیس (`PL` / `eng.1`)
-  2. لیگ قهرمانان اروپا (`CL` / `uefa.champions`)
-  3. **لیگ اروپا (`EL` / `uefa.europa` — افزوده‌شده در `v0.63.0` تا `v0.67.0`)**
-  4. لالیگا (`PD` / `esp.1`)
-  5. سری آ (`SA` / `ita.1`)
-  6. بوندس‌لیگا (`BL1` / `ger.1`)
-  7. لیگ ۱ فرانسه (`FL1` / `fra.1`)
-- **۱۵۱ باشگاه متقارن** در ۴ فایل پیکربندی (ارتقا از ۱۴۰ به ۱۵۱ با افزودن ۱۱ باشگاه جدید فصل ۲۰۲۶–۲۷ لیگ اروپا + ۱۱ نشان SVG محلی + عناوین ویکی‌پدیا).
-- **۱۱ لیگ CSV در `football-data.co.uk`** (`E0, SP1, I1, D1, F1` + `P1, N1, B1, T1, G1, SC0`) + همگام‌سازی تاریخچهٔ فصلی ESPN با `leagues[0].calendar` (با دانلود موازی `ThreadPoolExecutor(6)` و تایم‌اوت ۲۴۰ ثانیه‌ای با Heartbeat در ربات تلگرام).
-- **بازبینی کامل ۲۷۷ بازیکن (`v0.70.0`)**: یکسان‌سازی مصطلح‌ترین نوشتار فارسی در `config/glossary_fa.json`، `src/xgpedia/config.py` و `src/xgpedia/providers/injury_free.py` + پشتیبانی کامل از فرم‌های مخفف بدون فاصله مثل `B.Fernandes` ← `برونو فرناندز`.
+### الف) پوشش رقابت‌ها، ۱۵۱ باشگاه و سرویس واحد هویت نام‌ها
+- **۷ رقابت معتبر اروپا (کامل)**: لیگ برتر انگلیس (`PL`)، لیگ قهرمانان اروپا (`CL`)، لیگ اروپا (`EL`)، لالیگا (`PD`)، سری آ (`SA`)، بوندس‌لیگا (`BL1`) و لیگ ۱ فرانسه (`FL1`).
+- **۱۵۱ باشگاه با تقارن دقیق ۱:۱** در هر ۴ فایل پیکربندی (`Coventry City`, `Hull City`, `Ipswich Town`, `Leeds United`, `Newcastle United` هم‌تراز شدند) + **۱۵۱/۱۵۱ لوگوی واقعی آفلاین** با ابزار ارتقایافتهٔ `tools/fetch_crests.py` (پشتیبانی کامل از `.svg` و `.png` در `pl_badges_free.py` و `ucl_badges_free.py`).
+- **سرویس واحد هویت نام‌ها (`src/xgpedia/core/identity_service.py` — `v0.77.0`)**: تجمیع مرکزی هر ۳ منبع نام بازیکنان (`glossary_fa.json`، `config.py`، `injury_free.py`) و هویت باشگاه‌ها با کش LRU (`@lru_cache`) و تابع ممیزی یکتایی `audit_identity_consistency()`.
 
-### ب) موتور واقعی Opta xG، زنجیرهٔ منابع و پروایدرها (`45` ماژول در `src/xgpedia/providers/`)
-- **موتور واقعی xG (`xg_engine.py` + `opta_hub.py`)**:
-  - زنجیرهٔ فعال از `v0.71.0`: **FotMob (HTTP + `__NEXT_DATA__` با کش ۱۵ دقیقه‌ای روزانه) ← FotMob Playwright (رهگیری JSON رسمی Opta با استخراج یک‌جای هر ۷ ماژول پس‌ازبازی) ← Understat (۵ لیگ داخلی)** + پشتیبان اختیاری **API-Football**.
-  - **SofaScore (`v0.71.0`)**: تمام کدها و پارسرها دست‌نخورده حفظ شده‌اند اما به‌صورت پیش‌فرض در مسیر زنده غیرفعال است (`XGPEDIA_ENABLE_SOFASCORE=0`) تا خطای `403 Forbidden` و کندی حذف شود؛ با تنظیم `XGPEDIA_ENABLE_SOFASCORE=1` در `.env` بلافاصله به‌عنوان آخرین پشتیبان فعال می‌شود.
-- **جدول گلزنان و کفش طلا (`top_scorers_free.py` — `v0.68.0` تا `v0.69.1`)**:
-  - استفاده از **XHR JSON API جدید ۲۰۲۶ Understat** (`/getLeagueData/{league_slug}/{season_yr}`) برای دریافت واقعی xG، کلینیکال، شوت و پنالتی در ۵ لیگ معتبر اروپا.
-  - خواندن استاندارد توکن `FOOTBALL_DATA_ORG_TOKEN`، رفع نگاشت باشگاه‌های حقوقی و صعودکرده ۲۰۲۶–۲۷، نمایش لوگوی واقعی باشگاه‌های اروپایی و فعال‌سازی مسیر ۸ هفته اخیر کفش طلا از FPL `element-summary`.
-  - اتصال اختیاری به **GOAL API** (`src/xgpedia/providers/goal_api.py` با `GOAL_API_KEY`).
-- **کارت بازیکن FC27 (`player_fc27_free.py` + `player_fc27_card.py` — `v0.70.0`)**:
-  - نمایش نام کوتاه فارسی تیم حریف زیر هر ۵ نقطهٔ نمودار «روند فرم ۵ بازی» از `element-summary` در FPL + اصلاح کوئری TheSportsDB به نام انگلیسی.
-- **موتور پلاگین‌پذیر زنجیرهٔ منابع (`source_chain.py` + `config/data_source_chains.json`)**: ثبت رسمی تمام **۲۳ کارت** و ۱۲ زنجیرهٔ دامنه‌ای مرتب‌شده بر اساس `authority_score` + `api_health.py` و دستور `/health`.
-- **منابع باز دیگر**: `fpl_free.py`، `football_data_org.py`، `espn_free.py`، `open_football_hub.py` (`OpenLigaDB`, `worldcup26.ir`, `openfootball`), `live_intel_free.py`، `irib_conductor.py`، `dynamic_crests.py`.
+### ب) موتور واقعی Opta xG، کش پایدار SQLite و گرم‌کن پس‌زمینه
+- **موتور واقعی xG (`xg_engine.py` + `xg_engine_fotmob.py` + `xg_engine_playwright.py` + `opta_hub.py`)**:
+  - زنجیرهٔ فعال: **کش پایدار SQLite ← FotMob (HTTP + `__NEXT_DATA__`) ← FotMob Playwright (استخراج یک‌جای هر ۷ ماژول پس‌ازبازی) ← Understat (۵ لیگ داخلی)** + پشتیبان اختیاری **API-Football**.
+  - **SofaScore**: کدها حفظ شده‌اند اما به‌صورت پیش‌فرض خاموش است (`XGPEDIA_ENABLE_SOFASCORE=0`).
+- **کش پایدار SQLite و گرم‌کن پس‌زمینه (`core/hydration_cache.py` + `core/background_warmer.py` — `v0.78.0`)**:
+  - جدول `api_hydration_cache` با الگوی **Stale-While-Revalidate (SWR)**، TTL هوشمند (FotMob بازی تمام‌شده ۷ روز، Understat XHR ۱۲ ساعت، FPL ۶ ساعت) و نگهبان سقف نرخ (`RateBudget`) برای جلوگیری از ۴۲۹.
+  - حلقهٔ آرام پس‌زمینه (`XGPEDIA_ENABLE_WARMER=1`) متصل به `telegram_bot.py` برای گرم‌کردن تدریجی Opta پس‌ازبازی، Understat و FPL + نمایش آمار کش در `/health`.
+- **زنجیرهٔ منابع و حاکمیت داده (`core/source_chain.py` + `config/data_source_chains.json`)**: ثبت ۲۳ کارت و ۱۲ دامنه، تفکیک شفاف `official_opta` (صرفاً `opta_official`) از `opta_aggregator`/`verified_api`/`local_asset`، و امتیازدهی چندبعدی `SourceQualityProfile`.
 
-### ج) خانوادهٔ کامل کارت‌ها (`32` ماژول در `src/xgpedia/render/card_kit/`)
-- **پیش‌ازبازی (۷ ماژول)**: `radar`, `keyduel` (با ترجمهٔ فارسی نام بازیکنان), `signals` (+EV روی ۸ بازار), `wave`, `trend10`, `stats`, `poisson` (Dixon-Coles 5×5).
-- **پس‌ازبازی (۷ ماژول)**: `xgrace`, `shotmap`, `momentum`, `efficiency` (دروازه‌بان و PSxG با فالبک ESPN GK), `toprated`, `motm`, `stats`.
-- **کارت‌های استودیویی و اسلایدی**: `on_this_day`, `breaking_news`, `birthday`, `transfer_radar`, `this_or_that`, `players_rating`, `standings`, `injury`, `player_profile`, `player_fc27`, `top_scorers`, `matchday_results`, `h2h_teams`, `h2h_players`, `quote`, `debate`, `number_of_day`, `matchweek_wrapup`, `shotmap_xg`, `value_radar`, `lineup_injuries`.
-
-### د) تحریریه، ویدیو/ریلز، انتشار چندپلتفرمی و تست‌ها
-- **لایهٔ تحریریه (فاز ۳ — تکمیل‌شده)**: روتر چندمدلهٔ رایگان LLM (`llm_provider.py`) با چرخش چندکلیدی + ۴ لحن (`analytical`, `fan_light`, `x_thread`, `reels_script`) + قلاب‌های روایی (`narrative.py`) + نظرسنجی خودکار تلگرام + ولیدیتور اصلاح‌شده (`validate.py` در `v0.62.0`).
-- **موتور ویدیو و ریلز کینتیک (فاز ۶ — تکمیل‌شده)**: ریلز ۲۰ فریم بر ثانیه (`motion_reel.py`) + موزیک استریو ۱۲۴ BPM (`audio_synth.py`) + رفع قفل ۴KB پایپ FFmpeg در ویندوز.
-- **انتشار چندپلتفرمی (فاز ۷ — هسته تکمیل‌شده)**: **تلگرام** و **اینستاگرام** (`IG_SESSIONID` + تامبنیل خودکار FFmpeg) روی پروداکشن تأیید شده‌اند (`200 OK`)؛ **بله (Bale)** و **ایکس (X OAuth 2.0 PKCE)** پیاده‌سازی و آماده‌اند.
-- **تست‌ها**: بیش از **۶۲ فایل تست** در `tests/` (تا `test_v71_sofascore_feature_flag.py`) با سازگاری کامل اجرای مستقیم `python -m pytest tests/ -q` از ریشهٔ پروژه.
-
-### هـ) جمع‌بندی فاز صفر (نسخهٔ `v0.79.0` — ممیزی جامع و رفع باگ کلی)
-- **امنیت و نشست‌ها**: حذف نشست لو‌رفتهٔ اینستاگرام (`__nonexistent_test_ig_session__.json`)، تقویت `.gitignore`، ایزوله‌سازی `X_TOKEN_STORE`/`IG_SESSION_FILE` در `tmp_path` (`tests/conftest.py`)، مستقل‌سازی مسیر `IG_SESSION_FILE` از CWD با سطح دسترسی `0o600` و محدودکردن `verify=False` در `irib_conductor.py` به دامنه‌های مجاز `tv3.ir`/`varzeshtv.ir`.
-- **رفع ۵ کرش قطعی `NameError`**: تعریف `OK`/`FAIL` در `run.py`، اصلاح `logger` ← `log` و حذف `_tb_rep` اضافی و تعریف `match_lbl` در `telegram_bot.py`، اصلاح `_clean_text` ← `_clean_html_text` در `breaking_news_free.py`، و رفع ایمپورت‌های `TYPE_CHECKING` در `sync.py`.
-- **ولیدیتور تحریریه (`validate.py`)**: رفع شرط همیشه-درست `insufficient_data`، گسترش `_null_distortion()` به هر دو تیم (`home`/`away`) و شاخص‌های `xg`/`corners`/`possession`، و فعال‌سازی `_looks_like_name()` برای موجودیت‌های معرفی‌شده پس از نقش‌های فوتبالی.
-- **حریم خصوصی، DB و کارایی**: تغییر پیش‌فرض `LLM_ENABLE_ANONYMOUS_FALLBACK=0` و جایگزینی `print()` با `logging` در `llm_provider.py`؛ افزودن `timeout=30.0`، `PRAGMA busy_timeout=30000`، `PRAGMA foreign_keys=ON`، `PRAGMA user_version` و ستون `wave_json` در `_migrate()` (`db.py`)؛ افزودن شمارندهٔ ساختاریافتهٔ خطا (`core/error_metrics.py`)؛ polling وضعیت کانتینر Reels در IG Graph API با نسخهٔ قابل‌تنظیم `IG_GRAPH_API_VERSION`؛ و Reuse مرورگر Chromium در `render_png.py`.
-- **تقارن ۱۰۰٪ ۱۵۱ باشگاه و `null ≠ 0`**: هم‌ترازی ۵ باشگاه (`Coventry City`, `Hull City`, `Ipswich Town`, `Leeds United`, `Newcastle United`) بین `team_identities.json`، `team_mapping.json` و `team_venues.json`؛ اصلاح `null ≠ 0` فیلدهای تحلیلی در `top_scorers_free.py`، `fpl_free.py` و `player_profile_free.py`؛ حذف فایل مردهٔ `render/sync.py`؛ و اصلاح CI (`pyproject.toml` و `jobs.yml`) با فیکسچر `tests/fixtures/fact.json`.
-
-- **بازآرایی ماژولار فایل‌های غول‌پیکر (`v0.79.0`)**: شکستن ۴ فایل بزرگ پروژه با حفظ ۱۰۰٪ سازگاری و re-export:
-  - `telegram_bot.py` (۳۸۸۸ ← ۲۱۳۳ خط) + `bot_studio_otd_news.py` + `bot_studio_bday_transfer_tot.py`
-  - `today_workflow.py` (۳۰۲۵ ← ۱۲۵۰ خط) + `workflows/scheduling.py` + `workflows/post_match.py` + `workflows/studio_generators.py`
-  - `sync.py` (۱۶۲۷ ← ۱۰۱۶ خط) + `sync_enrichments.py`
-  - `modular_cards_bot.py` (۱۵۵۹ ← ۱۳۱۲ خط) + `modular_cards_helpers.py`
+### ج) پایگاه داده، امنیت، بازآرایی ماژولار و کنترل کیفیت بصری (`v0.72.0` تا `v0.80.3`)
+- **SQLite (`src/xgpedia/db.py` — `SCHEMA_VERSION = 5`)**: `timeout=30.0`، `PRAGMA busy_timeout=30000`، `PRAGMA foreign_keys=ON`، جدول `bot_kv_state` با کلاس `PersistentStateDict` (ماندگاری تمام وضعیت‌های ربات و استودیوها پس از ری‌استارت)، جدول `post_metrics` (ثبت تصمیم‌های ادمین برای یادگیری تدریجی ترجیحات)، ستون‌های ایندکس‌شدهٔ `team_code` با مهاجرت سریع بدون افت داده (`backfill_team_codes`) و جدول `api_hydration_cache`.
+- **امنیت و بهداشت عملیات**: `.gitignore` سخت‌گیرانه، ایزوله‌سازی توکن‌های تست در `tmp_path` (`tests/conftest.py`)، `IG_SESSION_FILE` مستقل از CWD با سطح دسترسی `0o600`، polling وضعیت کانتینر Reels در IG Graph API با `IG_GRAPH_API_VERSION`، محدودکردن `verify=False` در `irib_conductor.py` به `tv3.ir`/`varzeshtv.ir`، گارد مرکزی `AdminOnlyMiddleware` روی روتر تلگرام، و شمارندهٔ ساختاریافتهٔ خطاها (`core/error_metrics.py`) متصل به ۲۰ ماژول و دستور `/health`.
+- **بازآرایی ماژولار ۷ فایل بزرگ به ۱۶ زیرماژول مستقل** (با حفظ ۱۰۰٪ re-export و سازگاری):
+  - `telegram_bot.py` + `bot_studio_otd_news.py` + `bot_studio_bday_transfer_tot.py`
+  - `today_workflow.py` + `workflows/{scheduling,post_match,studio_generators,studio_core_generators,studio_modular_generators}.py`
+  - `sync.py` + `sync_enrichments.py`
+  - `modular_cards_bot.py` + `modular_cards_helpers.py`
+  - `xg_engine.py` + `xg_engine_fotmob.py` + `xg_engine_playwright.py`
+  - `on_this_day_card.py` + `on_this_day_art.py`
+- **ولیدیتور تحریریه (`editorial/validate.py`)**: هر ۴ گیت بحرانی (`ED-01` موجودیت‌های role-bound، `ED-02` اتصال عدد به تیم/شاخص، `ED-03` تحریف `null` دوطرفه روی `xg/corners/possession`، `ED-04` رد متن عمومی در `insufficient_data`) فعال و تست‌شده.
+- **آزمون رگرسیون بصری خودکار (`render/visual_qa.py` + `python run.py visual-qa` — `v0.79.0`)**: رندر واقعی ۴ کارت کلیدی + JPEG اینستاگرام روی Chromium با بررسی DOM (`broken_images == 0`، نبود سرریز بوم، بریدگی متن و فونت `Vazirmatn`) — خروجی تاییدشده: `5/5 passed`.
+- **مجموعه تست‌ها و CI**: **۸۴ فایل تست** (~۴۵۷ تست، پاس‌شده در ~۷۶ ثانیه روی ویندوز) + فیکسچر `tests/fixtures/fact.json` + گیت Ruff در `.github/workflows/jobs.yml`.
 
 ---
 
-## ۳. فاز صفر (شروع فوری چت جدید) — ممیزی جامع، تحلیل گزارش‌ها و رفع باگ کلی
-در آغاز چت جدید، کاربر چند **گزارش تحلیلی** از وضعیت فعلی سیستم، خروجی کارت‌ها و لاگ‌های اجرا ارائه می‌دهد. روند کار در فاز صفر به این شکل خواهد بود:
-1. **بررسی و دسته‌بندی تمام یافته‌های گزارش‌ها**: تفکیک به `P0` (باگ‌های بحرانی/کرش/داده غلط)، `P1` (نقص کارکردی یا داده‌ای در لیگ‌ها/کارت‌ها)، `P2` (جزئیات بصری، تایپوگرافی و تجربه کاربری ربات) و `P3` (بهینه‌سازی سرعت و بدهی فنی).
-2. **تصمیم‌گیری مشترک در نقاط نیازمند انتخاب**: هرجا دو رویکرد معماری، تحریریه‌ای یا گرافیکی وجود داشت، گزینه‌ها شفاف با مزایا/معایب به کاربر ارائه و با نظر کاربر نهایی شود.
-3. **اصلاح یکپارچه + تست رگرسیون کامل**: پیاده‌سازی اصلاحات، حفظ قوانین دائمی (`null ≠ 0`، تقارن ۱۵۱ باشگاه، آفلاین ۱۰۰٪) و اجرای تست‌های کامل.
-4. **تحویل نسخهٔ نهایی تثبیت‌شده (`Release Candidate / Final Polish`)** به کاربر.
+## ۳. پروتکل آغاز چت جدید (بازبینی جامع و رفع باگ کلی با گزارش‌های تحلیلی)
+در آغاز چت جدید، کاربر چند **گزارش تحلیلی** جدید ارائه می‌دهد. روند کار:
+1. **راستی‌آزمایی مستقیم روی سورس‌کد واقعی `v0.80.3`** (بدون اتکا به حدس) و دسته‌بندی یافته‌های واقعی به `P0` (بحرانی/امنیت/کرش/داده غلط)، `P1` (نقص کارکردی/داده‌ای/کارایی)، `P2` (بصری/UX/نگهداری) و `P3` (بهینه‌سازی و تمیزکاری)؛ و در صورت درخواست، امتیازدهی مستند به گزارش‌ها.
+2. **تصمیم‌گیری مشترک** در نقاط نیازمند انتخاب معماری، تحریریه‌ای یا گرافیکی با گزینه‌های شفاف.
+3. **پیاده‌سازی یکپارچه + تست کامل (`pytest` و `visual-qa`)** با حفظ کامل قوانین دائمی (`null ≠ 0`، تقارن ۱۵۱ باشگاه، آفلاین ۱۰۰٪، `XGPEDIA_ENABLE_SOFASCORE=0`).
+4. **تحویل بستهٔ نهایی تثبیت‌شده** به قالب `XGPedia_v*.zip` پیش از ورود به فازهای بعدی نقشهٔ راه.
 
 ---
 
@@ -99,7 +82,7 @@
 - [ ] **لوگوهای اختصاصی زیربرندها**: نسخه‌های سازگار با لوگوی اصلی (`XGPedia Light`، `XGPedia Iran`، یا کانال‌های تک‌تیم/تک‌لیگ) + اتصال فاوآیکون/آواتار و سوئیچ دو‌رنگ/تک‌رنگ (`brand_mono`).
 - [ ] **خط تولید عکس بازیکن‌ها**: جمع‌آوری چندمنبعی آفلاین (FPL/FotMob CDN/TheSportsDB `strCutout` با فیلتر `Soccer`/Wikipedia Section-0 Infobox `| image =` و Wikidata `P18` با User-Agent استاندارد ویکی‌مدیا/ESPN CDN مستقیم) + حذف پس‌زمینهٔ خودکار + نورپردازی دوگانه (سرمه‌ای/قرمز یا رنگ تیم) + قاب استاندارد و جدول `config/player_photos.json`.
 - [ ] **پوسترهای ویژهٔ اختصاصی**: قالب خودکار برای دربی‌ها، فینال‌ها، روز مسابقه (Matchday)، نتایج سنگین و رکوردها.
-- [ ] **راستی‌آزمایی رنگ‌های باشگاه‌ها و بدهی‌های تست رندر**: بررسی رنگ‌های `team_identities.json`، آزمون پیکسلی `9:16`/`16:9` و smoke test خروجی JPEG اینستاگرام.
+- [ ] **راستی‌آزمایی رنگ‌های باشگاه‌ها و بدهی‌های تست رندر**: بررسی رنگ‌های `team_identities.json`، گسترش `visual_qa.py` به آزمون پیکسلی `9:16`/`16:9` (تست JPEG اینستاگرام و `4:5` در `v0.79.0` انجام شد).
 
 ### فاز ۳ — تحلیل عمیق‌تر، جذاب‌تر و روایت‌محورتر
 - [x] تحریریهٔ چندلحنی (`analytical`, `fan_light`, `x_thread`, `reels_script`)، قلاب‌های روایی (`narrative.py`) و نظرسنجی خودکار (Poll).
@@ -118,7 +101,7 @@
 - [ ] قالب کاور و واترمارک خودکار روی کلیپ‌های گل و خلاصه بازی‌ها + اسلایدشوی خودکار برای کارت‌های نقل‌قول/مناظره/پیش‌بازی.
 
 ### فاز ۷ — انتشار خودکار چندپلتفرمی (Omnichannel Publishers)
-- [x] تلگرام (فعال و تأییدشده)، اینستاگرام (فعال و تأییدشده)، بله (آماده)، ایکس OAuth 2.0 PKCE (آماده).
+- [x] تلگرام (فعال و تأییدشده)، اینستاگرام (فعال و تأییدشده + polling کانتینر Reels)، بله (آماده)، ایکس OAuth 2.0 PKCE (آماده).
 - [ ] **پلتفرم‌های داخلی ایران (در صورت نیاز کاربر)**: ایتا (`eitaayar.ir/api`)، روبیکا و آپارات.
 - [ ] **پلتفرم‌های بین‌المللی و رشد سریع**: یوتیوب (Shorts `9:16` و ویدیو `16:9` با Data API v3)، تیک‌تاک، تردز (Threads)، کانال واتساپ، وب‌سایت سئو‌شده (`XGPedia.ir`) و پادکست کوتاه ۲ دقیقه‌ای پیش‌بازی (TTS).
 
@@ -127,31 +110,39 @@
 
 ---
 
-## ۵. پیشنهادهای راهبردی (جمع‌بندی `v0.60.0` + پیشنهادهای جدید بر اساس وضعیت `v0.71.0`)
+## ۵. پیشنهادهای راهبردی (حفظ ۱۰۰٪ موارد قبلی + پیشنهادهای جدید متناسب با `v0.80.3`)
 
-### الف) پیشنهادهای قبلی (حفظ‌شده کامل)
-1. **[تکمیل‌شده در `v0.79.0`] کش‌گرم‌کن پس‌زمینهٔ Opta (`core/background_warmer.py`)**: اجرای خودکار `enrich_post_match_fixture` هر ۲۰ دقیقه برای بازی‌های تازه تمام‌شده تا هر ۷ ماژول Opta زیر ۱ ثانیه آماده باشند.
+### الف) پیشنهادهای قبلی (حفظ‌شده کامل با وضعیت فعلی)
+1. **[تکمیل‌شده در `v0.78.0`] کش‌گرم‌کن پس‌زمینهٔ Opta (`core/background_warmer.py`)**: اجرای خودکار و کم‌فشار `enrich_post_match_fixture` هر ۱۵ دقیقه با کنترل نرخ.
 2. **نگهبان دقت داده (`Data Quality Guard`)**: هشدار خودکار به ادمین اگر بازی پایان‌یافته‌ای بیش از ۱ ساعت پس از سوت پایان هنوز xG واقعی دریافت نکرده باشد + دکمهٔ «تلاش مجدد Opta».
 3. **نریشن صوتی فارسی خودکار روی ریلز (`Persian TTS Voiceover`)**: افزودن صدای ۱۰–۱۵ ثانیه‌ای فارسی (با `edge-tts` رایگان و ducking خودکار موزیک ۱۲۴ BPM).
 4. **تقویم هوشمند انتشار روزانه (`Auto-Editorial Daily Planner`)**: پیشنهاد برنامهٔ روزانهٔ پست‌ها به ادمین (صبح/عصر/شب) با تایید یک‌کلیکی.
 5. **حالت Inline Query و مینی‌اپ آماری تلگرام**: جستجوی سریع آمار بازیکنان/تیم‌ها با `@XGPedia_bot` در هر چت و نمایش تعاملی ShotMap.
-
-### ب) پیشنهادهای جدید متناسب با وضعیت فعلی (`v0.79.0`)
-6. **[تکمیل‌شده در `v0.79.0`] سرویس واحد هویت نام‌ها (`Unified Identity Service` — `core/identity_service.py`)**: تجمیع ۳ نگاشت فعلی نام بازیکنان (`glossary_fa.json`، `config.py`، `injury_free.py`) و نام باشگاه‌ها در یک ماژول مرکزی با کش LRU و تست خودکار یکتایی تا هیچ تناقضی میان کارت‌ها تکرار نشود.
-7. **[تکمیل‌شده در `v0.79.0`] کش پایدار SQLite برای هیدراتاسیون FPL/Understat/FotMob (`core/hydration_cache.py`)**: ذخیرهٔ داده‌های هیدراتاسیون (مسیر ۸ هفته کفش طلا، تیم‌های حریف ۵ بازی اخیر FC27، آمار Understat XHR و نتایج FotMob) در SQLite با TTL هوشمند برای پاسخ‌گویی آنی ربات و کاهش فشار به APIها.
+6. **[تکمیل‌شده در `v0.77.0`] سرویس واحد هویت نام‌ها (`core/identity_service.py`)**: تجمیع مرکزی ۳ نگاشت بازیکنان و ۱۵۱ باشگاه با کش LRU و تست یکتایی.
+7. **[تکمیل‌شده در `v0.78.0`] کش پایدار SQLite برای هیدراتاسیون FPL/Understat/FotMob (`core/hydration_cache.py`)**: الگوی SWR، TTL هوشمند و بودجهٔ نرخ.
 8. **تقویت پوشش تاریخی تیم‌های غیر ۵ لیگ برتر در لیگ اروپا (`UEFA Coverage Hardening`)**: تکمیل همگام‌سازی بازی‌های فصل تیم‌های لیگ‌های پرتغال، هلند، بلژیک، ترکیه، یونان، اسکاتلند، کرواسی، لهستان و اتریش تا درصد بازی‌های آمادهٔ کارت پیش‌ازبازی لیگ اروپا به بالای ۹۰٪ برسد.
-9. **بازیابی پلاگین‌پذیر SofaScore (`SofaScore Pluggable Recovery`)**: افزودن پشتیبانی اختیاری پروکسی یا کوکی مرورگر پشت فلگ `XGPEDIA_ENABLE_SOFASCORE=1` برای زمانی که تصمیم به بازگرداندن SofaScore به‌عنوان پشتیبان دوم Opta گرفته شد.
-10. **[تکمیل‌شده در `v0.79.0`] آزمون رگرسیون بصری خودکار (`render/visual_qa.py` + `python run.py visual-qa`)**: رندر خودکار نمونهٔ کارت‌های کلیدی (`Pre-Match`, `Post-Match`, `Top Scorers`, `FC27`) با Playwright و بررسی ابعادی/بریدگی متن/لوگو پیش از هر انتشار.
+9. **بازیابی پلاگین‌پذیر SofaScore (`SofaScore Pluggable Recovery`)**: افزودن پشتیبانی اختیاری پروکسی یا کوکی مرورگر پشت فلگ `XGPEDIA_ENABLE_SOFASCORE=1`.
+10. **[تکمیل‌شده در `v0.79.0`] آزمون رگرسیون بصری خودکار (`render/visual_qa.py` + `python run.py visual-qa`)**: رندر ۴ کارت کلیدی + JPEG اینستاگرام با چک ابعادی، لوگوهای شکسته و سرریز DOM.
+
+### ب) پیشنهادهای جدید متناسب با وضعیت فعلی (`v0.80.3`)
+11. **موتور خودکارسازی مرحله‌ای و یادگیری ترجیحات (`Phased Auto-Publish & Preference Learner`)**: استفاده از داده‌های جدول جدید `post_metrics` (نرخ تایید و تعداد ویرایش به تفکیک `card_type` و `tone`) برای نمایش داشبورد `/metrics` در تلگرام و فعال‌سازی تدریجی انتشار خودکار برای کارت‌های کم‌ریسک با نرخ تایید بالای ۹۵٪.
+12. **ابزار چندمنبعی دانلود آفلاین عکس بازیکنان (`tools/fetch_player_photos.py`)**: تکرار دقیق موفقیت ۱۵۱/۱۵۱ لوگوها روی ۲۷۷ بازیکن (`glossary_fa.json`) با زنجیرهٔ FPL cutouts ← FotMob CDN ← `Wikipedia Section-0 Infobox` ← Wikidata `P18` ← TheSportsDB `strCutout` (`Soccer` only) ← ESPN CDN و ذخیره در `brand/player_photos/`.
+13. **پرکردن خودکار `team_code` هنگام درج در `sync.py`**: ثبت هم‌زمان `home_team_code`/`away_team_code`/`team_code` هنگام درج ردیف‌های جدید در `sync.py` (در کنار `backfill_team_codes` فعلی) تا تمام رکوردهای تازه نیز بدون نیاز به اجرای `--migrate-teams` دارای کلید استاندارد سه‌حرفی باشند.
+14. **گسترش `visual_qa.py` به نسبت‌های `9:16` (استوری/ریلز) و `16:9` (یوتیوب/ایکس) + گیت CI**: افزودن اجرای `python run.py visual-qa` به `.github/workflows/jobs.yml` تا هیچ PR جدیدی نتواند باعث سرریز متن فارسی یا شکستن لوگو شود.
+15. **بستهٔ آمادهٔ استقرار سرور رایگان (`Free-Tier Cloud Kit`)**: تهیهٔ `Dockerfile` سبک (مبتنی بر `python:3.12-slim` + Chromium + FFmpeg) همراه با اسکریپت بکاپ روزانهٔ SQLite به کانال خصوصی تلگرام یا GitHub/S3 برای اجرای ۲۴/۷ رایگان.
 
 ---
 
 ## ۶. دستورات کلیدی راستی‌آزمایی و ابزارهای کمکی
 ```powershell
 python -m pytest tests/ -q
+python run.py visual-qa
+python -m src.xgpedia.db --migrate-teams
+python tools/fetch_crests.py --only-placeholders --no-espn --workers 3
 python run.py data-chains
 python run.py test-xg "Olympiacos" "AC Milan" 2026-11-26
 python run.py test-platforms
 python run.py bot
 # اسکریپت اعمال خودکار بسته‌های XGPedia_v*.zip از Downloads\Compressed:
-powershell -ExecutionPolicy Bypass -File .\watch_xgpedia_updates.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\watch_xgpedia_updates.ps1
 ```

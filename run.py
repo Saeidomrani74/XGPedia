@@ -582,9 +582,9 @@ def cmd_today(args: argparse.Namespace) -> None:
             from src.xgpedia.publishers import telegram_publish as tp
             from src.xgpedia.publishers.telegram_bot import make_transport
 
-            async def _pub_now():
+            async def _pub_now(_post_id: int = res.post_id):
                 async with Bot(TELEGRAM_BOT_TOKEN) as bot:
-                    return await tp.approve_and_publish(res.post_id, min(ADMIN_TELEGRAM_IDS), make_transport(bot))
+                    return await tp.approve_and_publish(_post_id, min(ADMIN_TELEGRAM_IDS), make_transport(bot))
 
             try:
                 out = asyncio.run(_pub_now())
@@ -778,6 +778,9 @@ def main(argv: list[str] | None = None) -> int:
 
     p_dc = sub.add_parser("data-chains", help="List all 23 cards, required fields, and credibility-ranked data source chains")
     p_dc.add_argument("--card", default=None, help="Filter by card ID (e.g. post_match, pre_match, player_profile)")
+    sub.add_parser("gate3-check", help="بررسی آمادگی ۷ روزهٔ دروازهٔ ۳، توکن‌ها و کانال هشدار")
+    p_al = sub.add_parser("send-alerts", help="ارسال گزارش هشدار/خطا به کانال هشدار تلگرام")
+    p_al.add_argument("--dry-run", action="store_true", help="نمایش متن گزارش بدون ارسال به تلگرام")
     sub.add_parser("x-auth", help="X (Twitter) OAuth 2.0 PKCE one-time login & auto-refresh setup")
     sub.add_parser("ig-auth", help="Instagram direct login via instagrapi (no Meta Developer Portal needed)")
     sub.add_parser("diagnose-modules", help="inspect DB counts for keyduel, signals (+EV), wave, and coaches")
@@ -866,6 +869,18 @@ def main(argv: list[str] | None = None) -> int:
                 failed += 1
         print(f"Visual QA summary: {len(results) - failed}/{len(results)} passed")
         return 1 if failed else 0
+    elif args.cmd == "gate3-check":
+        from src.xgpedia.core.alerting import format_gate3_report_ascii
+        print(format_gate3_report_ascii())
+    elif args.cmd == "send-alerts":
+        import asyncio as _asyncio
+        from src.xgpedia.core.alerting import send_alert_digest_telegram
+        out_al = _asyncio.run(send_alert_digest_telegram(dry_run=bool(args.dry_run)))
+        if out_al.get("dry_run"):
+            print(f"[DRY-RUN] target={out_al['chat_id']}")
+            print(out_al["text"])
+        else:
+            print(f"OK - alert sent to {out_al['chat_id']} (attempts={out_al['attempts']})")
     elif args.cmd == "data-chains":
         from src.xgpedia.core.source_chain import format_chains_report_fa
         print(format_chains_report_fa(args.card))

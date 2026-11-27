@@ -103,7 +103,7 @@ FPL_LIVE_GW_URL = "https://fantasy.premierleague.com/api/event/{gw}/live/"
 
 
 def _bps_to_rating(bps: float, goals: int = 0, assists: int = 0) -> float:
-    """تبدیل شفاف امتیاز رسمی Opta BPS در یک مسابقه به مقیاس خوانای ۵٫۰ تا ۹٫۹."""
+    """شاخص نمایشی تخمینی از FPL BPS (این مقدار rating رسمی Opta/FotMob نیست)."""
     raw = 5.6 + (float(bps) / 11.2) + (0.25 if goals > 0 else 0.0) + (0.15 if assists > 0 else 0.0)
     return round(min(9.9, max(5.0, raw)), 1)
 
@@ -116,7 +116,7 @@ def parse_fpl_match_post_details(
     away_en: str,
     match_date: str = "",
 ) -> dict[str, Any] | None:
-    """استخراج واقعی Top Rated، MOTM و آمار دروازه‌بان (PSxG/Saves از Opta) برای یک مسابقه از FPL Official."""
+    """استخراج آمار مسابقه از FPL Official (امتیاز BPS به‌عنوان شاخص تخمینی و xGC جدا از PSxG)."""
     h_canon = canonical_team_name(home_en)
     a_canon = canonical_team_name(away_en)
 
@@ -217,9 +217,10 @@ def parse_fpl_match_post_details(
             "name": name,
             "side": side,
             "pos": FPL_POS_FA.get(et, "بازیکن"),
-            "number": int(meta.get("squad_number") or 0) or 10,
+            "number": int(meta.get("squad_number") or 0) or None,
             "stat": "، ".join(stat_parts[:2]),
             "rating": rating,
+            "rating_method": "xgpedia_bps_proxy",
             "bps": bps,
             "goals": goals,
             "assists": assists,
@@ -238,7 +239,8 @@ def parse_fpl_match_post_details(
             gk_obj = {
                 "name": name,
                 "saves": saves,
-                "psxg": round(xgc, 2) if xgc is not None else None,
+                "psxg": None,
+                "xgc": round(xgc, 2) if xgc is not None else None,
                 "ga": a_goals if side == "home" else h_goals,
             }
             if side == "home":
@@ -261,7 +263,7 @@ def parse_fpl_match_post_details(
 
     # اطلاعات غیرتکراری و جذاب Opta (هرگز مقدار صفر برای شاخص‌های نهایی‌نشده نمایش داده نمی‌شود)
     if best.get("et") == 1:
-        c2 = {"label": "تاثیرگذاری Opta", "val": f"{best['influence']:.0f}"} if best["influence"] > 0 else {"label": "امتیاز BPS", "val": str(int(best["bps"]))}
+        c2 = {"label": "تاثیرگذاری FPL", "val": f"{best['influence']:.0f}"} if best["influence"] > 0 else {"label": "امتیاز BPS", "val": str(int(best["bps"]))}
         chips = [
             {"label": "مهار شوت", "val": str(best["saves"])},
             c2,
@@ -271,10 +273,10 @@ def parse_fpl_match_post_details(
         c2 = (
             {"label": "تهدید دروازه", "val": f"{best['threat']:.0f}"}
             if best["threat"] > 0
-            else {"label": "امید گل (xG)", "val": f"{best['xg']:.2f}"}
+            else ({"label": "امید گل (xG)", "val": f"{best['xg']:.2f}"} if best.get("xg") is not None else {"label": "امتیاز BPS", "val": str(int(best["bps"]))})
         )
         c3 = (
-            {"label": "خلاقیت Opta", "val": f"{best['creativity']:.0f}"}
+            {"label": "خلاقیت FPL", "val": f"{best['creativity']:.0f}"}
             if best["creativity"] > 0
             else (
                 {"label": "امید پاس گل (xA)", "val": f"{best['xa']:.2f}"}
@@ -283,7 +285,7 @@ def parse_fpl_match_post_details(
             )
         )
         chips = [
-            {"label": "xG + xA", "val": f"{best['xg'] + best['xa']:.2f}"},
+            *([{"label": "xG + xA", "val": f"{best['xg'] + best['xa']:.2f}"}] if best.get("xg") is not None and best.get("xa") is not None else ([{"label": "امید گل (xG)", "val": f"{best['xg']:.2f}"}] if best.get("xg") is not None else [])),
             c2,
             c3,
         ]

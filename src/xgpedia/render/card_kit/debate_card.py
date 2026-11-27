@@ -19,6 +19,7 @@ import math
 from typing import Any
 
 from src.xgpedia.render.card_kit.helpers import (
+    with_sample_badge,
     contrast_ink,
     ensure_dark_bg_contrast,
     esc,
@@ -264,6 +265,7 @@ def _radar_svg(item: dict[str, Any], ca: str, cb: str, compact: bool = False) ->
     )
 
 
+@with_sample_badge
 def render_debate_html(
     item: dict[str, Any],
     *,

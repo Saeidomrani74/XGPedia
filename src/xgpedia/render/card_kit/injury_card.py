@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from src.xgpedia.render.card_kit.helpers import contrast_ink, esc, fa, luminance
+from src.xgpedia.render.card_kit.helpers import with_sample_badge, contrast_ink, esc, fa, luminance
 from src.xgpedia.render.cards import _brand_logo_data_uri
 from src.xgpedia.render.studio_engine import build_embedded_font_css
 
@@ -247,6 +247,7 @@ def _render_hero(item: dict[str, Any], sev: dict[str, str], header_mode: str, is
     )
 
 
+@with_sample_badge
 def render_injury_html(
     item: dict[str, Any],
     *,

@@ -859,8 +859,9 @@ def _register_card_handlers(card_kind: str) -> None:
             await _safe_answer(cb, "خطا در انتخاب دستی.", show_alert=True)
             try:
                 await cb.message.answer(f"❌ خطا در انتخابگر دستی: <code>{html.escape(type(exc).__name__)}: {html.escape(str(exc)[:250])}</code>", parse_mode="HTML")
-            except Exception:
-                pass
+            except Exception as _em_exc:
+                from src.xgpedia.core.error_metrics import record_error as _rec_err
+                _rec_err('bot.modular_cards', _em_exc)
 
 
     @modular_router.callback_query(F.data.startswith(f"{pref}:open:"))
@@ -1237,8 +1238,9 @@ def _register_card_handlers(card_kind: str) -> None:
             await bot.send_video(cb.from_user.id, video=FSInputFile(str(reel_res.video_path)), caption=cap_reel, reply_markup=_reel_kb)
             try:
                 await wait_msg.edit_text(f"✅ ریلز ویدیویی آماده و ارسال شد ({reel_res.duration_sec:.1f} ثانیه).")
-            except Exception:
-                pass
+            except Exception as _em_exc:
+                from src.xgpedia.core.error_metrics import record_error as _rec_err
+                _rec_err('bot.modular_cards', _em_exc)
             return
 
         text, kb = render_modular_customizer_view(card_kind, st)
@@ -1268,8 +1270,9 @@ async def _on_reel_publish_action(cb: CallbackQuery, bot: Bot) -> None:
         await _safe_answer(cb, "بسته شد.")
         try:
             await cb.message.edit_reply_markup(reply_markup=None)
-        except Exception:
-            pass
+        except Exception as _em_exc:
+            from src.xgpedia.core.error_metrics import record_error as _rec_err
+            _rec_err('bot.modular_cards', _em_exc)
         return
     from pathlib import Path as _Path
     if not entry or not _Path(entry["video_path"]).exists():
@@ -1309,6 +1312,7 @@ async def _on_reel_publish_action(cb: CallbackQuery, bot: Bot) -> None:
     REEL_PREVIEW_CACHE.pop(rid, None)
     try:
         await cb.message.edit_reply_markup(reply_markup=None)
-    except Exception:
-        pass
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err('bot.modular_cards', _em_exc)
     await cb.message.answer("🎬 <b>گزارش انتشار ریلز:</b>\n" + "\n".join(status_lines), parse_mode="HTML")

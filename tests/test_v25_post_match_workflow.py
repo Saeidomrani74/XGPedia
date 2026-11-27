@@ -232,7 +232,19 @@ def test_fpl_and_understat_unlock_all_7_post_match_modules_and_survive_pydantic(
     assert fpl_det["motm"]["name"] == "Salah"
     assert fpl_det["motm"]["runnerUp"]["name"] == "B.Fernandes"
     assert fpl_det["home_gk"]["name"] == "Alisson" and fpl_det["away_gk"]["name"] == "Onana"
+    # قانون null != 0 و صحت شاخص: xGC در FPL هرگز به نام PSxG ثبت نمی‌شود
+    assert fpl_det["home_gk"]["psxg"] is None and fpl_det["home_gk"]["xgc"] == 1.15
+    assert fpl_det["away_gk"]["psxg"] is None and fpl_det["away_gk"]["xgc"] == 2.05
     merge_post_match_details("espn:901", fpl_det, provider="fpl-official")
+    # افزودن PSxG واقعی (xGOT faced از FotMob/Opta) برای بازشدن ماژول efficiency
+    merge_post_match_details(
+        "espn:901",
+        {
+            "home_gk": {**fpl_det["home_gk"], "psxg": 1.42},
+            "away_gk": {**fpl_det["away_gk"], "psxg": 2.18},
+        },
+        provider="fotmob",
+    )
 
     # ۳) پارس Understat shotsData -> xgrace + shotmap + insideBox
     us_det = parse_understat_match_shots({

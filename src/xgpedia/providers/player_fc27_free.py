@@ -70,8 +70,9 @@ def _short_opp_label_fa(raw_team_name: str, short_fallback: str = "") -> str:
             return _SHORT_CLUB_FA[tr]
         if any("\u0600" <= c <= "\u06ff" for c in tr):
             return tr
-    except Exception:
-        pass
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err('provider.player_fc27', _em_exc)
     return short_fallback or club_fa[:6]
 _CACHE_TTL_SEC = 900.0
 
@@ -300,8 +301,9 @@ def fetch_live_player_fc27_items(*, force_refresh: bool = False, limit: int = 24
     try:
         from src.xgpedia.providers.opta_hub import merge_fpl_and_european_bootstrap
         bootstrap = merge_fpl_and_european_bootstrap(bootstrap, force_refresh=force_refresh)
-    except Exception:
-        pass
+    except Exception as _em_exc:
+        from src.xgpedia.core.error_metrics import record_error as _rec_err
+        _rec_err('provider.player_fc27', _em_exc)
     items = parse_fpl_fc27_players(bootstrap, limit=max(limit, 36))
     _LIVE_CACHE["ts"] = now_ts
     _LIVE_CACHE["items"] = items
@@ -372,8 +374,9 @@ def hydrate_player_fc27_item(item: dict[str, Any]) -> dict[str, Any]:
                 item["form"] = form_vals
                 if any(form_opps):
                     item["form_opponents"] = form_opps
-        except Exception:
-            pass
+        except Exception as _em_exc:
+            from src.xgpedia.core.error_metrics import record_error as _rec_err
+            _rec_err('provider.player_fc27', _em_exc)
 
     # 3. شماره پیراهن و پای تخصصی واقعی از TheSportsDB (منحصراً Soccer)
     if item.get("num") is None or not item.get("foot"):
@@ -401,8 +404,9 @@ def hydrate_player_fc27_item(item: dict[str, Any]) -> dict[str, Any]:
                         if uri:
                             item["photoUrl"] = uri
                     break
-            except Exception:
-                pass
+            except Exception as _em_exc:
+                from src.xgpedia.core.error_metrics import record_error as _rec_err
+                _rec_err('provider.player_fc27', _em_exc)
 
     item["_hydrated"] = True
     return item

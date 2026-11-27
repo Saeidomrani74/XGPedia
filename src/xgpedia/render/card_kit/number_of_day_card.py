@@ -19,6 +19,7 @@ import math
 from typing import Any
 
 from src.xgpedia.render.card_kit.helpers import (
+    with_sample_badge,
     _hex_to_rgb,
     ensure_dark_bg_contrast,
     esc,
@@ -163,6 +164,7 @@ def _fx_backdrop_svg(mode: str, w: int, h: int, ac: str, is16: bool, show_fx: bo
     )
 
 
+@with_sample_badge
 def render_number_of_day_html(
     item: dict[str, Any],
     *,

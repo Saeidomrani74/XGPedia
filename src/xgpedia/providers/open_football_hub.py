@@ -424,12 +424,12 @@ def parse_wc26_standings(raw: Any, league_slug: str = "esp.1", season: int | Non
                 if isinstance(s, dict) and s.get("name"):
                     st_map[str(s["name"]).lower()] = s.get("value")
 
-        def _g(keys: tuple[str, ...]) -> int:
+        def _g(keys: tuple[str, ...], _st_map=st_map, _ent=ent) -> int:
             for k in keys:
-                if k in st_map and st_map[k] is not None:
-                    return int(float(st_map[k]))
-                if k in ent and ent[k] is not None:
-                    return int(float(ent[k]))
+                if k in _st_map and _st_map[k] is not None:
+                    return int(float(_st_map[k]))
+                if k in _ent and _ent[k] is not None:
+                    return int(float(_ent[k]))
             return 0
 
         mp = _g(("gamesplayed", "played", "mp", "matches"))
